@@ -1,0 +1,6 @@
+vendor/
+composer.lock
+config.php
+node_modules/
+assets/
+.htaccess
