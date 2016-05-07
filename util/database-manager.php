@@ -25,6 +25,22 @@ class DatabaseManager
 
 		return new Statement($statement);
 	}
+	
+	public function transaction($callable)
+	{
+		try
+		{
+			$this->database->beginTransaction();
+			//$callable = $callable->bindTo($this);
+			$callable();
+			$this->database->commit();
+		}
+		catch(Exception $e)
+		{
+			$dbh->rollBack();
+			throw $e;
+		}
+	}
 }
 
 class Statement
