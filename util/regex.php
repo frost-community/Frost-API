@@ -9,6 +9,6 @@ class Regex
 	
 	public static function match($regexStr, $content)
 	{
-		return preg_match($regexStr, $content, $ms) === 1 ? $ms : [];
+		return preg_match($regexStr, $content, $ms) === 1 ? $ms : null;
 	}
 }
