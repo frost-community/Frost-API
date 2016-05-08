@@ -1,12 +1,10 @@
 <?php
 
-require_once __DIR__.'/util/api-exception.php';
-require_once __DIR__.'/util/api-utils.php';
-require_once __DIR__.'/util/call-api-controller.php';
-
 require_once __DIR__.'/controllers/access-key.php';
 require_once __DIR__.'/controllers/account.php';
+require_once __DIR__.'/controllers/application.php';
 require_once __DIR__.'/controllers/post.php';
+require_once __DIR__.'/controllers/web.php';
 
 $app->get('/', function ($req, $res, $args)
 {

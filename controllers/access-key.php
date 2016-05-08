@@ -1,9 +1,5 @@
 <?php
 
-require_once __DIR__.'/../util/api-exception.php';
-require_once __DIR__.'/../util/api-utils.php';
-require_once __DIR__.'/../util/regex.php';
-
 class IceAuth
 {
 	public static function authorize($params, $res, $container)
