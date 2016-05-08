@@ -31,7 +31,7 @@ class Account
 		$isOccurredError = false;
 		$errorTargets = [];
 
-		if (!Regex::isMatch('/^[a-z0-9_]{4,15}$/i', $params['screen_name']) || Regex::isMatch('(.)\1{4,}', $params['screen_name']))
+		if (!Regex::isMatch('/^[a-z0-9_]{4,15}$/i', $params['screen_name']) || Regex::isMatch('/(.)\1{3,}/', $params['screen_name']))
 		{
 			$isOccurredError = true;
 			$errorTargets[] = 'screen_name';
