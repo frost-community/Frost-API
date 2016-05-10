@@ -58,6 +58,6 @@ class Application
 			return withFailure($res, 'faild to generate application key');
 		}
 
-		return withSuccess($res);
+		return withSuccess($res,'successful', ['application-key'=>$key]);
 	}
 }

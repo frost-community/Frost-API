@@ -1,6 +1,11 @@
 <?php
+namespace Utility;
 
-function createAccesskey($applicationId, $userId, $container)
+// TODO
+class Accesskey
 {
-	return $userId.'-'.hash('sha256', $container->config['keyBase'].$applicationId.$userId);
+	public static function create($applicationId, $userId, $container)
+	{
+		return $userId.'-'.hash('sha256', $container->config['keyBase'].$applicationId.$userId);
+	}
 }
