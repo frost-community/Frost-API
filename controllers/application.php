@@ -1,55 +1,53 @@
 <?php
 
-/* developer */
-
 class Application
 {
 	public static function create($params, $res, $container)
 	{
-		// TODO
-		// session(frost-session): [user_id]
-		// params: [name, description]
-
-		$requireParams = ['name', 'description'];
+		$requireParams = ['request-key', 'name', 'description'];
 
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
 		$createdAt = time();
 
+		if (!validateRequestKey($params['request-key'], $container->config, $container->dbManager))
+			return withFailure($res, 'parameters are invalid', ['request-key']);
+
+		$userId = explode('-', $params['request-key']);
+
 		try
 		{
-			$container->dbManager->executeQuery('insert into frost_application (creator_id, created_at, name, description) values(?, ?, ?, ?)', [$_SESSION['user_id'], $createdAt, $params['name'], $params['description']]);
+			$container->dbManager->executeQuery('insert into frost_application (creator_id, created_at, name, description) values(?, ?, ?, ?)', [$userId, $createdAt, $params['name'], $params['description']]);
+			$application = $container->dbManager->executeQuery('select * from frost_application where name = ?', [$params['name']])->fetch()[0];
 		}
 		catch(PDOException $e)
 		{
 			return withFailure($res, 'faild to create application');
 		}
 
-		$application = $container->dbManager->executeQuery('select * from frost_application where name = ?', [$params['name']])->fetch()[0];
-
 		return withSuccess($res, "successful", ['application' => $application]);
 	}
 
 	public static function generateKey($params, $res, $container)
 	{
-		// TODO
-		// session(frost-session): [user_id]
-		// params: [app_id]
-
-		$requireParams = ['app_id'];
+		$requireParams = ['request-key', 'app-id'];
 
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
-		$applications = $container->dbManager->executeQuery('select * from frost_application where id = ? & creator_id = ?', [$params['app_id'], $_SESSION['user_id']])->fetch();
+		if (!validateRequestKey($params['request-key'], $container->config, $container->dbManager))
+			return withFailure($res, 'parameters are invalid', ['request-key']);
 
+		$userId = explode('-', $params['request-key']);
+
+		$applications = $container->dbManager->executeQuery('select * from frost_application where id = ? & creator_id = ?', [$params['app-id'], $userId])->fetch();
 		if (count($applications) === 0)
 			return withFailure($res, 'application not found');
 
 		$application = $applications[0];
 
-		$key = $application['id'].'-'.hash('sha256', $container->config['application_key_base'].'.'.$application['id'].'.'.rand(1, 1000));
+		$key = $application['id'].'-'.hash('sha256', $container->config['keyBase'].'.'.$application['id'].'.'.rand(1, 1000));
 
 		try
 		{
