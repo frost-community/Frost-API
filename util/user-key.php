@@ -1,7 +1,5 @@
 <?php
 
-require_once(__FILE__.'/regex.php');
-
 function createUserKey($userId, $config, $num = null)
 {
 	if ($num === null)
