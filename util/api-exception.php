@@ -1,4 +1,5 @@
 <?php
+namespace Utility;
 
 class ApiException extends Exception
 {

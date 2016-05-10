@@ -1,4 +1,5 @@
 <?php
+namespace Utility;
 
 // UserKey は正当なユーザーによるリクエストであるかどうかを検証するために利用されるキーです。
 
