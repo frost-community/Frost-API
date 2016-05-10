@@ -18,12 +18,11 @@ class Application
 
 		try
 		{
-			$container->dbManager->executeQuery('insert into frost_application (creator_id, created_at, name, description) values(?, ?, ?, ?)', [$userId, $createdAt, $params['name'], $params['description']]);
-			$application = $container->dbManager->executeQuery('select * from frost_application where name = ?', [$params['name']])->fetch()[0];
+			$application = Application::create($userId, $params['name'], $params['description'], $container->config, $container->dbManager);
 		}
-		catch(PDOException $e)
+		catch(Exception $e)
 		{
-			return withFailure($res, 'faild to create application');
+			return withFailure($res, 'faild to create application', ['detail'=>$e->getMessage()]);
 		}
 
 		return withSuccess($res, "successful", ['application' => $application]);
