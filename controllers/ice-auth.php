@@ -8,34 +8,36 @@ class IceAuth
 
 	public static function accesskey($params, $res, $container)
 	{
-		// TODO
-		// POST
-		// params: [app_key, user_id]
-		// return: access_key
+		// params: [resuqst-key, app-key]
+		// return: access-key
+
+		$requireParams = ['resuqst-key', 'application-key'];
 
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
-		if ($params['application_id'] !== 'web')
-		{
-			// TODO
-			return withFailure($res, 'parameters are invalid', ['app_name']);
-		}
+		if (!RequestKey::validate($params['request-key'], $container->config, $container->dbManager))
+			return withFailure($res, 'parameters are invalid', ['request-key']);
 
-		$correctAccessKey = createAccesskey($_SESSION['application_id'], $_SESSION['user_id'], $container);
+		$userId = explode('-', $params['request-key'])[0];
 
-		if ($correctAccessKey !== $params['access_key'])
-			return withFailure($res, 'parameters are invalid', ['access_key']);
+		if (!ApplicationKey::validate($params['application-key'], $container->config, $container->dbManager))
+			return withFailure($res, 'parameters are invalid', ['application-key']);
+
+		$appId = explode('-', $params['application-key'])[0];
+
+		$accessKey = createAccesskey($appId, $userId, $container);
 
 		$now = time();
 
-		$applicationAccess = $container->dbManager->executeQuery('select * from frost_iceauth_accesskey where access_key = ? limit 1', [$params['access_key']])->fetch();
+		$applicationAccess = $container->dbManager->executeQuery('select * from frost_iceauth_accesskey where access_key = ? limit 1', [$accessKey])->fetch();
 
 		if (count($applicationAccess) !== 0 )
 			return withFailure($res, 'already registered');
 
-		$container->dbManager->executeQuery('insert into frost_iceauth_accesskey (created_at, app_name, user_id, access_key) values(?, ?, ?, ?)', [$now, $params['app_name'], $params['user_id'], $params['access_key']]);
+		// TODO
+		$container->dbManager->executeQuery('insert into frost_iceauth_accesskey (created_at, app_id, user_id, access_key) values(?, ?, ?, ?)', [$now, $appId, $userId, $accessKey]);
 
-		return withSuccess($res);
+		return withSuccess($res, 'successful', ['access-key'=>$accessKey]);
 	}
 }
