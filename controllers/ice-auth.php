@@ -2,22 +2,15 @@
 
 class IceAuth
 {
-	public static function authorize($params, $res, $container)
-	{
-		// TODO
-		// GET
-		// セッション情報追加(有効期限あり)
-		// params: [app_key, user_id]
-		// return: view 認証ページ
-
-		return withFailure($res, 'not impremented');
-	}
+	// Frost-Web側 authorize
+	// params: [app_key]
+	// return: view 認証ページ
 
 	public static function accesskey($params, $res, $container)
 	{
 		// TODO
 		// POST
-		// セッション読み取り
+		// params: [app_key, user_id]
 		// return: access_key
 
 		if (!hasRequireParams($params, $requireParams))
