@@ -11,7 +11,7 @@ class Application
 
 		$createdAt = time();
 
-		if (!validateRequestKey($params['request-key'], $container->config, $container->dbManager))
+		if (!RequestKey::validate($params['request-key'], $container->config, $container->dbManager))
 			return withFailure($res, 'parameters are invalid', ['request-key']);
 
 		$userId = explode('-', $params['request-key']);
@@ -36,7 +36,7 @@ class Application
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
-		if (!validateRequestKey($params['request-key'], $container->config, $container->dbManager))
+		if (!RequestKey::validate($params['request-key'], $container->config, $container->dbManager))
 			return withFailure($res, 'parameters are invalid', ['request-key']);
 
 		$userId = explode('-', $params['request-key']);
