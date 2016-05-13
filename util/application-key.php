@@ -7,7 +7,17 @@ class ApplicationKey
 	{
 		$now = time();
 
-		// TODO: 既存のアプリケーションに同名のものがあれば例外
+		try
+		{
+			$applications = $container->dbManager->executeQuery('select * from frost_application where name = ?', [$name])->fetch();
+		}
+		catch(PDOException $e)
+		{
+			throw new Exception('faild to search database record');
+		}
+
+		if (count($applications) !== 0)
+			throw new Exception('already exists.');
 
 		try
 		{
