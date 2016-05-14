@@ -1,5 +1,5 @@
 <?php
-namespace Utility;
+namespace Model;
 
 // TODO
 class Accesskey

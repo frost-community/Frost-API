@@ -1,5 +1,5 @@
 <?php
-namespace Utility;
+namespace Model;
 
 // RequestKey はFrost-Webからのアクセスのみを許可するAPIでそのリクエストが正当であるかどうかを検証するためのキーです。
 

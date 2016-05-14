@@ -1,7 +1,7 @@
 <?php
-namespace Utility;
+namespace Model;
 
-class ApplicationKey
+class Application
 {
 	public static function create($userId, $name, $description, $config, DatabaseManager $db)
 	{
