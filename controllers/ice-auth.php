@@ -21,7 +21,7 @@ class IceAuth
 
 		$userId = explode('-', $params['request-key'])[0];
 
-		if (!ApplicationKey::validate($params['application-key'], $container->config, $container->dbManager))
+		if (!\Models\ApplicationKey::validate($params['application-key'], $container->config, $container->dbManager))
 			return withFailure($res, 'parameters are invalid', ['application-key']);
 
 		$appId = explode('-', $params['application-key'])[0];

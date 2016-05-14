@@ -18,7 +18,7 @@ class Application
 
 		try
 		{
-			$application = Application::create($userId, $params['name'], $params['description'], $container->config, $container->dbManager);
+			$application = \Models\Application::create($userId, $params['name'], $params['description'], $container->config, $container->dbManager);
 		}
 		catch(Exception $e)
 		{

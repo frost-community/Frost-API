@@ -14,7 +14,7 @@ class Web
 
 		try
 		{
-			$requestKey = RequestKey::create($params['user-key'], $container->config, $container->dbManager);
+			$requestKey = \Models\RequestKey::create($params['user-key'], $container->config, $container->dbManager);
 		}
 		catch(Exception $e)
 		{

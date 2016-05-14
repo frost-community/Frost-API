@@ -1,5 +1,5 @@
 <?php
-namespace Model;
+namespace Models;
 
 // UserKey は正当なユーザーによるリクエストであるかどうかを検証するために利用されるキーです。
 
