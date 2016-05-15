@@ -1,12 +1,10 @@
 <?php
 namespace Models;
 
-// RequestKey はFrost-Webからのアクセスのみを許可するAPIでそのリクエストが正当であるかどうかを検証するためのキーです。
-
+// RequestKey はFrost-Webからのアクセスのみを許可するAPIでそのリクエストが正当であるかどうかを検証するためのキーです
 class RequestKey
 {
 	// リクエストキーを生成します
-	// 例外が発生する可能性があります
 	public static function create($userId, $config, DatabaseManager $db, $requestId = null, $num = null)
 	{
 		$requestReceptions = $db->executeQuery('select * from frost_request_reception where user_id = ?', [$userId])->fetch();
@@ -72,7 +70,6 @@ class RequestKey
 	}
 
 	// リクエストキーを削除します
-	// 例外が発生する可能性があります
 	public static function destroy($requestId, DatabaseManager $db)
 	{
 		try

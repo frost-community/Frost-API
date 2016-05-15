@@ -30,21 +30,10 @@ class Application
 
 		$application = $container->dbManager->executeQuery('select * from frost_application where creator_id = ? & name = ?', [$userId, $name])->fetch()[0];
 
+		$key = ApplicationKey::create($application['id'], $config, $db);
+
+		$application['key'] = $key;
+
 		return $application;
-	}
-
-	public static function validate($config, DatabaseManager $db)
-	{
-		//TODO
-	}
-	
-	public static function generateKey($config, DatabaseManager $db)
-	{
-		//TODO
-	}
-
-	public static function validateKey()
-	{
-		//TODO
 	}
 }
