@@ -36,4 +36,21 @@ class Application
 
 		return $application;
 	}
+
+	public static function fetch($id, DatabaseManager $db)
+	{
+		try
+		{
+			$apps = $db->executeQuery('select * from frost_application where id = ?', [$id])->fetch();
+		}
+		catch(PDOException $e)
+		{
+			throw new ApiException('faild to fetch application');
+		}
+
+		if (count($apps) === 0)
+			throw new ApiException('application not found');
+
+		return $apps[0];
+	}
 }

@@ -5,32 +5,21 @@ class ApplicationKey
 {
 	public static function create($userId, $applicationId, $config, DatabaseManager $db)
 	{
-		try
-		{
-			$applications = $db->executeQuery('select * from frost_application where id = ?', [$applicationId])->fetch();
-		}
-		catch(PDOException $e)
-		{
-			throw new ApiException('faild to search database record');
-		}
+		$application = Application::fetch($applicationId, $db);
 
-		if (count($applications) === 0)
-			throw new ApiException('application not found');
-
-		$application = $applications[0];
 		$num = rand(1, 99999);
-		$key = $userId.'-'.hash('sha256', $config['applicationKeyBase'].$userId.$applicationId.$num);
+		$hash = hash('sha256', $config['applicationKeyBase'].$userId.$applicationId.$num);
 
 		try
 		{
-			$container->dbManager->executeQuery('update frost_application set key = ? where id = ?', [$key, $applicationId]);
+			$container->dbManager->executeQuery('update frost_application set hash = ? where id = ?', [$hash, $applicationId]);
 		}
 		catch(PDOException $e)
 		{
 			throw new ApiException('faild to generate application key');
 		}
 
-		return $key;
+		return $applicationId.'-'.$hash;
 	}
 
 	public static function validate($applicationKey, $config, DatabaseManager $db)
@@ -40,17 +29,18 @@ class ApplicationKey
 		if ($match === null)
 			return false;
 
-		$userId = $match[1];
+		$applicationId = $match[1];
+		$hash = $match[2];
 
 		try
 		{
-			$applications = $db->executeQuery('select * from frost_application where id = ? & creator_id = ?', [$applicationId, $userId])->fetch();
+			$application = Application::fetch($applicationId, $db);
 		}
-		catch(PDOException $e)
+		catch (Exception $e)
 		{
-			throw new ApiException('faild to search database record');
+			return false;
 		}
 
-		return count($applications) !== 0;
+		return $hash === $application['hash'];
 	}
 }
