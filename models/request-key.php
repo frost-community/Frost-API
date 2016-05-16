@@ -5,76 +5,67 @@ namespace Models;
 class RequestKey
 {
 	// リクエストキーを生成します
-	public static function create($userId, $config, DatabaseManager $db, $requestId = null, $num = null)
+	// return: request-key
+	public static function create($userId, $config, DatabaseManager $db)
 	{
-		$requestReceptions = $db->executeQuery('select * from frost_request_reception where user_id = ?', [$userId])->fetch();
+		$user = User::fetch($userId, $db);
 
-		// すでにキーが発行済みであれば
-		if (count($requestReceptions) !== 0)
+		$requestHash = hash('sha256', $config['requestKeyBase'].$userId.$salt);
+		
+		try
 		{
-			$requestReception = $requestReceptions[0];
-
-			$requestId = $requestReception['id'];
-			$num = $requestReception['salt'];
+			$db->executeQuery('update frost_user set request_hash = ? where id = ?', [$requestHash, $userId]);
 		}
-		else
+		catch(PDOException $e)
 		{
-			if ($requestId === null)
-			{
-				do
-				{
-					$requestId = rand(1, 999999);
-					$requestReceptions = $db->executeQuery('select * from frost_request_reception where id = ?', [$requestId])->fetch();
-					$tryCount++;
-					$isUsablerequestId = count($requestReceptions) === 0;
-				}
-				while(!$isUsablerequestId && $tryCount < 1000);
-
-				if(!$isUsablerequestId)
-					throw new Exception('faild to find usable request id');
-			}
-
-			if ($num === null)
-				$num = rand(1, 99999);
-
-			$now = time();
-
-			try
-			{
-				$db->executeQuery('insert into frost_request_reception (created_at, id, user_id, salt) values (?, ?, ?, ?)', [$now, $requestId, $userId, $num]);
-			}
-			catch(PDOException $e)
-			{
-				throw new Exception('faild to create database record');
-			}
+			throw new ApiException('faild to register request-key to database');
 		}
 
-		return [$userId.'-'.$requestId.'-'.$num.'-'.hash('sha256', $config['keyBase'].$userId.$requestId.$num), $requestId];
+		return $userId.'-'.$requestHash;
 	}
 
 	// リクエストキーを検証します
-	public static function validate($requestKey, $config, DatabaseManager $db)
+	// return: 与えられたリクエストキーが有効かどうか
+	public static function validate($requestKey, DatabaseManager $db)
 	{
-		$match = Regex::match('/([^-]+)-([^-]+)-([^-]+)-([^-]{32})/', $userKey);
+		$match = Regex::match('/([^-]+)-([^-]{32})/', $requestKey);
 
 		if ($match === null)
 			return false;
 
 		$userId = $match[1];
-		$requestId = $match[2];
-		$num = $match[3];
+		$requestHash = $match[2];
 
-		$correctRequestKey = $userId.'-'.$requestId.'-'.$num.'-'.hash('sha256', $config['keyBase'].$userId.$requestId.$num);
+		try
+		{
+			$user = User::fetch($userId, $db);
+		}
+		catch(Exception $e)
+		{
+			return false;
+		}
+
+		if ($user['request_hash'] == null)
+			return false;
+
+		$correctRequestKey = $userId.'-'.$user['request_hash'];
 
 		return $requestKey === $correctRequestKey;
 	}
 
 	// リクエストキーを削除します
-	public static function destroy($requestId, DatabaseManager $db)
+	public static function destroy($requestKey, DatabaseManager $db)
 	{
+		$match = Regex::match('/([^-]+)-([^-]{32})/', $requestKey);
+
+		if ($match === null)
+			return false;
+
+		$userId = $match[1];
+
 		try
 		{
-			$db->executeQuery('delete from frost_request_reception where id = ?', [$requestId]);
+			$db->executeQuery('update frost_user set request_hash = ? where id = ?', [null, $userId]);
 		}
 		catch(PDOException $e)
 		{

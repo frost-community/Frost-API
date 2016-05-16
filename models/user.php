@@ -78,4 +78,21 @@ class User
 
 		return $user;
 	}
+	
+	public static function fetch($id, DatabaseManager $db)
+	{
+		try
+		{
+			$users = $db->executeQuery('select * from frost_user where user_id = ?', [$id])->fetch();
+		}
+		catch(PDOException $e)
+		{
+			throw new ApiException('faild to fetch user');
+		}
+
+		if (count($users) === 0)
+			throw new ApiException('user not found');
+
+		return $users[0];
+	}
 }
