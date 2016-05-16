@@ -78,7 +78,7 @@ class User
 
 		return $user;
 	}
-	
+
 	public static function fetch($id, DatabaseManager $db)
 	{
 		try
