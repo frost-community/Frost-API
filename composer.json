@@ -1,5 +1,12 @@
 {
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/Frost-Dev/Frost-Core.git"
+        }
+    ],
     "require": {
-        "slim/slim": "^3.3"
+        "slim/slim": "^3.3",
+        "frost-dev/frost-core": "dev-master"
     }
 }
