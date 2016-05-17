@@ -26,7 +26,7 @@ class User
 		$isOccurredError = false;
 		$errorTargets = [];
 
-		if (!Regex::isMatch('/^[a-z0-9_]{4,15}$/i', $screenName) || Regex::isMatch('/(.)\1{3,}/', $screenName))
+		if (!Regex::isMatch('/^[a-z0-9_]{4,15}$/i', $screenName) || Regex::isMatch('/^(.)\1{3,}$/', $screenName))
 		{
 			$isOccurredError = true;
 			$errorTargets[] = 'screen-name';
