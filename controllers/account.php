@@ -13,7 +13,7 @@ class Account
 
 		try
 		{
-			$account = User::create($params['screen-name'], $params['password'], 'froster');
+			$account = User::create($params['screen-name'], $params['password'], 'froster', $container->config, $container->dbManager);
 		}
 		catch(ApiException $e)
 		{
