@@ -7,13 +7,12 @@ class Account
 		$params = $req->getParams();
 
 		$requireParams = ['screen-name', 'password'];
-
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
 		try
 		{
-			$account = User::create($params['screen-name'], $params['password'], 'froster', $container->config, $container->dbManager);
+			$account = \Models\User::create($params['screen-name'], $params['password'], 'froster', $container->config, $container->dbManager);
 		}
 		catch(ApiException $e)
 		{

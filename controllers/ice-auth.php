@@ -2,14 +2,12 @@
 
 class IceAuth
 {
-	// Frost-Web側 authorize
-	// params: [app_key]
-	// return: view 認証ページ
-
-	public static function accesskey($params, $res, $container)
+	public static function accessKey($req, $res, $container)
 	{
-		// params: [resuqst-key, app-key]
+		// params: [resuqst-key, application-key]
 		// return: access-key
+
+		$params = $req->getParams();
 
 		$requireParams = ['resuqst-key', 'application-key'];
 
@@ -39,5 +37,18 @@ class IceAuth
 		$container->dbManager->executeQuery('insert into frost_iceauth_accesskey (created_at, app_id, user_id, access_key) values(?, ?, ?, ?)', [$now, $appId, $userId, $accessKey]);
 
 		return withSuccess($res, 'successful', ['access-key'=>$accessKey]);
+	}
+
+	public static function authorizePage($req, $res, $container)
+	{
+		// TODO
+		// params: [application-key]
+		// return: view 認証ページ
+	}
+	
+	public static function authorize($req, $res, $container)
+	{
+		// TODO
+		// バリデーション
 	}
 }

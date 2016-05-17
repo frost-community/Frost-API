@@ -1,24 +1,26 @@
 <?php
 
-class Web
+class RequestKey
 {
-	public static function createRequestKey($params, $res, $container)
+	public static function create($req, $res, $container)
 	{
-		$requireParams = ['user-key'];
+		$params = $req->getParams();
 
+		$requireParams = ['user-key'];
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
 		if (!UserKey::validate($params['user-key'], $container->dbManager))
 			return withFailure($res, 'parameters are invalid', ['user-key']);
+		$userId = explode('-', $params['request-key'])[0];
 
 		try
 		{
-			$requestKey = \Models\RequestKey::create($params['user-key'], $container->config, $container->dbManager);
+			$requestKey = \Models\RequestKey::create($userId, $container->config, $container->dbManager);
 		}
 		catch(Exception $e)
 		{
-			return withFailure($res, 'failed to create request key', ['detail' => $e->getMessage()]);
+			return withFailure($res, 'failed to create request-key', ['detail' => $e->getMessage()]);
 		}
 
 		return withSuccess($res, 'successful', ['request-key'=>$requestKey]);

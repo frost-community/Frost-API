@@ -2,19 +2,17 @@
 
 class Application
 {
-	public static function create($params, $res, $container)
+	public static function create($req, $res, $container)
 	{
-		$requireParams = ['request-key', 'name', 'description'];
+		$params = $req->getParams();
 
+		$requireParams = ['request-key', 'name', 'description'];
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
-		$createdAt = time();
-
 		if (!RequestKey::validate($params['request-key'], $container->config, $container->dbManager))
 			return withFailure($res, 'parameters are invalid', ['request-key']);
-
-		$userId = explode('-', $params['request-key']);
+		$userId = explode('-', $params['request-key'])[0];
 
 		try
 		{
@@ -28,35 +26,26 @@ class Application
 		return withSuccess($res, "successful", ['application' => $application]);
 	}
 
-	public static function generateKey($params, $res, $container)
+	public static function regenerateKey($params, $res, $container)
 	{
-		$requireParams = ['request-key', 'app-id'];
-
+		$requireParams = ['request-key', 'application-id'];
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
 		if (!RequestKey::validate($params['request-key'], $container->config, $container->dbManager))
 			return withFailure($res, 'parameters are invalid', ['request-key']);
-
-		$userId = explode('-', $params['request-key']);
-
-		$applications = $container->dbManager->executeQuery('select * from frost_application where id = ? & creator_id = ?', [$params['app-id'], $userId])->fetch();
-		if (count($applications) === 0)
-			return withFailure($res, 'application not found');
-
-		$application = $applications[0];
-
-		$key = $application['id'].'-'.hash('sha256', $container->config['keyBase'].'.'.$application['id'].'.'.rand(1, 1000));
+		$userId = explode('-', $params['request-key'])[0];
 
 		try
 		{
-			$container->dbManager->executeQuery('update frost_application set key = ? where id = ?', [$key, $application['id']]);
+			$application = \Models\Application::fetch($params['application-id'], $container->dbManager);
+			$applicationKey = \Models\ApplicationKey::create($userId, $params['application-id'], $container->config, $container->dbManager);
 		}
-		catch(PDOException $e)
+		catch(Exception $e)
 		{
-			return withFailure($res, 'faild to generate application key');
+			return withFailure($res, 'faild to regenerate application-key', ['detail'=>$e->getMessage()]);
 		}
 
-		return withSuccess($res,'successful', ['application-key'=>$key]);
+		return withSuccess($res, 'successful', ['application-key'=>$applicationKey]);
 	}
 }
