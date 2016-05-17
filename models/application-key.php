@@ -8,7 +8,7 @@ class ApplicationKey
 		$application = Application::fetch($applicationId, $db);
 
 		$num = rand(1, 99999);
-		$hash = hash('sha256', $config['applicationKeyBase'].$userId.$applicationId.$num);
+		$hash = hash('sha256', $config['application-key-base'].$userId.$applicationId.$num);
 
 		try
 		{

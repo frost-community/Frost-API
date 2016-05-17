@@ -6,6 +6,6 @@ class Accesskey
 {
 	public static function create($userId, $applicationId, $container)
 	{
-		return $userId.'-'.hash('sha256', $container->config['keyBase'].$applicationId.$userId);
+		return $userId.'-'.hash('sha256', $container->config['access-key-base'].$applicationId.$userId);
 	}
 }

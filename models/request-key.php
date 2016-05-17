@@ -10,7 +10,7 @@ class RequestKey
 	{
 		$user = User::fetch($userId, $db);
 
-		$requestHash = hash('sha256', $config['requestKeyBase'].$userId.$salt);
+		$requestHash = hash('sha256', $config['request-key-base'].$userId.$salt);
 		
 		try
 		{
