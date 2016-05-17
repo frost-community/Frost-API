@@ -16,10 +16,27 @@ class ApplicationKey
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to generate application key');
+			throw new ApiException('faild to generate application-key');
 		}
 
 		return $applicationId.'-'.$hash;
+	}
+
+	public static function show($userId, $applicationId, $config, DatabaseManager $db)
+	{
+		try
+		{
+			$application = Application::fetch($applicationId, $db);
+		}
+		catch (Exception $e)
+		{
+			throw new ApiException('faild to generate application-key');
+		}
+
+		if ($application['hash'] === null)
+			throw new ApiException('application-key is empty');
+
+		return $applicationId.'-'.$application['hash'];
 	}
 
 	public static function validate($applicationKey, $config, DatabaseManager $db)
