@@ -48,9 +48,7 @@ class RequestKey
 		if ($user['request_hash'] == null)
 			return false;
 
-		$correctRequestKey = $userId.'-'.$user['request_hash'];
-
-		return $requestKey === $correctRequestKey;
+		return $requestHash === $user['request_hash'];
 	}
 
 	// リクエストキーを削除します
