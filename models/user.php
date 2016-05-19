@@ -64,7 +64,7 @@ class User
 
 		$now = time();
 		$passwordHash = hash('sha256', $password.$now);
-		
+
 		try
 		{
 			$db->executeQuery('insert into frost_user (created_at, screen_name, name, password_hash) values(?, ?, ?, ?)', [$now, $screenName, $name, $passwordHash]);
