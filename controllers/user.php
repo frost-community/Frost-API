@@ -1,6 +1,6 @@
 <?php
 
-class Account
+class User
 {
 	public static function create($req, $res, $appName, $userId, $container)
 	{
