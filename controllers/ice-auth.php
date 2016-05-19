@@ -28,13 +28,13 @@ class IceAuth
 
 		$now = time();
 
-		$applicationAccess = $container->dbManager->executeQuery('select * from frost_iceauth_accesskey where access_key = ? limit 1', [$accessKey])->fetch();
+		$applicationAccess = $container->dbManager->executeQuery('select * from frost_application_access where access_key = ? limit 1', [$accessKey])->fetch();
 
 		if (count($applicationAccess) !== 0 )
 			return withFailure($res, 'already registered');
 
 		// TODO
-		$container->dbManager->executeQuery('insert into frost_iceauth_accesskey (created_at, app_id, user_id, access_key) values(?, ?, ?, ?)', [$now, $appId, $userId, $accessKey]);
+		$container->dbManager->executeQuery('insert into frost_application_access (created_at, app_id, user_id, access_key) values(?, ?, ?, ?)', [$now, $appId, $userId, $accessKey]);
 
 		return withSuccess($res, 'successful', ['access-key'=>$accessKey]);
 	}
@@ -45,7 +45,7 @@ class IceAuth
 		// params: [application-key]
 		// return: view 認証ページ
 	}
-	
+
 	public static function authorize($req, $res, $container)
 	{
 		// TODO

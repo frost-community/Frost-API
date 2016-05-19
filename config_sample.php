@@ -10,5 +10,11 @@ $config = [
 		'dbname' => 'your-database-name',
 		'username' => 'your-database-username',
 		'password' => 'your-database-password',
+		'table-names' => [
+			'user' => 'frost_user',
+			'application' => 'frost_application',
+			'application-access' => 'frost_application_access',
+			'post' => 'frost_post'
+		]
 	]
 ];

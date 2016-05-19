@@ -12,23 +12,62 @@ $app->get('/', function ($req, $res, $args)
 	return $res;
 });
 
-$app->group('/accesskey', function()
+$app->group('/internal', function()
 {
-	$this->post('/register', function ($req, $res, $args)
+	$this->group('/application', function()
 	{
-		return AccessKey::register($req, $res, $this);
-	});	
+		$this->post('/create', function ($req, $res, $args)
+		{
+
+		});
+
+		$this->post('/regenerate-key', function ($req, $res, $args)
+		{
+
+		});
+		
+		$this->get('/application-key', function ($req, $res, $args)
+		{
+
+		});
+	});
+
+	$this->get('/request-key', function ($req, $res, $args)
+	{
+
+	});
+
+	$this->group('/ice-auth', function()
+	{
+		$this->get('/access-key', function ($req, $res, $args)
+		{
+			return AccessKey::register($req, $res, $this);
+		});
+	});
+
+	$this->group('/account', function()
+	{
+		$this->post('/create', function ($req, $res, $args)
+		{
+			return callApiController($req, $res, $args, $this, function($req, $res, $args, $appName, $userId, $accessKey, $container)
+			{
+				return Account::create($req, $res, $appName, $userId, $container);
+			});
+		});
+	});
 });
 
-$app->group('/account', function()
+$app->group('/ice-auth', function()
 {
-	$this->post('/create', function ($req, $res, $args)
+	$this->get('/authorize', function ($req, $res, $args)
 	{
-		return callApiController($req, $res, $args, $this, function($req, $res, $args, $appName, $userId, $accessKey, $container)
-		{
-			return Account::create($req, $res, $appName, $userId, $container);
-		});
-	});	
+
+	});
+
+	$this->post('/authorize', function ($req, $res, $args)
+	{
+
+	});
 });
 
 $app->group('/post', function()

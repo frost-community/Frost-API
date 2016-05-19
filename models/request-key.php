@@ -6,22 +6,26 @@ class RequestKey
 {
 	// リクエストキーを生成します
 	// return: request-key
-	public static function create($userId, $config, DatabaseManager $db)
+	public static function create($userKey, $config, DatabaseManager $db)
 	{
-		$user = User::fetch($userId, $db);
+		if (!UserKey::validate($userKey))
+			throw new ApiException('user-key is invalid');
 
-		$requestHash = hash('sha256', $config['request-key-base'].$userId.$salt);
-		
+		$num = rand(1, 99999);
+		$time = time();
+
+		$hash = hash('sha256', $config['request-key-base'].$userId.$num.$time);
+
 		try
 		{
-			$db->executeQuery('update frost_user set request_hash = ? where id = ?', [$requestHash, $userId]);
+			$db->executeQuery('update frost_user set request_hash = ? where id = ?', [$hash, $userId]);
 		}
 		catch(PDOException $e)
 		{
 			throw new ApiException('faild to register request-key to database');
 		}
 
-		return $userId.'-'.$requestHash;
+		return "$userId-$time-$hash";
 	}
 
 	// リクエストキーを検証します

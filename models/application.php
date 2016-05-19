@@ -9,7 +9,7 @@ class Application
 
 		try
 		{
-			$applications = $container->dbManager->executeQuery('select * from frost_application where name = ?', [$name])->fetch();
+			$applications = $db->executeQuery('select * from frost_application where name = ?', [$name])->fetch();
 		}
 		catch(PDOException $e)
 		{
@@ -21,14 +21,14 @@ class Application
 
 		try
 		{
-			$container->dbManager->executeQuery('insert into frost_application (creator_id, created_at, name, description) values(?, ?, ?, ?)', [$userId, $now, $name, $description]);
+			$db->executeQuery('insert into frost_application (creator_id, created_at, name, description) values(?, ?, ?, ?)', [$userId, $now, $name, $description]);
 		}
 		catch(PDOException $e)
 		{
 			throw new Exception('faild to create database record');
 		}
 
-		$application = $container->dbManager->executeQuery('select * from frost_application where creator_id = ? & name = ?', [$userId, $name])->fetch()[0];
+		$application = $db->executeQuery('select * from frost_application where creator_id = ? & name = ?', [$userId, $name])->fetch()[0];
 
 		$key = ApplicationKey::create($application['id'], $config, $db);
 
