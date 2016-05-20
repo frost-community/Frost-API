@@ -22,7 +22,7 @@ class Accesskey
 		return $userId.'-'.$hash;
 	}
 
-	public static function show($applicationId, $userId, $config, DatabaseManager $db)
+	public static function fetch($applicationId, $userId, $config, DatabaseManager $db)
 	{
 		try
 		{
@@ -53,6 +53,35 @@ class Accesskey
 
 	public static function validate($accessKey, $config, DatabaseManager $db)
 	{
-		// TODO
+		$match = Regex::match('/([^-]+)-([^-]{32})/', $accessKey);
+
+		if ($match === null)
+			return false;
+
+		$userId = $match[1];
+		$hash = $match[2];
+
+		try
+		{
+			try
+			{
+				$accesses = $db->executeQuery('select * from frost_application_access where hash = ? & user_id = ?', [$hash, $userId])->fetch();
+			}
+			catch(PDOException $e)
+			{
+				throw new ApiException('faild to fetch application access');
+			}
+
+			if (count($accesses) === 0)
+				throw new ApiException('application access not found');
+
+			$access = $accesses[0];
+		}
+		catch (Exception $e)
+		{
+			return false;
+		}
+
+		return true;
 	}
 }
