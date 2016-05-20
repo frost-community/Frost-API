@@ -22,7 +22,7 @@ class ApplicationKey
 		return $applicationId.'-'.$hash;
 	}
 
-	public static function show($userId, $applicationId, $config, DatabaseManager $db)
+	public static function fetch($userId, $applicationId, $config, DatabaseManager $db)
 	{
 		try
 		{
