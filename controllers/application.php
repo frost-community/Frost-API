@@ -26,7 +26,7 @@ class Application
 		return withSuccess($res, "successful", ['application' => $application]);
 	}
 
-	public static function showKey($req, $res, $container)
+	public static function applicationKey($req, $res, $container)
 	{
 		$params = $req->getParams();
 
@@ -40,7 +40,7 @@ class Application
 
 		try
 		{
-			$applicationKey = \Models\ApplicationKey::show($userId, $params['application-id'], $container->config, $container->dbManager);
+			$applicationKey = \Models\ApplicationKey::fetch($userId, $params['application-id'], $container->config, $container->dbManager);
 		}
 		catch(ApiException $e)
 		{
