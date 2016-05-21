@@ -18,7 +18,7 @@ class RequestKey
 		{
 			$requestKey = \Models\RequestKey::create($userId, $container->config, $container->dbManager);
 		}
-		catch(Exception $e)
+		catch(ApiException $e)
 		{
 			return withFailure($res, 'failed to create request-key', ['detail' => $e->getMessage()]);
 		}

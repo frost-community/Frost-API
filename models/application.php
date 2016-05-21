@@ -13,11 +13,11 @@ class Application
 		}
 		catch(PDOException $e)
 		{
-			throw new Exception('faild to search database record');
+			throw new ApiException('faild to search database record');
 		}
 
 		if (count($applications) !== 0)
-			throw new Exception('already exists.');
+			throw new ApiException('already exists.');
 
 		try
 		{
@@ -25,7 +25,7 @@ class Application
 		}
 		catch(PDOException $e)
 		{
-			throw new Exception('faild to create database record');
+			throw new ApiException('faild to create database record');
 		}
 
 		$application = $db->executeQuery('select * from frost_application where creator_id = ? & name = ?', [$userId, $name])->fetch()[0];

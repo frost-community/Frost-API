@@ -6,23 +6,6 @@ class User
 	// ユーザーを生成します
 	public static function create($screenName, $password, $name, $config, DatabaseManager $db)
 	{
-		$invalidScreenNames = [
-			'frost',
-			'help',
-			'home',
-			'mentions',
-			'login',
-			'logout',
-			'search',
-			'signin',
-			'signup',
-			'signout',
-			'welcome',
-			'static',
-			'application',
-			'developer',
-		];
-
 		$isOccurredError = false;
 		$errorTargets = [];
 
@@ -42,7 +25,7 @@ class User
 			}
 			else
 			{
-				foreach ($invalidScreenNames as $i)
+				foreach ($config['invalid-screen-names'] as $i)
 				{
 					if ($screenName === $i)
 					{

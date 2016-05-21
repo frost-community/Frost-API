@@ -16,19 +16,19 @@ class ApplicationKey
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to generate application-key');
+			throw new ApiException('faild to create database record', ['application-key']);
 		}
 
 		return $applicationId.'-'.$hash;
 	}
 
-	public static function fetch($userId, $applicationId, $config, DatabaseManager $db)
+	public static function fetch($userId, $applicationId, DatabaseManager $db)
 	{
 		try
 		{
 			$application = Application::fetch($applicationId, $db);
 		}
-		catch (Exception $e)
+		catch (ApiException $e)
 		{
 			throw new ApiException('faild to generate application-key');
 		}
@@ -39,7 +39,7 @@ class ApplicationKey
 		return $applicationId.'-'.$application['hash'];
 	}
 
-	public static function validate($applicationKey, $config, DatabaseManager $db)
+	public static function validate($applicationKey, DatabaseManager $db)
 	{
 		$match = Regex::match('/([^-]+)-([^-]{32})/', $applicationKey);
 
@@ -53,7 +53,7 @@ class ApplicationKey
 		{
 			$application = Application::fetch($applicationId, $db);
 		}
-		catch (Exception $e)
+		catch (ApiException $e)
 		{
 			return false;
 		}
