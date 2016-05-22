@@ -13,6 +13,7 @@ function indexPage ($req, $res, $container)
 }
 
 $routes = [
+	['method'=>'get',  'endpoint'=>'/',                                     'is-login'=>false, 'indexPage'],
 	['method'=>'post', 'endpoint'=>'/internal/application/create',          'is-login'=>true,  'is-internal'=>true, 'Application::create'],
 	['method'=>'post', 'endpoint'=>'/internal/application/regenerate-key',  'is-login'=>true,  'is-internal'=>true, 'indexPage'],
 	['method'=>'get',  'endpoint'=>'/internal/application/application-key', 'is-login'=>true,  'is-internal'=>true, 'indexPage'],
