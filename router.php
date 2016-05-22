@@ -13,15 +13,15 @@ function indexPage ($req, $res, $container)
 }
 
 $routes = [
-	['method'=>'post',	'endpoint'=>'/internal/application/create',				'is-login'=>true,	'is-internal'=>true,	'Application::create'],
-	['method'=>'post',	'endpoint'=>'/internal/application/regenerate-key',		'is-login'=>true,	'is-internal'=>true,	'indexPage'],
-	['method'=>'get',	'endpoint'=>'/internal/application/application-key',	'is-login'=>true,	'is-internal'=>true,	'indexPage'],
-	['method'=>'get',	'endpoint'=>'/internal/request-key',					'is-login'=>false,	'is-internal'=>true,	'indexPage'],
-	['method'=>'get',	'endpoint'=>'/internal/ice-auth/access-key',			'is-login'=>true,	'is-internal'=>true,	'indexPage'],
-	['method'=>'post',	'endpoint'=>'/internal/account/create',					'is-login'=>false,	'is-internal'=>true,	'indexPage'],
-	['method'=>'get',	'endpoint'=>'/ice-auth/authorize',						'is-login'=>false,	'is-internal'=>true,	'indexPage'],
-	['method'=>'post',	'endpoint'=>'/ice-auth/authorize',						'is-login'=>false,	'is-internal'=>true,	'indexPage'],
-	['method'=>'post',	'endpoint'=>'/post/create',								'is-login'=>true,	'is-internal'=>true,	'Post::create']
+	['method'=>'post', 'endpoint'=>'/internal/application/create',          'is-login'=>true,  'is-internal'=>true, 'Application::create'],
+	['method'=>'post', 'endpoint'=>'/internal/application/regenerate-key',  'is-login'=>true,  'is-internal'=>true, 'indexPage'],
+	['method'=>'get',  'endpoint'=>'/internal/application/application-key', 'is-login'=>true,  'is-internal'=>true, 'indexPage'],
+	['method'=>'get',  'endpoint'=>'/internal/request-key',                 'is-login'=>false, 'is-internal'=>true, 'indexPage'],
+	['method'=>'get',  'endpoint'=>'/internal/ice-auth/access-key',         'is-login'=>true,  'is-internal'=>true, 'indexPage'],
+	['method'=>'post', 'endpoint'=>'/internal/account/create',              'is-login'=>false, 'is-internal'=>true, 'indexPage'],
+	['method'=>'get',  'endpoint'=>'/ice-auth/authorize',                   'is-login'=>false, 'indexPage'],
+	['method'=>'post', 'endpoint'=>'/ice-auth/authorize',                   'is-login'=>false, 'indexPage'],
+	['method'=>'post', 'endpoint'=>'/post/create',                          'is-login'=>true,  'Post::create']
 ];
 
 foreach ($routes as $route)
@@ -31,8 +31,8 @@ foreach ($routes as $route)
 
 	$app->$method($endPoint, function ($req, $res, $args) use($routes, $route, $endPoint)
 	{
-		$isInternal = $route['is-internal'];
-		$isLogin = $route['is-login'];
+		$isInternal = isset($route['is-internal']) ? $route['is-internal'] : false;
+		$isLogin = isset($route['is-login']) ? $route['is-login'] : false;
 
 		if(!is_callable(current(array_slice($route, -1, 1))))
 			throw new Exception("last item of route was non-callable (endpoint: $endPoint)");
