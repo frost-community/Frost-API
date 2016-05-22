@@ -1,82 +1,53 @@
 <?php
 
 require_once __DIR__.'/controllers/access-key.php';
-require_once __DIR__.'/controllers/account.php';
-require_once __DIR__.'/controllers/application.php';
+require_once __DIR__.'/controllers/ice-auth.php';
 require_once __DIR__.'/controllers/post.php';
-require_once __DIR__.'/controllers/web.php';
+require_once __DIR__.'/controllers/request-key.php';
+require_once __DIR__.'/controllers/user.php';
 
-$app->get('/', function ($req, $res, $args)
+function indexPage ($req, $res, $container)
 {
 	$res->getBody()->write('Frost API Server');
 	return $res;
-});
+}
 
-$app->group('/internal', function()
+$routes = [
+	['method'=>'post',	'endpoint'=>'/internal/application/create',				'is-login'=>true,	'is-internal'=>true,	'Application::create'],
+	['method'=>'post',	'endpoint'=>'/internal/application/regenerate-key',		'is-login'=>true,	'is-internal'=>true,	'indexPage'],
+	['method'=>'get',	'endpoint'=>'/internal/application/application-key',	'is-login'=>true,	'is-internal'=>true,	'indexPage'],
+	['method'=>'get',	'endpoint'=>'/internal/request-key',					'is-login'=>false,	'is-internal'=>true,	'indexPage'],
+	['method'=>'get',	'endpoint'=>'/internal/ice-auth/access-key',			'is-login'=>true,	'is-internal'=>true,	'indexPage'],
+	['method'=>'post',	'endpoint'=>'/internal/account/create',					'is-login'=>false,	'is-internal'=>true,	'indexPage'],
+	['method'=>'get',	'endpoint'=>'/ice-auth/authorize',						'is-login'=>false,	'is-internal'=>true,	'indexPage'],
+	['method'=>'post',	'endpoint'=>'/ice-auth/authorize',						'is-login'=>false,	'is-internal'=>true,	'indexPage'],
+	['method'=>'post',	'endpoint'=>'/post/create',								'is-login'=>true,	'is-internal'=>true,	'Post::create']
+];
+
+foreach ($routes as $route)
 {
-	$this->group('/application', function()
+	$method = $route['method'];
+	$endPoint = $route['endpoint'];
+
+	$app->$method($endPoint, function ($req, $res, $args) use($routes, $route, $endPoint)
 	{
-		$this->post('/create', function ($req, $res, $args)
+		$isInternal = $route['is-internal'];
+		$isLogin = $route['is-login'];
+
+		if(!is_callable(current(array_slice($route, -1, 1))))
+			throw new Exception("last item of route was non-callable (endpoint: $endPoint)");
+		$callable = current(array_slice($route, -1, 1));
+
+		if ($isLogin)
 		{
+			
+		}
 
-		});
-
-		$this->post('/regenerate-key', function ($req, $res, $args)
+		if ($isInternal)
 		{
+			
+		}
 
-		});
-		
-		$this->get('/application-key', function ($req, $res, $args)
-		{
-
-		});
+		return call_user_func_array($callable, [$req, $res, $this]);
 	});
-
-	$this->get('/request-key', function ($req, $res, $args)
-	{
-
-	});
-
-	$this->group('/ice-auth', function()
-	{
-		$this->get('/access-key', function ($req, $res, $args)
-		{
-			return AccessKey::register($req, $res, $this);
-		});
-	});
-
-	$this->group('/account', function()
-	{
-		$this->post('/create', function ($req, $res, $args)
-		{
-			return callApiController($req, $res, $args, $this, function($req, $res, $args, $appName, $userId, $accessKey, $container)
-			{
-				return Account::create($req, $res, $appName, $userId, $container);
-			});
-		});
-	});
-});
-
-$app->group('/ice-auth', function()
-{
-	$this->get('/authorize', function ($req, $res, $args)
-	{
-
-	});
-
-	$this->post('/authorize', function ($req, $res, $args)
-	{
-
-	});
-});
-
-$app->group('/post', function()
-{
-	$this->post('/create', function ($req, $res, $args)
-	{
-		return callApiController($req, $res, $args, $this, function($req, $res, $args, $appName, $userId, $accessKey, $container)
-		{
-			return Post::create($req, $res, $appName, $userId, $container);
-		});
-	});	
-});
+}
