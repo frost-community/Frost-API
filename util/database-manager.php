@@ -9,13 +9,13 @@ class DatabaseManager
 	{
 		try
 		{
-			$this->database = new PDO('mysql:dbname='.$dbName.';host='.$hostName, $userName, $password);
-			$this->database->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+			$this->database = new \PDO('mysql:dbname='.$dbName.';host='.$hostName, $userName, $password);
+			$this->database->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 		}
-		catch (PDOException $e)
+		catch (\PDOException $e)
 		{
 			unset($this->database);
-			throw new Exception('failed to connect database.');
+			throw new \Exception('failed to connect database.');
 		}
 	}
 
@@ -24,7 +24,7 @@ class DatabaseManager
 		$statement = $this->database->prepare($query);
 		$statement->execute($content);
 
-		return new Statement($statement);
+		return new \Statement($statement);
 	}
 	
 	public function transaction($callable)
@@ -36,7 +36,7 @@ class DatabaseManager
 			$callable();
 			$this->database->commit();
 		}
-		catch(Exception $e)
+		catch(\Exception $e)
 		{
 			$dbh->rollBack();
 			throw $e;

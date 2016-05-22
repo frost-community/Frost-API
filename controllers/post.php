@@ -2,12 +2,12 @@
 
 class Post
 {
-	public static function create($req, $res, $appName, $userId, $container)
+	public static function create($req, $res, $container)
 	{
+		//$appName, $userId
 		$params = $req->getParams();
 
 		$requireParams = ['text'];
-
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 

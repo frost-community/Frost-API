@@ -9,7 +9,7 @@ $appConfig = [
 		'displayErrorDetails' => true
 	],
 	'config' => $config,
-	'dbManager' => new DatabaseManager($config['db']['hostname'], $config['db']['username'], $config['db']['password'], $config['db']['dbname'])
+	'dbManager' => new \Utility\DatabaseManager($config['db']['hostname'], $config['db']['username'], $config['db']['password'], $config['db']['dbname'])
 ];
 
 $app = new Slim\App($appConfig);

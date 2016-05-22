@@ -1,7 +1,7 @@
 <?php
 namespace Utility;
 
-class ApiException extends Exception
+class ApiException extends \Exception
 {
 	// 例外を再定義し、メッセージをオプションではなくする
 	public function __construct($message, $data = [], Exception $previous = null)

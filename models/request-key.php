@@ -6,53 +6,59 @@ class RequestKey
 {
 	// リクエストキーを生成します
 	// return: request-key
-	public static function create($userKey, $config, DatabaseManager $db)
+	public static function create($config, DatabaseManager $db)
 	{
-		if (!UserKey::validate($userKey))
-			throw new ApiException('user-key is invalid');
-
 		$num = rand(1, 99999);
 		$time = time();
 
-		$hash = hash('sha256', $config['request-key-base'].$userId.$num.$time);
+		$hash = hash('sha256', $config['request-key-base'].$num.$time);
 
 		try
 		{
-			$db->executeQuery('update frost_user set request_hash = ? where id = ?', [$hash, $userId]);
+			$db->executeQuery('insert into frost_request (hash, created_at) values(?, ?)', [$hash, $time]);
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to register request-key to database');
+			throw new ApiException('faild to create database record', ['request-key']);
 		}
 
-		return "$userId-$time-$hash";
+		return "$time-$hash";
 	}
 
 	// リクエストキーを検証します
 	// return: 与えられたリクエストキーが有効かどうか
-	public static function validate($requestKey, DatabaseManager $db)
+	public static function validate($requestKey, $config, DatabaseManager $db)
 	{
 		$match = Regex::match('/([^-]+)-([^-]{32})/', $requestKey);
 
 		if ($match === null)
 			return false;
 
-		$userId = $match[1];
+		$time = $match[1];
 		$requestHash = $match[2];
 
 		try
 		{
-			$user = User::fetch($userId, $db);
+			try
+			{
+				$requests = $db->executeQuery('select * from frost_request where hash = ? & created_at = ?', [$requestHash, $time])->fetch();
+			}
+			catch(PDOException $e)
+			{
+				throw new ApiException('faild to fetch request');
+			}
+
+			if (count($requests) === 0)
+				throw new ApiException('request not found');
+
+			$request = $requests[0];
 		}
 		catch(Exception $e)
 		{
 			return false;
 		}
 
-		if ($user['request_hash'] == null)
-			return false;
-
-		return $requestHash === $user['request_hash'];
+		return abs(time() - $request['created_at']) < $config['request-key-expire-sec'];
 	}
 
 	// リクエストキーを削除します
@@ -61,9 +67,9 @@ class RequestKey
 		$match = Regex::match('/([^-]+)-([^-]{32})/', $requestKey);
 
 		if ($match === null)
-			return false;
+			throw new ApiException('invalid format', ['request-key']);
 
-		$userId = $match[1];
+		$time = $match[1];
 
 		try
 		{
@@ -71,7 +77,7 @@ class RequestKey
 		}
 		catch(PDOException $e)
 		{
-			throw new Exception('faild to destroy database record');
+			throw new ApiException('faild to destroy database record');
 		}
 
 		return true;
