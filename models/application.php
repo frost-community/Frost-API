@@ -5,17 +5,21 @@ class Application
 {
 	// 権限一覧
 	public static $permissionTypes = [
-		'internal-access',
-		'account-access',
-		'user-read',
-		'post-read',
-		'post-write',
+		'internal',			// 内部APIへのアクセス
+		'account-read',		// アカウント情報の取得
+		'account-write',	// アカウント情報の変更
+		'user-read',		// ユーザー情報の取得
+		'user-write',		// ブロック等のアクション
+		'post-read',		// 投稿の取得
+		'post-write',		// 投稿の作成・削除、投稿へのアクション
 	];
 
 	public static function create($userId, $name, $description, array $permissions, $config, DatabaseManager $db)
 	{
 		$now = time();
 
+		$isPermissionError = false;
+		$invalidPermissionNames = [];
 		foreach ($permissions as $permission)
 		{
 			$isFound = false;
@@ -29,8 +33,14 @@ class Application
 			}
 
 			if (!$isFound)
-				throw new ApiException('unknown permission', [$permission]);
+			{
+				$isPermissionError = true;
+				$invalidPermissionNames += $permission;
+			}
 		}
+
+		if ($isPermissionError)
+			throw new ApiException('unknown permissions', $invalidPermissionNames);
 
 		try
 		{
