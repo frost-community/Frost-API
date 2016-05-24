@@ -26,19 +26,7 @@ class RequestKey
 	{
 		try
 		{
-			try
-			{
-				$requests = $db->executeQuery('select * from frost_request where key = ?', [$requestKey])->fetch();
-			}
-			catch(PDOException $e)
-			{
-				throw new ApiException('faild to fetch request');
-			}
-
-			if (count($requests) === 0)
-				throw new ApiException('request not found');
-
-			$request = $requests[0];
+			self::fetchByKey($requestKey, $db);
 		}
 		catch(Exception $e)
 		{
@@ -50,16 +38,9 @@ class RequestKey
 
 	public static function destroy($requestKey, DatabaseManager $db)
 	{
-		$match = Regex::match('/([^-]+)-([^-]{32})/', $requestKey);
-
-		if ($match === null)
-			throw new ApiException('invalid format', ['request-key']);
-
-		$time = $match[1];
-
 		try
 		{
-			$db->executeQuery('update frost_user set request_hash = ? where id = ?', [null, $userId]);
+			$db->executeQuery('delete from frost_request where key = ?', [$requestKey]);
 		}
 		catch(PDOException $e)
 		{
@@ -67,5 +48,22 @@ class RequestKey
 		}
 
 		return true;
+	}
+	
+	public static function fetchByKey($requestKey, DatabaseManager $db)
+	{
+		try
+		{
+			$requests = $db->executeQuery('select * from frost_request where key = ?', [$requestKey])->fetch();
+		}
+		catch(PDOException $e)
+		{
+			throw new ApiException('faild to fetch request');
+		}
+
+		if (count($requests) === 0)
+			throw new ApiException('request not found');
+
+		return $requests[0];
 	}
 }
