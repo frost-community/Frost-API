@@ -39,16 +39,20 @@ foreach ($routes as $route)
 			throw new Exception("last item of route was non-callable (endpoint: $endPoint)");
 		$callable = current(array_slice($route, -1, 1));
 
-		if ($isLogin)
-		{
-			
-		}
+		$controllerArgs = [$req, $res, $this];
 
 		if ($isInternal)
 		{
-			
+			if (!RequestKey::validate($req->getParams()['request-key'], $container->config, $container->dbManager))
+				return withFailure($res, 'request-key is invalid. this endpoint is web only');
 		}
 
-		return call_user_func_array($callable, [$req, $res, $this]);
+		if ($isLogin)
+		{
+			
+			$controllerArgs += $user;
+		}
+
+		return call_user_func_array($callable, $controllerArgs);
 	});
 }
