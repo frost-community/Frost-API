@@ -6,6 +6,7 @@ $config = [
 	'request-key-base' => 'keybase3',
 	'user-key-base' => 'keybase4',
 	'request-key-expire-sec' => 60 * 5,
+	'csrf-key-base' => 'keybase5',
 	'db' => [
 		'hostname' => 'your-database-hostname',
 		'dbname' => 'your-database-name',
