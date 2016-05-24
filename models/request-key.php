@@ -26,7 +26,7 @@ class RequestKey
 	{
 		try
 		{
-			self::fetchByKey($requestKey, $db);
+			$request = self::fetchByKey($requestKey, $db);
 		}
 		catch(Exception $e)
 		{
