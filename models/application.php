@@ -14,8 +14,11 @@ class Application
 		'post-write',		// 投稿の作成・削除、投稿へのアクション
 	];
 
-	public static function create($userId, $name, $description, array $permissions, $config, DatabaseManager $db)
+	public static function create($userId, $name, $description, array $permissions, $container)
 	{
+		$config = $container->config;
+		$db = $container->dbManager;
+
 		$now = time();
 
 		$isPermissionError = false;
@@ -77,8 +80,11 @@ class Application
 		return $application;
 	}
 
-	public static function generateKey($applicationId, $userId, $config, DatabaseManager $db)
+	public static function generateKey($applicationId, $userId, $container)
 	{
+		$config = $container->config;
+		$db = $container->dbManager;
+
 		$application = self::fetch($applicationId, $db);
 
 		$num = rand(1, 99999);
@@ -96,8 +102,11 @@ class Application
 		return $applicationId.'-'.$hash;
 	}
 
-	public static function fetch($id, DatabaseManager $db)
+	public static function fetch($id, $container)
 	{
+		$config = $container->config;
+		$db = $container->dbManager;
+
 		try
 		{
 			$apps = $db->executeQuery('select * from frost_application where id = ?', [$id])->fetch();
@@ -113,8 +122,11 @@ class Application
 		return $apps[0];
 	}
 
-	public static function fetchByName($name, DatabaseManager $db)
+	public static function fetchByName($name, $container)
 	{
+		$config = $container->config;
+		$db = $container->dbManager;
+
 		try
 		{
 			$apps = $db->executeQuery('select * from frost_application where name = ?', [$name])->fetch();
@@ -135,8 +147,11 @@ class Application
 		return $id.'-'.$hash;
 	}
 
-	public static function validate($applicationKey, DatabaseManager $db)
+	public static function validate($applicationKey, $container)
 	{
+		$config = $container->config;
+		$db = $container->dbManager;
+
 		$match = Regex::match('/([^-]+)-([^-]{32})/', $applicationKey);
 
 		if ($match === null)

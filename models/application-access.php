@@ -3,8 +3,11 @@ namespace Models;
 
 class ApplicationAccess
 {
-	public static function create($userId, $applicationId, $config, DatabaseManager $db)
+	public static function create($userId, $applicationId, $container)
 	{
+		$config = $container->config;
+		$db = $container->dbManager;
+
 		$time = time();
 
 		$num = rand(1, 99999);
@@ -24,8 +27,11 @@ class ApplicationAccess
 		return $access;
 	}
 
-	public static function fetch($applicationId, $userId, $config, DatabaseManager $db)
+	public static function fetch($applicationId, $userId, $container)
 	{
+		$config = $container->config;
+		$db = $container->dbManager;
+
 		try
 		{
 			$accesses = $db->executeQuery('select * from frost_application_access where application_id = ? & user_id = ?', [$applicationId, $userId])->fetch();
@@ -43,8 +49,11 @@ class ApplicationAccess
 		return $accesses[0];
 	}
 
-	public static function fetch2($userId, $hash, $config, DatabaseManager $db)
+	public static function fetch2($userId, $hash, $container)
 	{
+		$config = $container->config;
+		$db = $container->dbManager;
+
 		try
 		{
 			$accesses = $db->executeQuery('select * from frost_application_access where hash = ? & user_id = ?', [$hash, $userId])->fetch();
@@ -65,8 +74,11 @@ class ApplicationAccess
 		return $userId.'-'.$hash;
 	}
 
-	public static function validate($accessKey, $config, DatabaseManager $db)
+	public static function validate($accessKey, $container)
 	{
+		$config = $container->config;
+		$db = $container->dbManager;
+
 		$match = Regex::match('/([^-]+)-([^-]{32})/', $accessKey);
 
 		if ($match === null)

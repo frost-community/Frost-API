@@ -3,8 +3,11 @@ namespace Models;
 
 class Request
 {
-	public static function create($applicationKey, $config, DatabaseManager $db)
+	public static function create($applicationKey, $container)
 	{
+		$config = $container->config;
+		$db = $container->dbManager;
+
 		$num = rand(1, 99999);
 		$time = time();
 
@@ -24,8 +27,11 @@ class Request
 		return $request;
 	}
 
-	public static function fetchByKey($requestKey, DatabaseManager $db)
+	public static function fetchByKey($requestKey, $container)
 	{
+		$config = $container->config;
+		$db = $container->dbManager;
+
 		try
 		{
 			$requests = $db->executeQuery('select * from frost_request where key = ?', [$requestKey])->fetch();
@@ -41,8 +47,11 @@ class Request
 		return $requests[0];
 	}
 
-	public static function validate($requestKey, $config, DatabaseManager $db)
+	public static function validate($requestKey, $container)
 	{
+		$config = $container->config;
+		$db = $container->dbManager;
+
 		try
 		{
 			$request = self::fetchByKey($requestKey, $db);
@@ -55,8 +64,11 @@ class Request
 		return abs(time() - $request['created_at']) < $config['request-key-expire-sec'];
 	}
 
-	public static function destroy($requestKey, DatabaseManager $db)
+	public static function destroy($requestKey, $container)
 	{
+		$config = $container->config;
+		$db = $container->dbManager;
+
 		try
 		{
 			$db->executeQuery('delete from frost_request where key = ?', [$requestKey]);

@@ -4,8 +4,11 @@ namespace Models;
 class User
 {
 	// ユーザーを生成します
-	public static function create($screenName, $password, $name, $config, DatabaseManager $db)
+	public static function create($screenName, $password, $name, $container)
 	{
+		$config = $container->config;
+		$db = $container->dbManager;
+
 		$isOccurredError = false;
 		$errorTargets = [];
 
@@ -62,8 +65,11 @@ class User
 		return $user;
 	}
 
-	public static function fetch($id, DatabaseManager $db)
+	public static function fetch($id, $container)
 	{
+		$config = $container->config;
+		$db = $container->dbManager;
+
 		try
 		{
 			$users = $db->executeQuery('select * from frost_user where user_id = ?', [$id])->fetch();
