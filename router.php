@@ -19,10 +19,10 @@ $routes = [
 	['method'=>'post', 'endpoint'=>'/ice-auth/authorize',                   'permissions'=>[], 'indexPage'],
 	['method'=>'get',  'endpoint'=>'/ice-auth/access-key',                  'permissions'=>[], 'indexPage'],
 	['method'=>'post', 'endpoint'=>'/internal/account/create',              'permissions'=>['internal'], 'indexPage'],
-	['method'=>'get',  'endpoint'=>'/user',                                 'permissions'=>['user-read'], 'indexPage'],
 	['method'=>'post', 'endpoint'=>'/internal/application/create',          'permissions'=>['internal'], 'Application::create'],
 	['method'=>'post', 'endpoint'=>'/internal/application/regenerate-key',  'permissions'=>['internal'], 'indexPage'],
 	['method'=>'get',  'endpoint'=>'/internal/application/application-key', 'permissions'=>['internal'], 'indexPage'],
+	['method'=>'get',  'endpoint'=>'/user',                                 'permissions'=>['user-read'], 'indexPage'],
 	['method'=>'get',  'endpoint'=>'/post/timeline',                        'permissions'=>['post-read'], 'Post::timeline'],
 	['method'=>'post', 'endpoint'=>'/post/create',                          'permissions'=>['post-write'], 'Post::create']
 ];
@@ -34,8 +34,9 @@ foreach ($routes as $route)
 
 	$app->$method($endPoint, function ($req, $res, $args) use($routes, $route, $endPoint)
 	{
-		$isInternal = isset($route['is-internal']) ? $route['is-internal'] : false;
-		$isLogin = isset($route['is-login']) ? $route['is-login'] : false;
+		// TODO: validate access-key
+
+		// TODO: validate permissions
 
 		if(!is_callable(current(array_slice($route, -1, 1))))
 			throw new Exception("last item of route was non-callable (endpoint: $endPoint)");
