@@ -69,11 +69,30 @@ class Application
 
 		$application = $db->executeQuery('select * from frost_application where creator_id = ? & name = ?', [$userId, $name])->fetch()[0];
 
-		$key = ApplicationKey::create($application['id'], $config, $db);
+		$key = self::generateKey($userId, $application['id'], $config, $db);
 
 		$application['key'] = $key;
 
 		return $application;
+	}
+
+	public static function generateKey($userId, $applicationId, $config, DatabaseManager $db)
+	{
+		$application = Application::fetch($applicationId, $db);
+
+		$num = rand(1, 99999);
+		$hash = hash('sha256', $config['application-key-base'].$userId.$applicationId.$num);
+
+		try
+		{
+			$container->dbManager->executeQuery('update frost_application set hash = ? where id = ?', [$hash, $applicationId]);
+		}
+		catch(PDOException $e)
+		{
+			throw new ApiException('faild to create database record', ['application-key']);
+		}
+
+		return $applicationId.'-'.$hash;
 	}
 
 	public static function fetch($id, DatabaseManager $db)
@@ -108,5 +127,32 @@ class Application
 			throw new ApiException('application not found');
 
 		return $apps[0];
+	}
+
+	public static function buildKey($id, $hash, DatabaseManager $db)
+	{
+		return $id.'-'.$hash;
+	}
+
+	public static function validate($applicationKey, DatabaseManager $db)
+	{
+		$match = Regex::match('/([^-]+)-([^-]{32})/', $applicationKey);
+
+		if ($match === null)
+			return false;
+
+		$applicationId = $match[1];
+		$hash = $match[2];
+
+		try
+		{
+			$application = self::fetch($applicationId, $db);
+		}
+		catch (ApiException $e)
+		{
+			return false;
+		}
+
+		return $hash === $application['hash'];
 	}
 }

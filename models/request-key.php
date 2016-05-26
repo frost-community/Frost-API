@@ -22,6 +22,23 @@ class RequestKey
 		return $key;
 	}
 
+	public static function fetchByKey($requestKey, DatabaseManager $db)
+	{
+		try
+		{
+			$requests = $db->executeQuery('select * from frost_request where key = ?', [$requestKey])->fetch();
+		}
+		catch(PDOException $e)
+		{
+			throw new ApiException('faild to fetch request');
+		}
+
+		if (count($requests) === 0)
+			throw new ApiException('request not found');
+
+		return $requests[0];
+	}
+
 	public static function validate($requestKey, $config, DatabaseManager $db)
 	{
 		try
@@ -48,22 +65,5 @@ class RequestKey
 		}
 
 		return true;
-	}
-	
-	public static function fetchByKey($requestKey, DatabaseManager $db)
-	{
-		try
-		{
-			$requests = $db->executeQuery('select * from frost_request where key = ?', [$requestKey])->fetch();
-		}
-		catch(PDOException $e)
-		{
-			throw new ApiException('faild to fetch request');
-		}
-
-		if (count($requests) === 0)
-			throw new ApiException('request not found');
-
-		return $requests[0];
 	}
 }
