@@ -1,7 +1,7 @@
 <?php
 namespace Models;
 
-class RequestKey
+class Request
 {
 	public static function create($applicationKey, $config, DatabaseManager $db)
 	{
@@ -19,7 +19,9 @@ class RequestKey
 			throw new ApiException('faild to create database record', ['request-key']);
 		}
 
-		return $key;
+		$request = fetchByKey($key, $db);
+
+		return $request;
 	}
 
 	public static function fetchByKey($requestKey, DatabaseManager $db)
