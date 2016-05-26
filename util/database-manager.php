@@ -33,7 +33,7 @@ class DatabaseManager
 		{
 			$this->database->beginTransaction();
 			//$callable = $callable->bindTo($this);
-			$callable();
+			$res = $callable();
 			$this->database->commit();
 		}
 		catch(\Exception $e)
@@ -41,6 +41,8 @@ class DatabaseManager
 			$dbh->rollBack();
 			throw $e;
 		}
+
+		return $res;
 	}
 }
 

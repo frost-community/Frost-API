@@ -49,7 +49,7 @@ class Application
 
 		try
 		{
-			$application = Application::fetchByName($name);
+			$application = self::fetchByName($name);
 		}
 		catch(ApiException $e)
 		{
@@ -60,25 +60,26 @@ class Application
 
 		try
 		{
-			$db->executeQuery('insert into frost_application (creator_id, created_at, name, description, permissions) values(?, ?, ?, ?)', [$userId, $now, $name, $description, implode(',', $permissions)]);
+			$application = $db->transaction(function() use($db, $userId, $now, $name, $description, $permissions) {
+				$db->executeQuery('insert into frost_application (creator_id, created_at, name, description, permissions) values(?, ?, ?, ?)', [$userId, $now, $name, $description, implode(',', $permissions)]);
+				return $db->executeQuery('select * from frost_application where creator_id = ? & name = ?', [$userId, $name])->fetch()[0];
+			});
 		}
-		catch(PDOException $e)
+		catch(Exception $e)
 		{
 			throw new ApiException('faild to create database record');
 		}
 
-		$application = $db->executeQuery('select * from frost_application where creator_id = ? & name = ?', [$userId, $name])->fetch()[0];
-
-		$key = self::generateKey($userId, $application['id'], $config, $db);
+		$key = self::generateKey($application['id'], $userId, $config, $db);
 
 		$application['key'] = $key;
 
 		return $application;
 	}
 
-	public static function generateKey($userId, $applicationId, $config, DatabaseManager $db)
+	public static function generateKey($applicationId, $userId, $config, DatabaseManager $db)
 	{
-		$application = Application::fetch($applicationId, $db);
+		$application = self::fetch($applicationId, $db);
 
 		$num = rand(1, 99999);
 		$hash = hash('sha256', $config['application-key-base'].$userId.$applicationId.$num);
