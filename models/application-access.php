@@ -70,7 +70,7 @@ class ApplicationAccess
 		$match = Regex::match('/([^-]+)-([^-]{32})/', $accessKey);
 
 		if ($match === null)
-			throw new ApiException('invalid format', ['access-key']);
+			throw false;
 
 		$userId = $match[1];
 		$hash = $match[2];
