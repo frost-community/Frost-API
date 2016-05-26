@@ -130,7 +130,7 @@ class Application
 		return $apps[0];
 	}
 
-	public static function buildKey($id, $hash, DatabaseManager $db)
+	public static function buildKey($id, $hash)
 	{
 		return $id.'-'.$hash;
 	}
