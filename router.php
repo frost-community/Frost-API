@@ -12,11 +12,11 @@ $routes = [
 	['method'=>'get',  'endpoint'=>'/ice-auth/authorize',          'permissions'=>[], 'IceAuth::authorizePage'],
 	['method'=>'post', 'endpoint'=>'/ice-auth/authorize',          'permissions'=>[], 'IceAuth::authorize'],
 	['method'=>'get',  'endpoint'=>'/ice-auth/access-key',         'permissions'=>['internal'], 'IceAuth::accessKey'],
-	['method'=>'post', 'endpoint'=>'/account/create',              'permissions'=>['internal'], 'indexPage'],
+	['method'=>'post', 'endpoint'=>'/account/create',              'permissions'=>['internal'], 'User::create'],
 	['method'=>'post', 'endpoint'=>'/application/create',          'permissions'=>['internal'], 'Application::create'],
-	['method'=>'post', 'endpoint'=>'/application/regenerate-key',  'permissions'=>['internal'], 'indexPage'],
-	['method'=>'get',  'endpoint'=>'/application/application-key', 'permissions'=>['internal'], 'indexPage'],
-	['method'=>'get',  'endpoint'=>'/user',                        'permissions'=>['user-read'], 'indexPage'],
+	['method'=>'post', 'endpoint'=>'/application/regenerate-key',  'permissions'=>['internal'], 'Application::regenerateKey'],
+	['method'=>'get',  'endpoint'=>'/application/application-key', 'permissions'=>['internal'], 'Application::applicationKey'],
+	['method'=>'get',  'endpoint'=>'/user',                        'permissions'=>['user-read'], 'User::show'],
 	['method'=>'get',  'endpoint'=>'/post/timeline',               'permissions'=>['post-read'], 'Post::timeline'],
 	['method'=>'post', 'endpoint'=>'/post/create',                 'permissions'=>['post-write'], 'Post::create']
 ];
