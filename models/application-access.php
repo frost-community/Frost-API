@@ -79,10 +79,10 @@ class ApplicationAccess
 		$config = $container->config;
 		$db = $container->dbManager;
 
-		$match = Regex::match('/([^-]+)-([^-]{32})/', $accessKey);
+		$match = \Utility\Regex::match('/([^-]+)-([^-]{32})/', $accessKey);
 
 		if ($match === null)
-			throw false;
+			return false;
 
 		$userId = $match[1];
 		$hash = $match[2];

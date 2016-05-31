@@ -4,6 +4,7 @@ require_once __DIR__.'/vendor/autoload.php';
 require_once __DIR__.'/config.php';
 require_once __DIR__.'/util/utils-loader.php';
 require_once __DIR__.'/models/models-loader.php';
+require_once __DIR__.'/controllers/controllers-loader.php';
 
 $appConfig = [
 	'settings' => [

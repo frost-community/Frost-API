@@ -14,12 +14,12 @@ class IceAuth
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
-		if (!RequestKey::validate($params['request-key'], $container->config, $container->dbManager))
+		if (!\Models\Request::validate($params['request-key'], $container->config, $container->dbManager))
 			return withFailure($res, 'parameters are invalid', ['request-key']);
 
 		$userId = explode('-', $params['request-key'])[0];
 
-		if (!\Models\ApplicationKey::validate($params['application-key'], $container->config, $container->dbManager))
+		if (!\Models\Application::validate($params['application-key'], $container->config, $container->dbManager))
 			return withFailure($res, 'parameters are invalid', ['application-key']);
 
 		$appId = explode('-', $params['application-key'])[0];

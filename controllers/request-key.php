@@ -12,7 +12,7 @@ class RequestKey
 
 		try
 		{
-			$requestKey = \Models\RequestKey::create($params['application-key'], $container->config, $container->dbManager);
+			$requestKey = \Models\Request::create($params['application-key'], $container->config, $container->dbManager);
 		}
 		catch(ApiException $e)
 		{

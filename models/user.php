@@ -12,7 +12,7 @@ class User
 		$isOccurredError = false;
 		$errorTargets = [];
 
-		if (!Regex::isMatch('/^[a-z0-9_]{4,15}$/i', $screenName) || Regex::isMatch('/^(.)\1{3,}$/', $screenName))
+		if (!\Utility\Regex::isMatch('/^[a-z0-9_]{4,15}$/i', $screenName) || \Utility\Regex::isMatch('/^(.)\1{3,}$/', $screenName))
 		{
 			$isOccurredError = true;
 			$errorTargets[] = 'screen-name';
@@ -39,7 +39,7 @@ class User
 			}
 		}
 
-		if (!Regex::isMatch('/^[a-z0-9_-]{6,128}$/i', $password))
+		if (!\Utility\Regex::isMatch('/^[a-z0-9_-]{6,128}$/i', $password))
 		{
 			$isOccurredError = true;
 			$errorTargets[] = 'password';

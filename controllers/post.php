@@ -2,7 +2,7 @@
 
 class Post
 {
-	public static function create($req, $res, $container)
+	public static function create($req, $res, $container, $user, $application)
 	{
 		//$appName, $userId
 		$params = $req->getParams();
