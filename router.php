@@ -14,10 +14,10 @@ function indexPage ($req, $res, $container)
 
 $routes = [
 	['method'=>'get',  'endpoint'=>'/',                            'permissions'=>[], 'indexPage'],
-	['method'=>'get',  'endpoint'=>'/ice-auth/request-key',        'permissions'=>[], 'ice-auth::requestKey'],
-	['method'=>'get',  'endpoint'=>'/ice-auth/authorize',          'permissions'=>[], 'ice-auth::authorizePage'],
-	['method'=>'post', 'endpoint'=>'/ice-auth/authorize',          'permissions'=>[], 'ice-auth::authorize'],
-	['method'=>'get',  'endpoint'=>'/ice-auth/access-key',         'permissions'=>['internal'], 'ice-auth::accessKey'],
+	['method'=>'get',  'endpoint'=>'/ice-auth/request-key',        'permissions'=>[], 'IceAuth::requestKey'],
+	['method'=>'get',  'endpoint'=>'/ice-auth/authorize',          'permissions'=>[], 'IceAuth::authorizePage'],
+	['method'=>'post', 'endpoint'=>'/ice-auth/authorize',          'permissions'=>[], 'IceAuth::authorize'],
+	['method'=>'get',  'endpoint'=>'/ice-auth/access-key',         'permissions'=>['internal'], 'IceAuth::accessKey'],
 	['method'=>'post', 'endpoint'=>'/account/create',              'permissions'=>['internal'], 'indexPage'],
 	['method'=>'post', 'endpoint'=>'/application/create',          'permissions'=>['internal'], 'Application::create'],
 	['method'=>'post', 'endpoint'=>'/application/regenerate-key',  'permissions'=>['internal'], 'indexPage'],
@@ -27,23 +27,34 @@ $routes = [
 	['method'=>'post', 'endpoint'=>'/post/create',                 'permissions'=>['post-write'], 'Post::create']
 ];
 
-foreach ($routes as $route)
-{
+foreach ($routes as $route) {
 	$method = $route['method'];
 	$endPoint = $route['endpoint'];
 
-	$app->$method($endPoint, function ($req, $res, $args) use($route, $endPoint)
-	{
-		// TODO: validate access-key
+	$app->$method($endPoint, function ($req, $res, $args) use($route, $endPoint) {
+		$params = $req->getParams();
+		if (!array_key_exists('access-key', $params))
+			return withFailure($res, 'access-key is missing');
 
-		// TODO: validate permissions
-		$requirePermissions = $route['permissions'];
+		$applicationAccess = \Models\ApplicationAccess::validate($params['access-key'], $this);
+		if (!$applicationAccess)
+			return withFailure($res, 'access-key is invalid');
+
+		$user = \Models\User::fetch($applicationAccess['user_id'], $this);
+		$application = \Models\Application::fetch($applicationAccess['application_id'], $this);
+
+		$permissions = explode(',', $application['permissions']);
+
+		foreach ($route['permissions'] as $requirePermission) {
+			if (array_key_exists($requirePermission, $permissions))
+				return withFailure($res, 'You do not have some permissions.');
+		}
 
 		if(!is_callable(current(array_slice($route, -1, 1))))
 			throw new Exception("last item of route was non-callable (endpoint: $endPoint)");
 		$callable = current(array_slice($route, -1, 1));
 
-		$controllerArgs = [$req, $res, $this];
+		$controllerArgs = [$req, $res, $this, $user, $application];
 
 		return call_user_func_array($callable, $controllerArgs);
 	});
