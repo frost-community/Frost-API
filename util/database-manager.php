@@ -24,7 +24,7 @@ class DatabaseManager
 		$statement = $this->database->prepare($query);
 		$statement->execute($content);
 
-		return new \Statement($statement);
+		return $statement;
 	}
 	
 	public function transaction($callable)

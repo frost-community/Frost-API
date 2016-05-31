@@ -2,6 +2,11 @@
 
 class IceAuth
 {
+	public static function requestKey($req, $res, $container)
+	{
+		// TODO
+	}
+
 	public static function accessKey($req, $res, $container)
 	{
 		// params: [resuqst-key, application-key]

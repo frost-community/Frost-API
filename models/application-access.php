@@ -11,7 +11,7 @@ class ApplicationAccess
 		$time = time();
 
 		$num = rand(1, 99999);
-		$hash = hash('sha256', $config['access-key-base'].$applicationId.$userId.$num);
+		$hash = hash('sha256', $config['access-key-base'].'/'.$applicationId.'/'.$userId.'/'.$num);
 
 		try
 		{
@@ -22,7 +22,7 @@ class ApplicationAccess
 			throw new ApiException('faild to create database record');
 		}
 
-		$access = fetch($applicationId, $userId, $config, $db);
+		$access = self::fetch($applicationId, $userId, $container);
 
 		return $access;
 	}
@@ -56,7 +56,8 @@ class ApplicationAccess
 
 		try
 		{
-			$accesses = $db->executeQuery('select * from frost_application_access where hash = ? & user_id = ?', [$hash, $userId])->fetch();
+			$statement = $db->executeQuery('select * from frost_application_access where hash = ? and user_id = ?', [$hash, $userId]);
+			$accesses = $statement->fetch();
 		}
 		catch(PDOException $e)
 		{
@@ -79,7 +80,7 @@ class ApplicationAccess
 		$config = $container->config;
 		$db = $container->dbManager;
 
-		$match = \Utility\Regex::match('/([^-]+)-([^-]{32})/', $accessKey);
+		$match = \Utility\Regex::match('/([^-]+)-([^-]{64})/', $accessKey);
 
 		if ($match === null)
 			return false;
@@ -89,7 +90,7 @@ class ApplicationAccess
 
 		try
 		{
-			return self::fetch2($userId, $hash, $config, $db);
+			return self::fetch2($userId, $hash, $container);
 		}
 		catch (Exception $e)
 		{

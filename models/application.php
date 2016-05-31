@@ -152,7 +152,7 @@ class Application
 		$config = $container->config;
 		$db = $container->dbManager;
 
-		$match = \Utility\Regex::match('/([^-]+)-([^-]{32})/', $applicationKey);
+		$match = \Utility\Regex::match('/([^-]+)-([^-]{64})/', $applicationKey);
 
 		if ($match === null)
 			return false;

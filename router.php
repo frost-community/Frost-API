@@ -38,10 +38,16 @@ foreach ($routes as $route)
 			if (!$applicationAccess)
 				return withFailure($res, 'access-key is invalid');
 
-			$user = \Models\User::fetch($applicationAccess['user_id'], $this);
-			$application = \Models\Application::fetch($applicationAccess['application_id'], $this);
+			if (isset($applicationAccess['user_id']))
+				$userId = $applicationAccess['user_id'];
+			if (isset($applicationAccess['application_id']))
+				$applicationId = $applicationAccess['application_id'];
+			$permissionsStr = $application['permissions'];
 
-			$permissions = explode(',', $application['permissions']);
+			$user = \Models\User::fetch($userId, $this);
+			$application = \Models\Application::fetch($applicationId, $this);
+
+			$permissions = explode(',', $permissionsStr);
 
 			foreach ($route['permissions'] as $requirePermission)
 			{
