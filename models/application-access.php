@@ -89,13 +89,12 @@ class ApplicationAccess
 
 		try
 		{
-			self::fetch2($userId, $hash, $config, $db);
+			return self::fetch2($userId, $hash, $config, $db);
 		}
 		catch (Exception $e)
 		{
-			return false;
 		}
 
-		return true;
+		return false;
 	}
 }
