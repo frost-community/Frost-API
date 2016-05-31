@@ -17,8 +17,9 @@ $routes = [
 	['method'=>'post', 'endpoint'=>'/application/regenerate-key',  'permissions'=>['internal'], 'Application::regenerateKey'],
 	['method'=>'get',  'endpoint'=>'/application/application-key', 'permissions'=>['internal'], 'Application::applicationKey'],
 	['method'=>'get',  'endpoint'=>'/user',                        'permissions'=>['user-read'], 'User::show'],
-	['method'=>'get',  'endpoint'=>'/post/timeline',               'permissions'=>['post-read'], 'Post::timeline'],
-	['method'=>'post', 'endpoint'=>'/post/create',                 'permissions'=>['post-write'], 'Post::create']
+	['method'=>'get',  'endpoint'=>'/user/timeline',               'permissions'=>['user-read'], 'User::timeline'],
+	['method'=>'post', 'endpoint'=>'/post/create',                 'permissions'=>['post-write'], 'Post::create'],
+	['method'=>'get',  'endpoint'=>'/post/timeline',               'permissions'=>['post-read'], 'Post::timeline']
 ];
 
 foreach ($routes as $route)
