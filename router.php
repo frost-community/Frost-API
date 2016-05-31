@@ -44,17 +44,6 @@ foreach ($routes as $route)
 
 		$controllerArgs = [$req, $res, $this];
 
-		if ($isInternal)
-		{
-			if (!RequestKey::validate($req->getParams()['request-key'], $container->config, $container->dbManager))
-				return withFailure($res, 'request-key is invalid. this endpoint is web only');
-		}
-
-		if ($isLogin)
-		{
-			$controllerArgs += $user;
-		}
-
 		return call_user_func_array($callable, $controllerArgs);
 	});
 }
