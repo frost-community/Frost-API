@@ -1,11 +1,5 @@
 <?php
 
-require_once __DIR__.'/controllers/access-key.php';
-require_once __DIR__.'/controllers/ice-auth.php';
-require_once __DIR__.'/controllers/post.php';
-require_once __DIR__.'/controllers/request-key.php';
-require_once __DIR__.'/controllers/user.php';
-
 function indexPage ($req, $res, $container)
 {
 	$res->getBody()->write('Frost API Server');
