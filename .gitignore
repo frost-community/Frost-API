@@ -4,3 +4,4 @@ config.php
 node_modules/
 assets/
 .htaccess
+.idea

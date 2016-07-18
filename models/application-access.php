@@ -5,18 +5,16 @@ class ApplicationAccess
 {
 	public static function create($userId, $applicationId, $container)
 	{
-		$config = $container->config;
-		$db = $container->dbManager;
-
-		$time = time();
-
-		$num = rand(1, 99999);
-		$hash = hash('sha256', $config['access-key-base'].'/'.$applicationId.'/'.$userId.'/'.$num);
+		$config 	= $container->config;
+		$db 		= $container->dbManager;
+		$timestamp 	= time();
+		$num 		= mt_rand(1, 99999);
+		$hash 		= hash('sha256', $config['access-key-base'].'/'.$applicationId.'/'.$userId.'/'.$num);
 
 		try
 		{
 			$appAccessTable = $config['db']['table-names']['application-access'];
-			$db->executeQuery('insert into $appAccessTable (created_at, user_id, application_id, hash) values(?, ?, ?, ?)', [$time, $userId, $applicationId, $hash]);
+			$db->executeQuery("insert into $appAccessTable (created_at, user_id, application_id, hash) values(?, ?, ?, ?)", [$timestamp, $userId, $applicationId, $hash]);
 		}
 		catch(PDOException $e)
 		{
@@ -36,7 +34,7 @@ class ApplicationAccess
 		try
 		{
 			$appAccessTable = $config['db']['table-names']['application-access'];
-			$accesses = $db->executeQuery('select * from $appAccessTable where application_id = ? & user_id = ?', [$applicationId, $userId])->fetch();
+			$accesses = $db->executeQuery("select * from $appAccessTable where application_id = ? & user_id = ?", [$applicationId, $userId])->fetch();
 		}
 		catch(PDOException $e)
 		{
@@ -59,7 +57,7 @@ class ApplicationAccess
 		try
 		{
 			$appAccessTable = $config['db']['table-names']['application-access'];
-			$statement = $db->executeQuery('select * from $appAccessTable where hash = ? and user_id = ?', [$hash, $userId]);
+			$statement = $db->executeQuery("select * from $appAccessTable where hash = ? and user_id = ?", [$hash, $userId]);
 			$accesses = $statement->fetch();
 		}
 		catch(PDOException $e)

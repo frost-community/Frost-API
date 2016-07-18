@@ -5,6 +5,14 @@ class DatabaseManager
 {
 	public $database;
 
+	/**
+	 * DatabaseManager constructor for Connect Database
+	 * @param string $hostName
+	 * @param string $userName
+	 * @param string $password
+	 * @param string $dbName
+	 * @throws \Exception BaseException
+	 */
 	public function __construct($hostName, $userName, $password, $dbName)
 	{
 		try
@@ -17,6 +25,7 @@ class DatabaseManager
 			unset($this->database);
 			throw new \Exception('failed to connect database.');
 		}
+		catch (\Exception $e){ /* NO CODE */}
 	}
 
 	public function executeQuery($query, array $content)
@@ -27,7 +36,7 @@ class DatabaseManager
 		return $statement;
 	}
 	
-	public function transaction($callable)
+	public function transaction($callable, $dbh)
 	{
 		try
 		{

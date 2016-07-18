@@ -2,6 +2,15 @@
 
 class User
 {
+	/**
+	 * @param $req
+	 * @param $res
+	 * @param $container
+	 * @param $user
+	 * @param $application
+	 * @return mixed
+	 * @throws \Models\ApiException
+	 */
 	public static function create($req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
@@ -19,7 +28,7 @@ class User
 			return withFailure($res, $e->getMessage(), $e->getData());
 		}
 
-		return withSuccess('successful', ['user'=>$createdUser]);
+		return withSuccess($res, 'successful', ['user'=>$createdUser]);
 	}
 
 	public static function show($req, $res, $container, $user, $application)
@@ -30,8 +39,8 @@ class User
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
-		$user = \Models\User::fetch($params['user-id'], $container);
+		$destUser = \Models\User::fetch($params['user-id'], $container);
 
-		return withSuccess('successful', ['user'=>$user]);
+		return withSuccess($res, 'successful', ['user'=>$destUser]);
 	}
 }
