@@ -2,46 +2,33 @@
 
 class IceAuth
 {
-	public static function requestKey($req, $res, $container)
+	public static function accessKey($req, $res, $container, $user, $application)
 	{
-		// TODO
-	}
-
-	public static function accessKey($req, $res, $container)
-	{
-		// params: [resuqst-key, application-key]
-		// return: access-key
-
 		$params = $req->getParams();
 
-		$requireParams = ['resuqst-key', 'application-key'];
+		$requireParams = ['application-key'];
 
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
-
-		if (!\Models\Request::validate($params['request-key'], $container->config, $container->dbManager))
-			return withFailure($res, 'parameters are invalid', ['request-key']);
-
-		$userId = explode('-', $params['request-key'])[0];
 
 		if (!\Models\Application::validate($params['application-key'], $container->config, $container->dbManager))
 			return withFailure($res, 'parameters are invalid', ['application-key']);
 
 		$appId = explode('-', $params['application-key'])[0];
 
-		$accessKey = createAccesskey($appId, $userId, $container);
+		$applicationAccess = \Models\ApplicationAccess::create($user['id'], $appId, $container);
 
-		$now = time();
-
-		$applicationAccess = $container->dbManager->executeQuery('select * from frost_application_access where access_key = ? limit 1', [$accessKey])->fetch();
+		$accessKey = buildKey($applicationAccess['user_id'], $applicationAccess['hash']);
 
 		if (count($applicationAccess) !== 0 )
 			return withFailure($res, 'already registered');
 
-		// TODO
-		$container->dbManager->executeQuery('insert into frost_application_access (created_at, app_id, user_id, access_key) values(?, ?, ?, ?)', [$now, $appId, $userId, $accessKey]);
-
 		return withSuccess($res, 'successful', ['access-key'=>$accessKey]);
+	}
+
+	public static function requestKey($req, $res, $container)
+	{
+		// TODO
 	}
 
 	public static function authorizePage($req, $res, $container)

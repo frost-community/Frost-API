@@ -2,7 +2,7 @@
 
 class User
 {
-	public static function create($req, $res, $appName, $userId, $container)
+	public static function create($req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
 
@@ -20,5 +20,18 @@ class User
 		}
 
 		return withSuccess('successful', ['account'=>$account]);
+	}
+
+	public static function show($req, $res, $container, $user, $application)
+	{
+		$params = $req->getParams();
+
+		$requireParams = ['user-id'];
+		if (!hasRequireParams($params, $requireParams))
+			return withFailure($res, 'required parameters are missing', $requireParams);
+
+		$user = \Models\User::fetch($params['user-id'], $container);
+
+		return withSuccess('successful', ['user'=>$user]);
 	}
 }

@@ -1,6 +1,7 @@
 <?php
 namespace Models;
 
+// Webの認証ページの有効期限を管理する
 class Request
 {
 	public static function create($applicationKey, $container)
