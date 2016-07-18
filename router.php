@@ -63,9 +63,11 @@ foreach ($routes as $route)
 			$controllerArgs = [$req, $res, $this];
 		}
 
-		if(!is_callable(current(array_slice($route, -1, 1))))
-			throw new Exception("last item of route was non-callable (endpoint: $endPoint)");
+		// last element
 		$callable = current(array_slice($route, -1, 1));
+
+		if(!is_callable($callable))
+			throw new Exception("last item of route was non-callable (endpoint: $endPoint)");
 
 		return call_user_func_array($callable, $controllerArgs);
 	});
