@@ -33,7 +33,8 @@ class Application
 
 		try
 		{
-			$destAppKey = \Models\ApplicationKey::fetch($user['id'], $params['application-id'], $container->config, $container->dbManager);
+			$app = \Models\Application::fetch($params['application-id'], $container);
+			$destAppKey = \Models\Application::buildKey($params['application-id'], $app['hash']);
 		}
 		catch(ApiException $e)
 		{
