@@ -41,8 +41,10 @@ foreach ($routes as $route)
 
 			if (isset($applicationAccess['user_id']))
 				$userId = $applicationAccess['user_id'];
+
 			if (isset($applicationAccess['application_id']))
 				$applicationId = $applicationAccess['application_id'];
+
 			$permissionsStr = $application['permissions'];
 
 			$user = \Models\User::fetch($userId, $this);
