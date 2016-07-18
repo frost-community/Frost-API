@@ -27,9 +27,9 @@ class Application
 		{
 			$isFound = false;
 			// $permissionTypes = $permissions2?$permissions
-			for ($i=0; $i < count($permissionTypes); $i++)
+			for ($i=0; $i < count(self::$permissionTypes); $i++)
 			{
-				if($permission === $permissionTypes[$i])
+				if($permission === self::$permissionTypes[$i])
 				{
 					$isFound = true;
 					if (in_array($permission, $permissions2))

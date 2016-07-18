@@ -1,7 +1,8 @@
 vendor/
 composer.lock
-config.php
 node_modules/
 assets/
 .htaccess
 .idea
+config.php
+config_sample.php
