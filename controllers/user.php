@@ -12,14 +12,14 @@ class User
 
 		try
 		{
-			$account = \Models\User::create($params['screen-name'], $params['password'], 'froster', $container->config, $container->dbManager);
+			$createdUser = \Models\User::create($params['screen-name'], $params['password'], 'froster', $container->config, $container->dbManager);
 		}
 		catch(ApiException $e)
 		{
 			return withFailure($res, $e->getMessage(), $e->getData());
 		}
 
-		return withSuccess('successful', ['account'=>$account]);
+		return withSuccess('successful', ['user'=>$createdUser]);
 	}
 
 	public static function show($req, $res, $container, $user, $application)
