@@ -17,7 +17,7 @@ class Request
 		try
 		{
 			$requestTable = $config['db']['table-names']['request'];
-			$db->executeQuery('insert into $requestTable (created_at, application_key, key) values(?, ?, ?)', [$time, $applicationKey, $key]);
+			$db->executeQuery("insert into $requestTable (created_at, application_key, key) values(?, ?, ?)", [$time, $applicationKey, $key]);
 		}
 		catch(PDOException $e)
 		{
@@ -37,7 +37,7 @@ class Request
 		try
 		{
 			$requestTable = $config['db']['table-names']['request'];
-			$requests = $db->executeQuery('select * from $requestTable where key = ?', [$requestKey])->fetch();
+			$requests = $db->executeQuery("select * from $requestTable where key = ?", [$requestKey])->fetch();
 		}
 		catch(PDOException $e)
 		{
@@ -75,7 +75,7 @@ class Request
 		try
 		{
 			$requestTable = $config['db']['table-names']['request'];
-			$db->executeQuery('delete from $requestTable where key = ?', [$requestKey]);
+			$db->executeQuery("delete from $requestTable where key = ?", [$requestKey]);
 		}
 		catch(PDOException $e)
 		{

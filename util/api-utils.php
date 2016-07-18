@@ -51,7 +51,7 @@ function callApiController($req, $res, $args, $container, $callable)
 		throw new ApiException('parameters are required', ['access_key']);
 
 	$appAccessTable = $container->config['db']['table-names']['application-access'];
-	$applicationAccesses = $container->dbManager->executeQuery('select * from $appAccessTable where access_key = ? limit 1', [$accessKey])->fetch();
+	$applicationAccesses = $container->dbManager->executeQuery("select * from $appAccessTable where access_key = ? limit 1", [$accessKey])->fetch();
 	$applicationAccess = count($applicationAccesses) === 1 ? $applicationAccesses[0] : null;
 
 	if (!isset($accessKey))

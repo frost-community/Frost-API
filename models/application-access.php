@@ -16,7 +16,7 @@ class ApplicationAccess
 		try
 		{
 			$appAccessTable = $config['db']['table-names']['application-access'];
-			$db->executeQuery('insert into $appAccessTable (created_at, user_id, application_id, hash) values(?, ?, ?, ?)', [$time, $userId, $applicationId, $hash]);
+			$db->executeQuery("insert into $appAccessTable (created_at, user_id, application_id, hash) values(?, ?, ?, ?)", [$time, $userId, $applicationId, $hash]);
 		}
 		catch(PDOException $e)
 		{
@@ -36,7 +36,7 @@ class ApplicationAccess
 		try
 		{
 			$appAccessTable = $config['db']['table-names']['application-access'];
-			$accesses = $db->executeQuery('select * from $appAccessTable where application_id = ? & user_id = ?', [$applicationId, $userId])->fetch();
+			$accesses = $db->executeQuery("select * from $appAccessTable where application_id = ? & user_id = ?", [$applicationId, $userId])->fetch();
 		}
 		catch(PDOException $e)
 		{
@@ -59,7 +59,7 @@ class ApplicationAccess
 		try
 		{
 			$appAccessTable = $config['db']['table-names']['application-access'];
-			$statement = $db->executeQuery('select * from $appAccessTable where hash = ? and user_id = ?', [$hash, $userId]);
+			$statement = $db->executeQuery("select * from $appAccessTable where hash = ? and user_id = ?", [$hash, $userId]);
 			$accesses = $statement->fetch();
 		}
 		catch(PDOException $e)
