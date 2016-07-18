@@ -4,7 +4,6 @@ $config = [
 	'access-key-base' => 'keybase1',
 	'application-key-base' => 'keybase2',
 	'request-key-base' => 'keybase3',
-	'user-key-base' => 'keybase4',
 	'request-key-expire-sec' => 60 * 5,
 	'csrf-key-base' => 'keybase5',
 	'db' => [
@@ -16,7 +15,8 @@ $config = [
 			'user' => 'frost_user',
 			'application' => 'frost_application',
 			'application-access' => 'frost_application_access',
-			'post' => 'frost_post'
+			'post' => 'frost_post',
+			'request' => 'frost_request'
 		]
 	],
 	'invalid-screen-names' => [

@@ -63,9 +63,10 @@ class Application
 
 		try
 		{
-			$application = $db->transaction(function() use($db, $userId, $now, $name, $description, $permissions) {
-				$db->executeQuery('insert into frost_application (creator_id, created_at, name, description, permissions) values(?, ?, ?, ?)', [$userId, $now, $name, $description, implode(',', $permissions)]);
-				return $db->executeQuery('select * from frost_application where creator_id = ? & name = ?', [$userId, $name])->fetch()[0];
+			$application = $db->transaction(function() use($db, $userId, $now, $name, $description, $permissions, $config) {
+				$applicationTable = $config['db']['table-names']['application'];
+				$db->executeQuery('insert into $applicationTable (creator_id, created_at, name, description, permissions) values(?, ?, ?, ?)', [$userId, $now, $name, $description, implode(',', $permissions)]);
+				return $db->executeQuery('select * from $applicationTable where creator_id = ? & name = ?', [$userId, $name])->fetch()[0];
 			});
 		}
 		catch(Exception $e)
@@ -92,7 +93,8 @@ class Application
 
 		try
 		{
-			$container->dbManager->executeQuery('update frost_application set hash = ? where id = ?', [$hash, $applicationId]);
+			$applicationTable = $config['db']['table-names']['application'];
+			$container->dbManager->executeQuery('update $applicationTable set hash = ? where id = ?', [$hash, $applicationId]);
 		}
 		catch(PDOException $e)
 		{
@@ -109,7 +111,8 @@ class Application
 
 		try
 		{
-			$apps = $db->executeQuery('select * from frost_application where id = ?', [$id])->fetch();
+			$applicationTable = $config['db']['table-names']['application'];
+			$apps = $db->executeQuery('select * from $applicationTable where id = ?', [$id])->fetch();
 		}
 		catch(PDOException $e)
 		{
@@ -129,7 +132,8 @@ class Application
 
 		try
 		{
-			$apps = $db->executeQuery('select * from frost_application where name = ?', [$name])->fetch();
+			$applicationTable = $config['db']['table-names']['application'];
+			$apps = $db->executeQuery('select * from $applicationTable where name = ?', [$name])->fetch();
 		}
 		catch(PDOException $e)
 		{

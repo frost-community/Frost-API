@@ -19,7 +19,8 @@ class User
 		}
 		else
 		{
-			$isExistUser = count($db->executeQuery('select * from frost_user where screen_name = ? limit 1', [$screenName])->fetch()) === 1;
+			$userTable = $config['db']['table-names']['user'];
+			$isExistUser = count($db->executeQuery('select * from $userTable where screen_name = ? limit 1', [$screenName])->fetch()) === 1;
 
 			if ($isExistUser)
 			{
@@ -51,16 +52,19 @@ class User
 		$now = time();
 		$passwordHash = hash('sha256', $password.$now);
 
+		$userTable = $config['db']['table-names']['user'];
+
 		try
 		{
-			$db->executeQuery('insert into frost_user (created_at, screen_name, name, password_hash) values(?, ?, ?, ?)', [$now, $screenName, $name, $passwordHash]);
+			
+			$db->executeQuery('insert into $userTable (created_at, screen_name, name, password_hash) values(?, ?, ?, ?)', [$now, $screenName, $name, $passwordHash]);
 		}
 		catch(PDOException $e)
 		{
 			throw new ApiException('faild to create database record');
 		}
 
-		$user = $db->executeQuery('select * from frost_user where screen_name = ? limit 1', [$screenName])->fetch();
+		$user = $db->executeQuery('select * from $userTable where screen_name = ? limit 1', [$screenName])->fetch();
 
 		return $user;
 	}
@@ -72,7 +76,8 @@ class User
 
 		try
 		{
-			$users = $db->executeQuery('select * from frost_user where user_id = ?', [$id])->fetch();
+			$userTable = $config['db']['table-names']['user'];
+			$users = $db->executeQuery('select * from $userTable where id = ?', [$id])->fetch();
 		}
 		catch(PDOException $e)
 		{

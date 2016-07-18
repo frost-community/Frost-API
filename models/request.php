@@ -16,7 +16,8 @@ class Request
 
 		try
 		{
-			$db->executeQuery('insert into frost_request (created_at, application_key, key) values(?, ?, ?)', [$time, $applicationKey, $key]);
+			$requestTable = $config['db']['table-names']['request'];
+			$db->executeQuery('insert into $requestTable (created_at, application_key, key) values(?, ?, ?)', [$time, $applicationKey, $key]);
 		}
 		catch(PDOException $e)
 		{
@@ -35,7 +36,8 @@ class Request
 
 		try
 		{
-			$requests = $db->executeQuery('select * from frost_request where key = ?', [$requestKey])->fetch();
+			$requestTable = $config['db']['table-names']['request'];
+			$requests = $db->executeQuery('select * from $requestTable where key = ?', [$requestKey])->fetch();
 		}
 		catch(PDOException $e)
 		{
@@ -72,7 +74,8 @@ class Request
 
 		try
 		{
-			$db->executeQuery('delete from frost_request where key = ?', [$requestKey]);
+			$requestTable = $config['db']['table-names']['request'];
+			$db->executeQuery('delete from $requestTable where key = ?', [$requestKey]);
 		}
 		catch(PDOException $e)
 		{

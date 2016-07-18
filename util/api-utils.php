@@ -50,7 +50,8 @@ function callApiController($req, $res, $args, $container, $callable)
 	if (!isset($accessKey))
 		throw new ApiException('parameters are required', ['access_key']);
 
-	$applicationAccesses = $container->dbManager->executeQuery('select * from frost_application_access where access_key = ? limit 1', [$accessKey])->fetch();
+	$appAccessTable = $container->config['db']['table-names']['application-access'];
+	$applicationAccesses = $container->dbManager->executeQuery('select * from $appAccessTable where access_key = ? limit 1', [$accessKey])->fetch();
 	$applicationAccess = count($applicationAccesses) === 1 ? $applicationAccesses[0] : null;
 
 	if (!isset($accessKey))
