@@ -12,7 +12,7 @@ class User
 
 		try
 		{
-			$createdUser = \Models\User::create($params['screen-name'], $params['password'], 'froster', $container->config, $container->dbManager);
+			$createdUser = \Models\User::create($params['screen-name'], $params['password'], 'froster', $container);
 		}
 		catch(ApiException $e)
 		{
