@@ -19,12 +19,19 @@ class DatabaseManager
 		}
 	}
 
-	public function executeQuery($query, array $content)
+	public function execute($query, array $content)
 	{
 		$statement = $this->database->prepare($query);
 		$statement->execute($content);
 
 		return $statement;
+	}
+
+	public function executeFetch($query, array $content)
+	{
+		$result = self::execute($query, $content)->fetchAll();
+
+		return $result;
 	}
 	
 	public function transaction($callable)
