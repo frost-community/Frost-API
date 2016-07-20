@@ -57,5 +57,5 @@ function callApiController($req, $res, $args, $container, $callable)
 	if (!isset($accessKey))
 		throw new ApiException('parameters are invalid', ['access_key']);
 
-	return $callable($req, $res, $args, $$applicationAccess['app_name'], $$applicationAccess['user_id'], $$applicationAccess['access_key'], $container);
+	return $callable($req, $res, $args, $applicationAccess['app_name'], $applicationAccess['user_id'], $applicationAccess['access_key'], $container);
 };
