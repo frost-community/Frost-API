@@ -56,7 +56,6 @@ class User
 
 		try
 		{
-			
 			$db->executeQuery("insert into $userTable (created_at, screen_name, name, password_hash) values(?, ?, ?, ?)", [$now, $screenName, $name, $passwordHash]);
 		}
 		catch(PDOException $e)
