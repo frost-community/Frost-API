@@ -36,6 +36,7 @@ foreach ($routes as $route)
 				return withFailure($res, 'access-key is missing');
 
 			$applicationAccess = \Models\ApplicationAccess::validate($params['access-key'], $this);
+
 			if (!$applicationAccess)
 				return withFailure($res, 'access-key is invalid');
 
@@ -48,6 +49,7 @@ foreach ($routes as $route)
 			$permissionsStr = $application['permissions'];
 
 			$user = \Models\User::fetch($userId, $this);
+
 			$application = \Models\Application::fetch($applicationId, $this);
 
 			$permissions = explode(',', $permissionsStr);

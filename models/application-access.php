@@ -16,11 +16,11 @@ class ApplicationAccess
 		try
 		{
 			$appAccessTable = $config['db']['table-names']['application-access'];
-			$db->executeQuery("insert into $appAccessTable (created_at, user_id, application_id, hash) values(?, ?, ?, ?)", [$time, $userId, $applicationId, $hash]);
+			$db->execute("insert into $appAccessTable (created_at, user_id, application_id, hash) values(?, ?, ?, ?)", [$time, $userId, $applicationId, $hash]);
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to create database record');
+			throw new Utility\ApiException('faild to create database record');
 		}
 
 		$access = self::fetch($applicationId, $userId, $container);
@@ -36,15 +36,15 @@ class ApplicationAccess
 		try
 		{
 			$appAccessTable = $config['db']['table-names']['application-access'];
-			$accesses = $db->executeQuery("select * from $appAccessTable where application_id = ? & user_id = ?", [$applicationId, $userId])->fetch();
+			$accesses = $db->executeFetch("select * from $appAccessTable where application_id = ? & user_id = ?", [$applicationId, $userId]);
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to fetch application access');
+			throw new Utility\ApiException('faild to fetch application access');
 		}
 
 		if (count($accesses) === 0)
-			throw new ApiException('application access not found');
+			throw new Utility\ApiException('application access not found');
 
 		$access = $accesses[0];
 
@@ -59,16 +59,15 @@ class ApplicationAccess
 		try
 		{
 			$appAccessTable = $config['db']['table-names']['application-access'];
-			$statement = $db->executeQuery("select * from $appAccessTable where hash = ? and user_id = ?", [$hash, $userId]);
-			$accesses = $statement->fetch();
+			$accesses = $db->executeFetch("select * from $appAccessTable where hash = ? and user_id = ?", [$hash, $userId]);
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to fetch application access');
+			throw new Utility\ApiException('faild to fetch application access');
 		}
 
 		if (count($accesses) === 0)
-			throw new ApiException('application access not found');
+			throw new Utility\ApiException('application access not found');
 
 		return $accesses[0];
 	}

@@ -14,7 +14,7 @@ class User
 		{
 			$createdUser = \Models\User::create($params['screen-name'], $params['password'], 'froster', $container);
 		}
-		catch(ApiException $e)
+		catch(Utility\ApiException $e)
 		{
 			return withFailure($res, $e->getMessage(), $e->getData());
 		}

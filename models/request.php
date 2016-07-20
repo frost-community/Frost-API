@@ -17,11 +17,11 @@ class Request
 		try
 		{
 			$requestTable = $config['db']['table-names']['request'];
-			$db->executeQuery("insert into $requestTable (created_at, application_key, key) values(?, ?, ?)", [$time, $applicationKey, $key]);
+			$db->execute("insert into $requestTable (created_at, application_key, key) values(?, ?, ?)", [$time, $applicationKey, $key]);
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to create database record', ['request-key']);
+			throw new Utility\ApiException('faild to create database record', ['request-key']);
 		}
 
 		$request = fetchByKey($key, $db);
@@ -37,15 +37,15 @@ class Request
 		try
 		{
 			$requestTable = $config['db']['table-names']['request'];
-			$requests = $db->executeQuery("select * from $requestTable where key = ?", [$requestKey])->fetch();
+			$requests = $db->executeFetch("select * from $requestTable where key = ?", [$requestKey]);
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to fetch request');
+			throw new Utility\ApiException('faild to fetch request');
 		}
 
 		if (count($requests) === 0)
-			throw new ApiException('request not found');
+			throw new Utility\ApiException('request not found');
 
 		return $requests[0];
 	}
@@ -75,11 +75,11 @@ class Request
 		try
 		{
 			$requestTable = $config['db']['table-names']['request'];
-			$db->executeQuery("delete from $requestTable where key = ?", [$requestKey]);
+			$db->execute("delete from $requestTable where key = ?", [$requestKey]);
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to destroy database record');
+			throw new Utility\ApiException('faild to destroy database record');
 		}
 
 		return true;

@@ -33,7 +33,7 @@ class Application
 				{
 					$isFound = true;
 					if (in_array($permission, $permissions2))
-						throw new ApiException('permissions is duplicate');
+						throw new \Utility\ApiException('permissions is duplicate');
 
 					$permissions2 += $permission;
 					break;
@@ -48,30 +48,30 @@ class Application
 		}
 
 		if ($isPermissionError)
-			throw new ApiException('unknown permissions', $invalidPermissionNames);
+			throw new \Utility\ApiException('unknown permissions', $invalidPermissionNames);
 
 		try
 		{
 			$application = self::fetchByName($name);
 		}
-		catch(ApiException $e)
+		catch(\Utility\ApiException $e)
 		{
 		}
 
 		if (isset($application))
-			throw new ApiException('already exists.');
+			throw new \Utility\ApiException('already exists.');
 
 		try
 		{
 			$application = $db->transaction(function() use($db, $userId, $now, $name, $description, $permissions, $config) {
 				$applicationTable = $config['db']['table-names']['application'];
-				$db->executeQuery("insert into $applicationTable (creator_id, created_at, name, description, permissions) values(?, ?, ?, ?)", [$userId, $now, $name, $description, implode(',', $permissions)]);
-				return $db->executeQuery("select * from $applicationTable where creator_id = ? & name = ?", [$userId, $name])->fetch()[0];
+				$db->execute("insert into $applicationTable (creator_id, created_at, name, description, permissions) values(?, ?, ?, ?)", [$userId, $now, $name, $description, implode(',', $permissions)]);
+				return $db->executeFetch("select * from $applicationTable where creator_id = ? & name = ?", [$userId, $name])[0];
 			});
 		}
 		catch(Exception $e)
 		{
-			throw new ApiException('faild to create database record');
+			throw new \Utility\ApiException('faild to create database record');
 		}
 
 		$key = self::generateKey($application['id'], $userId, $config, $db);
@@ -94,11 +94,11 @@ class Application
 		try
 		{
 			$applicationTable = $config['db']['table-names']['application'];
-			$container->dbManager->executeQuery("update $applicationTable set hash = ? where id = ?", [$hash, $applicationId]);
+			$container->dbManager->execute("update $applicationTable set hash = ? where id = ?", [$hash, $applicationId]);
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to create database record', ['application-key']);
+			throw new \Utility\ApiException('faild to create database record', ['application-key']);
 		}
 
 		return $applicationId.'-'.$hash;
@@ -112,15 +112,15 @@ class Application
 		try
 		{
 			$applicationTable = $config['db']['table-names']['application'];
-			$apps = $db->executeQuery("select * from $applicationTable where id = ?", [$id])->fetch();
+			$apps = $db->executeFetch("select * from $applicationTable where id = ?", [$id]);
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to fetch application');
+			throw new \Utility\ApiException('faild to fetch application');
 		}
 
 		if (count($apps) === 0)
-			throw new ApiException('application not found');
+			throw new \Utility\ApiException('application not found');
 
 		return $apps[0];
 	}
@@ -133,15 +133,15 @@ class Application
 		try
 		{
 			$applicationTable = $config['db']['table-names']['application'];
-			$apps = $db->executeQuery("select * from $applicationTable where name = ?", [$name])->fetch();
+			$apps = $db->executeFetch("select * from $applicationTable where name = ?", [$name]);
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to fetch application');
+			throw new \Utility\ApiException('faild to fetch application');
 		}
 
 		if (count($apps) === 0)
-			throw new ApiException('application not found');
+			throw new \Utility\ApiException('application not found');
 
 		return $apps[0];
 	}
@@ -168,7 +168,7 @@ class Application
 		{
 			$application = self::fetch($applicationId, $db);
 		}
-		catch (ApiException $e)
+		catch (\Utility\ApiException $e)
 		{
 			return false;
 		}

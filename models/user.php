@@ -20,7 +20,7 @@ class User
 		else
 		{
 			$userTable = $config['db']['table-names']['user'];
-			$isExistUser = count($db->executeQuery("select * from $userTable where screen_name = ? limit 1", [$screenName])->fetch()) === 1;
+			$isExistUser = count($db->executeFetch("select * from $userTable where screen_name = ? limit 1", [$screenName])) === 1;
 
 			if ($isExistUser)
 			{
@@ -47,7 +47,7 @@ class User
 		}
 
 		if ($isOccurredError)
-			throw new ApiException('parameters are invalid', $errorTargets);
+			throw new \Utility\ApiException('parameters are invalid', $errorTargets);
 
 		$now = time();
 		$passwordHash = hash('sha256', $password.$now);
@@ -56,16 +56,16 @@ class User
 
 		try
 		{
-			$db->executeQuery("insert into $userTable (created_at, screen_name, name, password_hash) values(?, ?, ?, ?)", [$now, $screenName, $name, $passwordHash]);
+			$db->execute("insert into $userTable (created_at, screen_name, name, password_hash) values(?, ?, ?, ?)", [$now, $screenName, $name, $passwordHash]);
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to create database record');
+			throw new \Utility\ApiException('faild to create database record');
 		}
 
-		$user = $db->executeQuery("select * from $userTable where screen_name = ? limit 1", [$screenName])->fetch();
+		$users = $db->executeFetch("select * from $userTable where screen_name = ? limit 1", [$screenName]);
 
-		return $user;
+		return $users[0];
 	}
 
 	public static function fetch($id, $container)
@@ -76,16 +76,16 @@ class User
 		try
 		{
 			$userTable = $config['db']['table-names']['user'];
-			$user = $db->executeQuery("select * from $userTable where id = ?", [$id])->fetch();
+			$users = $db->executeFetch("select * from $userTable where id = ?", [$id]);
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to fetch user');
+			throw new \Utility\ApiException('faild to fetch user');
 		}
 
-		if ($user === null)
-			throw new ApiException('user not found');
+		if (count($users) === 0)
+			throw new \Utility\ApiException('user not found');
 
-		return $user;
+		return $users[0];
 	}
 }
