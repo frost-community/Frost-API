@@ -25,6 +25,7 @@ function withSuccess($res, $content = null, $message = 'successful')
 function validateReferer($req)
 {
 	$referer = $req->getHeader('Referer');
+
 	if ($referer === null || $referer === '')
 	{
 		throw new ApiException(3);

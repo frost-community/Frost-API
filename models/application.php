@@ -5,13 +5,13 @@ class Application
 {
 	// 権限一覧
 	public static $permissionTypes = [
-		'internal',			// 内部APIへのアクセス
-		'account-read',		// アカウント情報の取得
-		'account-write',	// アカウント情報の変更
-		'user-read',		// ユーザー情報の取得
-		'user-write',		// フォローやブロック等のアクション
-		'post-read',		// 投稿の取得
-		'post-write',		// 投稿の作成・削除、投稿へのアクション
+		'internal',      // 内部APIへのアクセス
+		'account-read',  // アカウント情報の取得
+		'account-write', // アカウント情報の変更
+		'user-read',     // ユーザー情報の取得
+		'user-write',    // フォローやブロック等のアクション
+		'post-read',     // 投稿の取得
+		'post-write',    // 投稿の作成・削除、投稿へのアクション
 	];
 
 	public static function create($userId, $name, $description, array $permissions, $container)
@@ -19,19 +19,21 @@ class Application
 		$config = $container->config;
 		$db = $container->dbManager;
 		$now = time();
-
 		$isPermissionError = false;
 		$invalidPermissionNames = [];
 		$permissions2 = [];
+
 		foreach ($permissions as $permission)
 		{
 			$isFound = false;
 			// $permissionTypes = $permissions2?$permissions
+
 			for ($i=0; $i < count(self::$permissionTypes); $i++)
 			{
 				if($permission === self::$permissionTypes[$i])
 				{
 					$isFound = true;
+
 					if (in_array($permission, $permissions2))
 						throw new ApiException('permissions is duplicate');
 
@@ -54,9 +56,7 @@ class Application
 		{
 			$application = self::fetchByName($name);
 		}
-		catch(ApiException $e)
-		{
-		}
+		catch(ApiException $e) { }
 
 		if (isset($application))
 			throw new ApiException('already exists.');
@@ -75,21 +75,18 @@ class Application
 		}
 
 		$key = self::generateKey($application['id'], $userId, $config, $db);
-
 		$application['key'] = $key;
 
 		return $application;
 	}
 
-	public static function generateKey($applicationId, $userId, $container)
+	public static function generateKey($id, $userId, $container)
 	{
 		$config = $container->config;
 		$db = $container->dbManager;
-
-		$application = self::fetch($applicationId, $db);
-
 		$num = rand(1, 99999);
 		$hash = hash('sha256', $config['application-key-base'].$userId.$applicationId.$num);
+		$application = self::fetch($id, $db);
 
 		try
 		{
@@ -155,7 +152,6 @@ class Application
 	{
 		$config = $container->config;
 		$db = $container->dbManager;
-
 		$match = \Utility\Regex::match('/([^-]+)-([^-]{64})/', $applicationKey);
 
 		if ($match === null)

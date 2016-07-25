@@ -8,7 +8,6 @@ class User
 	{
 		$config = $container->config;
 		$db = $container->dbManager;
-
 		$isOccurredError = false;
 		$errorTargets = [];
 
@@ -51,7 +50,6 @@ class User
 
 		$now = time();
 		$passwordHash = hash('sha256', $password.$now);
-
 		$userTable = $config['db']['table-names']['user'];
 
 		try

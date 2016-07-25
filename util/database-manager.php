@@ -54,7 +54,7 @@ class DatabaseManager
 		}
 		catch(\Exception $e)
 		{
-			$dbh->rollBack();
+			$this->database->rollBack();
 			throw $e;
 		}
 

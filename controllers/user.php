@@ -14,8 +14,8 @@ class User
 	public static function create($req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
-
 		$requireParams = ['screen-name', 'password'];
+
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
@@ -34,8 +34,8 @@ class User
 	public static function show($req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
-
 		$requireParams = ['user-id'];
+
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 

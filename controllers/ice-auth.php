@@ -5,7 +5,6 @@ class IceAuth
 	public static function accessKey($req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
-
 		$requireParams = ['application-key'];
 
 		if (!hasRequireParams($params, $requireParams))
@@ -15,9 +14,7 @@ class IceAuth
 			return withFailure($res, 'parameters are invalid', ['application-key']);
 
 		$appId = explode('-', $params['application-key'])[0];
-
 		$applicationAccess = \Models\ApplicationAccess::create($user['id'], $appId, $container);
-
 		$accessKey = buildKey($applicationAccess['user_id'], $applicationAccess['hash']);
 
 		if (count($applicationAccess) !== 0 )

@@ -12,6 +12,7 @@ foreach ($routes as $route)
 		if (count($route['permissions']) !== 0)
 		{
 			$params = $req->getParams();
+
 			if (!array_key_exists('access-key', $params))
 				return withFailure($res, 'access-key is missing');
 
@@ -27,11 +28,8 @@ foreach ($routes as $route)
 				$applicationId = $applicationAccess['application_id'];
 
 			$permissionsStr = $application['permissions'];
-
 			$user = \Models\User::fetch($userId, $this);
-
 			$application = \Models\Application::fetch($applicationId, $this);
-
 			$permissions = explode(',', $permissionsStr);
 
 			foreach ($route['permissions'] as $requirePermission)

@@ -5,11 +5,11 @@ class ApplicationAccess
 {
 	public static function create($userId, $applicationId, $container)
 	{
-		$config 	= $container->config;
-		$db 		= $container->dbManager;
-		$timestamp 	= time();
-		$num 		= mt_rand(1, 99999);
-		$hash 		= hash('sha256', $config['access-key-base'].'/'.$applicationId.'/'.$userId.'/'.$num);
+		$config = $container->config;
+		$db = $container->dbManager;
+		$timestamp = time();
+		$num = mt_rand(1, 99999);
+		$hash = hash('sha256', $config['access-key-base'].'/'.$applicationId.'/'.$userId.'/'.$num);
 
 		try
 		{
@@ -79,7 +79,6 @@ class ApplicationAccess
 	{
 		$config = $container->config;
 		$db = $container->dbManager;
-
 		$match = \Utility\Regex::match('/([^-]+)-([^-]{64})/', $accessKey);
 
 		if ($match === null)
@@ -92,9 +91,7 @@ class ApplicationAccess
 		{
 			return self::fetch2($userId, $hash, $container);
 		}
-		catch (Exception $e)
-		{
-		}
+		catch (ApiWException $e) { }
 
 		return false;
 	}
