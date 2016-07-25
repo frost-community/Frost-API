@@ -27,14 +27,14 @@ foreach ($routes as $route)
 			if (isset($applicationAccess['application_id']))
 				$applicationId = $applicationAccess['application_id'];
 
+			$application = \Models\Application::fetch($applicationId, $this);
 			$permissionsStr = $application['permissions'];
 			$user = \Models\User::fetch($userId, $this);
-			$application = \Models\Application::fetch($applicationId, $this);
 			$permissions = explode(',', $permissionsStr);
 
 			foreach ($route[2] as $requirePermission)
 			{
-				if (array_key_exists($requirePermission, $permissions))
+				if (!in_array($requirePermission, $permissions))
 					return withFailure($res, 'You do not have some permissions.');
 			}
 
