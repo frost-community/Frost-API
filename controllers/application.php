@@ -19,7 +19,7 @@ class Application
 			return withFailure($res, 'faild to create application', ['detail'=>$e->getMessage()]);
 		}
 
-		return withSuccess($res, "successful", ['application' => $destApp]);
+		return withSuccess($res, ['application' => $destApp]);
 	}
 
 	public static function applicationKey($req, $res, $container, $user, $application)
@@ -40,7 +40,7 @@ class Application
 			return withFailure($res, 'faild to show application-key', ['detail'=>$e->getMessage()]);
 		}
 
-		return withSuccess($res, 'successful', ['application-key'=>$destAppKey]);
+		return withSuccess($res, ['application-key'=>$destAppKey]);
 	}
 
 	public static function regenerateKey($req, $res, $container, $user, $application)
@@ -60,6 +60,6 @@ class Application
 			return withFailure($res, 'faild to regenerate application-key', ['detail'=>$e->getMessage()]);
 		}
 
-		return withSuccess($res, 'successful', ['application-key'=>$destAppKey]);
+		return withSuccess($res, ['application-key'=>$destAppKey]);
 	}
 }

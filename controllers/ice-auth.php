@@ -23,7 +23,7 @@ class IceAuth
 		if (count($applicationAccess) !== 0 )
 			return withFailure($res, 'already registered');
 
-		return withSuccess($res, 'successful', ['access-key'=>$accessKey]);
+		return withSuccess($res, ['access-key'=>$accessKey]);
 	}
 
 	public static function requestKey($req, $res, $container)

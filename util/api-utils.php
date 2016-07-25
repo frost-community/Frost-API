@@ -11,7 +11,7 @@ function withFailure($res, $message, $content = null, $httpStatus = 400)
 	return $res->withJson($src, $httpStatus);
 }
 
-function withSuccess($res, $message = 'successful', $content = null)
+function withSuccess($res, $content = null, $message = 'successful')
 {
 	$src['message'] = $message;
 	

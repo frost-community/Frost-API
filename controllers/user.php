@@ -19,7 +19,7 @@ class User
 			return withFailure($res, $e->getMessage(), $e->getData());
 		}
 
-		return withSuccess($res, 'successful', ['user'=>$createdUser]);
+		return withSuccess($res, ['user'=>$createdUser]);
 	}
 
 	public static function show($req, $res, $container, $user, $application)
@@ -32,6 +32,6 @@ class User
 
 		$destUser = \Models\User::fetch($params['user-id'], $container);
 
-		return withSuccess($res, 'successful', ['user'=>$destUser]);
+		return withSuccess($res, ['user'=>$destUser]);
 	}
 }
