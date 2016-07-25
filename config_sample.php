@@ -1,5 +1,7 @@
 <?php
 
+// key-baseは各種キーのSecret Keyです。
+
 $config = [
 	'access-key-base' => 'keybase1',
 	'application-key-base' => 'keybase2',
