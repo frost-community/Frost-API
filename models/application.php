@@ -6,6 +6,7 @@ class Application
 	// 権限一覧
 	public static $permissionTypes = [
 		'internal',      // 内部APIへのアクセス
+		'ice-auth-host', // 認証のホスト権限
 		'dev-center',    // 開発者センター(連携アプリ操作)
 		'account-read',  // アカウント情報の取得
 		'account-write', // アカウント情報の変更
