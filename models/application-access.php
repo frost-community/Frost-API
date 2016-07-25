@@ -3,7 +3,7 @@ namespace Models;
 
 class ApplicationAccess
 {
-	public static function create($userId, $applicationId, $container)
+	public static function create($applicationId, $userId, $container)
 	{
 		$config = $container->config;
 		$db = $container->dbManager;
