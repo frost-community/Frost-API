@@ -5,18 +5,16 @@ class ApplicationAccess
 {
 	public static function create($userId, $applicationId, $container)
 	{
-		$config = $container->config;
-		$db = $container->dbManager;
-
-		$time = time();
-
-		$num = rand(1, 99999);
-		$hash = hash('sha256', $config['access-key-base'].'/'.$applicationId.'/'.$userId.'/'.$num);
+		$config 	= $container->config;
+		$db 		= $container->dbManager;
+		$timestamp 	= time();
+		$num 		= mt_rand(1, 99999);
+		$hash 		= hash('sha256', $config['access-key-base'].'/'.$applicationId.'/'.$userId.'/'.$num);
 
 		try
 		{
 			$appAccessTable = $config['db']['table-names']['application-access'];
-			$db->execute("insert into $appAccessTable (created_at, user_id, application_id, hash) values(?, ?, ?, ?)", [$time, $userId, $applicationId, $hash]);
+			$db->execute("insert into $appAccessTable (created_at, user_id, application_id, hash) values(?, ?, ?, ?)", [$timestamp, $userId, $applicationId, $hash]);
 		}
 		catch(PDOException $e)
 		{
@@ -40,11 +38,11 @@ class ApplicationAccess
 		}
 		catch(PDOException $e)
 		{
-			throw new Utility\ApiException('faild to fetch application access');
+			throw new ApiException('faild to fetch application access');
 		}
 
 		if (count($accesses) === 0)
-			throw new Utility\ApiException('application access not found');
+			throw new ApiException('application access not found');
 
 		$access = $accesses[0];
 
@@ -63,11 +61,11 @@ class ApplicationAccess
 		}
 		catch(PDOException $e)
 		{
-			throw new Utility\ApiException('faild to fetch application access');
+			throw new ApiException('faild to fetch application access');
 		}
 
 		if (count($accesses) === 0)
-			throw new Utility\ApiException('application access not found');
+			throw new ApiException('application access not found');
 
 		return $accesses[0];
 	}

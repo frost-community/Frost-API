@@ -18,7 +18,6 @@ class Application
 	{
 		$config = $container->config;
 		$db = $container->dbManager;
-
 		$now = time();
 
 		$isPermissionError = false;
@@ -27,13 +26,14 @@ class Application
 		foreach ($permissions as $permission)
 		{
 			$isFound = false;
-			for ($i=0; $i < count($permissionTypes); $i++)
+			// $permissionTypes = $permissions2?$permissions
+			for ($i=0; $i < count(self::$permissionTypes); $i++)
 			{
-				if($permission === $permissionTypes[$i])
+				if($permission === self::$permissionTypes[$i])
 				{
 					$isFound = true;
 					if (in_array($permission, $permissions2))
-						throw new \Utility\ApiException('permissions is duplicate');
+						throw new ApiException('permissions is duplicate');
 
 					$permissions2 += $permission;
 					break;
@@ -48,18 +48,18 @@ class Application
 		}
 
 		if ($isPermissionError)
-			throw new \Utility\ApiException('unknown permissions', $invalidPermissionNames);
+			throw new ApiException('unknown permissions', $invalidPermissionNames);
 
 		try
 		{
 			$application = self::fetchByName($name);
 		}
-		catch(\Utility\ApiException $e)
+		catch(ApiException $e)
 		{
 		}
 
 		if (isset($application))
-			throw new \Utility\ApiException('already exists.');
+			throw new ApiException('already exists.');
 
 		try
 		{
@@ -71,7 +71,7 @@ class Application
 		}
 		catch(Exception $e)
 		{
-			throw new \Utility\ApiException('faild to create database record');
+			throw new ApiException('faild to create database record');
 		}
 
 		$key = self::generateKey($application['id'], $userId, $config, $db);
@@ -98,7 +98,7 @@ class Application
 		}
 		catch(PDOException $e)
 		{
-			throw new \Utility\ApiException('faild to create database record', ['application-key']);
+			throw new ApiException('faild to create database record', ['application-key']);
 		}
 
 		return $applicationId.'-'.$hash;
@@ -116,11 +116,11 @@ class Application
 		}
 		catch(PDOException $e)
 		{
-			throw new \Utility\ApiException('faild to fetch application');
+			throw new ApiException('faild to fetch application');
 		}
 
 		if (count($apps) === 0)
-			throw new \Utility\ApiException('application not found');
+			throw new ApiException('application not found');
 
 		return $apps[0];
 	}
@@ -137,11 +137,11 @@ class Application
 		}
 		catch(PDOException $e)
 		{
-			throw new \Utility\ApiException('faild to fetch application');
+			throw new ApiException('faild to fetch application');
 		}
 
 		if (count($apps) === 0)
-			throw new \Utility\ApiException('application not found');
+			throw new ApiException('application not found');
 
 		return $apps[0];
 	}
@@ -168,7 +168,7 @@ class Application
 		{
 			$application = self::fetch($applicationId, $db);
 		}
-		catch (\Utility\ApiException $e)
+		catch (ApiException $e)
 		{
 			return false;
 		}

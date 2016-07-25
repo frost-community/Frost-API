@@ -21,7 +21,7 @@ class Request
 		}
 		catch(PDOException $e)
 		{
-			throw new Utility\ApiException('faild to create database record', ['request-key']);
+			throw new ApiException('faild to create database record', ['request-key']);
 		}
 
 		$request = fetchByKey($key, $db);
@@ -41,11 +41,11 @@ class Request
 		}
 		catch(PDOException $e)
 		{
-			throw new Utility\ApiException('faild to fetch request');
+			throw new ApiException('faild to fetch request');
 		}
 
 		if (count($requests) === 0)
-			throw new Utility\ApiException('request not found');
+			throw new ApiException('request not found');
 
 		return $requests[0];
 	}
@@ -79,7 +79,7 @@ class Request
 		}
 		catch(PDOException $e)
 		{
-			throw new Utility\ApiException('faild to destroy database record');
+			throw new ApiException('faild to destroy database record');
 		}
 
 		return true;

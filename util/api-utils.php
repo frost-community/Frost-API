@@ -27,7 +27,7 @@ function validateReferer($req)
 	$referer = $req->getHeader('Referer');
 	if ($referer === null || $referer === '')
 	{
-		throw new Utility\ApiException(3);
+		throw new ApiException(3);
 	}
 
 	return true;
