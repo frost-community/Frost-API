@@ -2,8 +2,7 @@
 
 function indexPage ($req, $res, $container)
 {
-	$res->getBody()->write('Frost API Server');
-	return $res;
+	return withSuccess($res, [], 'Frost API Server');
 }
 
 $routes = [
