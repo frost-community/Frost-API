@@ -2,7 +2,6 @@
 
 class Application
 {
-	// TODO: サードパーティアプリへのinternal権限設定の禁止
 	public static function create($req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
