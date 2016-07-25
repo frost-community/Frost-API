@@ -6,21 +6,28 @@ function indexPage ($req, $res, $container)
 }
 
 $routes = [
-	['method'=>'get',  'endpoint'=>'/',                            'permissions'=>[],            'indexPage'],
+	// Top
+	[ 'get',  '/',                            [],                         'indexPage' ],
 
-	['method'=>'get',  'endpoint'=>'/ice-auth/request-key',        'permissions'=>[],            'IceAuth::requestKey'],
-	['method'=>'get',  'endpoint'=>'/ice-auth/authorize',          'permissions'=>[],            'IceAuth::authorizePage'],
-	['method'=>'get',  'endpoint'=>'/ice-auth/access-key',         'permissions'=>['internal'],  'IceAuth::accessKey'],
-	['method'=>'post', 'endpoint'=>'/ice-auth/authorize',          'permissions'=>[],            'IceAuth::authorize'],
+	// IceAuth
+	[ 'get',  '/ice-auth/request-key',        [],                         'IceAuth::requestKey' ],
+	[ 'get',  '/ice-auth/authorize',          [],                         'IceAuth::authorizePage' ],
+	[ 'get',  '/ice-auth/access-key',         ['internal'],               'IceAuth::accessKey' ],
+	[ 'post', '/ice-auth/authorize',          [],                         'IceAuth::authorize' ],
 
-	['method'=>'get',  'endpoint'=>'/application/application-key', 'permissions'=>['internal'],  'Application::applicationKey'],
-	['method'=>'post', 'endpoint'=>'/application/create',          'permissions'=>['internal'],  'Application::create'],
-	['method'=>'post', 'endpoint'=>'/application/regenerate-key',  'permissions'=>['internal'],  'Application::regenerateKey'],
+	// DevelopersCenter(Application)
+	[ 'get',  '/application/application-key', ['internal', 'dev-center'], 'Application::applicationKey' ],
+	[ 'post', '/application/create',          ['internal', 'dev-center'], 'Application::create' ],
+	[ 'post', '/application/regenerate-key',  ['internal', 'dev-center'], 'Application::regenerateKey' ],
 
-	['method'=>'get',  'endpoint'=>'/user',                        'permissions'=>['user-read'], 'User::show'],
-	['method'=>'get',  'endpoint'=>'/user/timeline',               'permissions'=>['user-read'], 'User::timeline'],
-	['method'=>'post', 'endpoint'=>'/account/create',              'permissions'=>['internal'],  'User::create'],
+	// User
+	[ 'get', '/user',                         ['user-read'],              'User::show' ],
+	[ 'get', '/user/timeline',                ['user-read'],              'User::timeline' ],
 
-	['method'=>'get',  'endpoint'=>'/post/timeline',               'permissions'=>['post-read'], 'Post::timeline'],
-	['method'=>'post', 'endpoint'=>'/post/create',                 'permissions'=>['post-write'],'Post::create'],
+	// Account
+	[ 'post', '/account/create',              ['internal'],               'User::create' ],
+
+	// Post
+	[ 'get',  '/post/timeline',               ['post-read'],              'Post::timeline' ],
+	[ 'post', '/post/create',                 ['post-write'],             'Post::create' ],
 ];

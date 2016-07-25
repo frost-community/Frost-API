@@ -6,6 +6,7 @@ class Application
 	// 権限一覧
 	public static $permissionTypes = [
 		'internal',      // 内部APIへのアクセス
+		'dev-center',    // 開発者センター(連携アプリ操作)
 		'account-read',  // アカウント情報の取得
 		'account-write', // アカウント情報の変更
 		'user-read',     // ユーザー情報の取得
@@ -18,7 +19,7 @@ class Application
 	{
 		$config = $container->config;
 		$db = $container->dbManager;
-		$now = time();
+		$timestamp = time();
 		$isPermissionError = false;
 		$invalidPermissionNames = [];
 		$permissions2 = [];
@@ -63,9 +64,9 @@ class Application
 
 		try
 		{
-			$application = $db->transaction(function() use($db, $userId, $now, $name, $description, $permissions, $config) {
+			$application = $db->transaction(function() use($db, $userId, $timestamp, $name, $description, $permissions, $config) {
 				$applicationTable = $config['db']['table-names']['application'];
-				$db->execute("insert into $applicationTable (creator_id, created_at, name, description, permissions) values(?, ?, ?, ?)", [$userId, $now, $name, $description, implode(',', $permissions)]);
+				$db->execute("insert into $applicationTable (creator_id, created_at, name, description, permissions) values(?, ?, ?, ?)", [$userId, $timestamp, $name, $description, implode(',', $permissions)]);
 				return $db->executeFetch("select * from $applicationTable where creator_id = ? & name = ?", [$userId, $name])[0];
 			});
 		}

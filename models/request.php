@@ -8,16 +8,14 @@ class Request
 	{
 		$config = $container->config;
 		$db = $container->dbManager;
-
 		$num = rand(1, 99999);
-		$time = time();
-
-		$key = $time.'-'.$num.'-'.hash('sha256', $config['request-key-base'].$applicationKey.$time.$num);
+		$timestamp = time();
+		$key = $timestamp.'-'.$num.'-'.hash('sha256', $config['request-key-base'].$applicationKey.$timestamp.$num);
 
 		try
 		{
 			$requestTable = $config['db']['table-names']['request'];
-			$db->execute("insert into $requestTable (created_at, application_key, key) values(?, ?, ?)", [$time, $applicationKey, $key]);
+			$db->execute("insert into $requestTable (created_at, application_key, key) values(?, ?, ?)", [$timestamp, $applicationKey, $key]);
 		}
 		catch(PDOException $e)
 		{
