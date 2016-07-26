@@ -16,30 +16,30 @@ class Application
 		'post-write',    // 投稿の作成・削除、投稿へのアクション
 	];
 
-	public static function create($userId, $name, $description, array $permissions, $container)
+	public static function create($userId, $name, $description, array $requestedPermissions, $container)
 	{
 		$config = $container->config;
 		$db = $container->dbManager;
 		$timestamp = time();
 		$isPermissionError = false;
 		$invalidPermissionNames = [];
-		$permissions2 = [];
+		$permissions = [];
 
-		foreach ($permissions as $permission)
+		foreach ($requestedPermissions as $requestedPermission)
 		{
 			$isFound = false;
-			// $permissionTypes = $permissions2?$permissions
 
-			for ($i=0; $i < count(self::$permissionTypes); $i++)
+			foreach (self::$permissionTypes as $permissionType)
 			{
-				if($permission === self::$permissionTypes[$i])
+				if($requestedPermission === $permissionType)
 				{
 					$isFound = true;
 
-					if (in_array($permission, $permissions2))
+					if (in_array($requestedPermission, $permissions))
 						throw new ApiException('permissions is duplicate');
 
-					$permissions2 += $permission;
+					$permissions += $requestedPermission;
+
 					break;
 				}
 			}
@@ -47,7 +47,7 @@ class Application
 			if (!$isFound)
 			{
 				$isPermissionError = true;
-				$invalidPermissionNames += $permission;
+				$invalidPermissionNames += $requestedPermission;
 			}
 		}
 

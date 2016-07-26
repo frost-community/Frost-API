@@ -10,9 +10,16 @@ class Application
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
+		if (!\Utility\Regex::isMatch('/^[a-z,-]+$/', $params['permissions']))
+		{
+			return withFailure($res, 'format of permissions parameter is invalid', ['detail'=>'it is required to be constructed in "a" to "z", and ","']);
+		}
+
+		$splitedPermissions = explode(',', $params['permissions']);
+
 		try
 		{
-			$destApp = \Models\Application::create($user['id'], $params['name'], $params['description'], $container->config, $container->dbManager);
+			$destApp = \Models\Application::create($user['id'], $params['name'], $params['description'], $splitedPermissions, $container);
 		}
 		catch(Utility\ApiException $e)
 		{
