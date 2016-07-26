@@ -36,7 +36,7 @@ class Application
 					$isFound = true;
 
 					if (in_array($requestedPermission, $permissions))
-						throw new ApiException('permissions is duplicate');
+						throw new \Utility\ApiException('permissions is duplicate');
 
 					array_push($permissions, $requestedPermission);
 
@@ -52,31 +52,31 @@ class Application
 		}
 
 		if ($isPermissionError)
-			throw new ApiException('unknown permissions', $invalidPermissionNames);
+			throw new \Utility\ApiException('unknown permissions', $invalidPermissionNames);
 
 		try
 		{
-			$application = self::fetchByName($name);
+			$application = self::fetchByName($name, $container);
 		}
-		catch(ApiException $e) { }
+		catch(\Utility\ApiException $e) { }
 
 		if (isset($application))
-			throw new ApiException('already exists.');
+			throw new \Utility\ApiException('already exists.');
 
 		try
 		{
 			$application = $db->transaction(function() use($db, $userId, $timestamp, $name, $description, $permissions, $config) {
 				$applicationTable = $config['db']['table-names']['application'];
-				$db->execute("insert into $applicationTable (creator_id, created_at, name, description, permissions) values(?, ?, ?, ?)", [$userId, $timestamp, $name, $description, implode(',', $permissions)]);
+				$db->execute("insert into $applicationTable (creator_id, created_at, name, description, permissions) values(?, ?, ?, ?, ?)", [$userId, $timestamp, $name, $description, implode(',', $permissions)]);
 				return $db->executeFetch("select * from $applicationTable where creator_id = ? & name = ?", [$userId, $name])[0];
 			});
 		}
 		catch(Exception $e)
 		{
-			throw new ApiException('faild to create database record');
+			throw new \Utility\ApiException('faild to create database record');
 		}
 
-		$key = self::generateKey($application['id'], $userId, $config, $db);
+		$key = self::generateKey($application['id'], $userId, $container);
 		$application['key'] = $key;
 
 		return $application;
@@ -88,7 +88,7 @@ class Application
 		$db = $container->dbManager;
 		$num = rand(1, 99999);
 		$hash = hash('sha256', $config['application-key-base'].$userId.$applicationId.$num);
-		$application = self::fetch($id, $db);
+		$application = self::fetch($id, $container);
 
 		try
 		{
@@ -97,7 +97,7 @@ class Application
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to create database record', ['application-key']);
+			throw new \Utility\ApiException('faild to create database record', ['application-key']);
 		}
 
 		return $applicationId.'-'.$hash;
@@ -115,11 +115,11 @@ class Application
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to fetch application');
+			throw new \Utility\ApiException('faild to fetch application');
 		}
 
 		if (count($apps) === 0)
-			throw new ApiException('application not found');
+			throw new \Utility\ApiException('application not found');
 
 		return $apps[0];
 	}
@@ -136,11 +136,11 @@ class Application
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to fetch application');
+			throw new \Utility\ApiException('faild to fetch application');
 		}
 
 		if (count($apps) === 0)
-			throw new ApiException('application not found');
+			throw new \Utility\ApiException('application not found');
 
 		return $apps[0];
 	}
@@ -164,9 +164,9 @@ class Application
 
 		try
 		{
-			$application = self::fetch($applicationId, $db);
+			$application = self::fetch($applicationId, $container);
 		}
-		catch (ApiException $e)
+		catch (\Utility\ApiException $e)
 		{
 			return false;
 		}

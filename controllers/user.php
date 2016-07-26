@@ -9,7 +9,7 @@ class User
 	 * @param $user
 	 * @param $application
 	 * @return mixed
-	 * @throws \Models\ApiException
+	 * @throws \Utility\ApiException
 	 */
 	public static function create($req, $res, $container, $user, $application)
 	{
@@ -23,7 +23,7 @@ class User
 		{
 			$createdUser = \Models\User::create($params['screen-name'], $params['password'], 'froster', $container);
 		}
-		catch(ApiException $e)
+		catch(\Utility\ApiException $e)
 		{
 			return withFailure($res, $e->getMessage(), $e->getData());
 		}

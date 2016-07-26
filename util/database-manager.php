@@ -42,7 +42,7 @@ class DatabaseManager
 
 		return $result;
 	}
-	
+
 	public function transaction($callable)
 	{
 		try

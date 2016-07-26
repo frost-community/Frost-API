@@ -18,7 +18,7 @@ class ApplicationAccess
 		}
 		catch(PDOException $e)
 		{
-			throw new Utility\ApiException('faild to create database record');
+			throw new \Utility\ApiException('faild to create database record');
 		}
 
 		$access = self::fetch($applicationId, $userId, $container);
@@ -38,11 +38,11 @@ class ApplicationAccess
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to fetch application access');
+			throw new \Utility\ApiException('faild to fetch application access');
 		}
 
 		if (count($accesses) === 0)
-			throw new ApiException('application access not found');
+			throw new \Utility\ApiException('application access not found');
 
 		$access = $accesses[0];
 
@@ -61,11 +61,11 @@ class ApplicationAccess
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to fetch application access');
+			throw new \Utility\ApiException('faild to fetch application access');
 		}
 
 		if (count($accesses) === 0)
-			throw new ApiException('application access not found');
+			throw new \Utility\ApiException('application access not found');
 
 		return $accesses[0];
 	}

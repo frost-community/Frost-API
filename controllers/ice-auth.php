@@ -20,7 +20,7 @@ class IceAuth
 		{
 			$applicationAccess = \Models\ApplicationAccess::fetch($appId, $user['id'], $container);
 		}
-		catch(ApiException $e)
+		catch(\Utility\ApiException $e)
 		{
 			return withFailure($res, 'access-key is empty. please try generate key');
 		}
@@ -69,7 +69,7 @@ class IceAuth
 		{
 			$applicationAccess = \Models\ApplicationAccess::fetch($appId, $user['id'], $container);
 		}
-		catch(ApiException $e) { }
+		catch(\Utility\ApiException $e) { }
 
 		if ($applicationAccess == null)
 			$applicationAccess = \Models\ApplicationAccess::create($appId, $user['id'], $container);

@@ -21,9 +21,9 @@ class Application
 		{
 			$destApp = \Models\Application::create($user['id'], $params['name'], $params['description'], $splitedPermissions, $container);
 		}
-		catch(Utility\ApiException $e)
+		catch(\Utility\ApiException $e)
 		{
-			return withFailure($res, 'faild to create application', ['detail'=>$e->getMessage()]);
+			return withFailure($res, 'faild to create application', ['detail'=>$e->getMessage(),'data'=>$e->getData()]);
 		}
 
 		return withSuccess($res, ['application' => $destApp]);
@@ -42,7 +42,7 @@ class Application
 			$app = \Models\Application::fetch($params['application-id'], $container);
 			$destAppKey = \Models\Application::buildKey($params['application-id'], $app['hash']);
 		}
-		catch(Utility\ApiException $e)
+		catch(\Utility\ApiException $e)
 		{
 			return withFailure($res, 'faild to show application-key', ['detail'=>$e->getMessage()]);
 		}
@@ -62,7 +62,7 @@ class Application
 		{
 			$destAppKey = \Models\Application::generateKey($params['application-id'], $user['id'], $container);
 		}
-		catch(Utility\ApiException $e)
+		catch(\Utility\ApiException $e)
 		{
 			return withFailure($res, 'faild to regenerate application-key', ['detail'=>$e->getMessage()]);
 		}

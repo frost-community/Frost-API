@@ -46,7 +46,7 @@ class User
 		}
 
 		if ($isOccurredError)
-			throw new ApiException('parameters are invalid', $errorTargets);
+			throw new \Utility\ApiException('parameters are invalid', $errorTargets);
 
 		$now = time();
 		$passwordHash = hash('sha256', $password.$now);
@@ -58,7 +58,7 @@ class User
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to create database record');
+			throw new \Utility\ApiException('faild to create database record');
 		}
 
 		$user = $db->executeFetch("select * from $userTable where screen_name = ? limit 1", [$screenName])[0];
@@ -74,15 +74,15 @@ class User
 		try
 		{
 			$userTable = $config['db']['table-names']['user'];
-			$user = $db->executeFetch("select * from $userTable where id = ?", [$id]);
+			$user = $db->executeFetch("select * from $userTable where id = ?", [$id])[0];
 		}
 		catch(PDOException $e)
 		{
-			throw new ApiException('faild to fetch user');
+			throw new \Utility\ApiException('faild to fetch user');
 		}
 
 		if ($user === null)
-			throw new ApiException('user not found');
+			throw new \Utility\ApiException('user not found');
 
 		return $user;
 	}
