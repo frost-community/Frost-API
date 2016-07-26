@@ -11,9 +11,9 @@ $routes = [
 
 	// IceAuth
 	[ 'get',  '/ice-auth/request-key',          [],                            'IceAuth::requestKey' ],
-	[ 'post', '/ice-auth/access-key',           [],                            'IceAuth::accessKeyAuth' ],
+	[ 'post', '/ice-auth/access-key/authorize', [],                            'IceAuth::accessKeyAuth' ],
 	[ 'get',  '/ice-auth/pin-code',             ['internal', 'ice-auth-host'], 'IceAuth::pinCodeShow' ],
-	[ 'get',  '/ice-auth/access-key/show',      ['internal', 'ice-auth-host'], 'IceAuth::accessKeyShow' ],
+	[ 'get',  '/ice-auth/access-key',           ['internal', 'ice-auth-host'], 'IceAuth::accessKeyShow' ],
 	[ 'post', '/ice-auth/access-key/generate',  ['internal', 'ice-auth-host'], 'IceAuth::accessKeyGenerate' ],
 
 	// DevelopersCenter(Application)
@@ -29,6 +29,7 @@ $routes = [
 	[ 'post', '/account/create',                ['internal'],                  'User::create' ],
 
 	// Post
+	[ 'get',  '/post/show',                     ['post-read'],                 'Post::show' ],
 	[ 'get',  '/post/timeline',                 ['post-read'],                 'Post::timeline' ],
 	[ 'post', '/post/create',                   ['post-write'],                'Post::create' ],
 ];
