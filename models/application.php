@@ -38,7 +38,7 @@ class Application
 					if (in_array($requestedPermission, $permissions))
 						throw new ApiException('permissions is duplicate');
 
-					$permissions += $requestedPermission;
+					array_push($permissions, $requestedPermission);
 
 					break;
 				}
