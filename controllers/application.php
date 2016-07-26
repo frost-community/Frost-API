@@ -40,6 +40,14 @@ class Application
 		try
 		{
 			$app = \Models\Application::fetch($params['application-id'], $container);
+
+			// 自分のアプリケーションのキー以外は拒否
+			if ($app['creator_id'] !== $user['id'])
+				throw new \Utility\ApiException('this key is managed by other user');
+
+			if ($app['hash'] === null)
+				throw new \Utility\ApiException('key is empty');
+
 			$destAppKey = \Models\Application::buildKey($params['application-id'], $app['hash']);
 		}
 		catch(\Utility\ApiException $e)
@@ -50,7 +58,7 @@ class Application
 		return withSuccess($res, ['application-key'=>$destAppKey]);
 	}
 
-	public static function regenerateKey($req, $res, $container, $user, $application)
+	public static function applicationKeyGenerate($req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
 		$requireParams = ['application-id'];
@@ -60,11 +68,17 @@ class Application
 
 		try
 		{
+			$app = \Models\Application::fetch($params['application-id'], $container);
+
+			// 自分のアプリケーションのキー以外は拒否
+			if ($app['creator_id'] !== $user['id'])
+				throw new \Utility\ApiException('this key is managed by other user');
+
 			$destAppKey = \Models\Application::generateKey($params['application-id'], $user['id'], $container);
 		}
 		catch(\Utility\ApiException $e)
 		{
-			return withFailure($res, 'faild to regenerate application-key', ['detail'=>$e->getMessage()]);
+			return withFailure($res, 'faild to generate application-key', ['detail'=>$e->getMessage()]);
 		}
 
 		return withSuccess($res, ['application-key'=>$destAppKey]);
