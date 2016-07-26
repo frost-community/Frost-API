@@ -87,20 +87,20 @@ class Application
 		$config = $container->config;
 		$db = $container->dbManager;
 		$num = rand(1, 99999);
-		$hash = hash('sha256', $config['application-key-base'].$userId.$applicationId.$num);
+		$hash = hash('sha256', $config['application-key-base'].$userId.$id.$num);
 		$application = self::fetch($id, $container);
 
 		try
 		{
 			$applicationTable = $config['db']['table-names']['application'];
-			$container->dbManager->execute("update $applicationTable set hash = ? where id = ?", [$hash, $applicationId]);
+			$container->dbManager->execute("update $applicationTable set hash = ? where id = ?", [$hash, $id]);
 		}
 		catch(PDOException $e)
 		{
 			throw new \Utility\ApiException('faild to create database record', ['application-key']);
 		}
 
-		return $applicationId.'-'.$hash;
+		return $id.'-'.$hash;
 	}
 
 	public static function fetch($id, $container)
