@@ -5,15 +5,16 @@ class Application
 {
 	// 権限一覧
 	public static $permissionTypes = [
-		'internal',      // 内部APIへのアクセス
-		'ice-auth-host', // 認証のホスト権限
-		'dev-center',    // 開発者センター(連携アプリ操作)
-		'account-read',  // アカウント情報の取得
-		'account-write', // アカウント情報の変更
-		'user-read',     // ユーザー情報の取得
-		'user-write',    // フォローやブロック等のアクション
-		'post-read',     // 投稿の取得
-		'post-write',    // 投稿の作成・削除、投稿へのアクション
+		'ice-auth-host',       // 認証のホスト権限
+		'application',         // 連携アプリ操作
+		'application-special', // 連携アプリ特殊操作
+		'account-read',        // アカウント情報の取得
+		'account-write',       // アカウント情報の変更
+		'account-special',     // アカウント情報の特殊操作
+		'user-read',           // ユーザー情報の取得
+		'user-write',          // ユーザーのフォロー等のアクション
+		'post-read',           // 投稿の取得
+		'post-write',          // 投稿の作成や削除等のアクション
 	];
 
 	public static function create($userId, $name, $description, array $requestedPermissions, $container)
