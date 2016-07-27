@@ -5,16 +5,14 @@ class ApplicationAccess
 {
 	public static function create($applicationId, $userId, $container)
 	{
-		$config = $container->config;
-		$db = $container->dbManager;
 		$timestamp = time();
 		$num = mt_rand(1, 99999);
-		$hash = strtoupper(hash('sha256', $config['access-key-base'].'/'.$applicationId.'/'.$userId.'/'.$num));
+		$hash = strtoupper(hash('sha256', $container->config['access-key-base'].'/'.$applicationId.'/'.$userId.'/'.$num));
 
 		try
 		{
-			$appAccessTable = $config['db']['table-names']['application-access'];
-			$db->execute("insert into $appAccessTable (created_at, user_id, application_id, hash) values(?, ?, ?, ?)", [$timestamp, $userId, $applicationId, $hash]);
+			$appAccessTable = $container->config['db']['table-names']['application-access'];
+			$container->dbManager->execute("insert into $appAccessTable (created_at, user_id, application_id, hash) values(?, ?, ?, ?)", [$timestamp, $userId, $applicationId, $hash]);
 		}
 		catch(PDOException $e)
 		{
@@ -28,13 +26,10 @@ class ApplicationAccess
 
 	public static function fetch($applicationId, $userId, $container)
 	{
-		$config = $container->config;
-		$db = $container->dbManager;
-
 		try
 		{
-			$appAccessTable = $config['db']['table-names']['application-access'];
-			$accesses = $db->executeFetch("select * from $appAccessTable where application_id = ? & user_id = ?", [$applicationId, $userId]);
+			$appAccessTable = $container->config['db']['table-names']['application-access'];
+			$accesses = $container->dbManager->executeFetch("select * from $appAccessTable where application_id = ? & user_id = ?", [$applicationId, $userId]);
 		}
 		catch(PDOException $e)
 		{
@@ -51,13 +46,10 @@ class ApplicationAccess
 
 	public static function fetch2($userId, $hash, $container)
 	{
-		$config = $container->config;
-		$db = $container->dbManager;
-
 		try
 		{
-			$appAccessTable = $config['db']['table-names']['application-access'];
-			$accesses = $db->executeFetch("select * from $appAccessTable where hash = ? and user_id = ?", [$hash, $userId]);
+			$appAccessTable = $container->config['db']['table-names']['application-access'];
+			$accesses = $container->dbManager->executeFetch("select * from $appAccessTable where hash = ? and user_id = ?", [$hash, $userId]);
 		}
 		catch(PDOException $e)
 		{
@@ -77,8 +69,6 @@ class ApplicationAccess
 
 	public static function validate($accessKey, $container)
 	{
-		$config = $container->config;
-		$db = $container->dbManager;
 		$match = \Utility\Regex::match('/([^-]+)-([^-]{64})/', $accessKey);
 
 		if ($match === null)

@@ -6,16 +6,14 @@ class Request
 {
 	public static function create($applicationKey, $container)
 	{
-		$config = $container->config;
-		$db = $container->dbManager;
 		$num = rand(1, 99999);
 		$timestamp = time();
-		$key = $timestamp.'-'.$num.'-'.strtoupper(hash('sha256', $config['request-key-base'].$applicationKey.$timestamp.$num));
+		$key = $timestamp.'-'.strtoupper(hash('sha256', $container->config['request-key-base'].$applicationKey.$timestamp.$num));
 
 		try
 		{
-			$requestTable = $config['db']['table-names']['request'];
-			$db->execute("insert into $requestTable (created_at, application_key, key) values(?, ?, ?)", [$timestamp, $applicationKey, $key]);
+			$requestTable = $container->config['db']['table-names']['request'];
+			$container->dbManager->execute("insert into $requestTable (created_at, application_key, key) values(?, ?, ?)", [$timestamp, $applicationKey, $key]);
 		}
 		catch(PDOException $e)
 		{
@@ -29,13 +27,10 @@ class Request
 
 	public static function fetchByKey($requestKey, $container)
 	{
-		$config = $container->config;
-		$db = $container->dbManager;
-
 		try
 		{
-			$requestTable = $config['db']['table-names']['request'];
-			$requests = $db->executeFetch("select * from $requestTable where key = ?", [$requestKey]);
+			$requestTable = $container->config['db']['table-names']['request'];
+			$requests = $container->dbManager->executeFetch("select * from $requestTable where key = ?", [$requestKey]);
 		}
 		catch(PDOException $e)
 		{
@@ -50,30 +45,24 @@ class Request
 
 	public static function validate($requestKey, $container)
 	{
-		$config = $container->config;
-		$db = $container->dbManager;
-
 		try
 		{
-			$request = self::fetchByKey($requestKey, $db);
+			$request = self::fetchByKey($requestKey, $container);
 		}
 		catch(Exception $e)
 		{
 			return false;
 		}
 
-		return abs(time() - $request['created_at']) < $config['request-key-expire-sec'];
+		return abs(time() - $request['created_at']) < $container->config['request-key-expire-sec'];
 	}
 
 	public static function destroy($requestKey, $container)
 	{
-		$config = $container->config;
-		$db = $container->dbManager;
-
 		try
 		{
-			$requestTable = $config['db']['table-names']['request'];
-			$db->execute("delete from $requestTable where key = ?", [$requestKey]);
+			$requestTable = $container->config['db']['table-names']['request'];
+			$container->dbManager->execute("delete from $requestTable where key = ?", [$requestKey]);
 		}
 		catch(PDOException $e)
 		{

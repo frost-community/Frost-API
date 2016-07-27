@@ -18,8 +18,6 @@ class Application
 
 	public static function create($userId, $name, $description, array $requestedPermissions, $container)
 	{
-		$config = $container->config;
-		$db = $container->dbManager;
 		$timestamp = time();
 		$isPermissionError = false;
 		$invalidPermissionNames = [];
@@ -65,10 +63,10 @@ class Application
 
 		try
 		{
-			$application = $db->transaction(function() use($db, $userId, $timestamp, $name, $description, $permissions, $config) {
-				$applicationTable = $config['db']['table-names']['application'];
-				$db->execute("insert into $applicationTable (creator_id, created_at, name, description, permissions) values(?, ?, ?, ?, ?)", [$userId, $timestamp, $name, $description, implode(',', $permissions)]);
-				return $db->executeFetch("select * from $applicationTable where creator_id = ? & name = ?", [$userId, $name])[0];
+			$application = $container->dbManager->transaction(function() use($container, $userId, $timestamp, $name, $description, $permissions) {
+				$applicationTable = $container->config['db']['table-names']['application'];
+				$container->dbManager->execute("insert into $applicationTable (creator_id, created_at, name, description, permissions) values(?, ?, ?, ?, ?)", [$userId, $timestamp, $name, $description, implode(',', $permissions)]);
+				return $container->dbManager->executeFetch("select * from $applicationTable where creator_id = ? & name = ?", [$userId, $name])[0];
 			});
 		}
 		catch(Exception $e)
@@ -84,15 +82,13 @@ class Application
 
 	public static function generateKey($id, $userId, $container)
 	{
-		$config = $container->config;
-		$db = $container->dbManager;
 		$num = rand(1, 99999);
-		$hash = strtoupper(hash('sha256', $config['application-key-base'].$userId.$id.$num));
+		$hash = strtoupper(hash('sha256', $container->config['application-key-base'].$userId.$id.$num));
 		$application = self::fetch($id, $container);
 
 		try
 		{
-			$applicationTable = $config['db']['table-names']['application'];
+			$applicationTable = $container->config['db']['table-names']['application'];
 			$container->dbManager->execute("update $applicationTable set hash = ? where id = ?", [$hash, $id]);
 		}
 		catch(PDOException $e)
@@ -100,18 +96,15 @@ class Application
 			throw new \Utility\ApiException('faild to create database record', ['application-key']);
 		}
 
-		return $id.'-'.$hash;
+		return self::buildKey($id, $hash);
 	}
 
 	public static function fetch($id, $container)
 	{
-		$config = $container->config;
-		$db = $container->dbManager;
-
 		try
 		{
-			$applicationTable = $config['db']['table-names']['application'];
-			$apps = $db->executeFetch("select * from $applicationTable where id = ?", [$id]);
+			$applicationTable = $container->config['db']['table-names']['application'];
+			$apps = $container->dbManager->executeFetch("select * from $applicationTable where id = ?", [$id]);
 		}
 		catch(PDOException $e)
 		{
@@ -126,13 +119,10 @@ class Application
 
 	public static function fetchByName($name, $container)
 	{
-		$config = $container->config;
-		$db = $container->dbManager;
-
 		try
 		{
-			$applicationTable = $config['db']['table-names']['application'];
-			$apps = $db->executeFetch("select * from $applicationTable where name = ?", [$name]);
+			$applicationTable = $container->config['db']['table-names']['application'];
+			$apps = $container->dbManager->executeFetch("select * from $applicationTable where name = ?", [$name]);
 		}
 		catch(PDOException $e)
 		{
@@ -152,8 +142,6 @@ class Application
 
 	public static function validate($applicationKey, $container)
 	{
-		$config = $container->config;
-		$db = $container->dbManager;
 		$match = \Utility\Regex::match('/([^-]+)-([^-]{64})/', $applicationKey);
 
 		if ($match === null)
