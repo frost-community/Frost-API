@@ -10,7 +10,7 @@ class Request
 		$db = $container->dbManager;
 		$num = rand(1, 99999);
 		$timestamp = time();
-		$key = $timestamp.'-'.$num.'-'.hash('sha256', $config['request-key-base'].$applicationKey.$timestamp.$num);
+		$key = $timestamp.'-'.$num.'-'.strtoupper(hash('sha256', $config['request-key-base'].$applicationKey.$timestamp.$num));
 
 		try
 		{

@@ -87,7 +87,7 @@ class Application
 		$config = $container->config;
 		$db = $container->dbManager;
 		$num = rand(1, 99999);
-		$hash = hash('sha256', $config['application-key-base'].$userId.$id.$num);
+		$hash = strtoupper(hash('sha256', $config['application-key-base'].$userId.$id.$num));
 		$application = self::fetch($id, $container);
 
 		try

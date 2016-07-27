@@ -9,7 +9,7 @@ class ApplicationAccess
 		$db = $container->dbManager;
 		$timestamp = time();
 		$num = mt_rand(1, 99999);
-		$hash = hash('sha256', $config['access-key-base'].'/'.$applicationId.'/'.$userId.'/'.$num);
+		$hash = strtoupper(hash('sha256', $config['access-key-base'].'/'.$applicationId.'/'.$userId.'/'.$num));
 
 		try
 		{
