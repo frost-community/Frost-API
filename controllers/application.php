@@ -11,9 +11,7 @@ class Application
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
 		if (!\Utility\Regex::isMatch('/^[a-z,-]+$/', $params['permissions']))
-		{
 			return withFailure($res, 'format of permissions parameter is invalid', ['detail'=>'it is required to be constructed in "a" to "z", and ","']);
-		}
 
 		$splitedPermissions = explode(',', $params['permissions']);
 
