@@ -84,20 +84,21 @@ class Application
 	public static function generateKey($id, $userId, $container)
 	{
 		$num = rand(1, 99999);
-		$hash = strtoupper(hash('sha256', $container->config['application-key-base'].$userId.$id.$num));
 		$application = self::fetch($id, $container);
+		$key = self::buildKey($id, $userId, $num, $container);
+		$keyHash = strtoupper(hash('sha256', $key));
 
 		try
 		{
 			$applicationTable = $container->config['db']['table-names']['application'];
-			$container->dbManager->execute("update $applicationTable set hash = ? where id = ?", [$hash, $id]);
+			$container->dbManager->execute("update $applicationTable set hash = ? where id = ?", [$keyHash, $id]);
 		}
 		catch(PDOException $e)
 		{
 			throw new \Utility\ApiException('faild to create database record', ['application-key']);
 		}
 
-		return self::buildKey($id, $hash);
+		return $key;
 	}
 
 	public static function fetch($id, $container)
@@ -136,9 +137,10 @@ class Application
 		return $apps[0];
 	}
 
-	public static function buildKey($id, $hash)
+	public static function buildKey($id, $userId, $num, $container)
 	{
-		return $id.'-'.$hash;
+		$hash = strtoupper(hash('sha256', "{$container->config['application-key-base']}/{$userId}/{$id}/{$num}"));
+		return "{$id}-{$hash}.{$num}";
 	}
 
 	public static function validate($applicationKey, $container)

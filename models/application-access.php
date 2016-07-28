@@ -7,12 +7,13 @@ class ApplicationAccess
 	{
 		$timestamp = time();
 		$num = mt_rand(1, 99999);
-		$hash = strtoupper(hash('sha256', $container->config['access-key-base'].'/'.$applicationId.'/'.$userId.'/'.$num));
+		$key = self::buildKey($applicationId, $userId, $num, $container);
+		$keyHash = strtoupper(hash('sha256', $key));
 
 		try
 		{
 			$appAccessTable = $container->config['db']['table-names']['application-access'];
-			$container->dbManager->execute("insert into $appAccessTable (created_at, user_id, application_id, hash) values(?, ?, ?, ?)", [$timestamp, $userId, $applicationId, $hash]);
+			$container->dbManager->execute("insert into $appAccessTable (created_at, user_id, application_id, hash) values(?, ?, ?, ?)", [$timestamp, $userId, $applicationId, $keyHash]);
 		}
 		catch(PDOException $e)
 		{
@@ -62,9 +63,10 @@ class ApplicationAccess
 		return $accesses[0];
 	}
 
-	public static function buildKey($userId, $hash)
+	public static function buildKey($applicationId, $userId, $num, $container)
 	{
-		return $userId.'-'.$hash;
+		$hash = strtoupper(hash('sha256', "{$container->config['access-key-base']}/{$applicationId}/{$userId}/{$num}"));
+		return "{$userId}-{$hash}.{$num}";
 	}
 
 	public static function validate($accessKey, $container)

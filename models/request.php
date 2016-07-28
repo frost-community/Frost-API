@@ -4,16 +4,17 @@ namespace Models;
 // Webの認証ページの有効期限を管理する
 class Request
 {
-	public static function create($applicationKey, $container)
+	public static function create($applicationId, $container)
 	{
 		$num = rand(1, 99999);
 		$timestamp = time();
-		$key = $timestamp.'-'.strtoupper(hash('sha256', $container->config['request-key-base'].$applicationKey.$timestamp.$num));
+		$key = self::buildKey($applicationId, $timestamp, $num, $container);
+		$keyHash = strtoupper(hash('sha256', $key));
 
 		try
 		{
 			$requestTable = $container->config['db']['table-names']['request'];
-			$container->dbManager->execute("insert into $requestTable (created_at, application_key, key) values(?, ?, ?)", [$timestamp, $applicationKey, $key]);
+			$container->dbManager->execute("insert into $requestTable (created_at, application_id, hash) values(?, ?, ?)", [$timestamp, $applicationId, $keyHash]);
 		}
 		catch(PDOException $e)
 		{
@@ -41,6 +42,12 @@ class Request
 			throw new \Utility\ApiException('request not found');
 
 		return $requests[0];
+	}
+
+	public static function buildKey($applicationId, $timestamp, $num, $container)
+	{
+		$hash = strtoupper(hash('sha256', "{$container->config['request-key-base']}/{$applicationId}/{$timestamp}/{$num}"));
+		return "{$timestamp}-{$hash}.{$num}";
 	}
 
 	public static function validate($requestKey, $container)
