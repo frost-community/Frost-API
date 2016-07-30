@@ -6,7 +6,7 @@ class ApplicationAccess
 	public static function create($applicationId, $userId, $container)
 	{
 		$timestamp = time();
-		$num = mt_rand(1, 99999);
+		$num = random_int(1, 99999);
 		$hash = strtoupper(hash('sha256', $container->config['access-key-base'].'/'.$applicationId.'/'.$userId.'/'.$num));
 
 		try

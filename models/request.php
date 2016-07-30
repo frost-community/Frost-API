@@ -6,7 +6,7 @@ class Request
 {
 	public static function create($applicationKey, $container)
 	{
-		$num = rand(1, 99999);
+		$num = random_int(1, 99999);
 		$timestamp = time();
 		$key = $timestamp.'-'.strtoupper(hash('sha256', $container->config['request-key-base'].$applicationKey.$timestamp.$num));
 

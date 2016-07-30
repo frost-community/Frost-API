@@ -83,7 +83,7 @@ class Application
 
 	public static function generateKey($id, $userId, $container)
 	{
-		$num = rand(1, 99999);
+		$num = random_int(1, 99999);
 		$hash = strtoupper(hash('sha256', $container->config['application-key-base'].$userId.$id.$num));
 		$application = self::fetch($id, $container);
 
