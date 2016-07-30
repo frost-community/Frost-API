@@ -1,8 +1,10 @@
 <?php
-namespace Models;
 
-class Application
+class Application extends Model
 {
+	public static $_table = 'test_application';
+	public static $_id_column = 'id';
+
 	// 権限一覧
 	public static $permissionTypes = [
 		'ice-auth-host',       // 認証のホスト権限
@@ -19,6 +21,8 @@ class Application
 
 	public static function create($userId, $name, $description, array $requestedPermissions, $container)
 	{
+		$app = parent::create();
+
 		$timestamp = time();
 		$isPermissionError = false;
 		$invalidPermissionNames = [];
@@ -38,7 +42,6 @@ class Application
 						throw new \Utility\ApiException('permissions is duplicate');
 
 					array_push($permissions, $requestedPermission);
-
 					break;
 				}
 			}
@@ -53,88 +56,26 @@ class Application
 		if ($isPermissionError)
 			throw new \Utility\ApiException('unknown permissions', $invalidPermissionNames);
 
-		try
-		{
-			$application = self::fetchByName($name, $container);
-		}
-		catch(\Utility\ApiException $e) { }
-
-		if (isset($application))
+		if (!Model::factory('Application')->where('name', $name)->find_many())
 			throw new \Utility\ApiException('already exists.');
 
-		try
-		{
-			$application = $container->dbManager->transaction(function() use($container, $userId, $timestamp, $name, $description, $permissions) {
-				$applicationTable = $container->config['db']['table-names']['application'];
-				$container->dbManager->execute("insert into $applicationTable (creator_id, created_at, name, description, permissions) values(?, ?, ?, ?, ?)", [$userId, $timestamp, $name, $description, implode(',', $permissions)]);
-				return $container->dbManager->executeFetch("select * from $applicationTable where creator_id = ? & name = ?", [$userId, $name])[0];
-			});
-		}
-		catch(Exception $e)
-		{
-			throw new \Utility\ApiException('faild to create database record');
-		}
+		$app->created_at = $timestamp;
+		$app->creator_id = $userId;
+		$app->name = $name;
+		$app->description = $description;
+		$app->permissions = implode(',', $permissions);
 
-		$key = self::generateKey($application['id'], $userId, $container);
-		$application['key'] = $key;
-
-		return $application;
+		return $app;
 	}
 
-	public static function generateKey($id, $userId, $container)
+	public function generateKey($id, $userId, $container)
 	{
 		$num = rand(1, 99999);
-		$application = self::fetch($id, $container);
 		$key = self::buildKey($id, $userId, $num, $container);
 		$keyHash = strtoupper(hash('sha256', $key));
-
-		try
-		{
-			$applicationTable = $container->config['db']['table-names']['application'];
-			$container->dbManager->execute("update $applicationTable set hash = ? where id = ?", [$keyHash, $id]);
-		}
-		catch(PDOException $e)
-		{
-			throw new \Utility\ApiException('faild to create database record', ['application-key']);
-		}
+		$this->hash = $keyHash;
 
 		return $key;
-	}
-
-	public static function fetch($id, $container)
-	{
-		try
-		{
-			$applicationTable = $container->config['db']['table-names']['application'];
-			$apps = $container->dbManager->executeFetch("select * from $applicationTable where id = ?", [$id]);
-		}
-		catch(PDOException $e)
-		{
-			throw new \Utility\ApiException('faild to fetch application');
-		}
-
-		if (count($apps) === 0)
-			throw new \Utility\ApiException('application not found');
-
-		return $apps[0];
-	}
-
-	public static function fetchByName($name, $container)
-	{
-		try
-		{
-			$applicationTable = $container->config['db']['table-names']['application'];
-			$apps = $container->dbManager->executeFetch("select * from $applicationTable where name = ?", [$name]);
-		}
-		catch(PDOException $e)
-		{
-			throw new \Utility\ApiException('faild to fetch application');
-		}
-
-		if (count($apps) === 0)
-			throw new \Utility\ApiException('application not found');
-
-		return $apps[0];
 	}
 
 	public static function buildKey($id, $userId, $num, $container)
@@ -145,23 +86,28 @@ class Application
 
 	public static function validate($applicationKey, $container)
 	{
-		$match = \Utility\Regex::match('/([^-]+)-([^-]{64})/', $applicationKey);
+		$match = \Utility\Regex::match('/([^-]+)-([^-]{64}).([^-]+)/', $applicationKey);
 
 		if ($match === null)
 			return false;
 
 		$applicationId = $match[1];
 		$hash = $match[2];
+		$num = $match[3];
 
-		try
-		{
-			$application = self::fetch($applicationId, $container);
-		}
-		catch (\Utility\ApiException $e)
-		{
+		$app = Model::factory('Application')->find_one($applicationId);
+
+		if (!$app)
 			return false;
-		}
 
-		return $hash === $application['hash'];
+		$key = self::buildKey($applicationId, $app->creator_id, $num, $container);
+		$keyHash = strtoupper(hash('sha256', $key));
+
+		return $keyHash === $app->hash;
+	}
+
+	public function requests()
+	{
+		return $this->has_many('Request', 'id');
 	}
 }

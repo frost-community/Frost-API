@@ -1,6 +1,6 @@
 <?php
 
-class IceAuth
+class IceAuthController
 {
 	// 内部用 指定アプリケーションのアクセスキー取得
 	public static function accessKeyShow($req, $res, $container, $user, $application)
@@ -79,8 +79,17 @@ class IceAuth
 		return withSuccess($res, ['access-key'=>$accessKey]);
 	}
 
-	public static function requestKey($req, $res, $container)
+	public static function requestCreate($req, $res, $container)
 	{
 		// TODO: request-keyとpin-codeを発行
+
+		$params = $req->getParams();
+		$requireParams = ['application-id'];
+
+		if (!hasRequireParams($params, $requireParams))
+			return withFailure($res, 'required parameters are missing', $requireParams);
+
+		$req = Model::factory('Request')->create($params['application-id'], $container);
+		$req->save();
 	}
 }

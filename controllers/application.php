@@ -1,6 +1,6 @@
 <?php
 
-class Application
+class ApplicationController
 {
 	public static function create($req, $res, $container, $user, $application)
 	{

@@ -1,6 +1,6 @@
 <?php
 
-class Post
+class PostController
 {
 	public static function create($req, $res, $container, $user, $application)
 	{

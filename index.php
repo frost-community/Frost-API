@@ -15,6 +15,10 @@ $appConfig = [
 	'dbManager' => new \Utility\DatabaseManager($config['db']['hostname'], $config['db']['username'], $config['db']['password'], $config['db']['dbname'])
 ];
 
+ORM::configure("mysql:dbname={$config['db']['dbname']};host={$config['db']['hostname']};charset=utf8");
+ORM::configure('username', $config['db']['username']);
+ORM::configure('password', $config['db']['password']);
+
 $app = new Slim\App($appConfig);
 
 require_once './router.php';
