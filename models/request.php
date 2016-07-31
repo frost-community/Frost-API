@@ -15,7 +15,7 @@ class Request
 			$requestTable = $container->config['db']['table-names']['request'];
 			$container->dbManager->execute("insert into $requestTable (created_at, application_key, key) values(?, ?, ?)", [$timestamp, $applicationKey, $key]);
 		}
-		catch(PDOException $e)
+		catch(\PDOException $e)
 		{
 			throw new \Utility\ApiException('faild to create database record', ['request-key']);
 		}
@@ -32,7 +32,7 @@ class Request
 			$requestTable = $container->config['db']['table-names']['request'];
 			$requests = $container->dbManager->executeFetch("select * from $requestTable where key = ?", [$requestKey]);
 		}
-		catch(PDOException $e)
+		catch(\PDOException $e)
 		{
 			throw new \Utility\ApiException('faild to fetch request');
 		}
@@ -49,7 +49,7 @@ class Request
 		{
 			$request = self::fetchByKey($requestKey, $container);
 		}
-		catch(Exception $e)
+		catch(\Exception $e)
 		{
 			return false;
 		}
@@ -64,7 +64,7 @@ class Request
 			$requestTable = $container->config['db']['table-names']['request'];
 			$container->dbManager->execute("delete from $requestTable where key = ?", [$requestKey]);
 		}
-		catch(PDOException $e)
+		catch(\PDOException $e)
 		{
 			throw new \Utility\ApiException('faild to destroy database record');
 		}

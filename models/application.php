@@ -145,7 +145,7 @@ class Application
 	{
 		$match = \Utility\Regex::match('/([^-]+)-([^-]{64})/', $applicationKey);
 
-		if ($match === null)
+		if (!$match)
 			return false;
 
 		$applicationId = $match[1];

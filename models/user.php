@@ -56,7 +56,7 @@ class User
 		{
 			$db->execute("insert into $userTable (created_at, screen_name, name, password_hash) values(?, ?, ?, ?)", [$now, $screenName, $name, $passwordHash]);
 		}
-		catch(PDOException $e)
+		catch(\PDOException $e)
 		{
 			throw new \Utility\ApiException('faild to create database record');
 		}
@@ -76,7 +76,7 @@ class User
 			$userTable = $config['db']['table-names']['user'];
 			$user = $db->executeFetch("select * from $userTable where id = ?", [$id])[0];
 		}
-		catch(PDOException $e)
+		catch(\PDOException $e)
 		{
 			throw new \Utility\ApiException('faild to fetch user');
 		}

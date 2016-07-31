@@ -14,7 +14,7 @@ class ApplicationAccess
 			$appAccessTable = $container->config['db']['table-names']['application-access'];
 			$container->dbManager->execute("insert into $appAccessTable (created_at, user_id, application_id, hash) values(?, ?, ?, ?)", [$timestamp, $userId, $applicationId, $hash]);
 		}
-		catch(PDOException $e)
+		catch(\PDOException $e)
 		{
 			throw new \Utility\ApiException('faild to create database record');
 		}
@@ -31,7 +31,7 @@ class ApplicationAccess
 			$appAccessTable = $container->config['db']['table-names']['application-access'];
 			$accesses = $container->dbManager->executeFetch("select * from $appAccessTable where application_id = ? & user_id = ?", [$applicationId, $userId]);
 		}
-		catch(PDOException $e)
+		catch(\PDOException $e)
 		{
 			throw new \Utility\ApiException('faild to fetch application access');
 		}
@@ -51,7 +51,7 @@ class ApplicationAccess
 			$appAccessTable = $container->config['db']['table-names']['application-access'];
 			$accesses = $container->dbManager->executeFetch("select * from $appAccessTable where hash = ? and user_id = ?", [$hash, $userId]);
 		}
-		catch(PDOException $e)
+		catch(\PDOException $e)
 		{
 			throw new \Utility\ApiException('faild to fetch application access');
 		}
@@ -81,7 +81,7 @@ class ApplicationAccess
 		{
 			return self::fetch2($userId, $hash, $container);
 		}
-		catch (ApiWException $e) { }
+		catch (\Utility\ApiException $e) { }
 
 		return false;
 	}
