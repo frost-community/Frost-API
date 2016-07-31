@@ -134,9 +134,9 @@ class ApplicationModel
 		if (!$app)
 			return false;
 
-		$key = self::buildKey($id, $app->creator_id, $managementCode, $container);
+		$key = self::buildKey($id, $app->creator_id, $app->management_code, $container);
 		$keyHash = strtoupper(hash('sha256', $key));
 
-		return $keyHash === $app->hash;
+		return $keyHash === $app->key_hash;
 	}
 }
