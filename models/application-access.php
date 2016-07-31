@@ -1,7 +1,7 @@
 <?php
 namespace Models;
 
-class ApplicationAccess
+class ApplicationAccessModel
 {
 	public static function create($applicationId, $userId, $container)
 	{

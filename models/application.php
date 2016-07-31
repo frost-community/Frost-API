@@ -1,10 +1,7 @@
 <?php
 
-class Application extends Model
+class ApplicationModel
 {
-	public static $_table = 'test_application';
-	public static $_id_column = 'id';
-
 	// 権限一覧
 	public static $permissionTypes = [
 		'ice-auth-host',       // 認証のホスト権限
@@ -19,9 +16,10 @@ class Application extends Model
 		'post-write',          // 投稿の作成や削除等のアクション
 	];
 
+	// アプリケーションを作成し、DBに保存する
 	public static function create($userId, $name, $description, array $requestedPermissions, $container)
 	{
-		$app = parent::create();
+		$app = Model::factory('ApplicationData')->create();
 
 		$timestamp = time();
 		$isPermissionError = false;
@@ -65,25 +63,30 @@ class Application extends Model
 		$app->description = $description;
 		$app->permissions = implode(',', $permissions);
 
-		return $app;
+		$app->save();
 	}
 
-	public function generateKey($id, $userId, $container)
+	// アプリケーションキーを生成し、キーハッシュをDBへ保存する
+	public static function generateKey($id, $userId, $container)
 	{
 		$num = rand(1, 99999);
 		$key = self::buildKey($id, $userId, $num, $container);
 		$keyHash = strtoupper(hash('sha256', $key));
-		$this->hash = $keyHash;
+
+		$app = Model::factory('ApplicationData')->find_one($id);
+		$app->hash = $keyHash;
 
 		return $key;
 	}
 
+	// キーを構築する
 	public static function buildKey($id, $userId, $num, $container)
 	{
 		$hash = strtoupper(hash('sha256', "{$container->config['application-key-base']}/{$userId}/{$id}/{$num}"));
 		return "{$id}-{$hash}.{$num}";
 	}
 
+	// アプリケーションキーを検証する
 	public static function validate($applicationKey, $container)
 	{
 		$match = \Utility\Regex::match('/([^-]+)-([^-]{64}).([^-]+)/', $applicationKey);
@@ -91,23 +94,18 @@ class Application extends Model
 		if ($match === null)
 			return false;
 
-		$applicationId = $match[1];
+		$id = $match[1];
 		$hash = $match[2];
 		$num = $match[3];
 
-		$app = Model::factory('Application')->find_one($applicationId);
+		$app = Model::factory('Application')->find_one($id);
 
 		if (!$app)
 			return false;
 
-		$key = self::buildKey($applicationId, $app->creator_id, $num, $container);
+		$key = self::buildKey($id, $app->creator_id, $num, $container);
 		$keyHash = strtoupper(hash('sha256', $key));
 
 		return $keyHash === $app->hash;
-	}
-
-	public function requests()
-	{
-		return $this->has_many('Request', 'id');
 	}
 }

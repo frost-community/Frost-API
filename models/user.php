@@ -1,7 +1,7 @@
 <?php
 namespace Models;
 
-class User
+class UserModel
 {
 	// ユーザーを生成します
 	public static function create($screenName, $password, $name, $container)
