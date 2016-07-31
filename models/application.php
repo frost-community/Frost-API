@@ -19,9 +19,14 @@ class ApplicationModel
 		$this->ApplicationData = $applicationData;
 	}
 
-	// データベースのレコードを作成し、インスタンスを取得します。
-	public static function createRecord($userId, $name, $description, array $requestedPermissions, $container)
+	// データベースのレコードを作成し、インスタンスを取得します
+	public static function createRecord($userId, $name, $description, $requestedPermissions, $container)
 	{
+		if (!\Utility\Regex::isMatch('/^[a-z,-]+$/', $requestedPermissions))
+			throw new \Utility\ApiException('format of permissions parameter is invalid', ['detail'=>'it is required to be constructed in "a" to "z", and ","']);
+
+		$splitedPermissionsArray = explode(',', $requestedPermissions);
+
 		$app = Model::factory('ApplicationData')->create();
 
 		$timestamp = time();
@@ -89,15 +94,18 @@ class ApplicationModel
 	アプリケーションキーを生成し、ハッシュを更新します
 	データベースへのsaveはされません
 	*/
-	public static function generateKey($id, $userId, $container)
+	public function generateKey($userId, $container)
 	{
+		// 自分のアプリケーションのキー以外は拒否
+		if ($this->ApplicationData->creator_id !== $userId)
+			throw new \Utility\ApiException('this key is managed by other user');
+
 		$managementCode = rand(1, 99999);
-		$key = self::buildKey($id, $userId, $managementCode, $container);
+		$key = self::buildKey($this->ApplicationData, $userId, $managementCode, $container);
 		$keyHash = strtoupper(hash('sha256', $key));
 
-		$app = Model::factory('ApplicationData')->find_one($id);
-		$app->key_hash = $keyHash;
-		$app->management_code = $managementCode;
+		$this->ApplicationData->key_hash = $keyHash;
+		$this->ApplicationData->management_code = $managementCode;
 
 		return $key;
 	}
@@ -105,19 +113,26 @@ class ApplicationModel
 	/*
 	アプリケーションキーをデータベースから取得します
 	*/
-	public function getKey()
+	public function getKey($accessUserId)
 	{
+		// 自分のアプリケーションのキー以外は拒否
+		if ($accessUserId !== null && $this->ApplicationData->creator_id !== $accessUserId)
+			throw new \Utility\ApiException('this key is managed by other user');
+
+		if ($this->ApplicationData->key_hash === null)
+			throw new \Utility\ApiException('key is empty');
+
 		return self::buildKey($this->ApplicationData->id, $this->ApplicationData->creator_id, $this->ApplicationData->management_code, $this->container);
 	}
 
-	// キーを構築する
+	// キーを構築します
 	public static function buildKey($id, $userId, $managementCode, $container)
 	{
 		$hash = strtoupper(hash('sha256', "{$container->config['application-key-base']}/{$userId}/{$id}/{$managementCode}"));
 		return "{$id}-{$hash}.{$managementCode}";
 	}
 
-	// アプリケーションキーを検証する
+	// アプリケーションキーを検証します
 	public static function validateKey($applicationKey, $container)
 	{
 		$match = \Utility\Regex::match('/([^-]+)-([^-]{64}).([^-]+)/', $applicationKey);
@@ -138,5 +153,22 @@ class ApplicationModel
 		$keyHash = strtoupper(hash('sha256', $key));
 
 		return $keyHash === $app->key_hash;
+	}
+
+	// レスポンス向けの配列データに変換します
+	public function toArrayResponse()
+	{
+		$app = $this->ApplicationData;
+		$data = [
+			'created_at' => $app->created_at,
+			'creator_id' => $app->creator_id,
+			'name' => $app->name,
+			'description' => $app->description,
+			'permissions' => $app->permissions,
+			'key_hash' => $app->key_hash,
+			'management_code' => $app->management_code
+		];
+
+		return $data;
 	}
 }
