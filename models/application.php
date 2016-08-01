@@ -4,7 +4,7 @@
 class ApplicationModel
 {
 	// 操作対象のApplicationレコード
-	private $ApplicationData;
+	private $applicationData;
 
 	// コンテナー
 	private $container;
@@ -16,7 +16,7 @@ class ApplicationModel
 			throw new Exception('some arguments are empty');
 
 		$this->container = $container;
-		$this->ApplicationData = $applicationData;
+		$this->applicationData = $applicationData;
 	}
 
 	// データベースのレコードを作成し、インスタンスを取得します
@@ -97,15 +97,15 @@ class ApplicationModel
 	public function generateKey($userId, $container)
 	{
 		// 自分のアプリケーションのキー以外は拒否
-		if ($this->ApplicationData->creator_id !== $userId)
+		if ($this->applicationData->creator_id !== $userId)
 			throw new \Utility\ApiException('this key is managed by other user');
 
 		$managementCode = rand(1, 99999);
-		$key = self::buildKey($this->ApplicationData, $userId, $managementCode, $container);
+		$key = self::buildKey($this->applicationData, $userId, $managementCode, $container);
 		$keyHash = strtoupper(hash('sha256', $key));
 
-		$this->ApplicationData->key_hash = $keyHash;
-		$this->ApplicationData->management_code = $managementCode;
+		$this->applicationData->key_hash = $keyHash;
+		$this->applicationData->management_code = $managementCode;
 
 		return $key;
 	}
@@ -116,13 +116,13 @@ class ApplicationModel
 	public function getKey($accessUserId)
 	{
 		// 自分のアプリケーションのキー以外は拒否
-		if ($accessUserId !== null && $this->ApplicationData->creator_id !== $accessUserId)
+		if ($accessUserId !== null && $this->applicationData->creator_id !== $accessUserId)
 			throw new \Utility\ApiException('this key is managed by other user');
 
-		if ($this->ApplicationData->key_hash === null)
+		if ($this->applicationData->key_hash === null)
 			throw new \Utility\ApiException('key is empty');
 
-		return self::buildKey($this->ApplicationData->id, $this->ApplicationData->creator_id, $this->ApplicationData->management_code, $this->container);
+		return self::buildKey($this->applicationData->id, $this->applicationData->creator_id, $this->applicationData->management_code, $this->container);
 	}
 
 	// キーを構築します
@@ -158,7 +158,7 @@ class ApplicationModel
 	// レスポンス向けの配列データに変換します
 	public function toArrayResponse()
 	{
-		$app = $this->ApplicationData;
+		$app = $this->applicationData;
 		$data = [
 			'created_at' => $app->created_at,
 			'creator_id' => $app->creator_id,
