@@ -9,8 +9,14 @@ class ApplicationModel
 	// コンテナー
 	private $container;
 
-	// クラスの新しいインスタンスを初期化し、データベースのレコードを作成します
-	public function __construct($applicationData, $container)
+	// ユーザーid
+	private $userId;
+
+	/*
+	クラスの新しいインスタンスを初期化します
+	userIdに関しては特殊なアクセスのためにnullを許容します
+	*/
+	public function __construct($applicationData, $container, $userId = null)
 	{
 		if (!$applicationData || !$container)
 			throw new Exception('some arguments are empty');
@@ -94,14 +100,14 @@ class ApplicationModel
 	アプリケーションキーを生成し、ハッシュを更新します
 	データベースへのsaveはされません
 	*/
-	public function generateKey($userId, $container)
+	public function generateKey()
 	{
 		// 自分のアプリケーションのキー以外は拒否
-		if ($this->applicationData->creator_id !== $userId)
+		if ($this->userId !== null && $this->applicationData->creator_id !== $this->userId)
 			throw new \Utility\ApiException('this key is managed by other user');
 
 		$managementCode = rand(1, 99999);
-		$key = self::buildKey($this->applicationData, $userId, $managementCode, $container);
+		$key = self::buildKey($this->applicationData, $userId, $managementCode, $this->container);
 		$keyHash = strtoupper(hash('sha256', $key));
 
 		$this->applicationData->key_hash = $keyHash;
@@ -113,10 +119,10 @@ class ApplicationModel
 	/*
 	アプリケーションキーをデータベースから取得します
 	*/
-	public function getKey($accessUserId)
+	public function getKey()
 	{
 		// 自分のアプリケーションのキー以外は拒否
-		if ($accessUserId !== null && $this->applicationData->creator_id !== $accessUserId)
+		if ($this->userId !== null && $this->applicationData->creator_id !== $this->userId)
 			throw new \Utility\ApiException('this key is managed by other user');
 
 		if ($this->applicationData->key_hash === null)
