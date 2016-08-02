@@ -39,5 +39,5 @@ CREATE TABLE IF NOT EXISTS `frost_user` (
   `name` VARCHAR(256) NULL,
   `password_hash` VARCHAR(256) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `screen_name` (`screen_name`))
+  UNIQUE KEY `screen_name_UNIQUE` (`screen_name`))
 ENGINE=MyISAM DEFAULT CHARSET=utf8;
