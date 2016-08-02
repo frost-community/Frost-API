@@ -52,7 +52,6 @@ class Application
 
 		if ($isPermissionError)
 			throw new \Utility\ApiException('unknown permissions', $invalidPermissionNames);
-
 		try
 		{
 			$application = self::fetchByName($name, $container);
