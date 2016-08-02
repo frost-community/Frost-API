@@ -1,33 +1,52 @@
 <?php
 
-// APIにアクセスするためのアプリケーションを管理します
+/**
+ * APIにアクセスするためのアプリケーションを管理します
+ */
 class ApplicationModel
 {
-	// 操作対象のApplicationレコード
+	/**
+	 * 操作対象のApplicationレコード
+	 */
 	private $applicationData;
 
-	// コンテナー
+	/**
+	 * コンテナー
+	 */
 	private $container;
 
-	// ユーザーid
-	private $userId;
-
-	/*
-	クラスの新しいインスタンスを初期化します
-	userIdに関しては特殊なアクセスのためにnullを許容します
-	*/
-	public function __construct($applicationData, $container, $userId = null)
+	/**
+	 * クラスの新しいインスタンスを初期化します
+	 *
+	 * @param ApplicationData $applicationData 操作対象のApplicationレコード
+	 * @param array $container コンテナー
+	 * @throws \Exception
+	 */
+	public function __construct($applicationData, $container)
 	{
 		if (!$applicationData || !$container)
-			throw new Exception('some arguments are empty');
+			throw new \Exception('some arguments are empty');
 
 		$this->container = $container;
 		$this->applicationData = $applicationData;
 	}
 
-	// データベースのレコードを作成し、インスタンスを取得します
+	/**
+	 * データベースのレコードを作成し、インスタンスを取得します
+	 *
+	 * @param int $userId ユーザーのID
+	 * @param string $name 名前
+	 * @param string $description 説明
+	 * @param string $requestedPermissions 要求する権限
+	 * @param array $container コンテナー
+	 * @throws \Utility\ApiException
+	 * @return ApplicationModel 新しいインスタンス
+	 */
 	public static function createRecord($userId, $name, $description, $requestedPermissions, $container)
 	{
+		if (!$userId || !$description || !$requestedPermissions || !$container)
+			throw new \Exception('some arguments are empty');
+
 		if (!\Utility\Regex::isMatch('/^[a-z,-]+$/', $requestedPermissions))
 			throw new \Utility\ApiException('format of permissions parameter is invalid', ['detail'=>'it is required to be constructed in "a" to "z", and ","']);
 
@@ -82,7 +101,9 @@ class ApplicationModel
 		return new ApplicationModel($app, $container);
 	}
 
-	// 権限一覧
+	/**
+	 * 権限一覧
+	 */
 	public static $permissionTypes = [
 		'ice-auth-host',       // 認証のホスト権限
 		'application',         // 連携アプリ操作
@@ -96,14 +117,17 @@ class ApplicationModel
 		'post-write',          // 投稿の作成や削除等のアクション
 	];
 
-	/*
-	アプリケーションキーを生成し、ハッシュを更新します
-	データベースへのsaveはされません
-	*/
-	public function generateKey()
+	/**
+	 * アプリケーションキーを生成します
+	 *
+	 * @param int $accessedUserId アクセスされたユーザーのID(nullを許容します)
+	 * @throws \Utility\ApiException
+	 * @return string アプリケーションキー
+	 */
+	public function generateKey($accessedUserId = null)
 	{
 		// 自分のアプリケーションのキー以外は拒否
-		if ($this->userId !== null && $this->applicationData->creator_id !== $this->userId)
+		if ($accessedUserId !== null && $this->applicationData->creator_id !== $accessedUserId)
 			throw new \Utility\ApiException('this key is managed by other user');
 
 		$managementCode = rand(1, 99999);
@@ -116,13 +140,17 @@ class ApplicationModel
 		return $key;
 	}
 
-	/*
-	アプリケーションキーをデータベースから取得します
-	*/
-	public function getKey()
+	/**
+	 * アプリケーションキーをデータベースから取得します
+	 *
+	 * @param int $accessedUserId アクセスされたユーザーのID(nullを許容します)
+	 * @throws \Utility\ApiException
+	 * @return string アプリケーションキー
+	 */
+	public function getKey($accessedUserId = null)
 	{
 		// 自分のアプリケーションのキー以外は拒否
-		if ($this->userId !== null && $this->applicationData->creator_id !== $this->userId)
+		if ($accessedUserId !== null && $this->applicationData->creator_id !== $accessedUserId)
 			throw new \Utility\ApiException('this key is managed by other user');
 
 		if ($this->applicationData->key_hash === null)
@@ -131,20 +159,42 @@ class ApplicationModel
 		return self::buildKey($this->applicationData->id, $this->applicationData->creator_id, $this->applicationData->management_code, $this->container);
 	}
 
-	// キーに含まれるハッシュを構築します
+	/**
+	 * キーを構成するために必要なハッシュを構築します
+	 *
+	 * @param int $id アプリケーションID
+	 * @param int $userId ユーザーID
+	 * @param int $managementCode キーの管理コード
+	 * @param array $container コンテナー
+	 * @return string キーを構成するために必要なハッシュ
+	 */
 	public static function buildHash($id, $userId, $managementCode, $container)
 	{
 		return strtoupper(hash('sha256', "{$container->config['application-key-base']}/{$userId}/{$id}/{$managementCode}"));
 	}
 
-	// キーを構築します
+	/**
+	 * アプリケーションキーを構築します
+	 *
+	 * @param int $id アプリケーションID
+	 * @param int $userId ユーザーID
+	 * @param int $managementCode キーの管理コード
+	 * @param array $container コンテナー
+	 * @return string アプリケーションキー
+	 */
 	public static function buildKey($id, $userId, $managementCode, $container)
 	{
 		$hash = buildHash($id, $userId, $managementCode, $container);
 		return "{$id}-{$hash}.{$managementCode}";
 	}
 
-	// アプリケーションキーを検証します
+	/**
+	 * アプリケーションキーを検証します
+	 *
+	 * @param string $applicationKey アプリケーションキー
+	 * @param array $container コンテナー
+	 * @return bool キーが有効であるかどうか
+	 */
 	public static function validateKey($applicationKey, $container)
 	{
 		$match = \Utility\Regex::match('/([^-]+)-([^-]{64}).([^-]+)/', $applicationKey);
@@ -161,7 +211,6 @@ class ApplicationModel
 		if (!$app)
 			return false;
 
-		// ハッシュを作ってみる
 		$correctHash = buildHash($id, $app->creator_id, $managementCode, $container);
 
 		// management_codeが一致していて且つハッシュ値が正しいかどうか
@@ -170,7 +219,11 @@ class ApplicationModel
 		return $isPassed;
 	}
 
-	// レスポンス向けの配列データに変換します
+	/**
+	 * レスポンス向けの配列データに変換します
+	 *
+	 * @return array レスポンス向けの配列データ
+	 */
 	public function toArrayResponse()
 	{
 		$app = $this->applicationData;
