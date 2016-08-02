@@ -134,7 +134,7 @@ class ApplicationModel
 		$key = self::buildKey($this->applicationData->id, $this->applicationData->creator_id, $keyCode, $this->container);
 
 		$this->applicationData->key_code = $keyCode;
-		$app->save();
+		$this->applicationData->save();
 
 		return $key;
 	}
