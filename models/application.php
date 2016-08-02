@@ -130,12 +130,11 @@ class ApplicationModel
 		if ($accessedUserId !== null && $this->applicationData->creator_id !== $accessedUserId)
 			throw new \Utility\ApiException('this key is managed by other user');
 
-		$managementCode = rand(1, 99999);
-		$key = self::buildKey($this->applicationData, $userId, $managementCode, $this->container);
-		$keyHash = strtoupper(hash('sha256', $key));
+		$keyCode = rand(1, 99999);
+		$key = self::buildKey($this->applicationData->id, $this->applicationData->creator_id, $keyCode, $this->container);
 
-		$this->applicationData->key_hash = $keyHash;
-		$this->applicationData->management_code = $managementCode;
+		$this->applicationData->key_code = $keyCode;
+		$app->save();
 
 		return $key;
 	}
@@ -153,10 +152,10 @@ class ApplicationModel
 		if ($accessedUserId !== null && $this->applicationData->creator_id !== $accessedUserId)
 			throw new \Utility\ApiException('this key is managed by other user');
 
-		if ($this->applicationData->key_hash === null)
+		if ($this->applicationData->key_code === null)
 			throw new \Utility\ApiException('key is empty');
 
-		return self::buildKey($this->applicationData->id, $this->applicationData->creator_id, $this->applicationData->management_code, $this->container);
+		return self::buildKey($this->applicationData->id, $this->applicationData->creator_id, $this->applicationData->key_code, $this->container);
 	}
 
 	/**
@@ -164,13 +163,13 @@ class ApplicationModel
 	 *
 	 * @param int $id アプリケーションID
 	 * @param int $userId ユーザーID
-	 * @param int $managementCode キーの管理コード
+	 * @param int $keyCode キーの管理コード
 	 * @param array $container コンテナー
 	 * @return string キーを構成するために必要なハッシュ
 	 */
-	public static function buildHash($id, $userId, $managementCode, $container)
+	public static function buildHash($id, $userId, $keyCode, $container)
 	{
-		return strtoupper(hash('sha256', "{$container->config['application-key-base']}/{$userId}/{$id}/{$managementCode}"));
+		return strtoupper(hash('sha256', "{$container->config['application-key-base']}/{$userId}/{$id}/{$keyCode}"));
 	}
 
 	/**
@@ -178,14 +177,14 @@ class ApplicationModel
 	 *
 	 * @param int $id アプリケーションID
 	 * @param int $userId ユーザーID
-	 * @param int $managementCode キーの管理コード
+	 * @param int $keyCode キーの管理コード
 	 * @param array $container コンテナー
 	 * @return string アプリケーションキー
 	 */
-	public static function buildKey($id, $userId, $managementCode, $container)
+	public static function buildKey($id, $userId, $keyCode, $container)
 	{
-		$hash = buildHash($id, $userId, $managementCode, $container);
-		return "{$id}-{$hash}.{$managementCode}";
+		$hash = buildHash($id, $userId, $keyCode, $container);
+		return "{$id}-{$hash}.{$keyCode}";
 	}
 
 	/**
@@ -204,17 +203,17 @@ class ApplicationModel
 
 		$id = $match[1];
 		$hash = $match[2];
-		$managementCode = $match[3];
+		$keyCode = $match[3];
 
 		$app = Model::factory('ApplicationData')->find_one($id);
 
 		if (!$app)
 			return false;
 
-		$correctHash = buildHash($id, $app->creator_id, $managementCode, $container);
+		$correctHash = buildHash($id, $app->creator_id, $keyCode, $container);
 
-		// management_codeが一致していて且つハッシュ値が正しいかどうか
-		$isPassed = $managementCode === $app->management_code && $hash === $correctHash;
+		// key_codeが一致していて且つハッシュ値が正しいかどうか
+		$isPassed = $keyCode === $app->key_code && $hash === $correctHash;
 
 		return $isPassed;
 	}
