@@ -70,7 +70,7 @@ class Application
 				return $container->dbManager->executeFetch("select * from $applicationTable where creator_id = ? & name = ?", [$userId, $name])[0];
 			});
 		}
-		catch(\Exception $e)
+		catch(Exception $e)
 		{
 			throw new \Utility\ApiException('faild to create database record');
 		}
@@ -92,7 +92,7 @@ class Application
 			$applicationTable = $container->config['db']['table-names']['application'];
 			$container->dbManager->execute("update $applicationTable set hash = ? where id = ?", [$hash, $id]);
 		}
-		catch(\PDOException $e)
+		catch(PDOException $e)
 		{
 			throw new \Utility\ApiException('faild to create database record', ['application-key']);
 		}
@@ -107,7 +107,7 @@ class Application
 			$applicationTable = $container->config['db']['table-names']['application'];
 			$apps = $container->dbManager->executeFetch("select * from $applicationTable where id = ?", [$id]);
 		}
-		catch(\PDOException $e)
+		catch(PDOException $e)
 		{
 			throw new \Utility\ApiException('faild to fetch application');
 		}
@@ -125,7 +125,7 @@ class Application
 			$applicationTable = $container->config['db']['table-names']['application'];
 			$apps = $container->dbManager->executeFetch("select * from $applicationTable where name = ?", [$name]);
 		}
-		catch(\PDOException $e)
+		catch(PDOException $e)
 		{
 			throw new \Utility\ApiException('faild to fetch application');
 		}

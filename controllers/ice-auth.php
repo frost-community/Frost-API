@@ -3,7 +3,7 @@
 class IceAuth
 {
 	// 内部用 指定アプリケーションのアクセスキー取得
-	public static function accessKeyShow( \Slim\Http\Request $req, $res, $container, $user, $application)
+	public static function accessKeyShow($req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
 		$requireParams = ['application-key'];
@@ -24,13 +24,14 @@ class IceAuth
 		{
 			return withFailure($res, 'access-key is empty. please try generate key');
 		}
-		$accessKey = \Models\Application::buildKey($applicationAccess['user_id'], $applicationAccess['hash']);
+
+		$accessKey = buildKey($applicationAccess['user_id'], $applicationAccess['hash']);
 
 		return withSuccess($res, ['access-key'=>$accessKey]);
 	}
 
 	// 内部用 指定アプリケーションのアクセスキー生成
-	public static function accessKeyGenerate( \Slim\Http\Request $req, $res, $container, $user, $application)
+	public static function accessKeyGenerate($req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
 		$requireParams = ['application-key'];
@@ -43,13 +44,13 @@ class IceAuth
 
 		$appId = explode('-', $params['application-key'])[0];
 		$applicationAccess = \Models\ApplicationAccess::create($appId, $user['id'], $container);
-		$accessKey = \Models\Application::buildKey($applicationAccess['user_id'], $applicationAccess['hash']);
+		$accessKey = buildKey($applicationAccess['user_id'], $applicationAccess['hash']);
 
 		return withSuccess($res, ['access-key'=>$accessKey]);
 	}
 
 	// 認証を行って指定アプリケーションのアクセスキーを取得
-	public static function accessKeyAuth( \Slim\Http\Request $req, $res, $container, $user, $application)
+	public static function accessKeyAuth($req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
 		$requireParams = ['application-key', 'pin-code'];
@@ -62,18 +63,19 @@ class IceAuth
 
 		// TODO: pin-codeを比較
 
-		$appId 		= explode('-', $params['application-key'])[0];
-		$accessKey 	= '';
+		$appId = explode('-', $params['application-key'])[0];
+
 		try
 		{
 			$applicationAccess = \Models\ApplicationAccess::fetch($appId, $user['id'], $container);
-			if ($applicationAccess === null)
-				$applicationAccess = \Models\ApplicationAccess::create($appId, $user['id'], $container);
-			$accessKey = \Models\Application::buildKey($applicationAccess['user_id'], $applicationAccess['hash']);
 		}
-		catch(\Utility\ApiException $e) {
-			/* 何も書かずに例外を無視するのはコーディングホラーだとか（言うだけ言っておいて何も書き足さない人） :  コードコンプリート->第二部 高品質なコードの作成 にて */
-		}
+		catch(\Utility\ApiException $e) { }
+
+		if ($applicationAccess == null)
+			$applicationAccess = \Models\ApplicationAccess::create($appId, $user['id'], $container);
+
+		$accessKey = buildKey($applicationAccess['user_id'], $applicationAccess['hash']);
+
 		return withSuccess($res, ['access-key'=>$accessKey]);
 	}
 
