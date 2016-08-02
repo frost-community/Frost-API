@@ -131,10 +131,16 @@ class ApplicationModel
 		return self::buildKey($this->applicationData->id, $this->applicationData->creator_id, $this->applicationData->management_code, $this->container);
 	}
 
+	// キーに含まれるハッシュを構築します
+	public static function buildHash($id, $userId, $managementCode, $container)
+	{
+		return strtoupper(hash('sha256', "{$container->config['application-key-base']}/{$userId}/{$id}/{$managementCode}"));
+	}
+
 	// キーを構築します
 	public static function buildKey($id, $userId, $managementCode, $container)
 	{
-		$hash = strtoupper(hash('sha256', "{$container->config['application-key-base']}/{$userId}/{$id}/{$managementCode}"));
+		$hash = buildHash($id, $userId, $managementCode, $container);
 		return "{$id}-{$hash}.{$managementCode}";
 	}
 
@@ -155,10 +161,13 @@ class ApplicationModel
 		if (!$app)
 			return false;
 
-		$key = self::buildKey($id, $app->creator_id, $app->management_code, $container);
-		$keyHash = strtoupper(hash('sha256', $key));
+		// ハッシュを作ってみる
+		$correctHash = buildHash($id, $app->creator_id, $managementCode, $container);
 
-		return $keyHash === $app->key_hash;
+		// management_codeが一致していて且つハッシュ値が正しいかどうか
+		$isPassed = $managementCode === $app->management_code && $hash === $correctHash;
+
+		return $isPassed;
 	}
 
 	// レスポンス向けの配列データに変換します
@@ -170,9 +179,7 @@ class ApplicationModel
 			'creator_id' => $app->creator_id,
 			'name' => $app->name,
 			'description' => $app->description,
-			'permissions' => $app->permissions,
-			'key_hash' => $app->key_hash,
-			'management_code' => $app->management_code
+			'permissions' => $app->permissions
 		];
 
 		return $data;
