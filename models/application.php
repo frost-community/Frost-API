@@ -24,7 +24,7 @@ class ApplicationModel
 	 */
 	public function __construct($applicationData, $container)
 	{
-		if (!$applicationData || !$container)
+		if ($applicationData === null || $container === null)
 			throw new \Exception('some arguments are empty');
 
 		$this->container = $container;
@@ -44,7 +44,7 @@ class ApplicationModel
 	 */
 	public static function createRecord($userId, $name, $description, $requestedPermissions, $container)
 	{
-		if (!$userId || !$description || !$requestedPermissions || !$container)
+		if ($userId === null || $description === null || $requestedPermissions === null || $container === null)
 			throw new \Exception('some arguments are empty');
 
 		if (!\Utility\Regex::isMatch('/^[a-z,-]+$/', $requestedPermissions))
