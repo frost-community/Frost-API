@@ -3,88 +3,110 @@ namespace Models;
 
 class ApplicationAccessModel
 {
-	public static function create($applicationId, $userId, $container)
+	// 操作対象のApplicationAccessレコード
+	private $applicationAccessData;
+
+	// コンテナー
+	private $container;
+
+	// クラスの新しいインスタンスを初期化します
+	public function __construct($applicationAccessData, $container)
 	{
-		$timestamp = time();
-		$num = mt_rand(1, 99999);
-		$key = self::buildKey($applicationId, $userId, $num, $container);
-		$keyHash = strtoupper(hash('sha256', $key));
+		if ($applicationAccessData === null || $container === null)
+			throw new Exception('some arguments are empty');
 
-		try
-		{
-			$appAccessTable = $container->config['db']['table-names']['application-access'];
-			$container->dbManager->execute("insert into $appAccessTable (created_at, user_id, application_id, hash) values(?, ?, ?, ?)", [$timestamp, $userId, $applicationId, $keyHash]);
-		}
-		catch(PDOException $e)
-		{
-			throw new \Utility\ApiException('faild to create database record');
-		}
-
-		$access = self::fetch($applicationId, $userId, $container);
-
-		return $access;
+		$this->container = $container;
+		$this->applicationAccessData = $applicationAccessData;
 	}
 
-	public static function fetch($applicationId, $userId, $container)
+	// データベースのレコードを作成し、インスタンスを取得します
+	public static function createRecord($applicationId, $userId, $container)
 	{
-		try
-		{
-			$appAccessTable = $container->config['db']['table-names']['application-access'];
-			$accesses = $container->dbManager->executeFetch("select * from $appAccessTable where application_id = ? & user_id = ?", [$applicationId, $userId]);
-		}
-		catch(PDOException $e)
-		{
-			throw new \Utility\ApiException('faild to fetch application access');
-		}
+		if ($applicationId === null || $userId === null || $container === null)
+			throw new Exception('some arguments are empty');
 
-		if (count($accesses) === 0)
-			throw new \Utility\ApiException('application access not found');
+		$access = Model::factory('ApplicationAccessData')->create();
+		$access->created_at = time();
+		$access->user_id = $userId;
+		$access->application_id = $applicationId;
+		$access->save();
 
-		$access = $accesses[0];
-
-		return $accesses[0];
+		return new ApplicationAccessModel($access, $container);
 	}
 
-	public static function fetch2($userId, $hash, $container)
+	// アクセスキーを生成し、ハッシュを更新します
+	public function generateKey($accessedUserId = null)
 	{
-		try
-		{
-			$appAccessTable = $container->config['db']['table-names']['application-access'];
-			$accesses = $container->dbManager->executeFetch("select * from $appAccessTable where hash = ? and user_id = ?", [$hash, $userId]);
-		}
-		catch(PDOException $e)
-		{
-			throw new \Utility\ApiException('faild to fetch application access');
-		}
+		// 自分のアプリケーションのキー以外は拒否
+		if ($accessedUserId !== null && $this->applicationAccessData->creator_id !== $accessedUserId)
+			throw new \Utility\ApiException('this key is managed by other user');
 
-		if (count($accesses) === 0)
-			throw new \Utility\ApiException('application access not found');
+		// キーコードが重複していたら3回まで施行
+		$tryCount = 0;
+		do
+		{
+			$tryCount++;
+			$keyCode = rand(1, 99999);
+			$isExist = Model::factory('ApplicationAccessData')->where('user_id', $this->applicationAccessData->user_id)->where('key_code', $keyCode)->count() !== 0;
+		} while ($isExist && $tryCount < 3);
 
-		return $accesses[0];
+		if ($isExist && $tryCount >= 3)
+			throw new \Utility\ApiException('the number of trials for key_code generation has reached its upper limit');
+
+		$this->applicationAccessData->key_code = $keyCode;
+		$this->applicationAccessData->save();
+
+		$key = self::buildKey($this->applicationAccessData->application_id, $this->applicationAccessData->user_id, $keyCode, $this->container);
+
+		return $key;
 	}
 
-	public static function buildKey($applicationId, $userId, $num, $container)
+	// キーを取得
+	public function getKey($accessedUserId = null)
 	{
-		$hash = strtoupper(hash('sha256', "{$container->config['access-key-base']}/{$applicationId}/{$userId}/{$num}"));
-		return "{$userId}-{$hash}.{$num}";
+		// 自分のアプリケーションのキー以外は拒否
+		if ($accessedUserId !== null && $this->applicationAccessData->creator_id !== $accessedUserId)
+			throw new \Utility\ApiException('this key is managed by other user');
+
+		if ($this->applicationAccessData->key_code === null)
+			throw new \Utility\ApiException('key is empty');
+
+		return self::buildKey($this->applicationAccessData->application_id, $this->applicationAccessData->user_id, $this->applicationAccessData->key_code, $container);
 	}
 
-	public static function validate($accessKey, $container)
+	// ハッシュを構築
+	public static function buildHash($applicationId, $userId, $keyCode, $container)
 	{
-		$match = \Utility\Regex::match('/([^-]+)-([^-]{64})/', $accessKey);
+		return strtoupper(hash('sha256', "{$container->config['access-key-base']}/{$applicationId}/{$userId}/{$keyCode}"));
+	}
+
+	// キーを構築
+	public static function buildKey($applicationId, $userId, $keyCode, $container)
+	{
+		$hash = self::buildHash($applicationId, $userId, $keyCode, $container);
+		return "{$userId}-{$hash}.{$keyCode}";
+	}
+
+	// キーを検証
+	public static function verifyKey($accessKey, $container)
+	{
+		$match = \Utility\Regex::match('/([^-]+)-([^-]{64}).([^-]+)/', $accessKey);
 
 		if ($match === null)
 			return false;
 
 		$userId = $match[1];
 		$hash = $match[2];
+		$keyCode = $match[3];
 
-		try
-		{
-			return self::fetch2($userId, $hash, $container);
-		}
-		catch (ApiWException $e) { }
+		$access = Model::factory('ApplicationAccessData')->where('user_id', $userId)->where('key_code', $keyCode)->find_one();
 
-		return false;
+		if (!$access)
+			return false;
+
+		$correctHash = self::buildHash($access->application_id, $userId, $keyCode, $container);
+		$isPassed = $keyCode === $access->key_code && $hash === $correctHash;
+
+		return $isPassed;
 	}
 }
