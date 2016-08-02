@@ -52,8 +52,6 @@ class ApplicationModel
 
 		$splitedPermissionsArray = explode(',', $requestedPermissions);
 
-		$app = Model::factory('ApplicationData')->create();
-
 		$timestamp = time();
 		$isPermissionError = false;
 		$invalidPermissionNames = [];
@@ -90,12 +88,13 @@ class ApplicationModel
 		if (!Model::factory('ApplicationData')->where('name', $name)->find_many())
 			throw new \Utility\ApiException('already exists.');
 
+		$app = Model::factory('ApplicationData')->create();
+
 		$app->created_at = $timestamp;
 		$app->creator_id = $userId;
 		$app->name = $name;
 		$app->description = $description;
 		$app->permissions = implode(',', $permissions);
-
 		$app->save();
 
 		return new ApplicationModel($app, $container);
