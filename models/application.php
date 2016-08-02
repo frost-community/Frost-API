@@ -16,6 +16,22 @@ class ApplicationModel
 	private $container;
 
 	/**
+	 * 権限一覧
+	 */
+	public static $permissionTypes = [
+		'ice-auth-host',       // 認証のホスト権限
+		'application',         // 連携アプリ操作
+		'application-special', // 連携アプリ特殊操作
+		'account-read',        // アカウント情報の取得
+		'account-write',       // アカウント情報の変更
+		'account-special',     // アカウント情報の特殊操作
+		'user-read',           // ユーザー情報の取得
+		'user-write',          // ユーザーのフォロー等のアクション
+		'post-read',           // 投稿の取得
+		'post-write',          // 投稿の作成や削除等のアクション
+	];
+
+	/**
 	 * クラスの新しいインスタンスを初期化します
 	 *
 	 * @param ApplicationData $applicationData 操作対象のApplicationレコード
@@ -50,47 +66,13 @@ class ApplicationModel
 		if (!\Utility\Regex::isMatch('/^[a-z,-]+$/', $requestedPermissions))
 			throw new \Utility\ApiException('format of permissions parameter is invalid', ['detail'=>'it is required to be constructed in "a" to "z", and ","']);
 
-		$splitedPermissionsArray = explode(',', $requestedPermissions);
-
-		$timestamp = time();
-		$isPermissionError = false;
-		$invalidPermissionNames = [];
-		$permissions = [];
-
-		foreach ($requestedPermissions as $requestedPermission)
-		{
-			$isFound = false;
-
-			foreach (self::$permissionTypes as $permissionType)
-			{
-				if($requestedPermission === $permissionType)
-				{
-					$isFound = true;
-
-					if (in_array($requestedPermission, $permissions))
-						throw new \Utility\ApiException('permissions is duplicate');
-
-					array_push($permissions, $requestedPermission);
-					break;
-				}
-			}
-
-			if (!$isFound)
-			{
-				$isPermissionError = true;
-				$invalidPermissionNames += $requestedPermission;
-			}
-		}
-
-		if ($isPermissionError)
-			throw new \Utility\ApiException('unknown permissions', $invalidPermissionNames);
-
 		if (!Model::factory('ApplicationData')->where('name', $name)->find_many())
 			throw new \Utility\ApiException('already exists.');
 
-		$app = Model::factory('ApplicationData')->create();
+		$permissions = self::analyzePermission(explode(',', $requestedPermissions));
 
-		$app->created_at = $timestamp;
+		$app = Model::factory('ApplicationData')->create();
+		$app->created_at = time();
 		$app->creator_id = $userId;
 		$app->name = $name;
 		$app->description = $description;
@@ -101,20 +83,80 @@ class ApplicationModel
 	}
 
 	/**
-	 * 権限一覧
+	 * 権限の内容を解析して正当性を検証します
+	 *
+	 * @param array $permissions 権限の配列
+	 * @param string $name 名前
+	 * @param string $description 説明
+	 * @param string $requestedPermissions 要求する権限
+	 * @param array $container コンテナー
+	 * @throws \Utility\ApiException
+	 * @return ApplicationModel 新しいインスタンス
 	 */
-	public static $permissionTypes = [
-		'ice-auth-host',       // 認証のホスト権限
-		'application',         // 連携アプリ操作
-		'application-special', // 連携アプリ特殊操作
-		'account-read',        // アカウント情報の取得
-		'account-write',       // アカウント情報の変更
-		'account-special',     // アカウント情報の特殊操作
-		'user-read',           // ユーザー情報の取得
-		'user-write',          // ユーザーのフォロー等のアクション
-		'post-read',           // 投稿の取得
-		'post-write',          // 投稿の作成や削除等のアクション
-	];
+	private static function analyzePermission(array $permissions)
+	{
+		$isPermissionError = false;
+		$invalidPermissionNames = [];
+
+		foreach ($permissions as $permission)
+		{
+			$isFound = false;
+
+			foreach (self::$permissionTypes as $permissionType)
+			{
+				if($permission === $permissionType)
+				{
+					$isFound = true;
+
+					if (in_array($permission, $destPermissions))
+						throw new \Utility\ApiException('permissions is duplicate');
+
+					array_push($destPermissions, $permission);
+					break;
+				}
+			}
+
+			if (!$isFound)
+			{
+				$isPermissionError = true;
+				$invalidPermissionNames += $permission;
+			}
+		}
+
+		if ($isPermissionError)
+			throw new \Utility\ApiException('unknown permissions', $invalidPermissionNames);
+		
+		return $destPermissions;
+	}
+
+	/**
+	 * キーを構成するために必要なハッシュを構築します
+	 *
+	 * @param int $id アプリケーションID
+	 * @param int $userId ユーザーID
+	 * @param int $keyCode キーの管理コード
+	 * @param array $container コンテナー
+	 * @return string キーを構成するために必要なハッシュ
+	 */
+	private static function buildHash($id, $userId, $keyCode, $container)
+	{
+		return strtoupper(hash('sha256', "{$container->config['application-key-base']}/{$userId}/{$id}/{$keyCode}"));
+	}
+
+	/**
+	 * アプリケーションキーを構築します
+	 *
+	 * @param int $id アプリケーションID
+	 * @param int $userId ユーザーID
+	 * @param int $keyCode キーの管理コード
+	 * @param array $container コンテナー
+	 * @return string アプリケーションキー
+	 */
+	private static function buildKey($id, $userId, $keyCode, $container)
+	{
+		$hash = buildHash($id, $userId, $keyCode, $container);
+		return "{$id}-{$hash}.{$keyCode}";
+	}
 
 	/**
 	 * アプリケーションキーを生成します
@@ -158,42 +200,13 @@ class ApplicationModel
 	}
 
 	/**
-	 * キーを構成するために必要なハッシュを構築します
-	 *
-	 * @param int $id アプリケーションID
-	 * @param int $userId ユーザーID
-	 * @param int $keyCode キーの管理コード
-	 * @param array $container コンテナー
-	 * @return string キーを構成するために必要なハッシュ
-	 */
-	public static function buildHash($id, $userId, $keyCode, $container)
-	{
-		return strtoupper(hash('sha256', "{$container->config['application-key-base']}/{$userId}/{$id}/{$keyCode}"));
-	}
-
-	/**
-	 * アプリケーションキーを構築します
-	 *
-	 * @param int $id アプリケーションID
-	 * @param int $userId ユーザーID
-	 * @param int $keyCode キーの管理コード
-	 * @param array $container コンテナー
-	 * @return string アプリケーションキー
-	 */
-	public static function buildKey($id, $userId, $keyCode, $container)
-	{
-		$hash = buildHash($id, $userId, $keyCode, $container);
-		return "{$id}-{$hash}.{$keyCode}";
-	}
-
-	/**
 	 * アプリケーションキーを検証します
 	 *
 	 * @param string $applicationKey アプリケーションキー
 	 * @param array $container コンテナー
 	 * @return bool キーが有効であるかどうか
 	 */
-	public static function validateKey($applicationKey, $container)
+	public static function verifyKey($applicationKey, $container)
 	{
 		$match = \Utility\Regex::match('/([^-]+)-([^-]{64}).([^-]+)/', $applicationKey);
 
@@ -209,9 +222,7 @@ class ApplicationModel
 		if (!$app)
 			return false;
 
-		$correctHash = buildHash($id, $app->creator_id, $keyCode, $container);
-
-		// key_codeが一致していて且つハッシュ値が正しいかどうか
+		$correctHash = self::buildHash($id, $app->creator_id, $keyCode, $container);
 		$isPassed = $keyCode === $app->key_code && $hash === $correctHash;
 
 		return $isPassed;
