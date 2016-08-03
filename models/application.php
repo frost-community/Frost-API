@@ -58,7 +58,7 @@ class ApplicationModel
 	 * @throws \Utility\ApiException
 	 * @return ApplicationModel 新しいインスタンス
 	 */
-	public static function createRecord($userId, $name, $description, $requestedPermissions, $container)
+	public static function createInstance($userId, $name, $description, $requestedPermissions, $container)
 	{
 		if ($userId === null || $description === null || $requestedPermissions === null || $container === null)
 			throw new \Exception('some arguments are empty');
@@ -78,6 +78,20 @@ class ApplicationModel
 		$app->description = $description;
 		$app->permissions = implode(',', $permissions);
 		$app->save();
+
+		return new ApplicationModel($app, $container);
+	}
+
+	/**
+	 * データベースのレコードを検索し、インスタンスを取得します
+	 *
+	 * @param int $id アプリケーションID
+	 * @param array $container コンテナー
+	 * @return ApplicationModel 新しいインスタンス
+	 */
+	public static function getInstance($id, $container)
+	{
+		$app = Model::factory('ApplicationData')->find_one($applicationId);
 
 		return new ApplicationModel($app, $container);
 	}
@@ -197,6 +211,18 @@ class ApplicationModel
 			throw new \Utility\ApiException('key is empty');
 
 		return self::buildKey($this->applicationData->id, $this->applicationData->creator_id, $this->applicationData->key_code, $this->container);
+	}
+
+	/**
+	 * 権限情報をデータベースから取得します
+	 *
+	 * @return array 権限情報
+	 */
+	public function getPermissions()
+	{
+		$permissionsArray = explode(',', $this->applicationData->permissions);
+
+		return $permissionsArray;
 	}
 
 	/**

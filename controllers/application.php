@@ -12,7 +12,7 @@ class ApplicationController
 
 		try
 		{
-			$app = \Models\ApplicationModel::createRecord($res, $user['id'], $params['name'], $params['description'], $splitedPermissions, $container);
+			$app = ApplicationModel::createInstance($res, $user['id'], $params['name'], $params['description'], $splitedPermissions, $container);
 		}
 		catch(\Utility\ApiException $e)
 		{
@@ -32,8 +32,7 @@ class ApplicationController
 
 		try
 		{
-			$appData = Model::factory('ApplicationData')->find_one($params['application-id']);
-			$app = new \Models\ApplicationModel($appData, $container);
+			$app = ApplicationModel::getInstance($params['application-id'], $container);
 			$appKey = $app->getKey($user['id']);
 		}
 		catch(\Utility\ApiException $e)
@@ -54,8 +53,7 @@ class ApplicationController
 
 		try
 		{
-			$appData = Model::factory('ApplicationData')->find_one($params['application-id']);
-			$app = new \Models\ApplicationModel($appData, $container);
+			$app = ApplicationModel::getInstance($params['application-id'], $container);
 			$appKey = $app->generateKey($user['id'], $container);
 		}
 		catch(\Utility\ApiException $e)
