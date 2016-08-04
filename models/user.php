@@ -13,7 +13,7 @@ class UserModel extends Model
 	/**
 	 * データベースのレコードを作成し、インスタンスを取得します
 	 */
-	public static function create($screenName, $password, $name, $container)
+	public static function create($screenName, $password, $name, array $container)
 	{
 		$timestamp = time();
 

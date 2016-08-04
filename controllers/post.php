@@ -14,4 +14,14 @@ class PostController
 
 		return withFailure($res, "not implemented.");
 	}
+
+	public static function show($req, $res, $container, $user, $application)
+	{
+		// TODO
+	}
+
+	public static function timeline($req, $res, $container, $user, $application)
+	{
+		// TODO
+	}
 }
