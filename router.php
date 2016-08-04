@@ -19,13 +19,13 @@ foreach ($routes as $route)
 			if (!ApplicationAccessModel::verifyKey($params['access-key'], $this))
 				return withFailure($res, 'access-key is invalid');
 
-			$access = ApplicationAccessModel::getInstanceByKey($params['access-key']);
-			$user = $access->applicationAccessData->user();
-			$application = $access->applicationAccessData->application();
+			$access = ApplicationAccessModel::getByKey($params['access-key'], $this);
+			$user = $access->user();
+			$application = $access->application();
 
 			foreach ($route[2] as $requirePermission)
 			{
-				if (!isHasPermission($requirePermission))
+				if (!$application->isHasPermission($requirePermission))
 					return withFailure($res, 'You do not have some permissions.');
 			}
 
