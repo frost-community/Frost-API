@@ -1,72 +1,81 @@
 <?php
 
-class ApplicationAccessModel
+/**
+ * アプリケーションによるAPIアクセスを管理します
+ */
+class ApplicationAccessModel extends Model
 {
-	// 操作対象のApplicationAccessレコード
-	public $applicationAccessData;
+	public static $_table = 'frost_application_access';
+	public static $_id_column = 'id';
 
-	// コンテナー
+	/**
+	 * コンテナー
+	 */
 	private $container;
 
-	// クラスの新しいインスタンスを初期化します
-	public function __construct($applicationAccessData, $container)
-	{
-		if ($applicationAccessData === null || $container === null)
-			throw new Exception('some arguments are empty');
-
-		$this->container = $container;
-		$this->applicationAccessData = $applicationAccessData;
-	}
-
-	// データベースのレコードを作成し、インスタンスを取得します
-	public static function createInstance($applicationId, $userId, $container)
+	/**
+	 * データベースのレコードを作成し、インスタンスを取得します
+	 */
+	public static function create($applicationId, $userId, $container)
 	{
 		if ($applicationId === null || $userId === null || $container === null)
 			throw new Exception('some arguments are empty');
 
-		$access = Model::factory('ApplicationAccessData')->create();
+		$access = Model::factory('ApplicationAccessModel')->create();
+		$access->container = $container;
 		$access->created_at = time();
 		$access->user_id = $userId;
 		$access->application_id = $applicationId;
 		$access->save();
 
-		return new ApplicationAccessModel($access, $container);
+		return $access;
 	}
 
 	/**
-	 * データベースのレコードを検索し、インスタンスを取得します
+	 * アクセスキーによってデータベースのレコードを検索し、インスタンスを取得します
 	 *
-	 * @param int $id アプリケーションアクセスID
+	 * @param int $accessKey アクセスキー
 	 * @param array $container コンテナー
 	 * @return ApplicationModel 新しいインスタンス
 	 */
-	public static function getInstance($id, $container)
+	public static function getByKey($accessKey, $container)
 	{
-		$access = Model::factory('ApplicationAccessData')->find_one($id);
+		if ($accessKey === null || $container === null)
+			throw new \Exception('some arguments are empty');
 
-		return new ApplicationAccessModel($access, $container);
+		$parseResult = self::parseKeyToArray($accessKey);
+		$access = Model::factory('ApplicationAccessModel')
+			->where_equal('user_id', $parseResult['id'])
+			->where_equal('key_code', $parseResult['keyCode'])
+			->find_one();
+		$access->container = $container;
+
+		return $access;
 	}
 
 	/**
-	 * キーによってデータベースのレコードを検索し、インスタンスを取得します
-	 *
-	 * @param int $key アクセスキー
-	 * @param array $container コンテナー
-	 * @return ApplicationModel 新しいインスタンス
+	 * このインスタンスに紐付いているアプリケーションを取得します
 	 */
-	public static function getInstanceByKey($key, $container)
+	public function application()
 	{
-		$parseResult = parseKey($key);
-		$access = Model::factory('ApplicationAccessData')->where('user_id', $parseResult['id'])->where('key_code', $parseResult['keyCode'])->find_one();
-
-		return new ApplicationAccessModel($access, $container);
+		return $this->has_one('ApplicationModel', 'id');
 	}
 
-	// アクセスキーを生成し、ハッシュを更新します
-	public function generateKey($accessedUserId = null)
+	/**
+	 * このインスタンスに紐付いているユーザーを取得します
+	 */
+	public function user()
+	{
+		return $this->has_one('UserModel', 'id');
+	}
+
+	/**
+	 * アクセスキーを生成しハッシュを更新します
+	 */
+	public function generateAccessKey($accessedUserId = null)
 	{
 		// 自分のアプリケーションのキー以外は拒否
-		if ($accessedUserId !== null && $this->applicationAccessData->creator_id !== $accessedUserId)
+		if ($accessedUserId !== null && $this->creator_id !== $accessedUserId)
 			throw new \Utility\ApiException('this key is managed by other user');
 
 		// キーコードが重複していたら3回まで施行
@@ -75,49 +84,65 @@ class ApplicationAccessModel
 		{
 			$tryCount++;
 			$keyCode = rand(1, 99999);
-			$isExist = Model::factory('ApplicationAccessData')->where('user_id', $this->applicationAccessData->user_id)->where('key_code', $keyCode)->count() !== 0;
+			$isExist = Model::factory('ApplicationAccessModel')->where_equal('user_id', $this->user_id)->where_equal('key_code', $keyCode)->count() !== 0;
 		} while ($isExist && $tryCount < 3);
 
 		if ($isExist && $tryCount >= 3)
 			throw new \Utility\ApiException('the number of trials for key_code generation has reached its upper limit');
 
-		$this->applicationAccessData->key_code = $keyCode;
-		$this->applicationAccessData->save();
+		$this->key_code = $keyCode;
+		$this->save();
 
-		$key = self::buildKey($this->applicationAccessData->application_id, $this->applicationAccessData->user_id, $keyCode, $this->container);
-
-		return $key;
+		return $this->accessKey($accessedUserId);
 	}
 
-	// キーを取得
-	public function getKey($accessedUserId = null)
+	/**
+	 * アクセスキーを取得します
+	 */
+	public function accessKey($accessedUserId = null)
 	{
 		// 自分のアプリケーションのキー以外は拒否
-		if ($accessedUserId !== null && $this->applicationAccessData->creator_id !== $accessedUserId)
+		if ($accessedUserId !== null && $this->creator_id !== $accessedUserId)
 			throw new \Utility\ApiException('this key is managed by other user');
 
-		if ($this->applicationAccessData->key_code === null)
+		if ($this->key_code === null)
 			throw new \Utility\ApiException('key is empty');
 
-		return self::buildKey($this->applicationAccessData->application_id, $this->applicationAccessData->user_id, $this->applicationAccessData->key_code, $container);
+		return self::buildKey($this->application_id, $this->user_id, $this->key_code, $this->container);
 	}
 
-	// ハッシュを構築
+	/**
+	 * アクセスキーに含まれるハッシュを構築します
+	 */
 	public static function buildHash($applicationId, $userId, $keyCode, $container)
 	{
+		if ($applicationId === null || $userId === null || $keyCode === null || $container === null)
+			throw new \Exception('some arguments are empty');
+
 		return strtoupper(hash('sha256', "{$container->config['access-key-base']}/{$applicationId}/{$userId}/{$keyCode}"));
 	}
 
-	// キーを構築
+	/**
+	 * アクセスキーを構築します
+	 */
 	public static function buildKey($applicationId, $userId, $keyCode, $container)
 	{
+		if ($applicationId === null || $userId === null || $keyCode === null || $container === null)
+			throw new \Exception('some arguments are empty');
+
 		$hash = self::buildHash($applicationId, $userId, $keyCode, $container);
+
 		return "{$userId}-{$hash}.{$keyCode}";
 	}
 
-	// キーを配列に展開します
-	public static function parseKey($key)
+	/**
+	 * アクセスキーを配列に展開します
+	 */
+	public static function parseKeyToArray($accessKey)
 	{
+		if ($accessKey === null)
+			throw new \Exception('some arguments are empty');
+
 		$match = \Utility\Regex::match('/([^-]+)-([^-]{64}).([^-]+)/', $accessKey);
 
 		if ($match === null)
@@ -126,19 +151,27 @@ class ApplicationAccessModel
 		return [$match[1],$match[2],$match[3],'id'=>$match[1],'hash'=>$match[2],'keyCode'=>$match[3]];
 	}
 
-	// キーを検証
+	/**
+	 * アクセスキーを検証します
+	 */
 	public static function verifyKey($accessKey, $container)
 	{
+		if ($accessKey === null || $container === null)
+			throw new \Exception('some arguments are empty');
+
 		try
 		{
-			$parseResult = parseKey($key);
+			$parseResult = self::parseKeyToArray($accessKey);
 		}
 		catch(\Exception $e)
 		{
 			return false;
 		}
 
-		$access = Model::factory('ApplicationAccessData')->where('user_id', $parseResult['id'])->where('key_code', $parseResult['keyCode'])->find_one();
+		$access = Model::factory('ApplicationAccessModel')
+			->where_equal('user_id', $parseResult['id'])
+			->where_equal('key_code', $parseResult['keyCode'])
+			->find_one();
 
 		if (!$access)
 			return false;

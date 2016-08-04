@@ -1,13 +1,24 @@
 <?php
-namespace Models;
 
-class UserModel
+class UserModel extends Model
 {
-	// ユーザーを生成します
+	public static $_table = 'frost_user';
+	public static $_id_column = 'id';
+
+	/**
+	 * コンテナー
+	 */
+	private $container;
+
+	/**
+	 * データベースのレコードを作成し、インスタンスを取得します
+	 */
 	public static function create($screenName, $password, $name, $container)
 	{
-		$config = $container->config;
-		$db = $container->dbManager;
+		$timestamp = time();
+
+		$user = Model::factory('UserModel')->create();
+
 		$isOccurredError = false;
 		$errorTargets = [];
 
@@ -18,19 +29,16 @@ class UserModel
 		}
 		else
 		{
-			$userTable = $config['db']['table-names']['user'];
-			$isExistUser = count($db->executeFetch("select * from $userTable where screen_name = ? limit 1", [$screenName])) === 1;
-
-			if ($isExistUser)
+			if ($Model::factory('UserModel')->where_equal('screen_name', $screenName)->find_one())
 			{
 				$isOccurredError = true;
 				$errorTargets[] = 'screen-name';
 			}
 			else
 			{
-				foreach ($config['invalid-screen-names'] as $i)
+				foreach ($container->config['invalid-screen-names'] as $invalidScreenName)
 				{
-					if ($screenName === $i)
+					if ($screenName === $invalidScreenName)
 					{
 						$isOccurredError = true;
 						$errorTargets[] = 'screen-name';
@@ -48,42 +56,45 @@ class UserModel
 		if ($isOccurredError)
 			throw new \Utility\ApiException('parameters are invalid', $errorTargets);
 
-		$now = time();
-		$passwordHash = hash('sha256', $password.$now);
-		$userTable = $config['db']['table-names']['user'];
-
-		try
-		{
-			$db->execute("insert into $userTable (created_at, screen_name, name, password_hash) values(?, ?, ?, ?)", [$now, $screenName, $name, $passwordHash]);
-		}
-		catch(PDOException $e)
-		{
-			throw new \Utility\ApiException('faild to create database record');
-		}
-
-		$user = $db->executeFetch("select * from $userTable where screen_name = ? limit 1", [$screenName])[0];
+		$user->created_at = $timestamp;
+		$user->screen_name = $screenName;
+		$user->name = $name;
+		$user->password_hash = hash('sha256', $password.$timestamp);
+		$user->save();
 
 		return $user;
 	}
 
-	public static function fetch($id, $container)
+	/**
+	 * アプリケーションを取得します
+	 */
+	public function applications()
 	{
-		$config = $container->config;
-		$db = $container->dbManager;
+		return $this->belongs_to('ApplicationModel', 'id');
+	}
 
-		try
-		{
-			$userTable = $config['db']['table-names']['user'];
-			$user = $db->executeFetch("select * from $userTable where id = ?", [$id])[0];
-		}
-		catch(PDOException $e)
-		{
-			throw new \Utility\ApiException('faild to fetch user');
-		}
+	/**
+	 * アプリケーションアクセスを取得します
+	 */
+	public function applicationAccesses()
+	{
+		return $this->belongs_to('ApplicationAccessModel', 'id');
+	}
 
-		if ($user === null)
-			throw new \Utility\ApiException('user not found');
+	/**
+	 * レスポンス向けの配列データに変換します
+	 *
+	 * @return array レスポンス向けの配列データ
+	 */
+	public function toArrayResponse()
+	{
+		$data = [
+			'id' => $this->id,
+			'created_at' => $this->created_at,
+			'screen_name' => $this->creator_id,
+			'name' => $this->name
+		];
 
-		return $user;
+		return $data;
 	}
 }
