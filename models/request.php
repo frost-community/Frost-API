@@ -1,74 +1,149 @@
 <?php
-namespace Models;
 
-// Webの認証ページの有効期限を管理する
-class Request
+/**
+ * Webの認証ページのインスタンスを管理する
+ */
+class RequestModel extends Model
 {
-	public static function create($applicationKey, $container)
+	public static $_table = 'frost_request';
+	public static $_id_column = 'id';
+
+	/**
+	 * コンテナー
+	 */
+	private $container;
+
+	/**
+	 * データベースのレコードを作成し、インスタンスを取得します
+	 */
+	public static function create($applicationId, $container)
 	{
-		$num = random_int(1, 99999);
-		$timestamp = time();
-		$key = $timestamp.'-'.strtoupper(hash('sha256', $container->config['request-key-base'].$applicationKey.$timestamp.$num));
+		// レコード構築・保存
+		$req = Model::factory('RequestModel')->create();
+		$req->container = $container;
+		$req->created_at = time();
+		$req->application_id = $applicationId;
+		$req->save();
 
-		try
-		{
-			$requestTable = $container->config['db']['table-names']['request'];
-			$container->dbManager->execute("insert into $requestTable (created_at, application_key, key) values(?, ?, ?)", [$timestamp, $applicationKey, $key]);
-		}
-		catch(\PDOException $e)
-		{
-			throw new \Utility\ApiException('faild to create database record', ['request-key']);
-		}
+		return $req;
+	}
 
-		$request = fetchByKey($key, $container);
+	/**
+	 * リクエストキーによってデータベースのレコードを検索し、インスタンスを取得します
+	 *
+	 * @param int $accessKey リクエストキー
+	 * @param array $container コンテナー
+	 * @throws \Exception
+	 * @return RequestModel 新しいインスタンス
+	 */
+	public static function getByKey($requestKey, array $container)
+	{
+		if ($requestKey === null || $container === null)
+			throw new \Exception('some arguments are empty');
+
+		$parseResult = self::parseKeyToArray($requestKey);
+		$request = Model::factory('RequestModel')->find_one(parseResult['id']);
+		$request->container = $container;
 
 		return $request;
 	}
 
-	public static function fetchByKey($requestKey, $container)
+	/**
+	 * アプリケーションを取得します
+	 */
+	public function application()
 	{
-		try
-		{
-			$requestTable = $container->config['db']['table-names']['request'];
-			$requests = $container->dbManager->executeFetch("select * from $requestTable where key = ?", [$requestKey]);
-		}
-		catch(\PDOException $e)
-		{
-			throw new \Utility\ApiException('faild to fetch request');
-		}
-
-		if (count($requests) === 0)
-			throw new \Utility\ApiException('request not found');
-
-		return $requests[0];
+		return $this->has_one('ApplicationModel', 'id');
 	}
 
-	public static function validate($requestKey, $container)
+	/**
+	 * PINコードを生成します
+	 */
+	public function generatePinCode()
+	{
+		$this->pin_code = "000000"; // TODO
+		$this->save();
+
+		return $this->pin_code;
+	}
+
+	/**
+	 * リクエストキーを生成し、ハッシュを更新します
+	 */
+	public function generateRequestKey()
+	{
+		$keyCode = random_int(1, 99999);
+		$this->key_code = $keyCode;
+		$this->save();
+
+		return $this->requestKey();
+	}
+
+	/**
+	 * リクエストキーをデータベースから取得します
+	 */
+	public function requestKey()
+	{
+		return self::buildKey($this->id, $this->application_id, $this->key_code, $this->container);
+	}
+
+	/**
+	 * 各種パラメータからキーを構築します
+	 */
+	public static function buildHash($requestId, $applicationId, $keyCode, array $container)
+	{
+		return strtoupper(hash('sha256', "{$container->config['request-key-base']}/{$applicationId}/{$requestId}/{$keyCode}"));
+	}
+
+	/**
+	 * 各種パラメータからキーを構築します
+	 */
+	public static function buildKey($requestId, $applicationId, $keyCode, array $container)
+	{
+		$hash = self::buildHash($requestId, $applicationId, $keyCode, $container);
+
+		return "{$requestId}-{$hash}.{$keyCode}";
+	}
+
+	/**
+	 * リクエストキーを配列に展開します
+	 */
+	public static function parseKeyToArray($requestKey)
+	{
+		if ($requestKey === null)
+			throw new \Exception('some arguments are empty');
+
+		$match = \Utility\Regex::match('/([^-]+)-([^-]{64}).([^-]+)/', $requestKey);
+
+		if ($match === null)
+			throw new \Utility\ApiException('key is invalid format');
+
+		return [$match[1],$match[2],$match[3],'id'=>$match[1],'hash'=>$match[2],'keyCode'=>$match[3]];
+	}
+
+	/**
+	 * リクエストキーを検証します
+	 */
+	public static function verifyKey($requestKey, $container)
 	{
 		try
 		{
-			$request = self::fetchByKey($requestKey, $container);
+			$parseResult = self::parseKeyToArray($requestKey);
 		}
 		catch(\Exception $e)
 		{
 			return false;
 		}
 
-		return abs(time() - $request['created_at']) < $container->config['request-key-expire-sec'];
-	}
+		$req = Model::factory('RequestModel')->find_one($parseResult['id']);
 
-	public static function destroy($requestKey, $container)
-	{
-		try
-		{
-			$requestTable = $container->config['db']['table-names']['request'];
-			$container->dbManager->execute("delete from $requestTable where key = ?", [$requestKey]);
-		}
-		catch(\PDOException $e)
-		{
-			throw new \Utility\ApiException('faild to destroy database record');
-		}
+		if (!$req)
+			return false;
 
-		return true;
+		$correctHash = self::buildKey($parseResult['id'], $req->application_id, $parseResult['keyCode'], $container);
+		$isAvailabilityPeriod = abs(time() - $app->created_at) < $container->config['request-key-expire-sec'];
+		$isPassed = $isAvailabilityPeriod && $parseResult['hash'] === $correctHash && $parseResult['keyCode'];
+
+		return $isPassed;
 	}
 }

@@ -1,84 +1,72 @@
 <?php
 
-class IceAuth
+class IceAuthController
 {
-	// 内部用 指定アプリケーションのアクセスキー取得
-	public static function accessKeyShow( \Slim\Http\Request $req, $res, $container, $user, $application)
+	// ice-auth/create
+	// リクエストを作成して、リクエストキーを取得
+	public static function requestCreate(\Slim\Http\Request $req, $res, $container)
 	{
 		$params = $req->getParams();
-		$requireParams = ['application-key'];
+		$requireParams = ['application-id'];
 
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
-		if (!\Models\Application::validate($params['application-key'], $container->config, $container->dbManager))
-			return withFailure($res, 'parameters are invalid', ['application-key']);
+		$request = RequestModel::create($params['application-id'], $container);
+		$request->generatePinCode();
+		$requestKey = $request->generateRequestKey();
 
-		$appId = explode('-', $params['application-key'])[0];
-
-		try
-		{
-			$applicationAccess = \Models\ApplicationAccess::fetch($appId, $user['id'], $container);
-		}
-		catch(\Utility\ApiException $e)
-		{
-			return withFailure($res, 'access-key is empty. please try generate key');
-		}
-		$accessKey = \Models\Application::buildKey($applicationAccess['user_id'], $applicationAccess['hash']);
-
-		return withSuccess($res, ['access-key'=>$accessKey]);
+		return $requestKey;
 	}
 
-	// 内部用 指定アプリケーションのアクセスキー生成
-	public static function accessKeyGenerate( \Slim\Http\Request $req, $res, $container, $user, $application)
+	// ice-auth/pin-code
+	// PINコードを取得
+	public static function pinCodeShow(\Slim\Http\Request $req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
-		$requireParams = ['application-key'];
+		$requireParams = ['request-key'];
 
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
-		if (!\Models\Application::validate($params['application-key'], $container->config, $container->dbManager))
-			return withFailure($res, 'parameters are invalid', ['application-key']);
+		if (!RequestModel::verifyKey($params['request-key'], $container))
+			return withFailure($res, 'parameters are invalid', ['request-key']);
 
-		$appId = explode('-', $params['application-key'])[0];
-		$applicationAccess = \Models\ApplicationAccess::create($appId, $user['id'], $container);
-		$accessKey = \Models\Application::buildKey($applicationAccess['user_id'], $applicationAccess['hash']);
+		$request = RequestModel::getByKey($params['request-key'], $container);
+		$pinCode = $request->pin_code;
 
-		return withSuccess($res, ['access-key'=>$accessKey]);
+		return withSuccess($res, ['pin-code'=>$pinCode]);
 	}
 
+	// ice-auth/authorize
 	// 認証を行って指定アプリケーションのアクセスキーを取得
-	public static function accessKeyAuth( \Slim\Http\Request $req, $res, $container, $user, $application)
+	public static function accessKeyAuth(\Slim\Http\Request $req, $res, $container)
 	{
 		$params = $req->getParams();
-		$requireParams = ['application-key', 'pin-code'];
+		$requireParams = ['request-key', 'user-id', 'pin-code'];
 
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
-		if (!\Models\Application::validate($params['application-key'], $container->config, $container->dbManager))
-			return withFailure($res, 'parameters are invalid', ['application-key']);
+		if (!RequestModel::verifyKey($params['request-key'], $container))
+			return withFailure($res, 'parameter is invalid', ['request-key']);
 
-		// TODO: pin-codeを比較
+		$request = RequestModel::getByKey($params['request-key'], $container);
 
-		$appId 		= explode('-', $params['application-key'])[0];
-		$accessKey 	= '';
-		try
+		if ($request->pin_code !== $params['pin-code'])
+			return withFailure($res, 'parameter is invalid', ['pin-code']);
+
+		$application = $request->application();
+		$access = ApplicationAccessModel::where('application_id', $application->id)->where('user_id', $params['user-id'])->find_one();
+
+		if (!$access)
 		{
-			$applicationAccess = \Models\ApplicationAccess::fetch($appId, $user['id'], $container);
-			if ($applicationAccess === null)
-				$applicationAccess = \Models\ApplicationAccess::create($appId, $user['id'], $container);
-			$accessKey = \Models\Application::buildKey($applicationAccess['user_id'], $applicationAccess['hash']);
+			$access = ApplicationAccessModel::create($application->id, $params['user-id'], $container);
+			$access->generateAccessKey($params['user-id']);
 		}
-		catch(\Utility\ApiException $e) {
-			/* 何も書かずに例外を無視するのはコーディングホラーだとか（言うだけ言っておいて何も書き足さない人） :  コードコンプリート->第二部 高品質なコードの作成 にて */
-		}
-		return withSuccess($res, ['access-key'=>$accessKey]);
-	}
 
-	public static function requestKey($req, $res, $container)
-	{
-		// TODO: request-keyとpin-codeを発行
+		$accessKey = $access->accessKey($params['user-id']);
+
+		return withSuccess($res, ['access-key'=>$accessKey]);
 	}
 }

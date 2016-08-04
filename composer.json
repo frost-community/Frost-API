@@ -7,6 +7,7 @@
     ],
     "require": {
         "slim/slim": "^3.3",
-        "frost-dev/frost-core": "dev-master"
+        "frost-dev/frost-core": "dev-master",
+        "j4mie/paris": "^1.5.4"
     }
 }

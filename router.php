@@ -16,25 +16,16 @@ foreach ($routes as $route)
 			if (!array_key_exists('access-key', $params))
 				return withFailure($res, 'access-key is missing');
 
-			$applicationAccess = \Models\ApplicationAccess::validate($params['access-key'], $this);
-
-			if (!$applicationAccess)
+			if (!ApplicationAccessModel::verifyKey($params['access-key'], $this))
 				return withFailure($res, 'access-key is invalid');
 
-			if (isset($applicationAccess['user_id']))
-				$userId = $applicationAccess['user_id'];
-
-			if (isset($applicationAccess['application_id']))
-				$applicationId = $applicationAccess['application_id'];
-
-			$application = \Models\Application::fetch($applicationId, $this);
-			$permissionsStr = $application['permissions'];
-			$user = \Models\User::fetch($userId, $this);
-			$permissions = explode(',', $permissionsStr);
+			$access = ApplicationAccessModel::getByKey($params['access-key'], $this);
+			$user = $access->user();
+			$application = $access->application();
 
 			foreach ($route[2] as $requirePermission)
 			{
-				if (!in_array($requirePermission, $permissions))
+				if (!$application->isHasPermission($requirePermission))
 					return withFailure($res, 'You do not have some permissions.');
 			}
 

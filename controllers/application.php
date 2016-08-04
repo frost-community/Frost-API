@@ -1,6 +1,6 @@
 <?php
 
-class Application
+class ApplicationController
 {
 	public static function create( \Slim\Http\Request $req, $res, $container, $user, $application)
 	{
@@ -10,21 +10,21 @@ class Application
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
-		if (!\Utility\Regex::isMatch('/^[a-z,-]+$/', $params['permissions']))
-			return withFailure($res, 'format of permissions parameter is invalid', ['detail'=>'it is required to be constructed in "a" to "z", and ","']);
-
-		$splitedPermissions = explode(',', $params['permissions']);
-
 		try
 		{
-			$destApp = \Models\Application::create($user['id'], $params['name'], $params['description'], $splitedPermissions, $container);
+			$app = ApplicationModel::create($user['id'], $params['name'], $params['description'], $splitedPermissions, $container);
 		}
 		catch(\Utility\ApiException $e)
 		{
-			return withFailure($res, 'faild to create application', ['detail'=>$e->getMessage(),'data'=>$e->getData()]);
+			return withFailure($res, $e->getMessage(), $e->getData());
 		}
 
-		return withSuccess($res, ['application' => $destApp]);
+		return withSuccess($res, ['application' => $app->toArrayResponse()]);
+	}
+
+	public static function show($req, $res, $container, $user, $application)
+	{
+		// TODO
 	}
 
 	public static function applicationKey(\Slim\Http\Request $req, $res, $container, $user, $application)
@@ -37,23 +37,15 @@ class Application
 
 		try
 		{
-			$app = \Models\Application::fetch($params['application-id'], $container);
-
-			// 自分のアプリケーションのキー以外は拒否
-			if ($app['creator_id'] !== $user['id'])
-				throw new \Utility\ApiException('this key is managed by other user');
-
-			if ($app['hash'] === null)
-				throw new \Utility\ApiException('key is empty');
-
-			$destAppKey = \Models\Application::buildKey($params['application-id'], $app['hash']);
+			$app = ApplicationModel::find_one($params['application-id']);
+			$applicationKey = $app->applicationKey($user->id);
 		}
 		catch(\Utility\ApiException $e)
 		{
-			return withFailure($res, 'faild to show application-key', ['detail'=>$e->getMessage()]);
+			return withFailure($res, $e->getMessage(), $e->getData());
 		}
 
-		return withSuccess($res, ['application-key'=>$destAppKey]);
+		return withSuccess($res, ['application-key'=>$applicationKey]);
 	}
 
 	public static function applicationKeyGenerate( \Slim\Http\Request $req, $res, $container, $user, $application)
@@ -66,19 +58,14 @@ class Application
 
 		try
 		{
-			$app = \Models\Application::fetch($params['application-id'], $container);
-
-			// 自分のアプリケーションのキー以外は拒否
-			if ($app['creator_id'] !== $user['id'])
-				throw new \Utility\ApiException('this key is managed by other user');
-
-			$destAppKey = \Models\Application::generateKey($params['application-id'], $user['id'], $container);
+			$app = ApplicationModel::find_one($params['application-id']);
+			$applicationKey = $app->generateKey($user->id);
 		}
 		catch(\Utility\ApiException $e)
 		{
-			return withFailure($res, 'faild to generate application-key', ['detail'=>$e->getMessage()]);
+			return withFailure($res, $e->getMessage(), $e->getData());
 		}
 
-		return withSuccess($res, ['application-key'=>$destAppKey]);
+		return withSuccess($res, ['application-key'=>$applicationKey]);
 	}
 }

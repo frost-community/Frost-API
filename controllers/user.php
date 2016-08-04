@@ -1,6 +1,6 @@
 <?php
 
-class User
+class UserController
 {
 	/**
 	 * @param $req
@@ -21,7 +21,7 @@ class User
 
 		try
 		{
-			$createdUser = \Models\User::create($params['screen-name'], $params['password'], 'froster', $container);
+			$createdUser = User::create($params['screen-name'], $params['password'], 'froster', $container);
 		}
 		catch(\Utility\ApiException $e)
 		{
@@ -39,8 +39,23 @@ class User
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
-		$destUser = \Models\User::fetch($params['user-id'], $container);
+		$destUser = User::find_one($params['user-id']);
 
 		return withSuccess($res, ['user'=>$destUser]);
+	}
+	
+	public static function timeline($req, $res, $container, $user, $application)
+	{
+		// TODO
+	}
+
+	public static function follow($req, $res, $container, $user, $application)
+	{
+		// TODO
+	}
+
+	public static function unfollow($req, $res, $container, $user, $application)
+	{
+		// TODO
 	}
 }

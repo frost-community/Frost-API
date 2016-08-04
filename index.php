@@ -4,6 +4,7 @@ require_once __DIR__.'/vendor/autoload.php';
 require_once __DIR__.'/config.php';
 
 require_once __DIR__.'/util/utils-loader.php';
+require_once __DIR__.'/data-models/data-models-loader.php';
 require_once __DIR__.'/models/models-loader.php';
 require_once __DIR__.'/controllers/controllers-loader.php';
 
@@ -12,8 +13,11 @@ $appConfig = [
 		'displayErrorDetails' => true
 	],
 	'config' 	=> $config,
-	'dbManager' => new \Utility\DatabaseManager($config['db']['hostname'], $config['db']['username'], $config['db']['password'], $config['db']['dbname'])
 ];
+
+ORM::configure("mysql:dbname={$config['db']['dbname']};host={$config['db']['hostname']};charset=utf8");
+ORM::configure('username', $config['db']['username']);
+ORM::configure('password', $config['db']['password']);
 
 $app = new Slim\App($appConfig);
 
