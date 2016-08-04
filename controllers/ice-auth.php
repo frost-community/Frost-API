@@ -4,7 +4,7 @@ class IceAuthController
 {
 	// ice-auth/create
 	// リクエストを作成して、リクエストキーを取得
-	public static function requestCreate($req, $res, $container)
+	public static function requestCreate(\Slim\Http\Request $req, $res, $container)
 	{
 		$params = $req->getParams();
 		$requireParams = ['application-id'];
@@ -21,7 +21,7 @@ class IceAuthController
 
 	// ice-auth/pin-code
 	// PINコードを取得
-	public static function pinCodeShow($req, $res, $container, $user, $application)
+	public static function pinCodeShow(\Slim\Http\Request $req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
 		$requireParams = ['request-key'];
@@ -40,7 +40,7 @@ class IceAuthController
 
 	// ice-auth/authorize
 	// 認証を行って指定アプリケーションのアクセスキーを取得
-	public static function accessKeyAuth($req, $res, $container)
+	public static function accessKeyAuth(\Slim\Http\Request $req, $res, $container)
 	{
 		$params = $req->getParams();
 		$requireParams = ['request-key', 'user-id', 'pin-code'];

@@ -72,7 +72,7 @@ class RequestModel extends Model
 	 */
 	public function generateRequestKey()
 	{
-		$keyCode = mt_rand(1, 99999);
+		$keyCode = random_int(1, 99999);
 		$this->key_code = $keyCode;
 		$this->save();
 

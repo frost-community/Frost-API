@@ -83,7 +83,7 @@ class ApplicationAccessModel extends Model
 		do
 		{
 			$tryCount++;
-			$keyCode = rand(1, 99999);
+			$keyCode = random_int(1, 99999);
 			$isExist = Model::factory('ApplicationAccessModel')->where_equal('user_id', $this->user_id)->where_equal('key_code', $keyCode)->count() !== 0;
 		} while ($isExist && $tryCount < 3);
 

@@ -2,7 +2,7 @@
 
 class ApplicationController
 {
-	public static function create($req, $res, $container, $user, $application)
+	public static function create( \Slim\Http\Request $req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
 		$requireParams = ['name', 'description', 'permissions'];
@@ -27,7 +27,7 @@ class ApplicationController
 		// TODO
 	}
 
-	public static function applicationKey($req, $res, $container, $user, $application)
+	public static function applicationKey(\Slim\Http\Request $req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
 		$requireParams = ['application-id'];
@@ -48,7 +48,7 @@ class ApplicationController
 		return withSuccess($res, ['application-key'=>$applicationKey]);
 	}
 
-	public static function applicationKeyGenerate($req, $res, $container, $user, $application)
+	public static function applicationKeyGenerate( \Slim\Http\Request $req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
 		$requireParams = ['application-id'];

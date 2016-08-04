@@ -220,7 +220,7 @@ class ApplicationModel extends Model
 				throw new \Utility\ApiException('this key is managed by other user');
 		}
 
-		$keyCode = rand(1, 99999);
+		$keyCode = random_int(1, 99999);
 		$this->key_code = $keyCode;
 		$this->save();
 
