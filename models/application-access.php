@@ -19,7 +19,7 @@ class ApplicationAccessModel
 	}
 
 	// データベースのレコードを作成し、インスタンスを取得します
-	public static function createRecord($applicationId, $userId, $container)
+	public static function createInstance($applicationId, $userId, $container)
 	{
 		if ($applicationId === null || $userId === null || $container === null)
 			throw new Exception('some arguments are empty');
@@ -29,6 +29,35 @@ class ApplicationAccessModel
 		$access->user_id = $userId;
 		$access->application_id = $applicationId;
 		$access->save();
+
+		return new ApplicationAccessModel($access, $container);
+	}
+
+	/**
+	 * データベースのレコードを検索し、インスタンスを取得します
+	 *
+	 * @param int $id アプリケーションアクセスID
+	 * @param array $container コンテナー
+	 * @return ApplicationModel 新しいインスタンス
+	 */
+	public static function getInstance($id, $container)
+	{
+		$access = Model::factory('ApplicationAccessData')->find_one($id);
+
+		return new ApplicationAccessModel($access, $container);
+	}
+
+	/**
+	 * キーによってデータベースのレコードを検索し、インスタンスを取得します
+	 *
+	 * @param int $key アクセスキー
+	 * @param array $container コンテナー
+	 * @return ApplicationModel 新しいインスタンス
+	 */
+	public static function getInstanceByKey($key, $container)
+	{
+		$parseResult = parseKey($key);
+		$access = Model::factory('ApplicationAccessData')->where('user_id', $parseResult['id'])->where('key_code', $parseResult['keyCode'])->find_one();
 
 		return new ApplicationAccessModel($access, $container);
 	}
@@ -86,25 +115,36 @@ class ApplicationAccessModel
 		return "{$userId}-{$hash}.{$keyCode}";
 	}
 
-	// キーを検証
-	public static function verifyKey($accessKey, $container)
+	// キーを配列に展開します
+	public static function parseKey($key)
 	{
 		$match = \Utility\Regex::match('/([^-]+)-([^-]{64}).([^-]+)/', $accessKey);
 
 		if ($match === null)
+			throw new \Utility\ApiException('key is invalid format');
+
+		return [$match[1],$match[2],$match[3],'id'=>$match[1],'hash'=>$match[2],'keyCode'=>$match[3]];
+	}
+
+	// キーを検証
+	public static function verifyKey($accessKey, $container)
+	{
+		try
+		{
+			$parseResult = parseKey($key);
+		}
+		catch(\Exception $e)
+		{
 			return false;
+		}
 
-		$userId = $match[1];
-		$hash = $match[2];
-		$keyCode = $match[3];
-
-		$access = Model::factory('ApplicationAccessData')->where('user_id', $userId)->where('key_code', $keyCode)->find_one();
+		$access = Model::factory('ApplicationAccessData')->where('user_id', $parseResult['id'])->where('key_code', $parseResult['keyCode'])->find_one();
 
 		if (!$access)
 			return false;
 
-		$correctHash = self::buildHash($access->application_id, $userId, $keyCode, $container);
-		$isPassed = $keyCode === $access->key_code && $hash === $correctHash;
+		$correctHash = self::buildHash($access->application_id, $parseResult['id'], $parseResult['keyCode'], $container);
+		$isPassed = $parseResult['keyCode'] === $access->key_code && $parseResult['hash'] === $correctHash;
 
 		return $isPassed;
 	}

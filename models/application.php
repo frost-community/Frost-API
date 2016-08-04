@@ -97,6 +97,21 @@ class ApplicationModel
 	}
 
 	/**
+	 * キーによってデータベースのレコードを検索し、インスタンスを取得します
+	 *
+	 * @param int $key アプリケーションキー
+	 * @param array $container コンテナー
+	 * @return ApplicationModel 新しいインスタンス
+	 */
+	public static function getInstanceByKey($applicationKey, $container)
+	{
+		$parseResult = self::parseKey($applicationKey);
+		$app = Model::factory('ApplicationData')->find_one($parseResult['id']);
+
+		return new ApplicationModel($app, $container);
+	}
+
+	/**
 	 * 権限の内容を解析して正当性を検証します
 	 *
 	 * @param array $permissions 権限の配列
@@ -144,35 +159,6 @@ class ApplicationModel
 	}
 
 	/**
-	 * キーを構成するために必要なハッシュを構築します
-	 *
-	 * @param int $id アプリケーションID
-	 * @param int $userId ユーザーID
-	 * @param int $keyCode キーの管理コード
-	 * @param array $container コンテナー
-	 * @return string キーを構成するために必要なハッシュ
-	 */
-	private static function buildHash($id, $userId, $keyCode, $container)
-	{
-		return strtoupper(hash('sha256', "{$container->config['application-key-base']}/{$userId}/{$id}/{$keyCode}"));
-	}
-
-	/**
-	 * アプリケーションキーを構築します
-	 *
-	 * @param int $id アプリケーションID
-	 * @param int $userId ユーザーID
-	 * @param int $keyCode キーの管理コード
-	 * @param array $container コンテナー
-	 * @return string アプリケーションキー
-	 */
-	private static function buildKey($id, $userId, $keyCode, $container)
-	{
-		$hash = buildHash($id, $userId, $keyCode, $container);
-		return "{$id}-{$hash}.{$keyCode}";
-	}
-
-	/**
 	 * アプリケーションキーを生成します
 	 *
 	 * @param int $accessedUserId アクセスされたユーザーのID(nullを許容します)
@@ -214,6 +200,51 @@ class ApplicationModel
 	}
 
 	/**
+	 * キーを構成するために必要なハッシュを構築します
+	 *
+	 * @param int $id アプリケーションID
+	 * @param int $userId ユーザーID
+	 * @param int $keyCode キーの管理コード
+	 * @param array $container コンテナー
+	 * @return string キーを構成するために必要なハッシュ
+	 */
+	private static function buildHash($id, $userId, $keyCode, $container)
+	{
+		return strtoupper(hash('sha256', "{$container->config['application-key-base']}/{$userId}/{$id}/{$keyCode}"));
+	}
+
+	/**
+	 * アプリケーションキーを構築します
+	 *
+	 * @param int $id アプリケーションID
+	 * @param int $userId ユーザーID
+	 * @param int $keyCode キーの管理コード
+	 * @param array $container コンテナー
+	 * @return string アプリケーションキー
+	 */
+	private static function buildKey($id, $userId, $keyCode, $container)
+	{
+		$hash = buildHash($id, $userId, $keyCode, $container);
+		return "{$id}-{$hash}.{$keyCode}";
+	}
+
+	/**
+	 * アプリケーションキーを配列に展開します
+	 * @param string $key アプリケーションキー
+	 * @throws \Utility\ApiException
+	 * @return array id,hash,keyCodeの格納された配列
+	 */
+	public static function parseKey($applicationKey)
+	{
+		$match = \Utility\Regex::match('/([^-]+)-([^-]{64}).([^-]+)/', $applicationKey);
+
+		if ($match === null)
+			throw new \Utility\ApiException('application-key is invalid format');
+
+		return [$match[1],$match[2],$match[3],'id'=>$match[1],'hash'=>$match[2],'keyCode'=>$match[3]];
+	}
+
+	/**
 	 * 権限情報をデータベースから取得します
 	 *
 	 * @return array 権限情報
@@ -234,22 +265,14 @@ class ApplicationModel
 	 */
 	public static function verifyKey($applicationKey, $container)
 	{
-		$match = \Utility\Regex::match('/([^-]+)-([^-]{64}).([^-]+)/', $applicationKey);
-
-		if ($match === null)
-			return false;
-
-		$id = $match[1];
-		$hash = $match[2];
-		$keyCode = $match[3];
-
-		$app = Model::factory('ApplicationData')->find_one($id);
+		$parseResult = self::parseKey($applicationKey);
+		$app = Model::factory('ApplicationData')->find_one($parseResult['id']);
 
 		if (!$app)
 			return false;
 
-		$correctHash = self::buildHash($id, $app->creator_id, $keyCode, $container);
-		$isPassed = $keyCode === $app->key_code && $hash === $correctHash;
+		$correctHash = self::buildHash($parseResult['id'], $app->creator_id, $parseResult['keyCode'], $container);
+		$isPassed = $parseResult['keyCode'] === $app->key_code && $parseResult['hash'] === $correctHash;
 
 		return $isPassed;
 	}
