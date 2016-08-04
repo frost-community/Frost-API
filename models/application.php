@@ -8,7 +8,7 @@ class ApplicationModel
 	/**
 	 * 操作対象のApplicationレコード
 	 */
-	private $applicationData;
+	public $applicationData;
 
 	/**
 	 * コンテナー
@@ -112,7 +112,17 @@ class ApplicationModel
 	}
 
 	/**
-	 * 権限の内容を解析して正当性を検証します
+	 * 指定された権限を所持しているかどうかを取得します
+	 * @param string $permissionName 対象の権限
+	 * @return bool その権限を所持しているかどうか
+	 */
+	public function isHasPermission($permissionName)
+	{
+		return in_array($permissionName, $this->getPermissions());
+	}
+
+	/**
+	 * 権限の内容を解析して内容の正当性を確認します
 	 *
 	 * @param array $permissions 権限の配列
 	 * @param string $name 名前

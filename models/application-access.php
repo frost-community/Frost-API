@@ -3,7 +3,7 @@
 class ApplicationAccessModel
 {
 	// 操作対象のApplicationAccessレコード
-	private $applicationAccessData;
+	public $applicationAccessData;
 
 	// コンテナー
 	private $container;
