@@ -1,7 +1,7 @@
 <?php
 
 /**
- * アプリケーションによるAPIアクセスを管理します
+ * アプリケーションによるAPIアクセスのインスタンスを管理します
  */
 class ApplicationAccessModel extends Model
 {
@@ -16,12 +16,12 @@ class ApplicationAccessModel extends Model
 	/**
 	 * データベースのレコードを作成し、インスタンスを取得します
 	 */
-	public static function create($applicationId, $userId, $container)
+	public static function createInstance($applicationId, $userId, $container)
 	{
 		if ($applicationId === null || $userId === null || $container === null)
 			throw new Exception('some arguments are empty');
 
-		$access = Model::factory('ApplicationAccessModel')->create();
+		$access = ApplicationAccessModel::create();
 		$access->container = $container;
 		$access->created_at = time();
 		$access->user_id = $userId;
@@ -31,26 +31,46 @@ class ApplicationAccessModel extends Model
 		return $access;
 	}
 
-	/**
-	 * アクセスキーによってデータベースのレコードを検索し、インスタンスを取得します
-	 *
-	 * @param int $accessKey アクセスキー
-	 * @param array $container コンテナー
-	 * @return ApplicationModel 新しいインスタンス
-	 */
-	public static function getByKey($accessKey, $container)
+	private static function getQueryWithFilters(array $wheres)
 	{
-		if ($accessKey === null || $container === null)
+		if ($wheres === null)
 			throw new \Exception('some arguments are empty');
 
-		$parseResult = self::parseKeyToArray($accessKey);
-		$access = Model::factory('ApplicationAccessModel')
-			->where_equal('user_id', $parseResult['id'])
-			->where_equal('key_code', $parseResult['keyCode'])
-			->find_one();
-		$access->container = $container;
+		$query = Model::factory(__class__);
 
-		return $access;
+		foreach($wheres as $key => $value)
+			$query = $query->where($key, $value);
+
+		return $query;
+	}
+
+	public static function getInstanceWithFilters(array $wheres, $container)
+	{
+		if ($container === null)
+			throw new \Exception('some arguments are empty');
+
+		$query = self::getQueryWithFilters($wheres);
+		$instance = $query->find_one();
+		$instance->container = $container;
+
+		return $instance;
+	}
+
+	public static function getInstancesWithFilters(array $wheres, $container)
+	{
+		if ($container === null)
+			throw new \Exception('some arguments are empty');
+
+		$query = self::getQueryWithFilters($wheres);
+		$instance = $query->find_many();
+		$instance->container = $container;
+
+		return $instance;
+	}
+
+	public static function getInstance($id, $container)
+	{
+		return self::getInstanceWithFilters(['id'=>$id], $container);
 	}
 
 	/**
@@ -58,7 +78,7 @@ class ApplicationAccessModel extends Model
 	 */
 	public function application()
 	{
-		return $this->has_one('ApplicationModel', 'id');
+		return ApplicationModel::getInstance($this->application_id, $this->container);
 	}
 
 	/**
@@ -66,7 +86,7 @@ class ApplicationAccessModel extends Model
 	 */
 	public function user()
 	{
-		return $this->has_one('UserModel', 'id');
+		return UserModel::getInstance($this->user_id, $this->container);
 	}
 
 	/**
@@ -75,7 +95,7 @@ class ApplicationAccessModel extends Model
 	public function generateAccessKey($accessedUserId = null)
 	{
 		// 自分のアプリケーションのキー以外は拒否
-		if ($accessedUserId !== null && $this->creator_id !== $accessedUserId)
+		if ($accessedUserId !== null && intval($this->creator_id) !== intval($accessedUserId))
 			throw new \Utility\ApiException('this key is managed by other user');
 
 		// キーコードが重複していたら3回まで施行
@@ -84,7 +104,7 @@ class ApplicationAccessModel extends Model
 		{
 			$tryCount++;
 			$keyCode = random_int(1, 99999);
-			$isExist = Model::factory('ApplicationAccessModel')->where_equal('user_id', $this->user_id)->where_equal('key_code', $keyCode)->count() !== 0;
+			$isExist = !!self::getInstanceWithFilters(['user_id'=>$this->user_id, 'key_code'=>$keyCode], $this->container);
 		} while ($isExist && $tryCount < 3);
 
 		if ($isExist && $tryCount >= 3)
@@ -102,7 +122,7 @@ class ApplicationAccessModel extends Model
 	public function accessKey($accessedUserId = null)
 	{
 		// 自分のアプリケーションのキー以外は拒否
-		if ($accessedUserId !== null && $this->creator_id !== $accessedUserId)
+		if ($accessedUserId !== null && intval($this->creator_id) !== intval($accessedUserId))
 			throw new \Utility\ApiException('this key is managed by other user');
 
 		if ($this->key_code === null)
@@ -168,10 +188,7 @@ class ApplicationAccessModel extends Model
 			return false;
 		}
 
-		$access = Model::factory('ApplicationAccessModel')
-			->where_equal('user_id', $parseResult['id'])
-			->where_equal('key_code', $parseResult['keyCode'])
-			->find_one();
+		$access = self::getInstanceWithFilters(['user_id'=>$parseResult['id'], 'key_code'=>$parseResult['keyCode']], $container);
 
 		if (!$access)
 			return false;

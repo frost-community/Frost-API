@@ -15,11 +15,17 @@ class RequestModel extends Model
 
 	/**
 	 * データベースのレコードを作成し、インスタンスを取得します
+	 * @param int $applicationId アプリケーションID
+	 * @param object $container コンテナー
+	 * @return RequestModel 新しいインスタンス
 	 */
-	public static function create($applicationId, $container)
+	public static function createInstance($applicationId, $container)
 	{
+		if ($applicationId === null || $container === null)
+			throw new \Exception('some arguments are empty');
+
 		// レコード構築・保存
-		$req = Model::factory('RequestModel')->create();
+		$req = self::create();
 		$req->container = $container;
 		$req->created_at = time();
 		$req->application_id = $applicationId;
@@ -28,24 +34,46 @@ class RequestModel extends Model
 		return $req;
 	}
 
-	/**
-	 * リクエストキーによってデータベースのレコードを検索し、インスタンスを取得します
-	 *
-	 * @param int $accessKey リクエストキー
-	 * @param array $container コンテナー
-	 * @throws \Exception
-	 * @return RequestModel 新しいインスタンス
-	 */
-	public static function getByKey($requestKey, array $container)
+	private static function getQueryWithFilters(array $wheres)
 	{
-		if ($requestKey === null || $container === null)
+		if ($wheres === null)
 			throw new \Exception('some arguments are empty');
 
-		$parseResult = self::parseKeyToArray($requestKey);
-		$request = Model::factory('RequestModel')->find_one(parseResult['id']);
-		$request->container = $container;
+		$query = Model::factory(__class__);
 
-		return $request;
+		foreach($wheres as $key => $value)
+			$query = $query->where($key, $value);
+
+		return $query;
+	}
+
+	public static function getInstanceWithFilters(array $wheres, $container)
+	{
+		if ($container === null)
+			throw new \Exception('some arguments are empty');
+
+		$query = self::getQueryWithFilters($wheres);
+		$instance = $query->find_one();
+		$instance->container = $container;
+
+		return $instance;
+	}
+
+	public static function getInstancesWithFilters(array $wheres, $container)
+	{
+		if ($container === null)
+			throw new \Exception('some arguments are empty');
+
+		$query = self::getQueryWithFilters($wheres);
+		$instance = $query->find_many();
+		$instance->container = $container;
+
+		return $instance;
+	}
+
+	public static function getInstance($id, $container)
+	{
+		return self::getInstanceWithFilters(['id'=>$id], $container);
 	}
 
 	/**
@@ -53,7 +81,7 @@ class RequestModel extends Model
 	 */
 	public function application()
 	{
-		return $this->has_one('ApplicationModel', 'id');
+		return ApplicationModel::getInstance($this->application_id, $container);
 	}
 
 	/**
@@ -94,7 +122,7 @@ class RequestModel extends Model
 	/**
 	 * 各種パラメータからキーを構築します
 	 */
-	public static function buildHash($requestId, $applicationId, $keyCode, array $container)
+	public static function buildHash($requestId, $applicationId, $keyCode, $container)
 	{
 		return strtoupper(hash('sha256', "{$container->config['request-key-base']}/{$applicationId}/{$requestId}/{$keyCode}"));
 	}
@@ -102,7 +130,7 @@ class RequestModel extends Model
 	/**
 	 * 各種パラメータからキーを構築します
 	 */
-	public static function buildKey($requestId, $applicationId, $keyCode, array $container)
+	public static function buildKey($requestId, $applicationId, $keyCode, $container)
 	{
 		$hash = self::buildHash($requestId, $applicationId, $keyCode, $container);
 
@@ -139,7 +167,7 @@ class RequestModel extends Model
 			return false;
 		}
 
-		$req = Model::factory('RequestModel')->find_one($parseResult['id']);
+		$req = self::getInstance($parseResult['id'], $container);
 
 		if (!$req)
 			return false;

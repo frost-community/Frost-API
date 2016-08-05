@@ -1,7 +1,7 @@
 <?php
 
 /**
- * APIにアクセスするためのアプリケーションを管理します
+ * APIにアクセスするためのアプリケーションのインスタンスを管理します
  */
 class ApplicationModel extends Model
 {
@@ -36,26 +36,23 @@ class ApplicationModel extends Model
 	 * @param string $name 名前
 	 * @param string $description 説明
 	 * @param string $requestedPermissions 要求する権限
-	 * @param array $container コンテナー
+	 * @param object $container コンテナー
 	 * @throws \Utility\ApiException
 	 * @throws \Exception
 	 */
-	public static function create($userId, $name, $description, $requestedPermissions, array $container)
+	public static function createInstance($userId, $name, $description, $requestedPermissions, $container)
 	{
 		if ($userId === null || $description === null || $requestedPermissions === null || $container === null)
 			throw new \Exception('argument is empty');
 
-		if (!is_int($userId) || !is_string($description) || !is_string($requestedPermissions) || !is_array($container))
-			throw new \Exception('argument type is invalid');
-
 		if (!\Utility\Regex::isMatch('/^[a-z,-]+$/', $requestedPermissions))
 			throw new \Utility\ApiException('format of permissions parameter is invalid', ['detail'=>'it is required to be constructed in "a" to "z", and ","']);
 
-		if (!Model::factory('ApplicationModel')->where_equal('name', $name)->find_one())
+		if (!self::getInstanceWithFilters(['name', $name], $container))
 			throw new \Utility\ApiException('already exists.');
 
 		$permissions = self::analyzePermission(explode(',', $requestedPermissions));
-		$app = Model::factory('ApplicationModel')->create();
+		$app = ApplicationModel::create();
 		$app->container = $container;
 		$app->created_at = time();
 		$app->creator_id = $userId;
@@ -67,27 +64,46 @@ class ApplicationModel extends Model
 		return $app;
 	}
 
-	/**
-	 * アプリケーションキーによってデータベースのレコードを検索し、インスタンスを取得します
-	 *
-	 * @param int $key アプリケーションキー
-	 * @param array $container コンテナー
-	 * @throws \Exception
-	 * @return ApplicationModel 新しいインスタンス
-	 */
-	public static function getByKey($applicationKey, array $container)
+	private static function getQueryWithFilters(array $wheres)
 	{
-		if ($applicationKey === null || $container === null)
-			throw new \Exception('argument is empty');
+		if ($wheres === null)
+			throw new \Exception('some arguments are empty');
 
-		if (!is_int($applicationKey) || !is_array($container))
-			throw new \Exception('argument type is invalid');
+		$query = Model::factory(__class__);
 
-		$parseResult = self::parseKeyToArray($applicationKey);
-		$app = Model::factory('ApplicationModel')->find_one($parseResult['id']);
-		$app->container = $container;
+		foreach($wheres as $key => $value)
+			$query = $query->where($key, $value);
 
-		return $app;
+		return $query;
+	}
+
+	public static function getInstanceWithFilters(array $wheres, $container)
+	{
+		if ($container === null)
+			throw new \Exception('some arguments are empty');
+
+		$query = self::getQueryWithFilters($wheres);
+		$instance = $query->find_one();
+		$instance->container = $container;
+
+		return $instance;
+	}
+
+	public static function getInstancesWithFilters(array $wheres, $container)
+	{
+		if ($container === null)
+			throw new \Exception('some arguments are empty');
+
+		$query = self::getQueryWithFilters($wheres);
+		$instance = $query->find_many();
+		$instance->container = $container;
+
+		return $instance;
+	}
+
+	public static function getInstance($id, $container)
+	{
+		return self::getInstanceWithFilters(['id'=>$id], $container);
 	}
 
 	/**
@@ -95,7 +111,7 @@ class ApplicationModel extends Model
 	 */
 	public function requests()
 	{
-		return $this->belongs_to('RequestModel', 'id');
+		return RequestModel::where('application_id', $this->id)->find_many();
 	}
 
 	/**
@@ -103,7 +119,7 @@ class ApplicationModel extends Model
 	 */
 	public function accesses()
 	{
-		return $this->belongs_to('ApplicationAccessModel', 'id');
+		return ApplicationAccessModel::where('application_id', $this->id)->find_many();
 	}
 
 	/**
@@ -113,21 +129,21 @@ class ApplicationModel extends Model
 	 * @throws \Exception
 	 * @return array 取得モード時は権限情報
 	 */
-	public function permissionsArray($value = null)
+	public function permissionsArray(array $value = null)
 	{
-		if (!is_array($value))
-			throw new \Exception('argument type is invalid');
-
 		if ($value === null)
 		{
 			// get
-			$permissionsArray = explode(',', $value);
+			$permissionsArray = explode(',', $this->permissions);
 
 			return $permissionsArray;
 		}
 		else
 		{
 			// set
+			if (!is_array($value))
+				throw new \Exception('argument type is invalid');
+
 			$permissions = implode(',', $value);
 			$this->permissions = $permissions;
 		}
@@ -145,10 +161,7 @@ class ApplicationModel extends Model
 		if ($permissionName === null)
 			throw new \Exception('argument is empty');
 
-		if (!is_string($applicationKey))
-			throw new \Exception('argument type is invalid');
-
-		return in_array($permissionName, $this->getPermissions());
+		return in_array($permissionName, $this->permissionsArray());
 	}
 
 	/**
@@ -162,9 +175,6 @@ class ApplicationModel extends Model
 	{
 		if ($permissions === null)
 			throw new \Exception('argument is empty');
-
-		if (!is_array($permissions))
-			throw new \Exception('argument type is invalid');
 
 		$isPermissionError = false;
 		$invalidPermissionNames = [];
@@ -212,11 +222,8 @@ class ApplicationModel extends Model
 	{
 		if ($accessedUserId !== null)
 		{
-			if (!is_int($accessedUserId))
-				throw new \Exception('argument type is invalid');
-
 			// 自分のアプリケーションのキー以外は拒否
-			if ($this->creator_id !== $accessedUserId)
+			if (intval($this->creator_id) !== intval($accessedUserId))
 				throw new \Utility\ApiException('this key is managed by other user');
 		}
 
@@ -239,11 +246,8 @@ class ApplicationModel extends Model
 	{
 		if ($accessedUserId !== null)
 		{
-			if (!is_int($accessedUserId))
-				throw new \Exception('argument type is invalid');
-
 			// 自分のアプリケーションのキー以外は拒否
-			if ($this->creator_id !== $accessedUserId)
+			if (intval($this->creator_id) !== intval($accessedUserId))
 				throw new \Utility\ApiException('this key is managed by other user');
 		}
 
@@ -259,17 +263,14 @@ class ApplicationModel extends Model
 	 * @param int $id アプリケーションID
 	 * @param int $userId ユーザーID
 	 * @param int $keyCode キーの管理コード
-	 * @param array $container コンテナー
+	 * @param object $container コンテナー
 	 * @throws \Exception
 	 * @return string キーを構成するために必要なハッシュ
 	 */
-	private static function buildHash($id, $userId, $keyCode, array $container)
+	private static function buildHash($id, $userId, $keyCode, $container)
 	{
 		if ($id === null || $userId === null || $keyCode === null || $container === null)
 			throw new \Exception('argument is empty');
-
-		if (!is_int($id) || !is_int($userId) || !is_int($keyCode) || !is_array($container))
-			throw new \Exception('argument type is invalid');
 
 		return strtoupper(hash('sha256', "{$container->config['application-key-base']}/{$userId}/{$id}/{$keyCode}"));
 	}
@@ -280,16 +281,13 @@ class ApplicationModel extends Model
 	 * @param int $id アプリケーションID
 	 * @param int $userId ユーザーID
 	 * @param int $keyCode キーの管理コード
-	 * @param array $container コンテナー
+	 * @param object $container コンテナー
 	 * @return string アプリケーションキー
 	 */
-	private static function buildKey($id, $userId, $keyCode, array $container)
+	private static function buildKey($id, $userId, $keyCode, $container)
 	{
 		if ($id === null || $userId === null || $keyCode === null || $container === null)
 			throw new \Exception('argument is empty');
-
-		if (!is_int($id) || !is_int($userId) || !is_int($keyCode) || !is_array($container))
-			throw new \Exception('argument type is invalid');
 
 		$hash = self::buildHash($id, $userId, $keyCode, $container);
 		$applicationKey = "{$id}-{$hash}.{$keyCode}";
@@ -309,9 +307,6 @@ class ApplicationModel extends Model
 		if ($applicationKey === null)
 			throw new \Exception('argument is empty');
 
-		if (!is_string($applicationKey))
-			throw new \Exception('argument type is invalid');
-
 		$match = \Utility\Regex::match('/([^-]+)-([^-]{64}).([^-]+)/', $applicationKey);
 
 		if ($match === null)
@@ -324,20 +319,17 @@ class ApplicationModel extends Model
 	 * アプリケーションキーを検証します
 	 *
 	 * @param string $applicationKey アプリケーションキー
-	 * @param array $container コンテナー
+	 * @param object $container コンテナー
 	 * @throws \Exception
 	 * @return bool キーが有効であるかどうか
 	 */
-	public static function verifyKey($applicationKey, array $container)
+	public static function verifyKey($applicationKey, $container)
 	{
 		if ($applicationKey === null || $container === null)
 			throw new \Exception('argument is empty');
 
-		if (!is_string($applicationKey) || !is_array($container))
-			throw new \Exception('argument type is invalid');
-
 		$parseResult = self::parseKeyToArray($applicationKey);
-		$app = Model::factory('ApplicationModel')->find_one($parseResult['id']);
+		$app = ApplicationModel::getInstance($parseResult['id'], $container);
 
 		if (!$app)
 			return false;

@@ -19,7 +19,8 @@ foreach ($routes as $route)
 			if (!ApplicationAccessModel::verifyKey($params['access-key'], $this))
 				return withFailure($res, 'access-key is invalid');
 
-			$access = ApplicationAccessModel::getByKey($params['access-key'], $this);
+			$parseResult = ApplicationAccessModel::parseKeyToArray($params['access-key']);
+			$access = ApplicationAccessModel::getInstanceWithFilters(['user_id' => $parseResult['id'], 'key_code' => $parseResult['keyCode']], $this);
 			$user = $access->user();
 			$application = $access->application();
 

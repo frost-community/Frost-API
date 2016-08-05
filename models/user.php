@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * ユーザーのインスタンスを管理します
+ */
 class UserModel extends Model
 {
 	public static $_table = 'frost_user';
@@ -13,11 +16,15 @@ class UserModel extends Model
 	/**
 	 * データベースのレコードを作成し、インスタンスを取得します
 	 */
-	public static function create($screenName, $password, $name, array $container)
+	public static function createInstance($screenName, $password, $name, $container)
 	{
+		if ($screenName === null || $password === null || $name === null || $container === null)
+			throw new \Exception('some arguments are empty');
+
 		$timestamp = time();
 
-		$user = Model::factory('UserModel')->create();
+		$user = self::create();
+		$user->container = $container;
 
 		$isOccurredError = false;
 		$errorTargets = [];
@@ -29,7 +36,7 @@ class UserModel extends Model
 		}
 		else
 		{
-			if ($Model::factory('UserModel')->where_equal('screen_name', $screenName)->find_one())
+			if (self::getInstanceWithFilters(['screen_name', $screenName], $container))
 			{
 				$isOccurredError = true;
 				$errorTargets[] = 'screen-name';
@@ -65,12 +72,54 @@ class UserModel extends Model
 		return $user;
 	}
 
+	private static function getQueryWithFilters(array $wheres)
+	{
+		if ($wheres === null)
+			throw new \Exception('some arguments are empty');
+
+		$query = Model::factory(__class__);
+
+		foreach($wheres as $key => $value)
+			$query = $query->where($key, $value);
+
+		return $query;
+	}
+
+	public static function getInstanceWithFilters(array $wheres, $container)
+	{
+		if ($container === null)
+			throw new \Exception('some arguments are empty');
+
+		$query = self::getQueryWithFilters($wheres);
+		$instance = $query->find_one();
+		$instance->container = $container;
+
+		return $instance;
+	}
+
+	public static function getInstancesWithFilters(array $wheres, $container)
+	{
+		if ($container === null)
+			throw new \Exception('some arguments are empty');
+
+		$query = self::getQueryWithFilters($wheres);
+		$instance = $query->find_many();
+		$instance->container = $container;
+
+		return $instance;
+	}
+
+	public static function getInstance($id, $container)
+	{
+		return self::getInstanceWithFilters(['id'=>$id], $container);
+	}
+
 	/**
 	 * アプリケーションを取得します
 	 */
 	public function applications()
 	{
-		return $this->belongs_to('ApplicationModel', 'id');
+		return ApplicationModel::where('user_id', $this->id)->find_many();
 	}
 
 	/**
@@ -78,7 +127,7 @@ class UserModel extends Model
 	 */
 	public function applicationAccesses()
 	{
-		return $this->belongs_to('ApplicationAccessModel', 'id');
+		return ApplicationAccessModel::where('user_id', $this->id)->find_many();
 	}
 
 	/**

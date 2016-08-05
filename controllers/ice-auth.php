@@ -12,7 +12,7 @@ class IceAuthController
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
-		$request = RequestModel::create($params['application-id'], $container);
+		$request = RequestModel::createInstance($params['application-id'], $container);
 		$request->generatePinCode();
 		$requestKey = $request->generateRequestKey();
 
@@ -32,10 +32,10 @@ class IceAuthController
 		if (!RequestModel::verifyKey($params['request-key'], $container))
 			return withFailure($res, 'parameters are invalid', ['request-key']);
 
-		$request = RequestModel::getByKey($params['request-key'], $container);
-		$pinCode = $request->pin_code;
+		$parseResult = RequestModel::parseKeyToArray($params['request-key']);
+		$request = RequestModel::getInstanceWithFilters(['id' => $parseResult['id'], 'key_code' => $parseResult['keyCode']], $container);
 
-		return withSuccess($res, ['pin-code'=>$pinCode]);
+		return withSuccess($res, ['pin-code'=>$request->pin_code]);
 	}
 
 	// ice-auth/authorize
@@ -51,17 +51,18 @@ class IceAuthController
 		if (!RequestModel::verifyKey($params['request-key'], $container))
 			return withFailure($res, 'parameter is invalid', ['request-key']);
 
-		$request = RequestModel::getByKey($params['request-key'], $container);
+		$parseResult = RequestModel::parseKeyToArray($params['request-key']);
+		$request = RequestModel::getInstanceWithFilters(['id' => $parseResult['id'], 'key_code' => $parseResult['keyCode']], $container);
 
 		if ($request->pin_code !== $params['pin-code'])
 			return withFailure($res, 'parameter is invalid', ['pin-code']);
 
 		$application = $request->application();
-		$access = ApplicationAccessModel::where('application_id', $application->id)->where('user_id', $params['user-id'])->find_one();
+		$access = ApplicationAccessModel::getInstanceWithFilters(['user_id' => $params['user-id'], 'application_id' => $application['id']], $container);
 
 		if (!$access)
 		{
-			$access = ApplicationAccessModel::create($application->id, $params['user-id'], $container);
+			$access = ApplicationAccessModel::createInstance($application->id, $params['user-id'], $container);
 			$access->generateAccessKey($params['user-id']);
 		}
 

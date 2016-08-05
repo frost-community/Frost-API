@@ -21,7 +21,7 @@ class UserController
 
 		try
 		{
-			$createdUser = User::create($params['screen-name'], $params['password'], 'froster', $container);
+			$createdUser = UserModel::createInstance($params['screen-name'], $params['password'], 'froster', $container);
 		}
 		catch(\Utility\ApiException $e)
 		{
@@ -39,7 +39,7 @@ class UserController
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
-		$destUser = User::find_one($params['user-id']);
+		$destUser = UserModel::getInstance($params['user-id'], $container);
 
 		return withSuccess($res, ['user'=>$destUser]);
 	}

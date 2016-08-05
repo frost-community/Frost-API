@@ -2,7 +2,7 @@
 
 class ApplicationController
 {
-	public static function create( \Slim\Http\Request $req, $res, $container, $user, $application)
+	public static function create(\Slim\Http\Request $req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
 		$requireParams = ['name', 'description', 'permissions'];
@@ -12,7 +12,7 @@ class ApplicationController
 
 		try
 		{
-			$app = ApplicationModel::create($user['id'], $params['name'], $params['description'], $splitedPermissions, $container);
+			$app = ApplicationModel::createInstance($user['id'], $params['name'], $params['description'], $splitedPermissions, $container);
 		}
 		catch(\Utility\ApiException $e)
 		{
@@ -37,7 +37,7 @@ class ApplicationController
 
 		try
 		{
-			$app = ApplicationModel::find_one($params['application-id']);
+			$app = ApplicationModel::getInstance($params['application-id'], $container);
 			$applicationKey = $app->applicationKey($user->id);
 		}
 		catch(\Utility\ApiException $e)
@@ -58,7 +58,7 @@ class ApplicationController
 
 		try
 		{
-			$app = ApplicationModel::find_one($params['application-id']);
+			$app = ApplicationModel::getInstance($params['application-id'], $container);
 			$applicationKey = $app->generateKey($user->id);
 		}
 		catch(\Utility\ApiException $e)
