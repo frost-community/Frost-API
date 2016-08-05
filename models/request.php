@@ -61,7 +61,11 @@ class RequestModel extends Model
 	 */
 	public function generatePinCode()
 	{
-		$this->pin_code = "000000"; // TODO
+		// 数字6文字を生成
+		foreach(range(0,6) as $i)
+			$code .= random_int(0, 9);
+
+		$this->pin_code = $code;
 		$this->save();
 
 		return $this->pin_code;
