@@ -24,7 +24,22 @@ class ApplicationController
 
 	public static function show($req, $res, $container, $user, $application)
 	{
-		// TODO
+		$params = $req->getParams();
+		$requireParams = ['application-id'];
+
+		if (!hasRequireParams($params, $requireParams))
+			return withFailure($res, 'required parameters are missing', $requireParams);
+
+		try
+		{
+			$app = ApplicationModel::getInstance($params['application_id'], $container);
+		}
+		catch(\Utility\ApiException $e)
+		{
+			return withFailure($res, $e->getMessage(), $e->getData(), $e->getStatus());
+		}
+
+		return withSuccess($res, ['application' => $app->toArrayResponse()]);
 	}
 
 	public static function applicationKey(\Slim\Http\Request $req, $res, $container, $user, $application)
