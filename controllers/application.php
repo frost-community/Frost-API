@@ -32,7 +32,7 @@ class ApplicationController
 
 		try
 		{
-			$app = ApplicationModel::getInstance($params['application_id'], $container);
+			$app = ApplicationModel::getInstance($params['application-id'], $container);
 		}
 		catch(\Utility\ApiException $e)
 		{
