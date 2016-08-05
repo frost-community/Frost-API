@@ -17,8 +17,8 @@ $routes = [
 	// Application
 	['post',   '/application',                 ['application-special'], 'ApplicationController::create'],                 // アプリ情報生成
 	['get',    '/application',                 ['application'],         'ApplicationController::show'],                   // アプリ情報表示
-	['get',    '/application/application-key', ['application-special'], 'ApplicationController::applicationKey'],         // アプリキー表示
 	['post',   '/application/application-key', ['application-special'], 'ApplicationController::applicationKeyGenerate'], // アプリキー生成
+	['get',    '/application/application-key', ['application-special'], 'ApplicationController::applicationKey'],         // アプリキー表示
 
 	// User
 	['get',    '/user',                        ['user-read'],           'UserController::show'],
@@ -27,10 +27,10 @@ $routes = [
 	['delete', '/user/follow',                 ['user-write'],          'UserController::unfollow'],
 
 	// Account
-	['post',   '/account/create',              ['account-special'],     'UserController::create'],
+	['post',   '/account',                     ['account-special'],     'UserController::create'],
 
 	// Post
+	['post',   '/post',                        ['post-write'],          'PostController::create'],
 	['get',    '/post',                        ['post-read'],           'PostController::show'],
-	['get',    '/post/timeline',               ['post-read'],           'PostController::timeline'],
-	['post',   '/post/create',                 ['post-write'],          'PostController::create'],
+	['get',    '/post/timeline',               ['post-read'],           'PostController::timeline']
 ];
