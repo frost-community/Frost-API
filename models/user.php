@@ -127,7 +127,7 @@ class UserModel extends Model
 	 */
 	public function applications()
 	{
-		return ApplicationModel::where('user_id', $this->id)->find_many();
+		return ApplicationModel::getInstancesWithFilters(['user_id', $this->id], $this->container);
 	}
 
 	/**
@@ -135,7 +135,7 @@ class UserModel extends Model
 	 */
 	public function applicationAccesses()
 	{
-		return ApplicationAccessModel::where('user_id', $this->id)->find_many();
+		return ApplicationAccessModel::getInstancesWithFilters(['user_id', $this->id], $this->container);
 	}
 
 	/**

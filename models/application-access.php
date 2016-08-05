@@ -104,7 +104,7 @@ class ApplicationAccessModel extends Model
 	{
 		// 自分のアプリケーションのキー以外は拒否
 		if ($accessedUserId !== null && intval($this->creator_id) !== intval($accessedUserId))
-			throw new \Utility\ApiException('this key is managed by other user');
+			throw new \Utility\ApiException('this key is managed by other user', [], 403);
 
 		// キーコードが重複していたら3回まで施行
 		$tryCount = 0;
@@ -116,7 +116,7 @@ class ApplicationAccessModel extends Model
 		} while ($isExist && $tryCount < 3);
 
 		if ($isExist && $tryCount >= 3)
-			throw new \Utility\ApiException('the number of trials for key_code generation has reached its upper limit');
+			throw new \Utility\ApiException('the number of trials for key_code generation has reached its upper limit', 500);
 
 		$this->key_code = $keyCode;
 		$this->save();
@@ -131,10 +131,10 @@ class ApplicationAccessModel extends Model
 	{
 		// 自分のアプリケーションのキー以外は拒否
 		if ($accessedUserId !== null && intval($this->creator_id) !== intval($accessedUserId))
-			throw new \Utility\ApiException('this key is managed by other user');
+			throw new \Utility\ApiException('this key is managed by other user', [], 403);
 
 		if ($this->key_code === null)
-			throw new \Utility\ApiException('key is empty');
+			throw new \Utility\ApiException('key is empty', [], 404);
 
 		return self::buildKey($this->application_id, $this->user_id, $this->key_code, $this->container);
 	}

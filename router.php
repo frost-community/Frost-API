@@ -27,7 +27,7 @@ foreach ($routes as $route)
 			foreach ($route[2] as $requirePermission)
 			{
 				if (!$application->isHasPermission($requirePermission))
-					return withFailure($res, 'You do not have some permissions.');
+					return withFailure($res, 'You do not have some permissions.', [], 403);
 			}
 
 			$controllerArgs = [$req, $res, $this, $user, $application];
@@ -40,7 +40,7 @@ foreach ($routes as $route)
 		$callable = $route[3];
 
 		if(!is_callable($callable))
-			throw new Exception("last item of route was non-callable (endpoint: $endPoint)");
+			throw new \Exception("last item of route was non-callable (endpoint: $endPoint)");
 
 		return call_user_func_array($callable, $controllerArgs);
 	});

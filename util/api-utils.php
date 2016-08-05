@@ -28,7 +28,7 @@ function validateReferer($req)
 
 	if ($referer === null || $referer === '')
 	{
-		throw new ApiException(3);
+		throw new \Utility\ApiException('referer is empty');
 	}
 
 	return true;

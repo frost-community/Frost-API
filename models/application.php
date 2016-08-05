@@ -49,7 +49,7 @@ class ApplicationModel extends Model
 			throw new \Utility\ApiException('format of permissions parameter is invalid', ['detail'=>'it is required to be constructed in "a" to "z", and ","']);
 
 		if (!self::getInstanceWithFilters(['name', $name], $container))
-			throw new \Utility\ApiException('already exists.');
+			throw new \Utility\ApiException('already exists.', [], 409);
 
 		$permissions = self::analyzePermission(explode(',', $requestedPermissions));
 		$app = ApplicationModel::create();
@@ -119,7 +119,7 @@ class ApplicationModel extends Model
 	 */
 	public function requests()
 	{
-		return RequestModel::where('application_id', $this->id)->find_many();
+		return RequestModel::getInstancesWithFilters(['application_id', $this->id], $this->container);
 	}
 
 	/**
@@ -127,7 +127,7 @@ class ApplicationModel extends Model
 	 */
 	public function accesses()
 	{
-		return ApplicationAccessModel::where('application_id', $this->id)->find_many();
+		return ApplicationAccessModel::getInstancesWithFilters(['application_id', $this->id], $this->container);
 	}
 
 	/**
@@ -232,7 +232,7 @@ class ApplicationModel extends Model
 		{
 			// 自分のアプリケーションのキー以外は拒否
 			if (intval($this->creator_id) !== intval($accessedUserId))
-				throw new \Utility\ApiException('this key is managed by other user');
+				throw new \Utility\ApiException('this key is managed by other user', [], 403);
 		}
 
 		$keyCode = random_int(1, 99999);
@@ -256,11 +256,11 @@ class ApplicationModel extends Model
 		{
 			// 自分のアプリケーションのキー以外は拒否
 			if (intval($this->creator_id) !== intval($accessedUserId))
-				throw new \Utility\ApiException('this key is managed by other user');
+				throw new \Utility\ApiException('this key is managed by other user', [], 403);
 		}
 
 		if ($this->key_code === null)
-			throw new \Utility\ApiException('key is empty');
+			throw new \Utility\ApiException('key is empty', [], 404);
 
 		return self::buildKey($this->id, $this->creator_id, $this->key_code, $this->container);
 	}
