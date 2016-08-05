@@ -50,7 +50,7 @@ class UserController
 
 		return withSuccess($res, ['user'=>$destUser]);
 	}
-	
+
 	public static function timeline($req, $res, $container, $user, $application)
 	{
 		// TODO
