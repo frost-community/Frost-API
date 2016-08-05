@@ -25,7 +25,7 @@ class UserController
 		}
 		catch(\Utility\ApiException $e)
 		{
-			return withFailure($res, $e->getMessage(), $e->getData());
+			return withFailure($res, $e->getMessage(), $e->getData(), $e->getStatus());
 		}
 
 		return withSuccess($res, ['user'=>$createdUser]);
@@ -39,7 +39,14 @@ class UserController
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
-		$destUser = UserModel::getInstance($params['user-id'], $container);
+		try
+		{
+			$destUser = UserModel::getInstance($params['user-id'], $container);
+		}
+		catch(\Utility\ApiException $e)
+		{
+			return withFailure($res, $e->getMessage(), $e->getData(), $e->getStatus());
+		}
 
 		return withSuccess($res, ['user'=>$destUser]);
 	}

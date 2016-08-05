@@ -16,7 +16,7 @@ class ApplicationController
 		}
 		catch(\Utility\ApiException $e)
 		{
-			return withFailure($res, $e->getMessage(), $e->getData());
+			return withFailure($res, $e->getMessage(), $e->getData(), $e->getStatus());
 		}
 
 		return withSuccess($res, ['application' => $app->toArrayResponse()]);
@@ -42,7 +42,7 @@ class ApplicationController
 		}
 		catch(\Utility\ApiException $e)
 		{
-			return withFailure($res, $e->getMessage(), $e->getData());
+			return withFailure($res, $e->getMessage(), $e->getData(), $e->getStatus());
 		}
 
 		return withSuccess($res, ['application-key'=>$applicationKey]);
@@ -63,7 +63,7 @@ class ApplicationController
 		}
 		catch(\Utility\ApiException $e)
 		{
-			return withFailure($res, $e->getMessage(), $e->getData());
+			return withFailure($res, $e->getMessage(), $e->getData(), $e->getStatus());
 		}
 
 		return withSuccess($res, ['application-key'=>$applicationKey]);

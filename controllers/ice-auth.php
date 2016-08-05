@@ -12,9 +12,16 @@ class IceAuthController
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
-		$request = RequestModel::createInstance($params['application-id'], $container);
-		$request->generatePinCode();
-		$requestKey = $request->generateRequestKey();
+		try
+		{
+			$request = RequestModel::createInstance($params['application-id'], $container);
+			$request->generatePinCode();
+			$requestKey = $request->generateRequestKey();
+		}
+		catch(\Utility\ApiException $e)
+		{
+			return withFailure($res, $e->getMessage(), $e->getData(), $e->getStatus());
+		}
 
 		return $requestKey;
 	}
@@ -32,8 +39,16 @@ class IceAuthController
 		if (!RequestModel::verifyKey($params['request-key'], $container))
 			return withFailure($res, 'parameters are invalid', ['request-key']);
 
-		$parseResult = RequestModel::parseKeyToArray($params['request-key']);
-		$request = RequestModel::getInstanceWithFilters(['id' => $parseResult['id'], 'key_code' => $parseResult['keyCode']], $container);
+		try
+		{
+			$parseResult = RequestModel::parseKeyToArray($params['request-key']);
+			$request = RequestModel::getInstanceWithFilters(['id' => $parseResult['id'], 'key_code' => $parseResult['keyCode']], $container);
+			$accessKey = $access->accessKey($params['user-id']);
+		}
+		catch(\Utility\ApiException $e)
+		{
+			return withFailure($res, $e->getMessage(), $e->getData(), $e->getStatus());
+		}
 
 		return withSuccess($res, ['pin-code'=>$request->pin_code]);
 	}
@@ -51,22 +66,29 @@ class IceAuthController
 		if (!RequestModel::verifyKey($params['request-key'], $container))
 			return withFailure($res, 'parameter is invalid', ['request-key']);
 
-		$parseResult = RequestModel::parseKeyToArray($params['request-key']);
-		$request = RequestModel::getInstanceWithFilters(['id' => $parseResult['id'], 'key_code' => $parseResult['keyCode']], $container);
-
-		if ($request->pin_code !== $params['pin-code'])
-			return withFailure($res, 'parameter is invalid', ['pin-code']);
-
-		$application = $request->application();
-		$access = ApplicationAccessModel::getInstanceWithFilters(['user_id' => $params['user-id'], 'application_id' => $application['id']], $container);
-
-		if (!$access)
+		try
 		{
-			$access = ApplicationAccessModel::createInstance($application->id, $params['user-id'], $container);
-			$access->generateAccessKey($params['user-id']);
-		}
+			$parseResult = RequestModel::parseKeyToArray($params['request-key']);
+			$request = RequestModel::getInstanceWithFilters(['id' => $parseResult['id'], 'key_code' => $parseResult['keyCode']], $container);
 
-		$accessKey = $access->accessKey($params['user-id']);
+			if ($request->pin_code !== $params['pin-code'])
+				return withFailure($res, 'parameter is invalid', ['pin-code']);
+
+			$application = $request->application();
+			$access = ApplicationAccessModel::getInstanceWithFilters(['user_id' => $params['user-id'], 'application_id' => $application['id']], $container);
+
+			if (!$access)
+			{
+				$access = ApplicationAccessModel::createInstance($application->id, $params['user-id'], $container);
+				$access->generateAccessKey($params['user-id']);
+			}
+
+			$accessKey = $access->accessKey($params['user-id']);
+		}
+		catch(\Utility\ApiException $e)
+		{
+			return withFailure($res, $e->getMessage(), $e->getData(), $e->getStatus());
+		}
 
 		return withSuccess($res, ['access-key'=>$accessKey]);
 	}

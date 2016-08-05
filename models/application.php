@@ -84,6 +84,10 @@ class ApplicationModel extends Model
 
 		$query = self::getQueryWithFilters($wheres);
 		$instance = $query->find_one();
+
+		if (!$instance)
+			throw new \Utility\ApiException('not found', [], 404);
+
 		$instance->container = $container;
 
 		return $instance;
@@ -96,6 +100,10 @@ class ApplicationModel extends Model
 
 		$query = self::getQueryWithFilters($wheres);
 		$instance = $query->find_many();
+
+		if (count($instance) == 0)
+			throw new \Utility\ApiException('not found', [], 404);
+
 		$instance->container = $container;
 
 		return $instance;
