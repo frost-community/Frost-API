@@ -22,7 +22,7 @@ class ApplicationController
 		return withSuccess($res, ['application' => $app->toArrayResponse()]);
 	}
 
-	public static function show($req, $res, $container, $user, $application)
+	public static function show(\Slim\Http\Request $req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
 		$requireParams = ['application-id'];
@@ -42,28 +42,7 @@ class ApplicationController
 		return withSuccess($res, ['application' => $app->toArrayResponse()]);
 	}
 
-	public static function applicationKey(\Slim\Http\Request $req, $res, $container, $user, $application)
-	{
-		$params = $req->getParams();
-		$requireParams = ['application-id'];
-
-		if (!hasRequireParams($params, $requireParams))
-			return withFailure($res, 'required parameters are missing', $requireParams);
-
-		try
-		{
-			$app = ApplicationModel::getInstance($params['application-id'], $container);
-			$applicationKey = $app->applicationKey($user->id);
-		}
-		catch(\Utility\ApiException $e)
-		{
-			return withFailure($res, $e->getMessage(), $e->getData(), $e->getStatus());
-		}
-
-		return withSuccess($res, ['application-key'=>$applicationKey]);
-	}
-
-	public static function applicationKeyGenerate( \Slim\Http\Request $req, $res, $container, $user, $application)
+	public static function applicationKeyGenerate(\Slim\Http\Request $req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
 		$requireParams = ['application-id'];
@@ -75,6 +54,27 @@ class ApplicationController
 		{
 			$app = ApplicationModel::getInstance($params['application-id'], $container);
 			$applicationKey = $app->generateKey($user->id);
+		}
+		catch(\Utility\ApiException $e)
+		{
+			return withFailure($res, $e->getMessage(), $e->getData(), $e->getStatus());
+		}
+
+		return withSuccess($res, ['application-key'=>$applicationKey]);
+	}
+
+	public static function applicationKeyShow(\Slim\Http\Request $req, $res, $container, $user, $application)
+	{
+		$params = $req->getParams();
+		$requireParams = ['application-id'];
+
+		if (!hasRequireParams($params, $requireParams))
+			return withFailure($res, 'required parameters are missing', $requireParams);
+
+		try
+		{
+			$app = ApplicationModel::getInstance($params['application-id'], $container);
+			$applicationKey = $app->applicationKey($user->id);
 		}
 		catch(\Utility\ApiException $e)
 		{
