@@ -20,7 +20,8 @@ class Router
 	 */
 	public function addRoute(Route $route)
 	{
-		$slimApplication->$route->method($route->endPoint, function ($req, $res, $args) use($route)
+		$method = $route->method;
+		$this->slimApplication->$method($route->endPoint, function ($req, $res, $args) use($route)
 		{
 			if (count($route->permissionsArray) !== 0)
 			{
