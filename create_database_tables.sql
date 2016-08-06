@@ -38,3 +38,11 @@ CREATE TABLE IF NOT EXISTS `frost_user` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `screen_name_UNIQUE` (`screen_name`))
 ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `frost_user_follow` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `created_at` INT NOT NULL,
+  `source_user_id` INT NOT NULL,
+  `target_user_id` INT NOT NULL,
+  PRIMARY KEY (`id`))
+ENGINE=MyISAM DEFAULT CHARSET=utf8;
