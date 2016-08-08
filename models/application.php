@@ -28,7 +28,7 @@ class ApplicationModel
 
 	public function __construct(DatabaseAccess $database, $config, \Utility\Regex $regex, ApplicationHelper $helper)
 	{
-		if ($helper === null)
+		if ($database === null || $config === null || $regex === null || $helper === null)
 			throw new \Exception('argument is empty');
 
 		$this->database = $database;
