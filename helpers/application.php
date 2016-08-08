@@ -50,7 +50,7 @@ class ApplicationHelper
 		if ($id === null || $userId === null || $keyCode === null)
 			throw new \Exception('argument is empty');
 
-		$hash = $this->buildHash($id, $userId, $keyCode, $container);
+		$hash = $this->buildKeyHash($id, $userId, $keyCode, $container);
 		$applicationKey = $id.'-'.$hash.'.'.$keyCode;
 
 		return $applicationKey;
