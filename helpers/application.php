@@ -5,16 +5,16 @@
  */
 class ApplicationHelper
 {
-	private $database;
+	private $applicationModel;
 	private $config;
 	private $regex;
 
-	public function __construct(DatabaseAccess $database, $config, \Utility\Regex $regex)
+	public function __construct(ApplicationModel $applicationModel, $config, \Utility\Regex $regex)
 	{
-		if ($database === null || $config === null || $regex === null)
+		if ($applicationModel === null || $config === null || $regex === null)
 			throw new \Exception('argument is empty');
 
-		$this->database = $database;
+		$this->applicationModel = $applicationModel;
 		$this->config = $config;
 		$this->regex = $regex;
 	}
@@ -138,7 +138,7 @@ class ApplicationHelper
 			throw new \Exception('argument is empty');
 
 		$parseResult = $this->parseKeyToArray($applicationKey);
-		$app = $this->database->find($this->config['db']['table-names']['application'], $parseResult['id']);
+		$app = $this->applicationModel->find($parseResult['id']);
 
 		if (!$app)
 			return false;
