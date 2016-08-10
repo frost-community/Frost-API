@@ -6,22 +6,26 @@
 class Router
 {
 	public $slimApplication;
+	public $container;
 
 	/**
 	 * コンストラクタ
 	 */
-	public function __construct(\Slim\App $app)
+	public function __construct(\Slim\App $app, $container)
 	{
 		$this->slimApplication = $app;
+		$this->container = $container;
 	}
 
 	/**
 	 * ルートを追加します
 	 */
-	public function addRoute(Route $route)
+	public function addRoute(\Route $route)
 	{
 		$method = $route->method;
-		$this->slimApplication->$method($route->endPoint, function ($req, $res, $args) use($route)
+		$container = $this->container;
+
+		$this->slimApplication->$method($route->endPoint, function ($req, $res, $args) use($route, $container)
 		{
 			if (count($route->permissionsArray) !== 0)
 			{
@@ -30,25 +34,26 @@ class Router
 				if (!array_key_exists('access-key', $params))
 					return withFailure($res, 'access-key is missing');
 
-				if (!ApplicationAccessModel::verifyKey($params['access-key'], $this))
+				if (!ApplicationAccessModel::verifyKey($params['access-key'], $container))
 					return withFailure($res, 'access-key is invalid');
 
-				$parseResult = ApplicationAccessModel::parseKeyToArray($params['access-key']);
-				$access = ApplicationAccessModel::getInstanceWithFilters(['user_id' => $parseResult['id'], 'key_code' => $parseResult['keyCode']], $this);
-				$user = $access->user();
-				$application = $access->application();
+				// 権限を所持しているかどうかを確認
+
+				$accessFactory = new ApplicationAccessFactory($container['database'], $container['config'], new \Utility\Regex());
+				$keyElements = $accessFactory->parseKeyToArray($params['access-key']);
+				$accessData = $accessFactory->findOneWithFilters(['user_id' => $keyElements['id'], 'key_code' => $keyElements['keyCode']]);
 
 				foreach ($route->permissionsArray as $permission)
 				{
-					if (!$application->isHasPermission($permission))
+					if (!$accessData->application()->isHasPermission($permission))
 						return withFailure($res, 'You do not have some permissions.', [], 403);
 				}
 
-				$controllerArgs = [$req, $res, $this, $user, $application];
+				$controllerArgs = [$req, $res, $container, $accessData->user(), $accessData->application()];
 			}
 			else
 			{
-				$controllerArgs = [$req, $res, $this];
+				$controllerArgs = [$req, $res, $container];
 			}
 
 			if(!is_callable($route->callable))

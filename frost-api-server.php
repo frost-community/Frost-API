@@ -11,21 +11,10 @@ class FrostAPIServer
 	/**
 	 * コンストラクタ
 	 */
-	public function __construct($config)
+	public function __construct(Slim\App $app, Router $router)
 	{
-		$appConfig = [
-			'settings' => [
-				'displayErrorDetails' => true
-			],
-			'config' 	=> $config,
-		];
-
-		ORM::configure("mysql:dbname={$config['db']['dbname']};host={$config['db']['hostname']};charset=utf8");
-		ORM::configure('username', $config['db']['username']);
-		ORM::configure('password', $config['db']['password']);
-
-		$this->app = new Slim\App($appConfig);
-		$this->router = new Router($this->app);
+		$this->app = $app;
+		$this->router = $router;
 	}
 
 	/**
