@@ -12,14 +12,16 @@ class ApplicationController
 
 		try
 		{
-			$app = ApplicationModel::createInstance($user['id'], $params['name'], $params['description'], $splitedPermissions, $container);
+			$applicationFactory = new ApplicationFactory($container['database'], $container['config'], new \Utility\Regex());
+			$applicationModel = new ApplicationModel($applicationFactory);
+			$application = $applicationModel->create($user->record->id, $params['name'], $params['description'], $params['permissions']);
 		}
 		catch(\Utility\ApiException $e)
 		{
 			return withFailure($res, $e->getMessage(), $e->getData(), $e->getStatus());
 		}
 
-		return withSuccess($res, ['application' => $app->toArrayResponse()]);
+		return withSuccess($res, ['application' => $application]);
 	}
 
 	public static function show(\Slim\Http\Request $req, $res, $container, $user, $application)
@@ -32,14 +34,16 @@ class ApplicationController
 
 		try
 		{
-			$app = ApplicationModel::getInstance($params['application-id'], $container);
+			$applicationFactory = new ApplicationFactory($container['database'], $container['config'], new \Utility\Regex());
+			$applicationModel = new ApplicationModel($applicationFactory);
+			$application = $applicationModel->get($params['application-id']);
 		}
 		catch(\Utility\ApiException $e)
 		{
 			return withFailure($res, $e->getMessage(), $e->getData(), $e->getStatus());
 		}
 
-		return withSuccess($res, ['application' => $app->toArrayResponse()]);
+		return withSuccess($res, ['application' => $application]);
 	}
 
 	public static function applicationKeyGenerate(\Slim\Http\Request $req, $res, $container, $user, $application)
@@ -52,8 +56,9 @@ class ApplicationController
 
 		try
 		{
-			$app = ApplicationModel::getInstance($params['application-id'], $container);
-			$applicationKey = $app->generateKey($user->id);
+			$applicationFactory = new ApplicationFactory($container['database'], $container['config'], new \Utility\Regex());
+			$applicationModel = new ApplicationModel($applicationFactory);
+			$applicationKey = $applicationModel->keyGenerate($params['application-id'], $user->record->id);
 		}
 		catch(\Utility\ApiException $e)
 		{
@@ -73,8 +78,9 @@ class ApplicationController
 
 		try
 		{
-			$app = ApplicationModel::getInstance($params['application-id'], $container);
-			$applicationKey = $app->applicationKey($user->id);
+			$applicationFactory = new ApplicationFactory($container['database'], $container['config'], new \Utility\Regex());
+			$applicationModel = new ApplicationModel($applicationFactory);
+			$applicationKey = $applicationModel->keyGet($params['application-id'], $user->record->id);
 		}
 		catch(\Utility\ApiException $e)
 		{

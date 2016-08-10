@@ -1,22 +1,14 @@
 <?php
 
 /**
- * APIにアクセスするためのアプリケーションのインスタンスを管理します
+ * アプリケーションへのアクションを提供します
  */
-class ApplicationModel extends Model
+class ApplicationModel
 {
-	public static $_table = 'frost_application';
-	public static $_id_column = 'id';
-
-	/**
-	 * コンテナー
-	 */
-	private $container;
-
 	/**
 	 * 権限一覧
 	 */
-	public static $permissionTypes = [
+	public $permissionTypes = [
 		'ice-auth-host',       // 認証のホスト権限
 		'application',         // 連携アプリ操作
 		'application-special', // 連携アプリ特殊操作
@@ -29,341 +21,63 @@ class ApplicationModel extends Model
 		'post-write',          // 投稿の作成や削除等のアクション
 	];
 
-	/**
-	 * 新しいレコードを作成してインスタンスを初期化します
-	 *
-	 * @param int $userId ユーザーのID
-	 * @param string $name 名前
-	 * @param string $description 説明
-	 * @param string $requestedPermissions 要求する権限
-	 * @param object $container コンテナー
-	 * @throws \Utility\ApiException
-	 * @throws \Exception
-	 */
-	public static function createInstance($userId, $name, $description, $requestedPermissions, $container)
+	private $applicationFactory;
+
+	// 各種必要なFactory
+	public function __construct(ApplicationFactory $applicationFactory)
 	{
-		if ($userId === null || $description === null || $requestedPermissions === null || $container === null)
+		if ($applicationFactory === null)
 			throw new \Exception('argument is empty');
 
-		if (!\Utility\Regex::isMatch('/^[a-z,-]+$/', $requestedPermissions))
-			throw new \Utility\ApiException('format of permissions parameter is invalid', ['detail'=>'it is required to be constructed in "a" to "z", and ","']);
-
-		if (!self::getInstanceWithFilters(['name', $name], $container))
-			throw new \Utility\ApiException('already exists.', [], 409);
-
-		$permissions = self::analyzePermission(explode(',', $requestedPermissions));
-		$app = ApplicationModel::create();
-		$app->container = $container;
-		$app->created_at = time();
-		$app->creator_id = $userId;
-		$app->name = $name;
-		$app->description = $description;
-		$app->permissions = implode(',', $permissions);
-		$app->save();
-
-		return $app;
-	}
-
-	private static function getQueryWithFilters(array $wheres)
-	{
-		if ($wheres === null)
-			throw new \Exception('some arguments are empty');
-
-		$query = Model::factory(__class__);
-
-		foreach($wheres as $key => $value)
-			$query = $query->where($key, $value);
-
-		return $query;
-	}
-
-	public static function getInstanceWithFilters(array $wheres, $container)
-	{
-		if ($container === null)
-			throw new \Exception('some arguments are empty');
-
-		$query = self::getQueryWithFilters($wheres);
-		$instance = $query->find_one();
-
-		if (!$instance)
-			throw new \Utility\ApiException('not found', [], 404);
-
-		$instance->container = $container;
-
-		return $instance;
-	}
-
-	public static function getInstancesWithFilters(array $wheres, $container)
-	{
-		if ($container === null)
-			throw new \Exception('some arguments are empty');
-
-		$query = self::getQueryWithFilters($wheres);
-		$instance = $query->find_many();
-
-		if (count($instance) == 0)
-			throw new \Utility\ApiException('not found', [], 404);
-
-		$instance->container = $container;
-
-		return $instance;
-	}
-
-	public static function getInstance($id, $container)
-	{
-		return self::getInstanceWithFilters(['id'=>$id], $container);
+		$this->applicationFactory = $applicationFactory;
 	}
 
 	/**
-	 * このアプリケーションに対するRequestレコードを取得します
+	 * アプリケーションを作成します
+	 * @param int $userId アプリケーションを作成するユーザーのID
+	 * @param string $name 名称
+	 * @param string $description 概要
+	 * @param string $permissions 権限名をコンマで区切った文字列
 	 */
-	public function requests()
+	public function create($userId, $name, $description, $permissions)
 	{
-		return RequestModel::getInstancesWithFilters(['application_id', $this->id], $this->container);
-	}
-
-	/**
-	 * このアプリケーションに対するApplicationAccessレコードを取得します
-	 */
-	public function accesses()
-	{
-		return ApplicationAccessModel::getInstancesWithFilters(['application_id', $this->id], $this->container);
-	}
-
-	/**
-	 * 権限情報を配列としてデータベースから取得または値を設定します。引数にnullを与えると取得モードになります。
-	 *
-	 * @param array $value 設定する値
-	 * @throws \Exception
-	 * @return array 取得モード時は権限情報
-	 */
-	public function permissionsArray(array $value = null)
-	{
-		if ($value === null)
-		{
-			// get
-			$permissionsArray = explode(',', $this->permissions);
-
-			return $permissionsArray;
-		}
-		else
-		{
-			// set
-			if (!is_array($value))
-				throw new \Exception('argument type is invalid');
-
-			$permissions = implode(',', $value);
-			$this->permissions = $permissions;
-		}
-	}
-
-	/**
-	 * 指定された権限を所持しているかどうかを取得します
-	 *
-	 * @param string $permissionName 対象の権限
-	 * @throws \Exception
-	 * @return bool その権限を所持しているかどうか
-	 */
-	public function isHasPermission($permissionName)
-	{
-		if ($permissionName === null)
+		if ($userId === null || $name === null || $description === null || $permissions === null)
 			throw new \Exception('argument is empty');
 
-		return in_array($permissionName, $this->permissionsArray());
+		return $this->applicationFactory->create($userId, $name, $description, $permissions, $this->permissionTypes)->toArrayResponse();
 	}
 
 	/**
-	 * 権限の内容を解析して内容の正当性を確認します
-	 *
-	 * @param array $permissions 権限の配列
-	 * @throws \Utility\ApiException
-	 * @return ApplicationModel 再構成された権限の配列
+	 * アプリケーションを取得します
+	 * @param int $applicationId アプリケーションのID
 	 */
-	private static function analyzePermissions(array $permissions)
+	public function get($applicationId)
 	{
-		if ($permissions === null)
+		if ($applicationId === null)
 			throw new \Exception('argument is empty');
 
-		$isPermissionError = false;
-		$invalidPermissionNames = [];
-
-		foreach ($permissions as $permission)
-		{
-			$isFound = false;
-
-			foreach (self::$permissionTypes as $permissionType)
-			{
-				if($permission === $permissionType)
-				{
-					$isFound = true;
-
-					if (in_array($permission, $destPermissions))
-						throw new \Utility\ApiException('permissions is duplicate');
-
-					array_push($destPermissions, $permission);
-					break;
-				}
-			}
-
-			if (!$isFound)
-			{
-				$isPermissionError = true;
-				$invalidPermissionNames += $permission;
-			}
-		}
-
-		if ($isPermissionError)
-			throw new \Utility\ApiException('unknown permissions', $invalidPermissionNames);
-		
-		return $destPermissions;
+		return $this->applicationFactory->find($applicationId)->toArrayResponse();
 	}
 
-	/**
-	 * アプリケーションキーを生成します
-	 *
-	 * @param int $accessedUserId アクセスされたユーザーのID(nullを許容します)
-	 * @throws \Exception
-	 * @throws \Utility\ApiException
-	 * @return string アプリケーションキー
-	 */
-	public function generateApplicationKey($accessedUserId = null)
+	public function keyGenerate($applicationId, $accessedUserId)
 	{
-		if ($accessedUserId !== null)
-		{
-			// 自分のアプリケーションのキー以外は拒否
-			if (intval($this->creator_id) !== intval($accessedUserId))
-				throw new \Utility\ApiException('this key is managed by other user', [], 403);
-		}
-
-		$keyCode = random_int(1, 99999);
-		$this->key_code = $keyCode;
-		$this->save();
-
-		return $this->applicationKey($accessedUserId);
-	}
-
-	/**
-	 * アプリケーションキーを取得します
-	 *
-	 * @param int $accessedUserId アクセスされたユーザーのID(nullを許容します)
-	 * @throws \Exception
-	 * @throws \Utility\ApiException
-	 * @return string アプリケーションキー
-	 */
-	public function applicationKey($accessedUserId = null)
-	{
-		if ($accessedUserId !== null)
-		{
-			// 自分のアプリケーションのキー以外は拒否
-			if (intval($this->creator_id) !== intval($accessedUserId))
-				throw new \Utility\ApiException('this key is managed by other user', [], 403);
-		}
-
-		if ($this->key_code === null)
-			throw new \Utility\ApiException('key is empty', [], 404);
-
-		return self::buildKey($this->id, $this->creator_id, $this->key_code, $this->container);
-	}
-
-	/**
-	 * キーを構成するために必要なハッシュを構築します
-	 *
-	 * @param int $id アプリケーションID
-	 * @param int $userId ユーザーID
-	 * @param int $keyCode キーの管理コード
-	 * @param object $container コンテナー
-	 * @throws \Exception
-	 * @return string キーを構成するために必要なハッシュ
-	 */
-	private static function buildHash($id, $userId, $keyCode, $container)
-	{
-		if ($id === null || $userId === null || $keyCode === null || $container === null)
+		if ($applicationId === null || $accessedUserId === null)
 			throw new \Exception('argument is empty');
 
-		return strtoupper(hash('sha256', "{$container->config['application-key-base']}/{$userId}/{$id}/{$keyCode}"));
-	}
-
-	/**
-	 * アプリケーションキーを構築します
-	 *
-	 * @param int $id アプリケーションID
-	 * @param int $userId ユーザーID
-	 * @param int $keyCode キーの管理コード
-	 * @param object $container コンテナー
-	 * @return string アプリケーションキー
-	 */
-	private static function buildKey($id, $userId, $keyCode, $container)
-	{
-		if ($id === null || $userId === null || $keyCode === null || $container === null)
-			throw new \Exception('argument is empty');
-
-		$hash = self::buildHash($id, $userId, $keyCode, $container);
-		$applicationKey = "{$id}-{$hash}.{$keyCode}";
+		$applicationData = $this->applicationFactory->find($applicationId);
+		$applicationKey = $applicationData->generateApplicationKey($accessedUserId);
 
 		return $applicationKey;
 	}
 
-	/**
-	 * アプリケーションキーを配列に展開します
-	 * @param string $key アプリケーションキー
-	 * @throws \Exception
-	 * @throws \Utility\ApiException
-	 * @return array id,hash,keyCodeの格納された配列
-	 */
-	public static function parseKeyToArray($applicationKey)
+	public function keyGet($applicationId, $accessedUserId)
 	{
-		if ($applicationKey === null)
+		if ($applicationId === null || $accessedUserId === null)
 			throw new \Exception('argument is empty');
 
-		$match = \Utility\Regex::match('/([^-]+)-([^-]{64}).([^-]+)/', $applicationKey);
+		$applicationData = $this->applicationFactory->find($applicationId);
+		$applicationKey = $applicationData->applicationKey($accessedUserId);
 
-		if ($match === null)
-			throw new \Utility\ApiException('application-key is invalid format');
-
-		return [$match[1],$match[2],$match[3],'id'=>$match[1],'hash'=>$match[2],'keyCode'=>$match[3]];
-	}
-
-	/**
-	 * アプリケーションキーを検証します
-	 *
-	 * @param string $applicationKey アプリケーションキー
-	 * @param object $container コンテナー
-	 * @throws \Exception
-	 * @return bool キーが有効であるかどうか
-	 */
-	public static function verifyKey($applicationKey, $container)
-	{
-		if ($applicationKey === null || $container === null)
-			throw new \Exception('argument is empty');
-
-		$parseResult = self::parseKeyToArray($applicationKey);
-		$app = ApplicationModel::getInstance($parseResult['id'], $container);
-
-		if (!$app)
-			return false;
-
-		$correctHash = self::buildHash($parseResult['id'], $app->creator_id, $parseResult['keyCode'], $container);
-		$isPassed = $parseResult['keyCode'] === $app->key_code && $parseResult['hash'] === $correctHash;
-
-		return $isPassed;
-	}
-
-	/**
-	 * レスポンス向けの配列データに変換します
-	 *
-	 * @return array レスポンス向けの配列データ
-	 */
-	public function toArrayResponse()
-	{
-		$data = [
-			'id' => $this->id,
-			'created_at' => $this->created_at,
-			'creator_id' => $this->creator_id,
-			'name' => $this->name,
-			'description' => $this->description,
-			'permissions' => $this->permissions
-		];
-
-		return $data;
+		return $applicationKey;
 	}
 }

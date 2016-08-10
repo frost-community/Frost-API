@@ -3,7 +3,7 @@
 /**
  * ユーザーへのアクションを提供します
  */
-class UserModel
+class AccountModel
 {
 	private $userFactory;
 
@@ -16,11 +16,16 @@ class UserModel
 		$this->userFactory = $userFactory;
 	}
 
-	public function get($userId)
+	public function create($screenName, $password, $name = null)
 	{
-		if ($userId === null)
+		if ($screenName === null || $password === null)
 			throw new \Exception('argument is empty');
 
-		return $this->userFactory->find($userId)->toArrayResponse();
+		if ($name === null)
+			$name = 'froster';
+
+		$userData = $userFactory->create($screenName, $password, $name);
+
+		return $userData->toArrayResponse();
 	}
 }
