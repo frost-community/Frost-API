@@ -8,17 +8,15 @@ class ApplicationFactory
 	private $database;
 	private $config;
 	private $regex;
-	private $helper;
 
 	public function __construct(DatabaseAccess $database, $config, \Utility\Regex $regex)
 	{
-		if ($database === null || $config === null || $regex === null || $helper === null)
+		if ($database === null || $config === null || $regex === null)
 			throw new \Exception('argument is empty');
 
 		$this->database = $database;
 		$this->config = $config;
 		$this->regex = $regex;
-		$this->helper = $helper;
 	}
 
 	/**
@@ -28,11 +26,12 @@ class ApplicationFactory
 	 * @param string $name 名前
 	 * @param string $description 説明
 	 * @param string $requestedPermissions 要求する権限
+	 * @param array $permissionTypes 存在する権限名の配列
 	 * @throws \Utility\ApiException
 	 * @throws \Exception
 	 * @return ApplicationModel 新しいインスタンス
 	 */
-	public function create($userId, $name, $description, $requestedPermissions)
+	public function create($userId, $name, $description, $requestedPermissions, $permissionTypes)
 	{
 		if ($userId === null || $description === null || $requestedPermissions === null)
 			throw new \Exception('argument is empty');
@@ -43,7 +42,7 @@ class ApplicationFactory
 		if ($this->database->findOneWithFilters($this->config['db']['table-names']['application'], ['name' => $name]))
 			throw new \Utility\ApiException('already exists.', [], 409);
 
-		$permissions = $this->helper->analyzePermissions(explode(',', $requestedPermissions));
+		$permissions = $this->analyzePermissions(explode(',', $requestedPermissions), $permissionTypes);
 		$record = $this->database->create($this->config['db']['table-names']['application'], [
 			'created_at' => time(),
 			'creator_id' => $userId,

@@ -44,7 +44,7 @@ class ApplicationModel
 		if ($userId === null || $name === null || $description === null || $permissions === null)
 			throw new \Exception('argument is empty');
 
-		return $this->applicationFactory->create($userId, $name, $description, $permissions);
+		return $this->applicationFactory->create($userId, $name, $description, $permissions, $this->permissionTypes);
 	}
 
 	/**
