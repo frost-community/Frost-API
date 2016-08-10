@@ -13,11 +13,11 @@ class Route
 	/**
 	 * コンストラクタ
 	 */
-	public function __construct($method, $endPoint, array $permissionsArray, callable $callable)
+	public function __construct($method, $endPoint, array $permissionsArray, $callableString)
 	{
 		$this->method = $method;
 		$this->endPoint = $endPoint;
 		$this->permissionsArray = $permissionsArray;
-		$this->callable = $callable;
+		$this->callable = $callableString;
 	}
 }

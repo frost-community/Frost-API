@@ -46,7 +46,7 @@ class UserFactory
 			}
 			else
 			{
-				foreach ($container->config['invalid-screen-names'] as $invalidScreenName)
+				foreach ($this->config['invalid-screen-names'] as $invalidScreenName)
 				{
 					if ($screenName === $invalidScreenName)
 					{
@@ -73,7 +73,7 @@ class UserFactory
 			'password_hash' => hash('sha256', $password.$timestamp)
 		]);
 
-		return $record;
+		return new UserData($this, $record);
 	}
 
 	/**
@@ -89,12 +89,12 @@ class UserFactory
 		if ($requestId === null)
 			throw new \Exception('argument is empty');
 
-		$record = $this->database->find($this->config['db']['table-names']['request'], $requestId);
+		$record = $this->database->find($this->config['db']['table-names']['user'], $requestId);
 
 		if (!$record)
 			throw new \Utility\ApiException('request not found', [], 404);
 
-		return new RequestData($this, $record);
+		return new UserData($this, $record);
 	}
 
 	/**
@@ -110,12 +110,12 @@ class UserFactory
 		if ($wheres === null)
 			throw new \Exception('argument is empty');
 
-		$record = $this->database->findOneWithFilters($this->config['db']['table-names']['request'], $wheres);
+		$record = $this->database->findOneWithFilters($this->config['db']['table-names']['user'], $wheres);
 
 		if (!$record)
 			throw new \Utility\ApiException('request not found', [], 404);
 
-		return new RequestData($this, $record);
+		return new UserData($this, $record);
 	}
 
 	/**
@@ -131,13 +131,13 @@ class UserFactory
 		if ($wheres === null)
 			throw new \Exception('argument is empty');
 
-		$records = $this->database->findManyWithFilters($this->config['db']['table-names']['request'], $wheres);
+		$records = $this->database->findManyWithFilters($this->config['db']['table-names']['user'], $wheres);
 
 		if (count($records) === 0)
 			throw new \Utility\ApiException('request not found', [], 404);
 
 		foreach($records as $record)
-			array_push($instances, new RequestData($this, $record));
+			array_push($instances, new UserData($this, $record));
 
 		return $instances;
 	}

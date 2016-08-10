@@ -108,7 +108,7 @@ class RequestFactory
 	/**
 	 * 各種パラメータからキーを構築します
 	 */
-	public function buildKeyHash($requestId, $applicationId, $keyCode)
+	private function buildKeyHash($requestId, $applicationId, $keyCode)
 	{
 		return strtoupper(hash('sha256', $this->config['request-key-base'].'/'.$applicationId.'/'.$requestId.'/'.$keyCode));
 	}

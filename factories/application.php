@@ -39,7 +39,7 @@ class ApplicationFactory
 		if (!$this->regex->isMatch('/^[a-z,-]+$/', $requestedPermissions))
 			throw new \Utility\ApiException('format of permissions parameter is invalid', ['detail'=>'it is required to be constructed in "a" to "z", and ","']);
 
-		if ($this->database->findOneWithFilters($this->config['db']['table-names']['application'], ['name' => $name]))
+		if ($this->findOneWithFilters(['name' => $name]))
 			throw new \Utility\ApiException('already exists.', [], 409);
 
 		$permissions = $this->analyzePermissions(explode(',', $requestedPermissions), $permissionTypes);
@@ -147,12 +147,12 @@ class ApplicationFactory
 	 * @throws \Exception
 	 * @return string アプリケーションキー
 	 */
-	private function buildKey($id, $userId, $keyCode)
+	public function buildKey($id, $userId, $keyCode)
 	{
 		if ($id === null || $userId === null || $keyCode === null)
 			throw new \Exception('argument is empty');
 
-		$hash = $this->buildKeyHash($id, $userId, $keyCode, $container);
+		$hash = $this->buildKeyHash($id, $userId, $keyCode);
 		$applicationKey = $id.'-'.$hash.'.'.$keyCode;
 
 		return $applicationKey;

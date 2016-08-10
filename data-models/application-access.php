@@ -30,7 +30,7 @@ class ApplicationAccessData
 	 */
 	public function user(UserFactory $userFactory)
 	{
-		return $userFactory->find($this->user_id);
+		return $userFactory->find($this->record->user_id);
 	}
 
 	/**

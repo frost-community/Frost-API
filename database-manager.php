@@ -4,7 +4,7 @@ class DatabaseManager implements DatabaseAccess
 {
 	private function getQueryWithFilters($tableName, array $wheres)
 	{
-		if ($tableName === null || $dataArray === null)
+		if ($tableName === null || $wheres === null)
 			throw new \Exception('some arguments are empty');
 
 		$query = ORM::for_table($tableName);

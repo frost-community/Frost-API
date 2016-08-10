@@ -14,7 +14,7 @@ class ApplicationController
 		{
 			$applicationFactory = new ApplicationFactory($container['database'], $container['config'], new \Utility\Regex());
 			$applicationModel = new ApplicationModel($applicationFactory);
-			$application = $applicationModel->create($user['id'], $params['name'], $params['description'], $params['permissions']);
+			$application = $applicationModel->create($user->record->id, $params['name'], $params['description'], $params['permissions']);
 		}
 		catch(\Utility\ApiException $e)
 		{
@@ -58,7 +58,7 @@ class ApplicationController
 		{
 			$applicationFactory = new ApplicationFactory($container['database'], $container['config'], new \Utility\Regex());
 			$applicationModel = new ApplicationModel($applicationFactory);
-			$applicationKey = $applicationModel->keyGenerate($params['application-id'], $user['id']);
+			$applicationKey = $applicationModel->keyGenerate($params['application-id'], $user->record->id);
 		}
 		catch(\Utility\ApiException $e)
 		{
@@ -80,7 +80,7 @@ class ApplicationController
 		{
 			$applicationFactory = new ApplicationFactory($container['database'], $container['config'], new \Utility\Regex());
 			$applicationModel = new ApplicationModel($applicationFactory);
-			$applicationKey = $applicationModel->keyGet($params['application-id'], $user['id']);
+			$applicationKey = $applicationModel->keyGet($params['application-id'], $user->record->id);
 		}
 		catch(\Utility\ApiException $e)
 		{

@@ -45,17 +45,17 @@ class ApplicationAccessFactory
 	 * @throws \Utility\ApiException
 	 * @return ApplicationData インスタンス
 	 */
-	public function findOneWithFilters(array $wheres, $applicationModel, $userModel)
+	public function findOneWithFilters(array $wheres)
 	{
 		if ($wheres === null)
 			throw new \Exception('argument is empty');
 
-		$record = $this->database->findOneWithFilters($this->config['db']['table-names']['application'], $wheres);
+		$record = $this->database->findOneWithFilters($this->config['db']['table-names']['application-access'], $wheres);
 
 		if (!$record)
 			throw new \Utility\ApiException('application not found', [], 404);
 
-		return new ApplicationData($this, $record);
+		return new ApplicationAccessData($this, $record);
 	}
 
 	/**
@@ -66,18 +66,18 @@ class ApplicationAccessFactory
 	 * @throws \Utility\ApiException
 	 * @return array ApplicationDataの配列
 	 */
-	public function findManyWithFilters(array $wheres, $applicationModel, $userModel)
+	public function findManyWithFilters(array $wheres)
 	{
 		if ($wheres === null)
 			throw new \Exception('argument is empty');
 
-		$records = $this->database->findManyWithFilters($this->config['db']['table-names']['application'], $wheres);
+		$records = $this->database->findManyWithFilters($this->config['db']['table-names']['application-access'], $wheres);
 
 		if (count($records) === 0)
 			throw new \Utility\ApiException('application not found', [], 404);
 
 		foreach($records as $record)
-			array_push($instances, new ApplicationData($this, $record));
+			array_push($instances, new ApplicationAccessData($this, $record));
 
 		return $instances;
 	}
@@ -108,7 +108,7 @@ class ApplicationAccessFactory
 	 * @throws \Exception
 	 * @return string アプリケーションキー
 	 */
-	private function buildKey($applicationId, $userId, $keyCode)
+	public function buildKey($applicationId, $userId, $keyCode)
 	{
 		if ($applicationId === null || $userId === null || $keyCode === null)
 			throw new \Exception('argument is empty');
@@ -161,7 +161,7 @@ class ApplicationAccessFactory
 		if (!$accessModel)
 			return false;
 
-		$correctHash = $this->buildHash($accessModel->record->application_id, $parseResult['id'], $parseResult['keyCode']);
+		$correctHash = $this->buildKeyHash($accessModel->record->application_id, $parseResult['id'], $parseResult['keyCode']);
 		$isPassed = $parseResult['keyCode'] === $accessModel->record->key_code && $parseResult['hash'] === $correctHash;
 
 		return $isPassed;
