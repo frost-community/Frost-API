@@ -14,16 +14,18 @@ class IceAuthController
 
 		try
 		{
-			$request = RequestModel::createInstance($params['application-id'], $container);
-			$request->generatePinCode();
-			$requestKey = $request->generateRequestKey();
+			$regex = new \Utility\Regex();
+			$requestFactory = new RequestFactory($container['database'], $container['config'], $regex);
+			$applicationAccessFactory = new ApplicationAccessFactory($container['database'], $container['config'], $regex);
+			$iceAuthModel = new IceAuthModel($requestFactory, $applicationAccessFactory);
+			$requestKey = $iceAuthModel->createRequest();
 		}
 		catch(\Utility\ApiException $e)
 		{
 			return withFailure($res, $e->getMessage(), $e->getData(), $e->getStatus());
 		}
 
-		return $requestKey;
+		return withSuccess($res, ['request-key' => $requestKey]);
 	}
 
 	// ice-auth/pin-code
@@ -36,26 +38,25 @@ class IceAuthController
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
-		if (!RequestModel::verifyKey($params['request-key'], $container))
-			return withFailure($res, 'parameters are invalid', ['request-key']);
-
 		try
 		{
-			$parseResult = RequestModel::parseKeyToArray($params['request-key']);
-			$request = RequestModel::getInstanceWithFilters(['id' => $parseResult['id'], 'key_code' => $parseResult['keyCode']], $container);
-			$accessKey = $access->accessKey($params['user-id']);
+			$regex = new \Utility\Regex();
+			$requestFactory = new RequestFactory($container['database'], $container['config'], $regex);
+			$applicationAccessFactory = new ApplicationAccessFactory($container['database'], $container['config'], $regex);
+			$iceAuthModel = new IceAuthModel($requestFactory, $applicationAccessFactory);
+			$pinCode = $iceAuthModel->getPinCode();
 		}
 		catch(\Utility\ApiException $e)
 		{
 			return withFailure($res, $e->getMessage(), $e->getData(), $e->getStatus());
 		}
 
-		return withSuccess($res, ['pin-code'=>$request->pin_code]);
+		return withSuccess($res, ['pin-code' => $pinCode]);
 	}
 
 	// ice-auth/authorize
 	// 認証を行って指定アプリケーションのアクセスキーを取得
-	public static function accessKeyAuth(\Slim\Http\Request $req, $res, $container)
+	public static function authorize(\Slim\Http\Request $req, $res, $container)
 	{
 		$params = $req->getParams();
 		$requireParams = ['request-key', 'user-id', 'pin-code'];
@@ -63,33 +64,19 @@ class IceAuthController
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
 
-		if (!RequestModel::verifyKey($params['request-key'], $container))
-			return withFailure($res, 'parameter is invalid', ['request-key']);
-
 		try
 		{
-			$parseResult = RequestModel::parseKeyToArray($params['request-key']);
-			$request = RequestModel::getInstanceWithFilters(['id' => $parseResult['id'], 'key_code' => $parseResult['keyCode']], $container);
-
-			if ($request->pin_code !== $params['pin-code'])
-				return withFailure($res, 'parameter is invalid', ['pin-code']);
-
-			$application = $request->application();
-			$access = ApplicationAccessModel::getInstanceWithFilters(['user_id' => $params['user-id'], 'application_id' => $application['id']], $container);
-
-			if (!$access)
-			{
-				$access = ApplicationAccessModel::createInstance($application->id, $params['user-id'], $container);
-				$access->generateAccessKey($params['user-id']);
-			}
-
-			$accessKey = $access->accessKey($params['user-id']);
+			$regex = new \Utility\Regex();
+			$requestFactory = new RequestFactory($container['database'], $container['config'], $regex);
+			$applicationAccessFactory = new ApplicationAccessFactory($container['database'], $container['config'], $regex);
+			$iceAuthModel = new IceAuthModel($requestFactory, $applicationAccessFactory);
+			$accessKey = $iceAuthModel->authorize($params['request-key'], $params['user-id'], $params['pin-code']);
 		}
 		catch(\Utility\ApiException $e)
 		{
 			return withFailure($res, $e->getMessage(), $e->getData(), $e->getStatus());
 		}
 
-		return withSuccess($res, ['access-key'=>$accessKey]);
+		return withSuccess($res, ['access-key' => $accessKey]);
 	}
 }
