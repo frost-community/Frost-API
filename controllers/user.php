@@ -12,7 +12,9 @@ class UserController
 
 		try
 		{
-			$destUser = UserModel::getInstance($params['user-id'], $container);
+			$userFactory = new UserFactory($container['database'], $container['config'], new \Utility\Regex());
+			$userModel = new UserModel($userFactory);
+			$destUser = $userModel->get($params['user-id']);
 		}
 		catch(\Utility\ApiException $e)
 		{
@@ -21,7 +23,6 @@ class UserController
 
 		return withSuccess($res, ['user'=>$destUser]);
 	}
-
 
 	public static function followings($req, $res, $container, $user, $application)
 	{
