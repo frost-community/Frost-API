@@ -65,7 +65,9 @@ class ApplicationModel
 			throw new \Exception('argument is empty');
 
 		$applicationData = $this->applicationFactory->find($applicationId);
-		$applicationData->generateApplicationKey($accessedUserId);
+		$applicationKey = $applicationData->generateApplicationKey($accessedUserId);
+
+		return $applicationKey;
 	}
 
 	public function keyGet($applicationId, $accessedUserId)
@@ -74,6 +76,8 @@ class ApplicationModel
 			throw new \Exception('argument is empty');
 
 		$applicationData = $this->applicationFactory->find($applicationId);
-		$applicationData->applicationKey($accessedUserId);
+		$applicationKey = $applicationData->applicationKey($accessedUserId);
+
+		return $applicationKey;
 	}
 }
