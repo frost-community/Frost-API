@@ -44,7 +44,7 @@ class ApplicationModel
 		if ($userId === null || $name === null || $description === null || $permissions === null)
 			throw new \Exception('argument is empty');
 
-		return $this->applicationFactory->create($userId, $name, $description, $permissions, $this->permissionTypes);
+		return $this->applicationFactory->create($userId, $name, $description, $permissions, $this->permissionTypes)->toArrayResponse();
 	}
 
 	/**
@@ -56,7 +56,7 @@ class ApplicationModel
 		if ($applicationId === null)
 			throw new \Exception('argument is empty');
 
-		return $this->applicationFactory->find($applicationId);
+		return $this->applicationFactory->find($applicationId)->toArrayResponse();
 	}
 
 	public function keyGenerate($applicationId, $accessedUserId)

@@ -14,14 +14,14 @@ class ApplicationController
 		{
 			$applicationFactory = new ApplicationFactory($container['database'], $container['config'], new \Utility\Regex());
 			$applicationModel = new ApplicationModel($applicationFactory);
-			$applicationData = $applicationModel->create($user['id'], $params['name'], $params['description'], $params['permissions']);
+			$application = $applicationModel->create($user['id'], $params['name'], $params['description'], $params['permissions']);
 		}
 		catch(\Utility\ApiException $e)
 		{
 			return withFailure($res, $e->getMessage(), $e->getData(), $e->getStatus());
 		}
 
-		return withSuccess($res, ['application' => $applicationData->toArrayResponse()]);
+		return withSuccess($res, ['application' => $application]);
 	}
 
 	public static function show(\Slim\Http\Request $req, $res, $container, $user, $application)
@@ -36,14 +36,14 @@ class ApplicationController
 		{
 			$applicationFactory = new ApplicationFactory($container['database'], $container['config'], new \Utility\Regex());
 			$applicationModel = new ApplicationModel($applicationFactory);
-			$applicationData = $applicationModel->get($params['application-id']);
+			$application = $applicationModel->get($params['application-id']);
 		}
 		catch(\Utility\ApiException $e)
 		{
 			return withFailure($res, $e->getMessage(), $e->getData(), $e->getStatus());
 		}
 
-		return withSuccess($res, ['application' => $applicationData->toArrayResponse()]);
+		return withSuccess($res, ['application' => $application]);
 	}
 
 	public static function applicationKeyGenerate(\Slim\Http\Request $req, $res, $container, $user, $application)
