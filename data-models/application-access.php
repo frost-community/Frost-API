@@ -48,7 +48,7 @@ class ApplicationAccessData
 		{
 			$tryCount++;
 			$keyCode = random_int(1, 99999);
-			$isExist = $this->applicationAccessModel->findOneWithFilters(['user_id' => $this->record->user_id, 'key_code' => $keyCode]);
+			$isExist = $this->applicationAccessFactory->findOneWithFilters(['user_id' => $this->record->user_id, 'key_code' => $keyCode]);
 		} while ($isExist && $tryCount < 3);
 
 		if ($isExist && $tryCount >= 3)
@@ -72,6 +72,6 @@ class ApplicationAccessData
 		if ($this->record->key_code === null)
 			throw new \Utility\ApiException('key is empty', [], 404);
 
-		return $this->helper->buildKey($this->record->application_id, $this->record->user_id, $this->record->key_code);
+		return $this->applicationAccessFactory->buildKey($this->record->application_id, $this->record->user_id, $this->record->key_code);
 	}
 }

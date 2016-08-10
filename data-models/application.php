@@ -13,7 +13,7 @@ class ApplicationData
 		if ($applicationFactory === null || $record === null)
 			throw new \Exception('argument is empty');
 
-		$this->applicationFactory = $helper;
+		$this->applicationFactory = $applicationFactory;
 		$this->record = $record;
 	}
 

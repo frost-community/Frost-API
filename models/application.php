@@ -26,7 +26,7 @@ class ApplicationModel
 	// 各種必要なFactory
 	public function __construct(ApplicationFactory $applicationFactory)
 	{
-		if ($applicationFactory === null || $helper === null)
+		if ($applicationFactory === null)
 			throw new \Exception('argument is empty');
 
 		$this->applicationFactory = $applicationFactory;
