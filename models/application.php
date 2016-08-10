@@ -1,15 +1,10 @@
 <?php
 
 /**
- * アプリケーションを作成、検索する手段を提供します
+ * アプリケーションへのアクションを提供します
  */
 class ApplicationModel
 {
-	private $database;
-	private $config;
-	private $regex;
-	private $helper;
-
 	/**
 	 * 権限一覧
 	 */
@@ -26,115 +21,59 @@ class ApplicationModel
 		'post-write',          // 投稿の作成や削除等のアクション
 	];
 
-	public function __construct(DatabaseAccess $database, $config, \Utility\Regex $regex, ApplicationHelper $helper)
+	private $applicationFactory;
+
+	// 各種必要なFactory
+	public function __construct(ApplicationFactory $applicationFactory)
 	{
-		if ($database === null || $config === null || $regex === null || $helper === null)
+		if ($applicationFactory === null || $helper === null)
 			throw new \Exception('argument is empty');
 
-		$this->database = $database;
-		$this->config = $config;
-		$this->regex = $regex;
-		$this->helper = $helper;
+		$this->applicationFactory = $applicationFactory;
 	}
 
 	/**
-	 * 新しいレコードを作成してインスタンスを取得します
-	 *
-	 * @param int $userId ユーザーのID
-	 * @param string $name 名前
-	 * @param string $description 説明
-	 * @param string $requestedPermissions 要求する権限
-	 * @throws \Utility\ApiException
-	 * @throws \Exception
-	 * @return ApplicationModel 新しいインスタンス
+	 * アプリケーションを作成します
+	 * @param int $userId アプリケーションを作成するユーザーのID
+	 * @param string $name 名称
+	 * @param string $description 概要
+	 * @param string $permissions 権限名をコンマで区切った文字列
 	 */
-	public function create($userId, $name, $description, $requestedPermissions)
+	public function create($userId, $name, $description, $permissions)
 	{
-		if ($userId === null || $description === null || $requestedPermissions === null)
+		if ($userId === null || $name === null || $description === null || $permissions === null)
 			throw new \Exception('argument is empty');
 
-		if (!$this->regex->isMatch('/^[a-z,-]+$/', $requestedPermissions))
-			throw new \Utility\ApiException('format of permissions parameter is invalid', ['detail'=>'it is required to be constructed in "a" to "z", and ","']);
-
-		if ($this->database->findOneWithFilters($this->config['db']['table-names']['application'], ['name' => $name]))
-			throw new \Utility\ApiException('already exists.', [], 409);
-
-		$permissions = $this->helper->analyzePermissions(explode(',', $requestedPermissions));
-		$record = $this->database->create($this->config['db']['table-names']['application'], [
-			'created_at' => time(),
-			'creator_id' => $userId,
-			'name' => $name,
-			'description' => $description,
-			'permissions' => implode(',', $permissions)
-		]);
-		$record->save();
-
-		return new ApplicationData($this->helper, $record);
+		return $this->applicationFactory->create($userId, $name, $description, $permissions);
 	}
 
 	/**
-	 * 既存のレコードを取得してインスタンスを取得します
-	 *
-	 * @param int $applicationId アプリケーションID
-	 * @throws \Exception
-	 * @throws \Utility\ApiException
-	 * @return ApplicationData インスタンス
+	 * アプリケーションを取得します
+	 * @param int $applicationId アプリケーションのID
 	 */
-	public function find($applicationId)
+	public function get($applicationId)
 	{
 		if ($applicationId === null)
 			throw new \Exception('argument is empty');
 
-		$record = $this->database->find($this->config['db']['table-names']['application'], $applicationId);
-
-		if (!$record)
-			throw new \Utility\ApiException('application not found', [], 404);
-
-		return new ApplicationData($this->helper, $record);
+		return $this->applicationFactory->find($applicationId);
 	}
 
-	/**
-	 * 条件によってレコードを検索してインスタンスを取得します
-	 *
-	 * @param array $wheres 条件の連想配列(where句)
-	 * @throws \Exception
-	 * @throws \Utility\ApiException
-	 * @return ApplicationData インスタンス
-	 */
-	public function findOneWithFilters(array $wheres)
+	public function keyGenerate($applicationId, $accessedUserId)
 	{
-		if ($wheres === null)
+		if ($applicationId === null || $accessedUserId === null)
 			throw new \Exception('argument is empty');
 
-		$record = $this->database->findOneWithFilters($this->config['db']['table-names']['application'], $wheres);
-
-		if (!$record)
-			throw new \Utility\ApiException('application not found', [], 404);
-
-		return new ApplicationData($this->helper, $record);
+		$applicationData = $this->applicationFactory->find($applicationId);
+		$applicationData->generateApplicationKey($accessedUserId);
 	}
 
-	/**
-	 * 条件によってレコードを検索して複数のインスタンスを取得します
-	 *
-	 * @param array $wheres 条件の連想配列(where句)
-	 * @throws \Exception
-	 * @throws \Utility\ApiException
-	 * @return array ApplicationDataの配列
-	 */
-	public function findManyWithFilters(array $wheres)
+	public function keyGet($applicationId, $accessedUserId)
 	{
-		if ($wheres === null)
+		if ($applicationId === null || $accessedUserId === null)
 			throw new \Exception('argument is empty');
 
-		$records = $this->database->findManyWithFilters($this->config['db']['table-names']['application'], $wheres);
-
-		if (count($records) === 0)
-			throw new \Utility\ApiException('application not found', [], 404);
-
-		foreach($records as $record)
-			array_push($instances, new ApplicationData($this->helper, $record));
-
-		return $instances;
+		$applicationData = $this->applicationFactory->find($applicationId);
+		$applicationData->applicationKey($accessedUserId);
 	}
 }

@@ -5,15 +5,15 @@
  */
 class ApplicationData
 {
-	private $helper;
+	private $applicationFactory;
 	public $record;
 
-	public function __construct(ApplicationHelper $helper, $record)
+	public function __construct(ApplicationFactory $applicationFactory, $record)
 	{
-		if ($helper === null || $record === null)
+		if ($applicationFactory === null || $record === null)
 			throw new \Exception('argument is empty');
 
-		$this->helper = $helper;
+		$this->applicationFactory = $helper;
 		$this->record = $record;
 	}
 
@@ -103,7 +103,7 @@ class ApplicationData
 		if ($this->record->key_code === null)
 			throw new \Utility\ApiException('key is empty', [], 404);
 
-		return $this->helper->buildKey($this->record->id, $this->record->creator_id, $this->record->key_code);
+		return $this->applicationFactory->buildKey($this->record->id, $this->record->creator_id, $this->record->key_code);
 	}
 
 	/**
