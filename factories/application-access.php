@@ -1,30 +1,28 @@
 <?php
 
 /**
- * アプリケーションによるAPIアクセスのインスタンスを管理します
+ * アプリケーションアクセスを作成、検索する手段を提供します
  */
 class ApplicationAccessFactory
 {
 	private $database;
 	private $config;
 	private $regex;
-	private $helper;
 
-	public function __construct(DatabaseAccess $database, $config, \Utility\Regex $regex, ApplicationAccessHelper $helper)
+	public function __construct(DatabaseAccess $database, $config, \Utility\Regex $regex)
 	{
-		if ($config === null)
+		if ($database === null || $config === null || $regex === null)
 			throw new \Exception('argument is empty');
 
-		$this->atabase = $database;
+		$this->database = $database;
 		$this->config = $config;
 		$this->regex = $regex;
-		$this->helper = $helper;
 	}
 
 	/**
 	 * データベースのレコードを作成し、インスタンスを取得します
 	 */
-	public function create($applicationId, $userId, $applicationModel, $userModel)
+	public function create($applicationId, $userId)
 	{
 		if ($applicationId === null || $userId === null)
 			throw new Exception('some arguments are empty');
@@ -36,7 +34,7 @@ class ApplicationAccessFactory
 		]);
 		$record->save();
 
-		return new ApplicationAccessData($this, $applicationModel, $userModel, $this->config, $this->helper, $record);
+		return new ApplicationAccessData($this, $record);
 	}
 
 	/**
@@ -57,7 +55,7 @@ class ApplicationAccessFactory
 		if (!$record)
 			throw new \Utility\ApiException('application not found', [], 404);
 
-		return new ApplicationData($this, $applicationModel, $userModel, $this->config, $this->helper, $record);
+		return new ApplicationData($this, $record);
 	}
 
 	/**
@@ -79,7 +77,7 @@ class ApplicationAccessFactory
 			throw new \Utility\ApiException('application not found', [], 404);
 
 		foreach($records as $record)
-			array_push($instances, new ApplicationData($this, $applicationModel, $userModel, $this->config, $this->helper, $record));
+			array_push($instances, new ApplicationData($this, $record));
 
 		return $instances;
 	}

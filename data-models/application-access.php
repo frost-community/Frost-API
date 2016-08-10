@@ -1,41 +1,36 @@
 <?php
 
+/**
+ * アプリケーションアクセスのレコードに対する操作を提供します
+ */
 class ApplicationAccessData
 {
-	private $applicationAccessModel;
-	private $applicationModel;
-	private $userModel;
-	private $config;
-	private $helper;
+	private $applicationAccessFactory;
 	public $record;
 
-	public function __construct(ApplicationAccessModel $applicationAccessModel, ApplicationModel $applicationModel, UserModel $userModel, $config, ApplicationAccessHelper $helper, $record)
+	public function __construct(ApplicationAccessFactory $applicationAccessFactory, $record)
 	{
-		if ($applicationAccessModel === null || $applicationModel === null || $userModel === null || $config === null || $helper === null || $record === null)
+		if ($applicationAccessFactory === null || $record === null)
 			throw new \Exception('argument is empty');
 
-		$this->applicationAccessModel = $applicationAccessModel;
-		$this->ApplicationModel = $ApplicationModel;
-		$this->userModel = $userModel;
-		$this->config = $config;
-		$this->helper = $helper;
+		$this->applicationAccessFactory = $applicationAccessFactory;
 		$this->record = $record;
 	}
 
 	/**
 	 * このインスタンスに紐付いているアプリケーションを取得します
 	 */
-	public function application()
+	public function application(ApplicationFactory $applicationFactory)
 	{
-		return $this->applicationModel->find($this->record->application_id);
+		return $applicationFactory->find($this->record->application_id);
 	}
 
 	/**
 	 * このインスタンスに紐付いているユーザーを取得します
 	 */
-	public function user()
+	public function user(UserFactory $userFactory)
 	{
-		return $this->userModel->find($this->user_id);
+		return $userFactory->find($this->user_id);
 	}
 
 	/**
