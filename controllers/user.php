@@ -40,6 +40,7 @@ class UserController
 	public static function followCreate($req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
+		// user-id
 
 		try
 		{
@@ -47,7 +48,7 @@ class UserController
 			$userFactory = new UserFactory($container['database'], $container['config'], $regex);
 			$userFollowingFactory = new UserFollowingFactory($container['database'], $container['config'], $regex);
 			$userModel = new UserModel($userFactory, $userFollowingFactory);
-			$userModel->follow($params['source-user-id'], $params['target-user-id']);
+			$userModel->follow($user->record->id, $params['user-id']);
 		}
 		catch(\Utility\ApiException $e)
 		{
@@ -60,6 +61,7 @@ class UserController
 	public static function followDestroy($req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
+		// user-id
 
 		try
 		{
@@ -67,7 +69,7 @@ class UserController
 			$userFactory = new UserFactory($container['database'], $container['config'], $regex);
 			$userFollowingFactory = new UserFollowingFactory($container['database'], $container['config'], $regex);
 			$userModel = new UserModel($userFactory, $userFollowingFactory);
-			$userModel->unfollow($params['source-user-id'], $params['target-user-id']);
+			$userModel->unfollow($user->record->id, $params['user-id']);
 		}
 		catch(\Utility\ApiException $e)
 		{

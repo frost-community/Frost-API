@@ -40,6 +40,11 @@ class UserModel
 		if ($targetUserId === $sourceUserId)
 			throw new \Utility\ApiException('target user is you');
 
+		$userFollowingData = $this->userFollowingFactory->findOneWithFilters(['source_user_id' => $sourceUserId, 'target_user_id' => $targetUserId]);
+
+		if ($userFollowingData->record)
+			throw new \Utility\ApiException('already follow');
+
 		$this->userFollowingFactory->create($sourceUserId, $targetUserId);
 	}
 
