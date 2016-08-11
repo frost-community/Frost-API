@@ -6,22 +6,28 @@
 class IceAuthModel
 {
 	private $requestFactory;
+	private $applicationFactory;
 	private $applicationAccessFactory;
 
-	public function __construct(RequestFactory $requestFactory, ApplicationAccessFactory $applicationAccessFactory)
+	public function __construct(RequestFactory $requestFactory, ApplicationFactory $applicationFactory, ApplicationAccessFactory $applicationAccessFactory)
 	{
-		if ($requestFactory === null)
+		if ($requestFactory === null || $applicationFactory === null || $applicationAccessFactory === null)
 			throw new \Exception('argument is empty');
 
 		$this->requestFactory = $requestFactory;
+		$this->applicationFactory = $applicationFactory;
 		$this->applicationAccessFactory = $applicationAccessFactory;
 	}
 
-	public function createRequest($applicationId)
+	public function createRequest($applicationKey)
 	{
-		if ($applicationId === null)
+		if ($applicationKey === null)
 			throw new \Exception('argument is empty');
 
+		if (!$this->applicationFactory->verifyKey($applicationKey))
+			throw new \Utility\ApiException('parameter is invalid', ['application-key']);
+
+		$applicationId = $applicationFactory->parseKeyToArray($applicationKey)['id'];
 		$requestData = $this->requestFactory->create($applicationId);
 		$requestData->generatePinCode();
 		$requestKey = $requestData->generateRequestKey();
@@ -35,7 +41,7 @@ class IceAuthModel
 			throw new \Exception('argument is empty');
 
 		if (!$requestFactory->verifyKey($requestKey))
-			throw new \Utility\ApiException('parameters are invalid', ['request-key']);
+			throw new \Utility\ApiException('parameter is invalid', ['request-key']);
 
 		$keyElements = $requestFactory->parseKeyToArray($requestKey);
 		$requestData = $requestFactory->findOneWithFilters(['id' => $keyElements['id'], 'key_code' => $keyElements['keyCode']]);

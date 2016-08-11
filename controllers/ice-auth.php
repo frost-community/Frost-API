@@ -7,7 +7,7 @@ class IceAuthController
 	public static function requestCreate(\Slim\Http\Request $req, $res, $container)
 	{
 		$params = $req->getParams();
-		$requireParams = ['application-id'];
+		$requireParams = ['application-key'];
 
 		if (!hasRequireParams($params, $requireParams))
 			return withFailure($res, 'required parameters are missing', $requireParams);
@@ -16,9 +16,10 @@ class IceAuthController
 		{
 			$regex = new \Utility\Regex();
 			$requestFactory = new RequestFactory($container['database'], $container['config'], $regex);
+			$applicationFactory = new ApplicationFactory($container['database'], $container['config'], $regex);
 			$applicationAccessFactory = new ApplicationAccessFactory($container['database'], $container['config'], $regex);
-			$iceAuthModel = new IceAuthModel($requestFactory, $applicationAccessFactory);
-			$requestKey = $iceAuthModel->createRequest();
+			$iceAuthModel = new IceAuthModel($requestFactory, $applicationFactory, $applicationAccessFactory);
+			$requestKey = $iceAuthModel->createRequest($params['application-key']);
 		}
 		catch(\Utility\ApiException $e)
 		{
@@ -42,8 +43,9 @@ class IceAuthController
 		{
 			$regex = new \Utility\Regex();
 			$requestFactory = new RequestFactory($container['database'], $container['config'], $regex);
+			$applicationFactory = new ApplicationFactory($container['database'], $container['config'], $regex);
 			$applicationAccessFactory = new ApplicationAccessFactory($container['database'], $container['config'], $regex);
-			$iceAuthModel = new IceAuthModel($requestFactory, $applicationAccessFactory);
+			$iceAuthModel = new IceAuthModel($requestFactory, $applicationFactory, $applicationAccessFactory);
 			$pinCode = $iceAuthModel->getPinCode();
 		}
 		catch(\Utility\ApiException $e)
@@ -68,8 +70,9 @@ class IceAuthController
 		{
 			$regex = new \Utility\Regex();
 			$requestFactory = new RequestFactory($container['database'], $container['config'], $regex);
+			$applicationFactory = new ApplicationFactory($container['database'], $container['config'], $regex);
 			$applicationAccessFactory = new ApplicationAccessFactory($container['database'], $container['config'], $regex);
-			$iceAuthModel = new IceAuthModel($requestFactory, $applicationAccessFactory);
+			$iceAuthModel = new IceAuthModel($requestFactory, $applicationFactory, $applicationAccessFactory);
 			$accessKey = $iceAuthModel->authorize($params['request-key'], $params['user-id'], $params['pin-code']);
 		}
 		catch(\Utility\ApiException $e)
