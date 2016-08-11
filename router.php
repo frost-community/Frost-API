@@ -29,21 +29,21 @@ class Router
 		{
 			if (count($route->permissionsArray) !== 0)
 			{
-				$params = $req->getParams();
+				$accessKey = $req->getHeaderLine('access-key');
 
-				if (!array_key_exists('access-key', $params))
-					return withFailure($res, 'access-key is missing');
+				if (!$accessKey)
+					return withFailure($res, 'access-key header is empty');
 
 				$regex = new \Utility\Regex();
 				$applicationFactory = new ApplicationFactory($container['database'], $container['config'], $regex);
 				$userFactory = new UserFactory($container['database'], $container['config'], $regex);
 				$accessFactory = new ApplicationAccessFactory($container['database'], $container['config'], $regex);
 
-				if (!$accessFactory->verifyKey($params['access-key'], $container))
-					return withFailure($res, 'access-key is invalid');
+				if (!$accessFactory->verifyKey($accessKey))
+					return withFailure($res, 'access-key header is invalid');
 
 				// 権限を所持しているかどうかを確認
-				$keyElements = $accessFactory->parseKeyToArray($params['access-key']);
+				$keyElements = $accessFactory->parseKeyToArray($accessKey);
 				$accessData = $accessFactory->findOneWithFilters(['user_id' => $keyElements['id'], 'key_code' => $keyElements['keyCode']]);
 
 				foreach ($route->permissionsArray as $permission)
