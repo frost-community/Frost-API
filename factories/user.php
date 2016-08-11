@@ -22,7 +22,7 @@ class UserFactory
 	/**
 	 * データベースのレコードを作成し、インスタンスを取得します
 	 */
-	public static function create($screenName, $password, $name)
+	public function create($screenName, $password, $name)
 	{
 		if ($screenName === null || $password === null || $name === null)
 			throw new \Exception('some arguments are empty');
