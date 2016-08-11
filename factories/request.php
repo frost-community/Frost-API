@@ -94,8 +94,8 @@ class RequestFactory
 		if ($wheres === null)
 			throw new \Exception('argument is empty');
 
-		$records 	= $this->database->findManyWithFilters($this->config['db']['table-names']['request'], $wheres);
-		$instances 	= [];
+		$records = $this->database->findManyWithFilters($this->config['db']['table-names']['request'], $wheres);
+		$instances = [];
 
 		if (count($records) === 0)
 			throw new \Utility\ApiException('application not found', [], 404);
@@ -149,7 +149,6 @@ class RequestFactory
 	 */
 	public function verifyKey($requestKey)
 	{
-
 		try
 		{
 			$parseResult = $this->parseKeyToArray($requestKey);
