@@ -23,6 +23,9 @@ class UserModel
 		if ($userId === null)
 			throw new \Utility\ApiException('required parameters are missing');
 
+		if (!$this->userFactory->find($userId)->record)
+			throw new \Utility\ApiException('user not found', [], 404);
+
 		return $this->userFactory->find($userId)->toArrayResponse();
 	}
 
@@ -30,6 +33,12 @@ class UserModel
 	{
 		if ($sourceUserId === null || $targetUserId === null)
 			throw new \Utility\ApiException('required parameters are missing');
+
+		if (!$this->userFactory->find($targetUserId)->record)
+			throw new \Utility\ApiException('user not found', [], 404);
+
+		if ($targetUserId === $sourceUserId)
+			throw new \Utility\ApiException('target user is you');
 
 		$this->userFollowingFactory->create($sourceUserId, $targetUserId);
 	}
@@ -39,6 +48,14 @@ class UserModel
 		if ($sourceUserId === null || $targetUserId === null)
 			throw new \Utility\ApiException('required parameters are missing');
 
-		$this->userFollowingFactory->destroyOneWithFilters(['source_user_id' => $sourceUserId, 'target_user_id' => $targetUserId]);
+		if (!$this->userFactory->find($targetUserId)->record)
+			throw new \Utility\ApiException('user not found', [], 404);
+
+		$userFollowingData = $this->userFollowingFactory->findOneWithFilters(['source_user_id' => $sourceUserId, 'target_user_id' => $targetUserId]);
+
+		if (!$userFollowingData->record)
+			throw new \Utility\ApiException('user following not found');
+
+		$userFollowingData->record->delete();
 	}
 }
