@@ -43,7 +43,7 @@ class UserData
 		$data = [
 			'id' => $this->record->id,
 			'created_at' => $this->record->created_at,
-			'screen_name' => $this->record->creator_id,
+			'screen_name' => $this->record->screen_name,
 			'name' => $this->record->name
 		];
 
