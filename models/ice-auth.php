@@ -68,15 +68,15 @@ class IceAuthModel
 			throw new \Utility\ApiException('parameter is invalid', ['pin-code']);
 
 		$applicationData = $requestData->application();
-		$accessData = $applicationAccessFactory->findOneWithFilters(['user_id' => $userId, 'application_id' => $applicationData->record->id]);
+		$applicationAccessData = $applicationAccessFactory->findOneWithFilters(['user_id' => $userId, 'application_id' => $applicationData->record->id]);
 
-		if (!$accessData)
+		if (!$applicationAccessData->record)
 		{
-			$accessData = $applicationAccessFactory->create($applicationData->record->id, $userId);
-			$accessData->generateAccessKey($userId);
+			$applicationAccessData = $applicationAccessFactory->create($applicationData->record->id, $userId);
+			$applicationAccessData->generateAccessKey($userId);
 		}
 
-		$accessKey = $accessData->accessKey($userId);
+		$accessKey = $applicationAccessData->accessKey($userId);
 
 		return $accessKey;
 	}

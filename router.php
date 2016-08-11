@@ -49,12 +49,16 @@ class Router
 				if (!$accessFactory->verifyKey($accessKey))
 					return withFailure($res, 'access-key header is invalid');
 
-				// 権限を所持しているかどうかを確認
 				$keyElements = $accessFactory->parseKeyToArray($accessKey);
-				$accessData = $accessFactory->findOneWithFilters(['user_id' => $keyElements['id'], 'key_code' => $keyElements['keyCode']]);
-				$applicationData = $accessData->application($applicationFactory);
-				$userData = $accessData->user($userFactory);
+				$applicationAccessData = $accessFactory->findOneWithFilters(['user_id' => $keyElements['id'], 'key_code' => $keyElements['keyCode']]);
 
+				if (!$applicationAccessData->record)
+					return withFailure($res, 'access-key header is invalid');
+
+				$applicationData = $applicationAccessData->application($applicationFactory);
+				$userData = $applicationAccessData->user($userFactory);
+
+				// 権限を所持しているかどうかを確認
 				foreach ($route->permissionsArray as $permission)
 				{
 					if (!$applicationData->isHasPermission($permission))

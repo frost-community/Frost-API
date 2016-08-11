@@ -63,14 +63,14 @@ class ApplicationFactory
 	 * @throws \Utility\ApiException
 	 * @return ApplicationData インスタンス
 	 */
-	public function find($applicationId)
+	public function find($applicationId, $isThrowException = false)
 	{
 		if ($applicationId === null)
 			throw new \Exception('argument is empty');
 
 		$record = $this->database->find($this->config['db']['table-names']['application'], $applicationId);
 
-		if (!$record)
+		if ((!$record) && $isThrowException)
 			throw new \Utility\ApiException('application not found', [], 404);
 
 		return new ApplicationData($this, $record);
@@ -84,14 +84,14 @@ class ApplicationFactory
 	 * @throws \Utility\ApiException
 	 * @return ApplicationData インスタンス
 	 */
-	public function findOneWithFilters(array $wheres)
+	public function findOneWithFilters(array $wheres, $isThrowException = false)
 	{
 		if ($wheres === null)
 			throw new \Exception('argument is empty');
 
 		$record = $this->database->findOneWithFilters($this->config['db']['table-names']['application'], $wheres);
 
-		if (!$record)
+		if ((!$record) && $isThrowException)
 			throw new \Utility\ApiException('application not found', [], 404);
 
 		return new ApplicationData($this, $record);
@@ -105,14 +105,14 @@ class ApplicationFactory
 	 * @throws \Utility\ApiException
 	 * @return array ApplicationDataの配列
 	 */
-	public function findManyWithFilters(array $wheres)
+	public function findManyWithFilters(array $wheres, $isThrowException = false)
 	{
 		if ($wheres === null)
 			throw new \Exception('argument is empty');
 
 		$records = $this->database->findManyWithFilters($this->config['db']['table-names']['application'], $wheres);
 
-		if (count($records) === 0)
+		if ((count($records) === 0) && $isThrowException)
 			throw new \Utility\ApiException('application not found', [], 404);
 
 		foreach($records as $record)
@@ -248,13 +248,13 @@ class ApplicationFactory
 			return false;
 		}
 		
-		$appData = $this->find($parseResult['id']);
+		$applicationData = $this->find($parseResult['id']);
 
-		if (!$appData)
+		if (!$applicationData->record)
 			return false;
 
-		$correctHash = $this->buildKeyHash($parseResult['id'], $appData->record->creator_id, $parseResult['keyCode']);
-		$isPassed = $parseResult['keyCode'] === $appData->record->key_code && $parseResult['hash'] === $correctHash;
+		$correctHash = $this->buildKeyHash($parseResult['id'], $applicationData->record->creator_id, $parseResult['keyCode']);
+		$isPassed = $parseResult['keyCode'] === $applicationData->record->key_code && $parseResult['hash'] === $correctHash;
 
 		return $isPassed;
 	}

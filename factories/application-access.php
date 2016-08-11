@@ -45,14 +45,14 @@ class ApplicationAccessFactory
 	 * @throws \Utility\ApiException
 	 * @return ApplicationData インスタンス
 	 */
-	public function findOneWithFilters(array $wheres)
+	public function findOneWithFilters(array $wheres, $isThrowException = false)
 	{
 		if ($wheres === null)
 			throw new \Exception('argument is empty');
 
 		$record = $this->database->findOneWithFilters($this->config['db']['table-names']['application-access'], $wheres);
 
-		if (!$record)
+		if ((!$record) && $isThrowException)
 			throw new \Utility\ApiException('application not found', [], 404);
 
 		return new ApplicationAccessData($this, $record);
@@ -66,14 +66,14 @@ class ApplicationAccessFactory
 	 * @throws \Utility\ApiException
 	 * @return array ApplicationDataの配列
 	 */
-	public function findManyWithFilters(array $wheres)
+	public function findManyWithFilters(array $wheres, $isThrowException = false)
 	{
 		if ($wheres === null)
 			throw new \Exception('argument is empty');
 
 		$records = $this->database->findManyWithFilters($this->config['db']['table-names']['application-access'], $wheres);
 
-		if (count($records) === 0)
+		if ((count($records) === 0) && $isThrowException)
 			throw new \Utility\ApiException('application not found', [], 404);
 
 		foreach($records as $record)
@@ -161,16 +161,16 @@ class ApplicationAccessFactory
 			return false;
 		}
 
-		$accessModel = $this->findOneWithFilters([
+		$applicationAccessData = $this->findOneWithFilters([
 			'user_id' => $parseResult['id'],
 			'key_code' => $parseResult['keyCode']
 		]);
 
-		if (!$accessModel)
+		if (!$applicationAccessData->record)
 			return false;
 
-		$correctHash = $this->buildKeyHash($accessModel->record->application_id, $parseResult['id'], $parseResult['keyCode']);
-		$isPassed = $parseResult['keyCode'] === $accessModel->record->key_code && $parseResult['hash'] === $correctHash;
+		$correctHash = $this->buildKeyHash($applicationAccessData->record->application_id, $parseResult['id'], $parseResult['keyCode']);
+		$isPassed = $parseResult['keyCode'] === $applicationAccessData->record->key_code && $parseResult['hash'] === $correctHash;
 
 		return $isPassed;
 	}

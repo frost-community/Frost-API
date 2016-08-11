@@ -47,14 +47,14 @@ class RequestFactory
 	 * @throws \Utility\ApiException
 	 * @return RequestData インスタンス
 	 */
-	public function find($requestId)
+	public function find($requestId, $isThrowException = false)
 	{
 		if ($requestId === null)
 			throw new \Exception('argument is empty');
 
 		$record = $this->database->find($this->config['db']['table-names']['request'], $requestId);
 
-		if (!$record)
+		if ((!$record) && $isThrowException)
 			throw new \Utility\ApiException('request not found', [], 404);
 
 		return new RequestData($this, $record);
@@ -68,14 +68,14 @@ class RequestFactory
 	 * @throws \Utility\ApiException
 	 * @return RequestData インスタンス
 	 */
-	public function findOneWithFilters(array $wheres)
+	public function findOneWithFilters(array $wheres, $isThrowException = false)
 	{
 		if ($wheres === null)
 			throw new \Exception('argument is empty');
 
 		$record = $this->database->findOneWithFilters($this->config['db']['table-names']['request'], $wheres);
 
-		if (!$record)
+		if ((!$record) && $isThrowException)
 			throw new \Utility\ApiException('application not found', [], 404);
 
 		return new RequestData($this, $record);
@@ -89,7 +89,7 @@ class RequestFactory
 	 * @throws \Utility\ApiException
 	 * @return array RequestDataの配列
 	 */
-	public function findManyWithFilters(array $wheres)
+	public function findManyWithFilters(array $wheres, $isThrowException = false)
 	{
 		if ($wheres === null)
 			throw new \Exception('argument is empty');
@@ -97,7 +97,7 @@ class RequestFactory
 		$records = $this->database->findManyWithFilters($this->config['db']['table-names']['request'], $wheres);
 		$instances = [];
 
-		if (count($records) === 0)
+		if ((count($records) === 0) && $isThrowException)
 			throw new \Utility\ApiException('application not found', [], 404);
 
 		foreach($records as $record)
@@ -163,7 +163,7 @@ class RequestFactory
 
 		$requestData = $this->find($parseResult['id']);
 
-		if (!$requestData)
+		if (!$requestData->record)
 			return false;
 
 		$correctHash = $this->buildKey($parseResult['id'], $requestData->record->application_id, $parseResult['keyCode']);

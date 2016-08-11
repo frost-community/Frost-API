@@ -20,9 +20,6 @@ class DatabaseManager implements DatabaseAccess
 		$query = $this->getQueryWithFilters($tableName, $wheres);
 		$record = $query->find_one();
 
-		if (!$record)
-			throw new \Utility\ApiException('not found', [], 404);
-
 		return $record;
 	}
 
@@ -30,9 +27,6 @@ class DatabaseManager implements DatabaseAccess
 	{
 		$query = $this->getQueryWithFilters($tableName, $wheres);
 		$records = $query->find_many();
-
-		if (count($record) == 0)
-			throw new \Utility\ApiException('not found', [], 404);
 
 		return $records;
 	}

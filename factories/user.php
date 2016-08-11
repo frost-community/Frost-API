@@ -84,14 +84,14 @@ class UserFactory
 	 * @throws \Utility\ApiException
 	 * @return ApplicationData インスタンス
 	 */
-	public function find($requestId)
+	public function find($requestId, $isThrowException = false)
 	{
 		if ($requestId === null)
 			throw new \Exception('argument is empty');
 
 		$record = $this->database->find($this->config['db']['table-names']['user'], $requestId);
 
-		if (!$record)
+		if ((!$record) && $isThrowException)
 			throw new \Utility\ApiException('request not found', [], 404);
 
 		return new UserData($this, $record);
@@ -105,14 +105,14 @@ class UserFactory
 	 * @throws \Utility\ApiException
 	 * @return ApplicationData インスタンス
 	 */
-	public function findOneWithFilters(array $wheres)
+	public function findOneWithFilters(array $wheres, $isThrowException = false)
 	{
 		if ($wheres === null)
 			throw new \Exception('argument is empty');
 
 		$record = $this->database->findOneWithFilters($this->config['db']['table-names']['user'], $wheres);
 
-		if (!$record)
+		if ((!$record) && $isThrowException)
 			throw new \Utility\ApiException('request not found', [], 404);
 
 		return new UserData($this, $record);
@@ -126,14 +126,14 @@ class UserFactory
 	 * @throws \Utility\ApiException
 	 * @return array ApplicationDataの配列
 	 */
-	public function findManyWithFilters(array $wheres)
+	public function findManyWithFilters(array $wheres, $isThrowException = false)
 	{
 		if ($wheres === null)
 			throw new \Exception('argument is empty');
 
 		$records = $this->database->findManyWithFilters($this->config['db']['table-names']['user'], $wheres);
 
-		if (count($records) === 0)
+		if ((count($records) === 0) && $isThrowException)
 			throw new \Utility\ApiException('request not found', [], 404);
 
 		foreach($records as $record)
