@@ -5,8 +5,9 @@ function indexPage ($req, $res, $container)
 	return withSuccess($res, null, 'Frost API Server');
 }
 
-// post:   作成・更新
+// post:   作成
 // get:    取得
+// put:    更新
 // delete: 削除
 
 $routes = [
@@ -14,8 +15,8 @@ $routes = [
 	['get',    '/',                            [],                      'indexPage'],
 
 	// IceAuth
-	['post',   '/ice-auth/request',            [],                      'IceAuthController::requestCreate'],              // 認証リクエスト(リクエストキー表示)
-	['get',    '/ice-auth/pin-code',           ['ice-auth-host'],       'IceAuthController::pinCodeShow'],                // リクエストキーからPINコード取得
+	['post',   '/ice-auth/request',            [],                      'IceAuthController::requestCreate'],              // 認証リクエスト(リクエストキー取得)
+	['get',    '/ice-auth/pin-code',           ['ice-auth-host'],       'IceAuthController::pinCodeShow'],                // リクエストキーからPINコード取得(認証ホスト専用)
 	['post',   '/ice-auth/authorize',          [],                      'IceAuthController::accessKeyAuth'],              // 認証試行(PINコード)
 
 	// Application
