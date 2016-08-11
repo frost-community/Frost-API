@@ -5,7 +5,6 @@ class AccountController
 	public static function create($req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
-		$requireParams = ['screen-name', 'password'];
 
 		try
 		{
