@@ -15,6 +15,7 @@ $config = [
 		'password' => '',
 		'table-names' => [
 			'user' => 'frost_user',
+			'user-following' => 'frost_user_following',
 			'application' => 'frost_application',
 			'application-access' => 'frost_application_access',
 			'post' => 'frost_post',
