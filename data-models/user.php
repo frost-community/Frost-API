@@ -22,7 +22,7 @@ class UserData
 	 */
 	public function applications(ApplicationFactory $applicationFactory)
 	{
-		return $applicationFactory->findManyWithFilters(['user_id', $this->record->id]);
+		return $applicationFactory->findManyWithFilters(['user_id' => $this->record->id]);
 	}
 
 	/**
@@ -30,7 +30,7 @@ class UserData
 	 */
 	public function applicationAccesses(ApplicationAccessFactory $applicationAccessFactory)
 	{
-		return $applicationAccessFactory->findManyWithFilters(['user_id', $this->record->id]);
+		return $applicationAccessFactory->findManyWithFilters(['user_id' => $this->record->id]);
 	}
 
 	/**

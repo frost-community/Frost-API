@@ -24,7 +24,7 @@ class AccountModel
 		if ($name === null)
 			$name = 'froster';
 
-		$userData = $userFactory->create($screenName, $password, $name);
+		$userData = $this->userFactory->create($screenName, $password, $name);
 
 		return $userData->toArrayResponse();
 	}

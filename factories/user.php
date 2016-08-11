@@ -39,7 +39,7 @@ class UserFactory
 		}
 		else
 		{
-			if ($this->database->findOneWithFilters(['screen_name', $screenName]))
+			if ($this->findOneWithFilters(['screen_name' => $screenName])->record)
 			{
 				$isOccurredError = true;
 				$errorTargets[] = 'screen-name';
