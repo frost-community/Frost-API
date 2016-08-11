@@ -28,7 +28,7 @@ class RequestFactory
 	public function create($applicationId)
 	{
 		if ($applicationId === null)
-			throw new \Exception('some arguments are empty');
+			throw new \Exception('argument is empty');
 
 		$record = $this->database->create($this->config['db']['table-names']['request'], [
 			'created_at' => time(),
@@ -131,7 +131,7 @@ class RequestFactory
 	public function parseKeyToArray($requestKey)
 	{
 		if ($requestKey === null)
-			throw new \Exception('some arguments are empty');
+			throw new \Exception('argument is empty');
 		$match = $this->regex->match('/([^-]+)-([^-]{64}).([^-]+)/', $requestKey);
 
 		if ($match === null)

@@ -25,7 +25,7 @@ class ApplicationAccessFactory
 	public function create($applicationId, $userId)
 	{
 		if ($applicationId === null || $userId === null)
-			throw new Exception('some arguments are empty');
+			throw new Exception('argument is empty');
 
 		$record = $this->database->create($this->config['db']['table-names']['application-access'], [
 			'created_at' => time(),

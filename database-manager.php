@@ -5,7 +5,7 @@ class DatabaseManager implements DatabaseAccess
 	private function getQueryWithFilters($tableName, array $wheres)
 	{
 		if ($tableName === null || $wheres === null)
-			throw new \Exception('some arguments are empty');
+			throw new \Exception('argument is empty');
 
 		$query = ORM::for_table($tableName);
 
@@ -40,7 +40,7 @@ class DatabaseManager implements DatabaseAccess
 	public function create($tableName, array $dataArray)
 	{
 		if ($tableName === null || $dataArray === null)
-			throw new \Exception('some arguments are empty');
+			throw new \Exception('argument is empty');
 
 		$record = ORM::for_table($tableName)->create();
 

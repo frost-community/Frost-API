@@ -25,7 +25,7 @@ class UserFactory
 	public function create($screenName, $password, $name)
 	{
 		if ($screenName === null || $password === null || $name === null)
-			throw new \Exception('some arguments are empty');
+			throw new \Exception('argument is empty');
 
 		$timestamp = time();
 
@@ -64,7 +64,7 @@ class UserFactory
 		}
 
 		if ($isOccurredError)
-			throw new \Utility\ApiException('parameters are invalid', $errorTargets);
+			throw new \Utility\ApiException('parameter is invalid', $errorTargets);
 
 		$record = $this->database->create($this->config['db']['table-names']['user'], [
 			'created_at' => $timestamp,
