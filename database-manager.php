@@ -15,22 +15,6 @@ class DatabaseManager implements DatabaseAccess
 		return $query;
 	}
 
-	public function findOneWithFilters($tableName, array $wheres)
-	{
-		$query = $this->getQueryWithFilters($tableName, $wheres);
-		$record = $query->find_one();
-
-		return $record;
-	}
-
-	public function findManyWithFilters($tableName, array $wheres)
-	{
-		$query = $this->getQueryWithFilters($tableName, $wheres);
-		$records = $query->find_many();
-
-		return $records;
-	}
-
 	public function create($tableName, array $dataArray)
 	{
 		if ($tableName === null || $dataArray === null)
@@ -49,5 +33,29 @@ class DatabaseManager implements DatabaseAccess
 	public function find($tableName, $id)
 	{
 		return $this->findOneWithFilters($tableName, ['id'=>$id]);
+	}
+
+	public function findOneWithFilters($tableName, array $wheres)
+	{
+		$query = $this->getQueryWithFilters($tableName, $wheres);
+		$record = $query->find_one();
+
+		return $record;
+	}
+
+	public function findManyWithFilters($tableName, array $wheres)
+	{
+		$query = $this->getQueryWithFilters($tableName, $wheres);
+		$records = $query->find_many();
+
+		return $records;
+	}
+
+	function destroyOneWithFilters($tableName, array $wheres)
+	{
+		$record = findOneWithFilters($tableName, $wheres);
+
+		if ($record)
+			$record->delete();
 	}
 }

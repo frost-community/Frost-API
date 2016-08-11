@@ -8,8 +8,10 @@ class UserController
 
 		try
 		{
-			$userFactory = new UserFactory($container['database'], $container['config'], new \Utility\Regex());
-			$userModel = new UserModel($userFactory);
+			$regex = new \Utility\Regex();
+			$userFactory = new UserFactory($container['database'], $container['config'], $regex);
+			$userFollowingFactory = new UserFollowingFactory($container['database'], $container['config'], $regex);
+			$userModel = new UserModel($userFactory, $userFollowingFactory);
 			$destUser = $userModel->get($params['user-id']);
 		}
 		catch(\Utility\ApiException $e)
@@ -37,11 +39,41 @@ class UserController
 
 	public static function followCreate($req, $res, $container, $user, $application)
 	{
-		// TODO
+		$params = $req->getParams();
+
+		try
+		{
+			$regex = new \Utility\Regex();
+			$userFactory = new UserFactory($container['database'], $container['config'], $regex);
+			$userFollowingFactory = new UserFollowingFactory($container['database'], $container['config'], $regex);
+			$userModel = new UserModel($userFactory, $userFollowingFactory);
+			$userModel->follow($params['source-user-id'], $params['target-user-id']);
+		}
+		catch(\Utility\ApiException $e)
+		{
+			return withFailure($res, $e->getMessage(), $e->getData(), $e->getStatus());
+		}
+
+		return withSuccess($res);
 	}
 
 	public static function followDestroy($req, $res, $container, $user, $application)
 	{
-		// TODO
+		$params = $req->getParams();
+
+		try
+		{
+			$regex = new \Utility\Regex();
+			$userFactory = new UserFactory($container['database'], $container['config'], $regex);
+			$userFollowingFactory = new UserFollowingFactory($container['database'], $container['config'], $regex);
+			$userModel = new UserModel($userFactory, $userFollowingFactory);
+			$userModel->unfollow($params['source-user-id'], $params['target-user-id']);
+		}
+		catch(\Utility\ApiException $e)
+		{
+			return withFailure($res, $e->getMessage(), $e->getData(), $e->getStatus());
+		}
+
+		return withSuccess($res);
 	}
 }
