@@ -149,6 +149,9 @@ class RequestFactory
 	 */
 	public function verifyKey($requestKey)
 	{
+		if ($requestKey === null)
+			throw new \Exception('argument is empty');
+
 		try
 		{
 			$parseResult = $this->parseKeyToArray($requestKey);

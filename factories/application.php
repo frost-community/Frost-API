@@ -239,7 +239,15 @@ class ApplicationFactory
 		if ($applicationKey === null)
 			throw new \Exception('argument is empty');
 
-		$parseResult = $this->parseKeyToArray($applicationKey);
+		try
+		{
+			$parseResult = $this->parseKeyToArray($applicationKey);
+		}
+		catch (\Utility\ApiException $e)
+		{
+			return false;
+		}
+		
 		$appData = $this->find($parseResult['id']);
 
 		if (!$appData)

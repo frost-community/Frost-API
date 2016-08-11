@@ -152,7 +152,15 @@ class ApplicationAccessFactory
 		if ($accessKey === null)
 			throw new \Exception('argument is empty');
 
-		$parseResult = $this->parseKeyToArray($accessKey);
+		try
+		{
+			$parseResult = $this->parseKeyToArray($accessKey);
+		}
+		catch (\Utility\ApiException $e)
+		{
+			return false;
+		}
+
 		$accessModel = $this->findOneWithFilters([
 			'user_id' => $parseResult['id'],
 			'key_code' => $parseResult['keyCode']
