@@ -42,7 +42,7 @@ class ApplicationModel
 	public function create($userId, $name, $description, $permissions)
 	{
 		if ($userId === null || $name === null || $description === null || $permissions === null)
-			throw new \Exception('argument is empty');
+			throw new \Utility\ApiException('required parameters are missing');
 
 		return $this->applicationFactory->create($userId, $name, $description, $permissions, $this->permissionTypes)->toArrayResponse();
 	}
@@ -54,7 +54,7 @@ class ApplicationModel
 	public function get($applicationId)
 	{
 		if ($applicationId === null)
-			throw new \Exception('argument is empty');
+			throw new \Utility\ApiException('required parameters are missing');
 
 		return $this->applicationFactory->find($applicationId)->toArrayResponse();
 	}
@@ -62,7 +62,7 @@ class ApplicationModel
 	public function keyGenerate($applicationId, $accessedUserId)
 	{
 		if ($applicationId === null || $accessedUserId === null)
-			throw new \Exception('argument is empty');
+			throw new \Utility\ApiException('required parameters are missing');
 
 		$applicationData = $this->applicationFactory->find($applicationId);
 		$applicationKey = $applicationData->generateApplicationKey($accessedUserId);
@@ -73,7 +73,7 @@ class ApplicationModel
 	public function keyGet($applicationId, $accessedUserId)
 	{
 		if ($applicationId === null || $accessedUserId === null)
-			throw new \Exception('argument is empty');
+			throw new \Utility\ApiException('required parameters are missing');
 
 		$applicationData = $this->applicationFactory->find($applicationId);
 		$applicationKey = $applicationData->applicationKey($accessedUserId);

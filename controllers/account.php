@@ -7,9 +7,6 @@ class AccountController
 		$params = $req->getParams();
 		$requireParams = ['screen-name', 'password'];
 
-		if (!hasRequireParams($params, $requireParams))
-			return withFailure($res, 'required parameters are missing', $requireParams);
-
 		try
 		{
 			$userFactory = new UserFactory($container['database'], $container['config'], new \Utility\Regex());

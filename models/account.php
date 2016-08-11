@@ -19,7 +19,7 @@ class AccountModel
 	public function create($screenName, $password, $name = null)
 	{
 		if ($screenName === null || $password === null)
-			throw new \Exception('argument is empty');
+			throw new \Utility\ApiException('required parameters are missing');
 
 		if ($name === null)
 			$name = 'froster';

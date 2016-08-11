@@ -7,10 +7,6 @@ class IceAuthController
 	public static function requestCreate(\Slim\Http\Request $req, $res, $container)
 	{
 		$params = $req->getParams();
-		$requireParams = ['application-key'];
-
-		if (!hasRequireParams($params, $requireParams))
-			return withFailure($res, 'required parameters are missing', $requireParams);
 
 		try
 		{
@@ -34,10 +30,6 @@ class IceAuthController
 	public static function pinCodeShow(\Slim\Http\Request $req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
-		$requireParams = ['request-key'];
-
-		if (!hasRequireParams($params, $requireParams))
-			return withFailure($res, 'required parameters are missing', $requireParams);
 
 		try
 		{
@@ -61,10 +53,6 @@ class IceAuthController
 	public static function authorize(\Slim\Http\Request $req, $res, $container)
 	{
 		$params = $req->getParams();
-		$requireParams = ['request-key', 'user-id', 'pin-code'];
-
-		if (!hasRequireParams($params, $requireParams))
-			return withFailure($res, 'required parameters are missing', $requireParams);
 
 		try
 		{

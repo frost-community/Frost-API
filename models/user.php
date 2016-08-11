@@ -19,7 +19,7 @@ class UserModel
 	public function get($userId)
 	{
 		if ($userId === null)
-			throw new \Exception('argument is empty');
+			throw new \Utility\ApiException('required parameters are missing');
 
 		return $this->userFactory->find($userId)->toArrayResponse();
 	}

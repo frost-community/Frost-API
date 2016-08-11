@@ -22,7 +22,7 @@ class IceAuthModel
 	public function createRequest($applicationKey)
 	{
 		if ($applicationKey === null)
-			throw new \Exception('argument is empty');
+			throw new \Utility\ApiException('required parameters are missing');
 
 		if (!$this->applicationFactory->verifyKey($applicationKey))
 			throw new \Utility\ApiException('parameter is invalid', ['application-key']);
@@ -38,7 +38,7 @@ class IceAuthModel
 	public function getPinCode($requestKey)
 	{
 		if ($requestKey === null)
-			throw new \Exception('argument is empty');
+			throw new \Utility\ApiException('required parameters are missing');
 
 		if (!$requestFactory->verifyKey($requestKey))
 			throw new \Utility\ApiException('parameter is invalid', ['request-key']);
@@ -56,7 +56,7 @@ class IceAuthModel
 	public function authorize($requestKey, $userId, $pinCode)
 	{
 		if ($requestKey === null || $userId === null || $pinCode === null)
-			throw new \Exception('argument is empty');
+			throw new \Utility\ApiException('required parameters are missing');
 
 		if (!$requestFactory->verifyKey($requestKey))
 			throw new \Utility\ApiException('parameter is invalid', ['request-key']);

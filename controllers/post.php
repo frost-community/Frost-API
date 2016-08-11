@@ -5,10 +5,7 @@ class PostController
 	public static function statusCreate($req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
-		$requireParams = ['text'];
-
-		if (!hasRequireParams($params, $requireParams))
-			return withFailure($res, 'required parameters are missing', $requireParams);
+		// requireParams: text
 
 		// TODO
 
@@ -18,10 +15,7 @@ class PostController
 	public static function articleCreate($req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
-		$requireParams = ['text'];
-
-		if (!hasRequireParams($params, $requireParams))
-			return withFailure($res, 'required parameters are missing', $requireParams);
+		// requireParams: text
 
 		// TODO
 
