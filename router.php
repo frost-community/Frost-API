@@ -29,7 +29,11 @@ class Router
 		{
 			if (count($route->permissionsArray) !== 0)
 			{
+				$applicationKey = $req->getHeaderLine('application-key');
 				$accessKey = $req->getHeaderLine('access-key');
+
+				if (!$applicationKey)
+					return withFailure($res, 'application-key header is empty');
 
 				if (!$accessKey)
 					return withFailure($res, 'access-key header is empty');
@@ -39,20 +43,25 @@ class Router
 				$userFactory = new UserFactory($container['database'], $container['config'], $regex);
 				$accessFactory = new ApplicationAccessFactory($container['database'], $container['config'], $regex);
 
+				if (!$applicationFactory->verifyKey($applicationKey))
+					return withFailure($res, 'application-key header is invalid');
+
 				if (!$accessFactory->verifyKey($accessKey))
 					return withFailure($res, 'access-key header is invalid');
 
 				// 権限を所持しているかどうかを確認
 				$keyElements = $accessFactory->parseKeyToArray($accessKey);
 				$accessData = $accessFactory->findOneWithFilters(['user_id' => $keyElements['id'], 'key_code' => $keyElements['keyCode']]);
+				$applicationData = $accessData->application($applicationFactory);
+				$userData = $accessData->user($userFactory);
 
 				foreach ($route->permissionsArray as $permission)
 				{
-					if (!$accessData->application($applicationFactory)->isHasPermission($permission))
+					if (!$applicationData->isHasPermission($permission))
 						return withFailure($res, 'You do not have some permissions.', [], 403);
 				}
 
-				$controllerArgs = [$req, $res, $container, $accessData->user($userFactory), $accessData->application($applicationFactory)];
+				$controllerArgs = [$req, $res, $container, $userData, $applicationData];
 			}
 			else
 			{
