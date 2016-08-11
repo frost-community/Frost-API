@@ -25,7 +25,7 @@ class RequestFactory
 	 * @param int $applicationId アプリケーションID
 	 * @return RequestData 新しいインスタンス
 	 */
-	public static function create($applicationId)
+	public function create($applicationId)
 	{
 		if ($applicationId === null)
 			throw new \Exception('some arguments are empty');
@@ -49,7 +49,7 @@ class RequestFactory
 	 */
 	public function find($requestId)
 	{
-		if ($applicationId === null)
+		if ($requestId === null)
 			throw new \Exception('argument is empty');
 
 		$record = $this->database->find($this->config['db']['table-names']['request'], $requestId);
@@ -94,7 +94,8 @@ class RequestFactory
 		if ($wheres === null)
 			throw new \Exception('argument is empty');
 
-		$records = $this->database->findManyWithFilters($this->config['db']['table-names']['request'], $wheres);
+		$records 	= $this->database->findManyWithFilters($this->config['db']['table-names']['request'], $wheres);
+		$instances 	= [];
 
 		if (count($records) === 0)
 			throw new \Utility\ApiException('application not found', [], 404);
@@ -127,11 +128,10 @@ class RequestFactory
 	/**
 	 * リクエストキーを配列に展開します
 	 */
-	public static function parseKeyToArray($requestKey)
+	public function parseKeyToArray($requestKey)
 	{
 		if ($requestKey === null)
 			throw new \Exception('some arguments are empty');
-
 		$match = $this->regex->match('/([^-]+)-([^-]{64}).([^-]+)/', $requestKey);
 
 		if ($match === null)
@@ -142,9 +142,14 @@ class RequestFactory
 
 	/**
 	 * リクエストキーを検証します
+	 * @param $requestKey
+	 * @return bool
+	 * @throws Exception
+	 * @throws \Utility\ApiException
 	 */
-	public static function verifyKey($requestKey)
+	public function verifyKey($requestKey)
 	{
+
 		try
 		{
 			$parseResult = $this->parseKeyToArray($requestKey);

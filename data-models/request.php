@@ -19,6 +19,10 @@ class RequestData
 
 	/**
 	 * アプリケーションを取得します
+	 * @param ApplicationFactory $applicationFactory
+	 * @return ApplicationData
+	 * @throws Exception
+	 * @throws \Utility\ApiException
 	 */
 	public function application(ApplicationFactory $applicationFactory)
 	{
