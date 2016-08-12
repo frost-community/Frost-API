@@ -22,13 +22,13 @@ class ApplicationController
 
 	public static function show(\Slim\Http\Request $req, $res, $container, $user, $application)
 	{
-		$params = $req->getParams();
+		$urlArguments = $container['url-arguments'];
 
 		try
 		{
 			$applicationFactory = new ApplicationFactory($container['database'], $container['config'], new \Utility\Regex());
 			$applicationModel = new ApplicationModel($applicationFactory);
-			$application = $applicationModel->get($params['application-id']);
+			$application = $applicationModel->get($urlArguments['id']);
 		}
 		catch(\Utility\ApiException $e)
 		{
@@ -40,13 +40,13 @@ class ApplicationController
 
 	public static function applicationKeyGenerate(\Slim\Http\Request $req, $res, $container, $user, $application)
 	{
-		$params = $req->getParams();
+		$urlArguments = $container['url-arguments'];
 
 		try
 		{
 			$applicationFactory = new ApplicationFactory($container['database'], $container['config'], new \Utility\Regex());
 			$applicationModel = new ApplicationModel($applicationFactory);
-			$applicationKey = $applicationModel->keyGenerate($params['application-id'], $user->record->id);
+			$applicationKey = $applicationModel->keyGenerate($urlArguments['id'], $user->record->id);
 		}
 		catch(\Utility\ApiException $e)
 		{
@@ -58,13 +58,13 @@ class ApplicationController
 
 	public static function applicationKeyShow(\Slim\Http\Request $req, $res, $container, $user, $application)
 	{
-		$params = $req->getParams();
+		$urlArguments = $container['url-arguments'];
 
 		try
 		{
 			$applicationFactory = new ApplicationFactory($container['database'], $container['config'], new \Utility\Regex());
 			$applicationModel = new ApplicationModel($applicationFactory);
-			$applicationKey = $applicationModel->keyGet($params['application-id'], $user->record->id);
+			$applicationKey = $applicationModel->keyGet($urlArguments['id'], $user->record->id);
 		}
 		catch(\Utility\ApiException $e)
 		{

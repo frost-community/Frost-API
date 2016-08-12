@@ -27,6 +27,8 @@ class Router
 
 		$this->slimApplication->$method($route->endPoint, function ($req, $res, $args) use($route, $container)
 		{
+			$container['url-arguments'] = $args;
+
 			if (count($route->permissionsArray) !== 0)
 			{
 				$applicationKey = $req->getHeaderLine('application-key');
