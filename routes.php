@@ -2,7 +2,7 @@
 
 function indexPage ($req, $res, $container)
 {
-	return withSuccess($res, null, 'Frost API Server');
+	return withSuccess($res, ['message' => 'Frost API Server']);
 }
 
 // post:   作成
