@@ -9,22 +9,27 @@ class PostController
 
 		// TODO
 
-		return withFailure($res, "not implemented.");
+		return withSuccess($res, ["status" => null]);
 	}
 
 	public static function articleCreate($req, $res, $container, $user, $application)
 	{
 		$params = $req->getParams();
-		// requireParams: text
+		// requireParams: title, text, description
 
 		// TODO
 
-		return withFailure($res, "not implemented.");
+		return withSuccess($res, ["article" => null]);
 	}
 
 	public static function show($req, $res, $container, $user, $application)
 	{
+		$urlArguments = $container['url-arguments'];
+
 		// TODO
+
+		// return withSuccess($res, ["status" => null]);
+		// return withSuccess($res, ["post" => null]);
 	}
 
 	public static function timeline($req, $res, $container, $user, $application)
