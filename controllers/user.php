@@ -27,6 +27,9 @@ class UserController
 		$urlArguments = $container['url-arguments'];
 
 		// TODO
+		$simpleUsers = [];
+
+		return withSuccess($res, ['followings'=>$simpleUsers]);
 	}
 
 	public static function followers($req, $res, $container, $user, $application)
@@ -34,6 +37,9 @@ class UserController
 		$urlArguments = $container['url-arguments'];
 
 		// TODO
+		$simpleUsers = [];
+
+		return withSuccess($res, ['followers'=>$simpleUsers]);
 	}
 
 	public static function timeline($req, $res, $container, $user, $application)
@@ -41,6 +47,8 @@ class UserController
 		$urlArguments = $container['url-arguments'];
 
 		// TODO
+
+		
 	}
 
 	public static function followCreate($req, $res, $container, $user, $application)
