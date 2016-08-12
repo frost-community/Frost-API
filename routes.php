@@ -12,18 +12,18 @@ function indexPage ($req, $res, $container)
 
 $routes = [
 	// Top
-	['get',    '/',                            [],                      'indexPage'],
+	['get',    '/',                                 [],                      'indexPage'],
 
 	// IceAuth
-	['post',   '/ice-auth/request',            [],                      'IceAuthController::requestCreate'],              // 認証リクエスト(リクエストキー取得)
-	['get',    '/ice-auth/pin-code',           ['ice-auth-host'],       'IceAuthController::pinCodeShow'],                // リクエストキーからPINコード取得(認証ホスト専用)
-	['post',   '/ice-auth/authorize',          [],                      'IceAuthController::accessKeyAuth'],              // 認証試行(PINコード)
+	['post',   '/ice-auth/request',                 [],                      'IceAuthController::requestCreate'],              // 認証リクエスト(リクエストキー取得)
+	['get',    '/ice-auth/pin-code',                ['ice-auth-host'],       'IceAuthController::pinCodeShow'],                // リクエストキーからPINコード取得(認証ホスト専用)
+	['post',   '/ice-auth/authorize',               [],                      'IceAuthController::accessKeyAuth'],              // 認証試行(PINコード)
 
 	// Application
-	['post',   '/application',                 ['application-special'], 'ApplicationController::create'],                 // アプリ情報生成
-	['get',    '/application',                 ['application'],         'ApplicationController::show'],                   // アプリ情報表示
-	['post',   '/application/application-key', ['application-special'], 'ApplicationController::applicationKeyGenerate'], // アプリキー生成
-	['get',    '/application/application-key', ['application-special'], 'ApplicationController::applicationKeyShow'],     // アプリキー表示
+	['post',   '/application',                      ['application-special'], 'ApplicationController::create'],                 // アプリ情報生成
+	['get',    '/application/{id}',                 ['application'],         'ApplicationController::show'],                   // アプリ情報表示
+	['post',   '/application/{id}/application-key', ['application-special'], 'ApplicationController::applicationKeyGenerate'], // アプリキー生成
+	['get',    '/application/{id}/application-key', ['application-special'], 'ApplicationController::applicationKeyShow'],     // アプリキー表示
 
 	// User
 	['get',    '/user',                        ['user-read'],           'UserController::show'],
@@ -34,11 +34,11 @@ $routes = [
 	['delete', '/user/follow',                 ['user-write'],          'UserController::followDestroy'],
 
 	// Account
-	['post',   '/account',                     ['account-special'],     'AccountController::create'],
+	['post',   '/account',                          ['account-special'],     'AccountController::create'],
 
 	// Post
-	['post',   '/post/status',                 ['post-write'],          'PostController::statusCreate'],
-	['post',   '/post/article',                ['post-write'],          'PostController::articleCreate'],
-	['get',    '/post',                        ['post-read'],           'PostController::show'],
-	['get',    '/post/timeline',               ['post-read'],           'PostController::timeline']
+	['post',   '/post/status',                      ['post-write'],          'PostController::statusCreate'],
+	['post',   '/post/article',                     ['post-write'],          'PostController::articleCreate'],
+	['get',    '/post',                             ['post-read'],           'PostController::show'],
+	['get',    '/post/timeline',                    ['post-read'],           'PostController::timeline'],
 ];
