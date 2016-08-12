@@ -119,7 +119,7 @@ class ApplicationData
 			'creator_id' => $this->record->creator_id,
 			'name' => $this->record->name,
 			'description' => $this->record->description,
-			'permissions' => $this->record->permissions
+			'permissions' => $this->permissionsArray()
 		];
 
 		return $data;
