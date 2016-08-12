@@ -4,7 +4,7 @@ class UserController
 {
 	public static function show($req, $res, $container, $user, $application)
 	{
-		$params = $req->getParams();
+		$urlArguments = $container['url-arguments'];
 
 		try
 		{
@@ -12,7 +12,7 @@ class UserController
 			$userFactory = new UserFactory($container['database'], $container['config'], $regex);
 			$userFollowingFactory = new UserFollowingFactory($container['database'], $container['config'], $regex);
 			$userModel = new UserModel($userFactory, $userFollowingFactory);
-			$destUser = $userModel->get($params['user-id']);
+			$destUser = $userModel->get($urlArguments['id']);
 		}
 		catch(\Utility\ApiException $e)
 		{
@@ -24,23 +24,28 @@ class UserController
 
 	public static function followings($req, $res, $container, $user, $application)
 	{
+		$urlArguments = $container['url-arguments'];
+
 		// TODO
 	}
 
 	public static function followers($req, $res, $container, $user, $application)
 	{
+		$urlArguments = $container['url-arguments'];
+
 		// TODO
 	}
 
 	public static function timeline($req, $res, $container, $user, $application)
 	{
+		$urlArguments = $container['url-arguments'];
+
 		// TODO
 	}
 
 	public static function followCreate($req, $res, $container, $user, $application)
 	{
-		$params = $req->getParams();
-		// user-id
+		$urlArguments = $container['url-arguments'];
 
 		try
 		{
@@ -48,7 +53,7 @@ class UserController
 			$userFactory = new UserFactory($container['database'], $container['config'], $regex);
 			$userFollowingFactory = new UserFollowingFactory($container['database'], $container['config'], $regex);
 			$userModel = new UserModel($userFactory, $userFollowingFactory);
-			$userModel->follow($user->record->id, $params['user-id']);
+			$userModel->follow($user->record->id, $urlArguments['id']);
 		}
 		catch(\Utility\ApiException $e)
 		{
@@ -60,8 +65,7 @@ class UserController
 
 	public static function followDestroy($req, $res, $container, $user, $application)
 	{
-		$params = $req->getParams();
-		// user-id
+		$urlArguments = $container['url-arguments'];
 
 		try
 		{
@@ -69,7 +73,7 @@ class UserController
 			$userFactory = new UserFactory($container['database'], $container['config'], $regex);
 			$userFollowingFactory = new UserFollowingFactory($container['database'], $container['config'], $regex);
 			$userModel = new UserModel($userFactory, $userFollowingFactory);
-			$userModel->unfollow($user->record->id, $params['user-id']);
+			$userModel->unfollow($user->record->id, $urlArguments['id']);
 		}
 		catch(\Utility\ApiException $e)
 		{
