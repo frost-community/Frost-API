@@ -11,12 +11,12 @@ function withFailure($res, $message, $content = null, $httpStatus = 400)
 	return $res->withJson($src, $httpStatus);
 }
 
-function withSuccess($res, $content = null)
+function withSuccess($res, $content = null, $message = 'successful')
 {
+	$src['message'] = $message;
+	
 	if (isset($content))
-		$src = $content;
-	else
-		$src['message'] = 'successful';
+		$src['data'] = $content;
 
 	return $res->withJson($src, 200);
 }

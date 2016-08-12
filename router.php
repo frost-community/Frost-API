@@ -27,12 +27,10 @@ class Router
 
 		$this->slimApplication->$method($route->endPoint, function ($req, $res, $args) use($route, $container)
 		{
-			$container['url-arguments'] = $args;
-
 			if (count($route->permissionsArray) !== 0)
 			{
-				$applicationKey = $req->getHeaderLine('X-Application-Key');
-				$accessKey = $req->getHeaderLine('X-Access-Key');
+				$applicationKey = $req->getHeaderLine('application-key');
+				$accessKey = $req->getHeaderLine('access-key');
 
 				if (!$applicationKey)
 					return withFailure($res, 'application-key header is empty');
