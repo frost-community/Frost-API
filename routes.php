@@ -26,19 +26,19 @@ $routes = [
 	['get',    '/application/{id}/application-key', ['application-special'], 'ApplicationController::applicationKeyShow'],     // アプリキー表示
 
 	// User
-	['get',    '/user',                        ['user-read'],           'UserController::show'],
-	['get',    '/user/timeline',               ['user-read'],           'UserController::timeline'],
-	['get',    '/user/followings',             ['user-read'],           'UserController::followings'],
-	['get',    '/user/followers',              ['user-read'],           'UserController::followers'],
-	['post',   '/user/follow',                 ['user-write'],          'UserController::followCreate'],
-	['delete', '/user/follow',                 ['user-write'],          'UserController::followDestroy'],
+	['get',    '/user/{id}',                        ['user-read'],           'UserController::show'],
+	['get',    '/user/{id}/timeline',               ['user-read'],           'UserController::timeline'],
+	['get',    '/user/{id}/followings',             ['user-read'],           'UserController::followings'],
+	['get',    '/user/{id}/followers',              ['user-read'],           'UserController::followers'],
+	['post',   '/user/{id}/follow',                 ['user-write'],          'UserController::followCreate'],
+	['delete', '/user/{id}/follow',                 ['user-write'],          'UserController::followDestroy'],
 
 	// Account
 	['post',   '/account',                          ['account-special'],     'AccountController::create'],
 
 	// Post
-	['post',   '/post/status',                      ['post-write'],          'PostController::statusCreate'],
-	['post',   '/post/article',                     ['post-write'],          'PostController::articleCreate'],
-	['get',    '/post',                             ['post-read'],           'PostController::show'],
+	['post',   '/post/status',                      ['post-write'],          'PostController::statusCreate'],  // ステータスポストを作成する
+	['post',   '/post/article',                     ['post-write'],          'PostController::articleCreate'], // 記事を作成する
 	['get',    '/post/timeline',                    ['post-read'],           'PostController::timeline'],
+	['get',    '/post/{id}',                        ['post-read'],           'PostController::show'],
 ];
