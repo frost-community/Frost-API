@@ -31,14 +31,14 @@ class Router
 
 			if (count($route->permissionsArray) !== 0)
 			{
-				$applicationKey = $req->getHeaderLine('application-key');
-				$accessKey = $req->getHeaderLine('access-key');
+				$applicationKey = $req->getHeaderLine('X-Application-Key');
+				$accessKey = $req->getHeaderLine('X-Access-Key');
 
 				if (!$applicationKey)
-					return withFailure($res, 'application-key header is empty');
+					return withFailure($res, 'X-Application-Key header is empty');
 
 				if (!$accessKey)
-					return withFailure($res, 'access-key header is empty');
+					return withFailure($res, 'X-Access-Key header is empty');
 
 				$regex = new \Utility\Regex();
 				$applicationFactory = new ApplicationFactory($container['database'], $container['config'], $regex);
