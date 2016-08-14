@@ -7,10 +7,6 @@ require_once __DIR__.'/factories/factories-loader.php';
 require_once __DIR__.'/models/models-loader.php';
 require_once __DIR__.'/util/utils-loader.php';
 
-require_once __DIR__.'/frost-api-server.php';
-require_once __DIR__.'/router.php';
-require_once __DIR__.'/route.php';
-
 require_once __DIR__.'/config.php';
 require_once __DIR__.'/routes.php';
 
