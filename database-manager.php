@@ -55,6 +55,18 @@ class DatabaseManager implements DatabaseAccess
 	{
 		$query = $this->getQueryWithFilters($tableName, $wheres);
 		$records = $query->find_many();
+		$recordsArray = $query->find_array();
+
+		for ($i = 0; $i < count($recordsArray); $i++)
+		{
+			$keys = array_keys($recordsArray[$i]);
+
+			for ($j = 0; $j < count($keys); $j++)
+			{
+				if (is_numeric($records[$i]->$keys[$j]))
+					$records[$i]->$keys[$j] = intval($records[$i]->$keys[$j]);
+			}
+		}
 
 		return $records;
 	}
