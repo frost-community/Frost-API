@@ -39,6 +39,10 @@ class DatabaseManager implements DatabaseAccess
 	{
 		$query = $this->getQueryWithFilters($tableName, $wheres);
 		$record = $query->find_one();
+
+		if (!$record)
+			return false;
+
 		$recordArray = $record->as_array();
 
 		$keys = array_keys($recordArray);
@@ -56,6 +60,9 @@ class DatabaseManager implements DatabaseAccess
 		$query = $this->getQueryWithFilters($tableName, $wheres);
 		$records = $query->find_many();
 		$recordsArray = $query->find_array();
+
+		if (!$records)
+			return false;
 
 		for ($i = 0; $i < count($recordsArray); $i++)
 		{
