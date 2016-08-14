@@ -94,7 +94,7 @@ class UserFactory
 		if ((!$record) && $isThrowException)
 			throw new \Utility\ApiException('request not found', [], 404);
 
-		return new UserData($this, $record);
+		return $record ? new UserData($this, $record) : null;
 	}
 
 	/**
@@ -115,7 +115,7 @@ class UserFactory
 		if ((!$record) && $isThrowException)
 			throw new \Utility\ApiException('request not found', [], 404);
 
-		return new UserData($this, $record);
+		return $record ? new UserData($this, $record) : null;
 	}
 
 	/**

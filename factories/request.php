@@ -57,7 +57,7 @@ class RequestFactory
 		if ((!$record) && $isThrowException)
 			throw new \Utility\ApiException('request not found', [], 404);
 
-		return new RequestData($this, $record);
+		return $record ? new RequestData($this, $record) : null;
 	}
 
 	/**
@@ -78,7 +78,7 @@ class RequestFactory
 		if ((!$record) && $isThrowException)
 			throw new \Utility\ApiException('application not found', [], 404);
 
-		return new RequestData($this, $record);
+		return $record ? new RequestData($this, $record) : null;
 	}
 
 	/**

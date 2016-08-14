@@ -56,7 +56,7 @@ class UserFollowingFactory
 		if ((!$record) && $isThrowException)
 			throw new \Utility\ApiException('user following not found', [], 404);
 
-		return new UserFollowingData($this, $record);
+		return $record ? new UserFollowingData($this, $record) : null;
 	}
 
 	/**
@@ -77,7 +77,7 @@ class UserFollowingFactory
 		if ((!$record) && $isThrowException)
 			throw new \Utility\ApiException('request not found', [], 404);
 
-		return new UserFollowingData($this, $record);
+		return $record ? new UserFollowingData($this, $record) : null;
 	}
 
 	/**

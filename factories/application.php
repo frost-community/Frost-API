@@ -73,7 +73,7 @@ class ApplicationFactory
 		if ((!$record) && $isThrowException)
 			throw new \Utility\ApiException('application not found', [], 404);
 
-		return new ApplicationData($this, $record);
+		return $record ? new ApplicationData($this, $record) : null;
 	}
 
 	/**
@@ -94,7 +94,7 @@ class ApplicationFactory
 		if ((!$record) && $isThrowException)
 			throw new \Utility\ApiException('application not found', [], 404);
 
-		return new ApplicationData($this, $record);
+		return $record ? new ApplicationData($this, $record) : null;
 	}
 
 	/**
@@ -115,8 +115,12 @@ class ApplicationFactory
 		if ((count($records) === 0) && $isThrowException)
 			throw new \Utility\ApiException('application not found', [], 404);
 
+		$instances = [];
+
 		foreach($records as $record)
+		{
 			array_push($instances, new ApplicationData($this, $record));
+		}
 
 		return $instances;
 	}

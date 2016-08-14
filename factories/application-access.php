@@ -34,7 +34,7 @@ class ApplicationAccessFactory
 		]);
 		$record->save();
 
-		return new ApplicationAccessData($this, $record);
+		return $record ? new ApplicationAccessData($this, $record) : null;
 	}
 
 	/**
@@ -55,7 +55,7 @@ class ApplicationAccessFactory
 		if ((!$record) && $isThrowException)
 			throw new \Utility\ApiException('application not found', [], 404);
 
-		return new ApplicationAccessData($this, $record);
+		return $record ? new ApplicationAccessData($this, $record) : null;
 	}
 
 	/**
