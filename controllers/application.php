@@ -4,7 +4,7 @@ class ApplicationController
 {
 	public static function create(\Slim\Http\Request $req, $res, $container, $user, $application)
 	{
-		$getParsedBody = $req->getParams();
+		$params = $req->getParsedBody();
 
 		try
 		{
