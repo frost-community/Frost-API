@@ -137,7 +137,7 @@ class ApplicationAccessFactory
 		if ($match === null)
 			throw new \Utility\ApiException('access-key is invalid format');
 
-		return [$match[1],$match[2],$match[3],'id'=>$match[1],'hash'=>$match[2],'keyCode'=>$match[3]];
+		return [intval($match[1]),$match[2],intval($match[3]),'id'=>intval($match[1]),'hash'=>$match[2],'keyCode'=>intval($match[3])];
 	}
 
 	/**

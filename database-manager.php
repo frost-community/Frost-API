@@ -39,6 +39,14 @@ class DatabaseManager implements DatabaseAccess
 	{
 		$query = $this->getQueryWithFilters($tableName, $wheres);
 		$record = $query->find_one();
+		$recordArray = $record->as_array();
+
+		$keys = array_keys($recordArray);
+		for ($i = 0; $i < count($keys); $i++)
+		{
+			if (is_numeric($record[$keys[$i]]))
+				$record[$keys[$i]] = intval($record[$keys[$i]]);
+		}
 
 		return $record;
 	}
@@ -47,6 +55,18 @@ class DatabaseManager implements DatabaseAccess
 	{
 		$query = $this->getQueryWithFilters($tableName, $wheres);
 		$records = $query->find_many();
+		$recordsArray = $query->find_array();
+
+		for ($i = 0; $i < count($recordsArray); $i++)
+		{
+			$keys = array_keys($recordsArray[$i]);
+
+			for ($j = 0; $j < count($keys); $j++)
+			{
+				if (is_numeric($records[$i]->$keys[$j]))
+					$records[$i]->$keys[$j] = intval($records[$i]->$keys[$j]);
+			}
+		}
 
 		return $records;
 	}
