@@ -25,13 +25,13 @@ class ApplicationFactory
 	 * @param int $userId ユーザーのID
 	 * @param string $name 名前
 	 * @param string $description 説明
-	 * @param string $requestedPermissions 要求する権限
+	 * @param array $requestedPermissions 要求する権限
 	 * @param array $permissionTypes 存在する権限名の配列
 	 * @throws \Utility\ApiException
 	 * @throws \Exception
 	 * @return ApplicationModel 新しいインスタンス
 	 */
-	public function create($userId, $name, $description, array $requestedPermissions, $permissionTypes)
+	public function create($userId, $name, $description, array $requestedPermissions, array $permissionTypes)
 	{
 		if ($userId === null || $description === null || $requestedPermissions === null)
 			throw new \Exception('argument is empty');

@@ -37,9 +37,9 @@ class ApplicationModel
 	 * @param int $userId アプリケーションを作成するユーザーのID
 	 * @param string $name 名称
 	 * @param string $description 概要
-	 * @param string $permissions 権限名をコンマで区切った文字列
+	 * @param array $permissions 権限名の配列
 	 */
-	public function create($userId, $name, $description, $permissions)
+	public function create($userId, $name, $description, array $permissions)
 	{
 		if ($userId === null || $name === null || $description === null || $permissions === null)
 			throw new \Utility\ApiException('required parameters are missing');
