@@ -59,6 +59,27 @@ class ApplicationModel
 		return $this->applicationFactory->find($applicationId)->toArrayResponse();
 	}
 
+	/**
+	 * 指定ユーザーが作成したアプリケーション一覧を取得します
+	 */
+	public function getCreatedApplications($creatorId)
+	{
+		if ($creatorId === null)
+			throw new \Utility\ApiException('required parameters are missing');
+
+		$userData = $userFactory->find($creatorId);
+
+		if (!$userData)
+			throw new \Utility\ApiException('user not found', [], 404);
+
+		$applicationDataArray = $userData->applications($this->applicationFactory);
+
+		foreach ($applicationDataArray as $applicationData)
+			$applications[] = $applicationData->toArrayResponse();
+
+		return $applications;
+	}
+
 	public function keyGenerate($applicationId, $accessedUserId)
 	{
 		if ($applicationId === null || $accessedUserId === null)

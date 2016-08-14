@@ -80,4 +80,25 @@ class IceAuthModel
 
 		return $accessKey;
 	}
+
+	/**
+	 * ユーザーが認証したアプリケーション一覧を取得します
+	 */
+	public function getAuthorizedApplications($accessedUserId)
+	{
+		if ($accessedUserId === null)
+			throw new \Utility\ApiException('required parameters are missing');
+
+		$userData = $userFactory->find($accessedUserId);
+
+		if (!$userData)
+			throw new \Utility\ApiException('user not found', [], 404);
+
+		$applicationAccessesDataArray = $userData->applicationAccesses($this->applicationAccessFactory);
+
+		foreach ($applicationAccessesDataArray as $applicationAccessesData)
+			$applicationIds[] = $applicationAccessesData->record->application_id;
+
+		return $applicationIds;
+	}
 }
