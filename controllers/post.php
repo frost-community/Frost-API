@@ -4,7 +4,7 @@ class PostController
 {
 	public static function statusCreate($req, $res, $container, $user, $application)
 	{
-		$params = $req->getParams();
+		$params = $req->getParsedBody();
 		// requireParams: text
 
 		// TODO
@@ -14,7 +14,7 @@ class PostController
 
 	public static function articleCreate($req, $res, $container, $user, $application)
 	{
-		$params = $req->getParams();
+		$params = $req->getParsedBody();
 		// requireParams: title, text, description
 
 		// TODO

@@ -4,7 +4,7 @@ class AccountController
 {
 	public static function create($req, $res, $container, $user, $application)
 	{
-		$params = $req->getParams();
+		$params = $req->getParsedBody();
 
 		try
 		{

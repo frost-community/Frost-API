@@ -6,7 +6,7 @@ class IceAuthController
 	// リクエストを作成して、リクエストキーを取得
 	public static function requestCreate(\Slim\Http\Request $req, $res, $container)
 	{
-		$params = $req->getParams();
+		$params = $req->getParsedBody();
 
 		try
 		{
@@ -29,7 +29,7 @@ class IceAuthController
 	// PINコードを取得
 	public static function pinCodeShow(\Slim\Http\Request $req, $res, $container, $user, $application)
 	{
-		$params = $req->getParams();
+		$params = $req->getParsedBody();
 
 		try
 		{
@@ -38,7 +38,7 @@ class IceAuthController
 			$applicationFactory = new ApplicationFactory($container['database'], $container['config'], $regex);
 			$applicationAccessFactory = new ApplicationAccessFactory($container['database'], $container['config'], $regex);
 			$iceAuthModel = new IceAuthModel($requestFactory, $applicationFactory, $applicationAccessFactory);
-			$pinCode = $iceAuthModel->getPinCode();
+			$pinCode = $iceAuthModel->getPinCode($params['request-key']);
 		}
 		catch(\Utility\ApiException $e)
 		{
@@ -52,7 +52,7 @@ class IceAuthController
 	// 認証を行って指定アプリケーションのアクセスキーを取得
 	public static function authorize(\Slim\Http\Request $req, $res, $container)
 	{
-		$params = $req->getParams();
+		$params = $req->getParsedBody();
 
 		try
 		{
