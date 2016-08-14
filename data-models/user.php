@@ -22,7 +22,7 @@ class UserData
 	 */
 	public function applications(ApplicationFactory $applicationFactory)
 	{
-		return $applicationFactory->findManyWithFilters(['user_id' => $this->record->id]);
+		return $applicationFactory->findManyWithFilters(['creator_id' => $this->record->id]);
 	}
 
 	/**
