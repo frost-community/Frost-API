@@ -1,0 +1,20 @@
+{
+  "name": "frost-api",
+  "version": "0.0.0",
+  "description": "Frost API Server",
+  "private": true,
+  "main": "./built/index.js",
+  "scripts": {
+    "start": "node ./",
+    "build-copy": "cpx src/**/*.js built && exit 0",
+    "build": "npm run build-copy && exit 0",
+    "test": "echo \"Error: test not found\" && exit 1"
+  },
+  "author": "FrostDevelop team",
+  "license": "MIT",
+  "dependencies": {
+    "cpx": "^1.3.2",
+    "express": "^4.14.0"
+  },
+  "devDependencies": {}
+}
