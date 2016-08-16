@@ -1,10 +1,9 @@
 'use strict';
 
-const route = require('koa-route');
+const koaRoute = require('koa-route');
 const methods = require('methods');
 
 module.exports = (app, routes, before, after) => {
-
 	if (!Array.isArray(routes) && routes != undefined && routes != null)
 		throw new Error('routes is unknown type');
 
@@ -16,7 +15,7 @@ module.exports = (app, routes, before, after) => {
 
 		methods.forEach((m) => {
 			if (method == m) {
-				app.use(route[method](path, function *(req, res) {
+				app.use(koaRoute[method](path, function *(req, res) {
 					if (before != undefined)
 						yield before(req, res);
 

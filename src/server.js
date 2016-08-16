@@ -2,7 +2,9 @@
 
 const bodyParser = require('body-parser');
 const koa = require('koa');
+const co = require('co');
 const router = require('./modules/router');
+const loadConfig = require('./modules/load-config');
 
 exports.start = () => {
 	console.log("--------------------");
@@ -10,6 +12,7 @@ exports.start = () => {
 	console.log("--------------------");
 
 	const app = koa();
+	var config = loadConfig();
 
 	var testAction = function *(req, res) {
 		console.log(`test`);
@@ -25,7 +28,7 @@ exports.start = () => {
 	]
 
 	router(app, routes, function *(req, res) {console.log("before");});
-	var port = 8000;
-	app.listen(port);
-	console.log(`listen on port: ${port}`);
+
+	app.listen(config.api.port);
+	console.log(`listen on port: ${config.api.port}`);
 }
