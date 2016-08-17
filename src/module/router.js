@@ -7,7 +7,7 @@ module.exports = (app, routes, before, after) => {
 		throw new Error('routes is unknown type');
 
 	routes.forEach((route) => {
-		const method = route[0];
+		var method = route[0];
 		const path = route[1];
 		var extensions = route[2];
 
