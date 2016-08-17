@@ -1,38 +1,68 @@
 'use strict';
 
-const methods = require('methods');
+const _routes = [];
+let _app;
 
-module.exports = (app, routes, before, after) => {
-	if (!Array.isArray(routes) && routes != undefined && routes != null)
+const main = app => {
+	if (app === null)
 		throw new Error('routes is unknown type');
 
-	routes.forEach((route) => {
-		var method = route[0];
-		const path = route[1];
-		var extensions = route[2];
+	_app = app;
 
-		method = method.replace(/^del$/, 'delete');
+	return this;
+};
 
-		methods.forEach((m) => {
-			if (method == m) {
-				app[m](path, function (req, res) {
-					var dirPath = '../routes';
+const addRoute = (route, middles) => {
+	if (!Array.isArray(route) || route === undefined)
+		throw new Error('routes is unknown type');
 
-					path.substring(1).split(/\//).forEach((seg, i) => {
-						dirPath += '/' + seg.replace(/:/, '');
-					});
+	if (middles === undefined)
+		middles = [];
 
-					const action = require(dirPath)[method];
+	_routes.push(route);
 
-					if (before != undefined)
-						before(req, res, extensions);
+	var method = route[0];
+	const path = route[1];
+	var extensions = route[2];
 
-					action(req, res);
+	method = method.replace(/^del$/, 'delete');
 
-					if (after != undefined)
-						after(req, res, extensions);
+	require('methods').forEach(m => {
+		if (method == m) {
+			middles.forEach(middle => {
+				_app[m](path, middle);
+			});
+
+			_app[m](path, function (req, res) {
+				var dirPath = '../routes';
+
+				path.substring(1).split(/\//).forEach((seg, i) => {
+					dirPath += '/' + seg.replace(/:/, '');
 				});
-			}
-		});
+
+				require(dirPath)[method](req, res);
+			});
+		}
 	});
 }
+
+const addRoutes = (routes, middles) => {
+	if (!Array.isArray(routes) || routes === undefined)
+		throw new Error('routes is unknown type');
+
+	routes.forEach(route => addRoute(route, middles));
+};
+
+const findRoute = (method, path) => {
+	_routes.forEach((route) => {
+		if (method === route[0] && path === route[1])
+			return route[2];
+	});
+
+	return null;
+};
+
+module.exports = main;
+exports.addRoute = addRoute;
+exports.addRoutes = addRoutes;
+exports.findRoute = findRoute;

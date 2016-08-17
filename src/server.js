@@ -15,12 +15,14 @@ module.exports = () => {
 	const app = express();
 	const config = loadConfig();
 
-	const beforeAction = function (req, res) {
-		console.log('before');
+	const checkPermission = (req, res, next) => {
+		console.log('check permission');
 		// TODO: verify authentication information and permissions
-	}
+		next();
+	};
 
-	router(app, routes(), beforeAction);
+	var r = router(app);
+	r.addRoutes(routes(), [checkPermission]);
 
 	app.listen(config.api.port);
 	console.log(`listen on port: ${config.api.port}`);
