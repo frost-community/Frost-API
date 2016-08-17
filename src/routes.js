@@ -8,7 +8,7 @@ module.exports = () => {
 		['post', '/account',                          {permissions:['account-special']}],
 
 		// IceAuth
-		['post', '/ice-auth/request',                 {}] // 認証リクエスト(リクエストキー取得)
+		['post', '/ice-auth/request',                 {}], // 認証リクエスト(リクエストキー取得)
 		['get',  '/ice-auth/pin-code',                {permissions:['ice-auth-host']}], // リクエストキーからPINコード取得(認証ホスト専用)
 		['post', '/ice-auth/authorize',               {}],
 
