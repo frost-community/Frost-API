@@ -11,9 +11,11 @@ module.exports = (app, routes, before, after) => {
 		const path = route[1];
 		var extensions = route[2];
 
+		method = method.replace(/^del$/, 'delete');
+
 		methods.forEach((m) => {
 			if (method == m) {
-				app[method](path, function (req, res) {
+				app[m](path, function (req, res) {
 					var dirPath = '../routes';
 
 					path.split(/\//).forEach((seg, i) => {
