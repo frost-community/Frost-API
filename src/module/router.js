@@ -19,8 +19,6 @@ const addRoute = (route, middles) => {
 	if (middles === undefined)
 		middles = [];
 
-	_routes.push(route);
-
 	var method = route[0];
 	const path = route[1];
 	var extensions = route[2];
@@ -28,7 +26,7 @@ const addRoute = (route, middles) => {
 	method = method.replace(/^del$/, 'delete');
 
 	require('methods').forEach(m => {
-		if (method == m) {
+		if (method.toLowerCase() === m) {
 			middles.forEach(middle => {
 				_app[m](path, middle);
 			});
@@ -40,8 +38,10 @@ const addRoute = (route, middles) => {
 					dirPath += '/' + seg.replace(/:/, '');
 				});
 
-				require(dirPath)[method](req, res);
+				require(dirPath)[m](req, res);
 			});
+
+			_routes.push([m.toUpperCase(), path, extensions]);
 		}
 	});
 }
@@ -53,16 +53,21 @@ const addRoutes = (routes, middles) => {
 	routes.forEach(route => addRoute(route, middles));
 };
 
-const findRoute = (method, path) => {
-	_routes.forEach((route) => {
+const findRouteExtensions = (method, path) => {
+	var result;
+
+	_routes.some((route) => {
 		if (method === route[0] && path === route[1])
-			return route[2];
+		{
+			result = route[2];
+			return true;
+		}
 	});
 
-	return null;
+	return result;
 };
 
 module.exports = main;
 exports.addRoute = addRoute;
 exports.addRoutes = addRoutes;
-exports.findRoute = findRoute;
+exports.findRouteExtensions = findRouteExtensions;

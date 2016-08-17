@@ -15,13 +15,31 @@ module.exports = () => {
 	const app = express();
 	const config = loadConfig();
 
+	var r = router(app);
+
 	const checkPermission = (req, res, next) => {
-		console.log('check permission');
-		// TODO: verify authentication information and permissions
+		var extensions = r.findRouteExtensions(req.method, req.path);
+
+		if ('permissions' in extensions && extensions.permissions.length !== 0) {
+			const applicationKey = req.get('X-Application-Key');
+			const accessKey = req.get('X-Access-Key');
+
+			if (applicationKey === undefined) {
+				res.send({error: {message: 'X-Application-Key header is empty'}});
+				return;
+			}
+
+			if (accessKey === undefined) {
+				res.send({error: {message: 'X-Access-Key header is empty'}});
+				return;
+			}
+
+			// TODO: varify keys
+			// TODO: check permissions
+		}
 		next();
 	};
 
-	var r = router(app);
 	r.addRoutes(routes(), [checkPermission]);
 
 	app.listen(config.api.port);
