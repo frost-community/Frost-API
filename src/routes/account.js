@@ -1,5 +1,5 @@
 'use strict';
 
-module.exports = function (req, res) {
+exports.post = function (req, res) {
 	res.send({message: "not implemented"});
 }

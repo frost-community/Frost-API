@@ -19,11 +19,10 @@ module.exports = (app, routes, before, after) => {
 					var dirPath = '../routes';
 
 					path.split(/\//).forEach((seg, i) => {
-						dirPath += seg.replace(/:/, '') + '/';
+						dirPath += '/' + seg.replace(/:/, '');
 					});
 
-					dirPath += method;
-					const action = require(dirPath);
+					const action = require(dirPath)[method];
 
 					if (before != undefined)
 						before(req, res, extensions);
