@@ -8,8 +8,8 @@
     "start": "node ./",
     "clean": "rimraf ./built",
     "build-copy": "cpx src/**/*.js built",
-    "build": "npm run clean && npm run build-copy",
-    "test": "echo \"Error: test not found\" && exit 1"
+    "build": "npm run clean && npm run build-copy && npm run test",
+    "test": ""
   },
   "author": "FrostDevelop team",
   "license": "MIT",
@@ -21,6 +21,5 @@
     "methods": "^1.1.2",
     "rimraf": "^2.5.4",
     "util": "^0.10.3"
-  },
-  "devDependencies": {}
+  }
 }
