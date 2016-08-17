@@ -6,12 +6,20 @@ const testAction = function *(req, res) {
 
 module.exports = () => {
 	var routes = [
-		['get', '/', [], testAction],
-		['post', '/application', [], testAction],
-		['get', '/application/:id', [], testAction],
-		['post', '/application/:id/application-key', [], testAction],
-		['get', '/application/:id/application-key', [], testAction],
-		['get', '/user/:id', [], testAction],
+		// general
+		['get',  '/',                                 {permissions:[]}],
+
+		// applications
+		['post', '/applications',                     {permissions:[]}],
+		['get',  '/applications/:id',                 {permissions:[]}],
+		['post', '/applications/:id/application-key', {permissions:[]}],
+		['get',  '/applications/:id/application-key', {permissions:[]}],
+
+		// users
+		['get',  '/users/:id',                        {permissions:[]}],
+
+		// account
+		['post', '/account',                          {permissions:[]}],
 	];
 
 	return routes;

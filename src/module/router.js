@@ -1,6 +1,5 @@
 'use strict';
 
-const koaRoute = require('koa-route');
 const methods = require('methods');
 
 module.exports = (app, routes, before, after) => {
@@ -10,20 +9,28 @@ module.exports = (app, routes, before, after) => {
 	routes.forEach((route) => {
 		const method = route[0];
 		const path = route[1];
-		const permission = route[2];
-		const generator = route[3];
+		var extensions = route[2];
 
 		methods.forEach((m) => {
 			if (method == m) {
-				app.use(koaRoute[method](path, function *(req, res) {
-					if (before != undefined)
-						yield before(req, res);
+				app[method](path, function (req, res) {
+					var dirPath = '../routes';
 
-					yield generator(req, res);
+					path.split(/\//).forEach((seg, i) => {
+						dirPath += seg.replace(/:/, '') + '/';
+					});
+
+					dirPath += method;
+					const action = require(dirPath);
+
+					if (before != undefined)
+						before(req, res, extensions);
+
+					action(req, res);
 
 					if (after != undefined)
-						yield after(req, res);
-				}));
+						after(req, res, extensions);
+				});
 			}
 		});
 	});

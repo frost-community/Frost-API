@@ -1,21 +1,21 @@
 'use strict';
 
 const bodyParser = require('body-parser');
-const koa = require('koa');
+const express = require('express');
 const co = require('co');
-const router = require('./modules/router');
+const router = require('./module/router');
 const routes = require('./routes');
-const loadConfig = require('./modules/load-config');
+const loadConfig = require('./module/load-config');
 
 module.exports = () => {
 	console.log('--------------------');
 	console.log('  Frost API Server  ');
 	console.log('--------------------');
 
-	const app = koa();
+	const app = express();
 	const config = loadConfig();
 
-	const beforeAction = function *(req, res) {
+	const beforeAction = function (req, res) {
 		console.log('before');
 		// TODO: verify authentication information and permissions
 	}
