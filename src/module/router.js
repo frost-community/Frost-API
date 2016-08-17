@@ -18,7 +18,7 @@ module.exports = (app, routes, before, after) => {
 				app[m](path, function (req, res) {
 					var dirPath = '../routes';
 
-					path.split(/\//).forEach((seg, i) => {
+					path.substring(1).split(/\//).forEach((seg, i) => {
 						dirPath += '/' + seg.replace(/:/, '');
 					});
 
