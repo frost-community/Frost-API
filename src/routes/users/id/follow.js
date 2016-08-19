@@ -1,9 +1,15 @@
 'use strict';
 
-exports.delete = function (req, res) {
-	res.send({message: "not implemented"});
+exports.delete = function (request, response, extensions) {
+	if (!request.haveParams([], response))
+		return;
+
+	response.error('not implemented', 501);
 }
 
-exports.post = function (req, res) {
-	res.send({message: "not implemented"});
+exports.post = function (request, response, extensions) {
+	if (!request.haveParams([], response))
+		return;
+
+	response.error('not implemented', 501);
 }

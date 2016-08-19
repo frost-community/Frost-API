@@ -1,5 +1,5 @@
 'use strict';
 
-exports.get = function (req, res) {
-	res.send({message: "Frost API Server"});
+exports.get = function (request, response, extensions) {
+	response.success("Frost API Server");
 }
