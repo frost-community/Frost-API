@@ -1,9 +1,17 @@
 'use strict';
 
+const reqHelper = require('./request-helper');
+const resHelper = require('./response-helper');
+
 const _routes = [];
 let _app;
 
-const main = app => {
+/**
+ * このモジュールを初期化します
+ *
+ * @param  {any} app 対象のサーバアプリケーション
+ */
+var init = app => {
 	if (app === null)
 		throw new Error('routes is unknown type');
 
@@ -11,8 +19,15 @@ const main = app => {
 
 	return this;
 };
+module.exports = init;
 
-const addRoute = (route, middles) => {
+/**
+ * ルートを追加します
+ *
+ * @param  {string[]} route
+ * @param  {Function[]} middles
+ */
+var addRoute = (route, middles) => {
 	if (!Array.isArray(route) || route === undefined)
 		throw new Error('routes is unknown type');
 
@@ -31,43 +46,57 @@ const addRoute = (route, middles) => {
 				_app[m](path, middle);
 			});
 
-			_app[m](path, function (req, res) {
+			_app[m](path, function (request, response) {
 				var dirPath = '../routes';
 
 				path.substring(1).split(/\//).forEach((seg, i) => {
 					dirPath += '/' + seg.replace(/:/, '');
 				});
 
-				require(dirPath)[m](req, res);
+				reqHelper(request);
+				resHelper(response);
+
+				require(dirPath)[m](request, response, extensions);
 			});
 
-			_routes.push([m.toUpperCase(), path, extensions]);
+			_routes.push({method: m.toUpperCase(), path: path, extensions: extensions});
 		}
 	});
 }
+exports.addRoute = addRoute;
 
-const addRoutes = (routes, middles) => {
+/**
+ * 複数のルートを追加します
+ *
+ * @param  {string[][]} routes
+ * @param  {Function[]} middles
+ */
+var addRoutes = (routes, middles) => {
 	if (!Array.isArray(routes) || routes === undefined)
 		throw new Error('routes is unknown type');
 
 	routes.forEach(route => addRoute(route, middles));
 };
+exports.addRoutes = addRoutes;
 
-const findRouteExtensions = (method, path) => {
+/**
+ * 該当するルートを取得します
+ *
+ * @param  {string} method
+ * @param  {string} path
+ * @return {Object} ルート情報
+ */
+var findRoute = (method, path) => {
 	var result;
 
 	_routes.some((route) => {
-		if (method === route[0] && path === route[1])
+		if (method === route.method && path === route.path)
 		{
-			result = route[2];
+			result = route;
 			return true;
 		}
 	});
 
 	return result;
 };
-
-module.exports = main;
-exports.addRoute = addRoute;
-exports.addRoutes = addRoutes;
-exports.findRouteExtensions = findRouteExtensions;
+exports.findRoute = findRoute;
