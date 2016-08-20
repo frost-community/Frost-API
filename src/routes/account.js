@@ -1,5 +1,9 @@
 'use strict';
 
+var co = require('co');
+var log = require('../module/log');
+var dbModule = require('../module/db');
+
 exports.post = function (request, response, extensions) {
 
 	if (!request.haveParams(['screen_name', 'password'], response))
@@ -16,5 +20,23 @@ exports.post = function (request, response, extensions) {
 	if (description == undefined)
 		description = '';
 
-	response.success({user: {id: 1, created_at:1, screen_name: screenName, name: name, description: description}});
+	co(function* () {
+		var db = yield dbModule.connectApidb();
+
+		try {
+			var result = yield dbModule.createDocument(db, 'user', {screen_name: screenName, name: name, description: description});
+		}
+		catch(err) {
+			response.error('んにゃぴ');
+		}
+
+		return result;
+	}).then((result) => {
+		response.success(result);
+	}, (err) => {
+		if (typeof err == 'string')
+			response.error(err);
+		else
+			console.error(`error: ${err.stack}`);
+	});
 }
