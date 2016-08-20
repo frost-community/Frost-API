@@ -21,7 +21,7 @@ module.exports = init;
 var haveParams = (requireParams, response) => {
 	var missings = [];
 	requireParams.forEach((requireParam)=>{
-		if (_request.body[requireParam] === undefined)
+		if (_request.body[requireParam] == undefined || _request.body[requireParam] === '')
 			missings.push(requireParam);
 	});
 

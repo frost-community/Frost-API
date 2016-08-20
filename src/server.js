@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const co = require('co');
 const routes = require('./routes');
-const loadConfig = require('./module/load-config');
+const loadConfig = require('./modules/load-config');
 
 module.exports = () => {
 	console.log('--------------------');
@@ -15,7 +15,7 @@ module.exports = () => {
 	const app = express();
 	app.disable('x-powered-by');
 	app.use(bodyParser.json());
-	var router = require('./module/router')(app);
+	var router = require('./modules/router')(app);
 
 	const checkPermission = (request, response, next) => {
 		var extensions = router.findRoute(request.method, request.route.path).extensions;

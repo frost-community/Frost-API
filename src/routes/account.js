@@ -1,8 +1,8 @@
 'use strict';
 
 var co = require('co');
-var log = require('../module/log');
-var dbModule = require('../module/db');
+var log = require('../modules/log');
+var dbModule = require('../modules/db');
 
 exports.post = function (request, response, extensions) {
 

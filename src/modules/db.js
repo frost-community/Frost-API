@@ -41,7 +41,7 @@ var createCollection = (db, name, parameters) => new Promise((resolve, reject) =
 exports.createCollection = createCollection;
 
 var createDocument = (db, collectionName, data) => new Promise((resolve, reject) => {
-	db.collection(collectionName).insert(data,(err, result) => {
+	db.collection(collectionName).insertOne(data,(err, result) => {
 		if (err)
 			return reject('faild to create document');
 
