@@ -22,13 +22,13 @@ exports.post = (request, response, extensions) => {
 	if (description == undefined)
 		description = '';
 
-	const salt = randomRange(1, 99999);
-
-	const sha256 = crypto.createHash('sha256');
-	sha256.update(`${password}.${salt}`);
-	const hash = `${sha256.digest('hex')}.${salt}`;
-
 	(async () => {
+		const salt = randomRange(1, 99999);
+
+		const sha256 = crypto.createHash('sha256');
+		sha256.update(`${password}.${salt}`);
+		const hash = `${sha256.digest('hex')}.${salt}`;
+
 		const dbManager = await dbConnector.connectApidbAsync();
 		let result;
 
