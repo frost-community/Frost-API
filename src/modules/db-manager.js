@@ -22,11 +22,13 @@ module.exports = (db) => {
 	 * @param  {string} collectionName
 	 * @param  {Object} query
 	 * @param  {Object} projection
+	 * @param  {Object[]|null} documents
 	 */
-	var findAsync = (async (collectionName, query, projection) => {
-		return await instance.db.collection(collectionName).find(query, projection);
+	var findArrayAsync = (async (collectionName, query, projection) => {
+		var items = await instance.db.collection(collectionName).find(query, projection);
+		return await items.toArray();
 	});
-	instance.findAsync = findAsync;
+	instance.findArrayAsync = findArrayAsync;
 
 	/**
 	 * ドキュメントを更新します
