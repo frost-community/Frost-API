@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const randomRange = require('../modules/random-range');
 const log = require('../modules/log');
 const dbConnector = require('../modules/db-connector')();
+const config = require('../modules/load-config')();
 
 exports.post = (request, response, extensions) => {
 
@@ -31,22 +32,42 @@ exports.post = (request, response, extensions) => {
 		const dbManager = await dbConnector.connectApidbAsync();
 		let result;
 
-		try {
-			result = await dbManager.createAsync('users', {screen_name: screenName, name: name, description: description, password_hash: hash});
-		}
-		catch(err) {
-			response.error('んにゃぴ:');
-			log(err);
-			return;
+		if (!/^[a-z0-9_]{4,15}$/.test(screenName) || /^(.)\1{3,}$/.test(screenName))
+			throw "screen_name is invalid format";
+
+		config.api.invalid_screen_names.forEach((invalidScreenName)=>{
+			if (screenName === invalidScreenName)
+				throw "screen_name is invalid";
+		});
+
+		if (/^[a-z0-9_-]{6,128}$/.test(password))
+			throw "password is invalid format";
+
+		if ((await dbManager.findArrayAsync('users', {screen_name: screenName})).length !== 0)
+		{
+			throw "this screen_name is already exists";
 		}
 
-		return result;
-	})().then(result => {
-		response.success(result);
-	}).catch(err => {
-		if (typeof err == 'string')
-			response.error(err);
-		else
-			console.error(`error: ${err.stack}`);
+		try {
+			result = (await dbManager.createAsync('users', {screen_name: screenName, name: name, description: description, password_hash: hash})).ops[0];
+		}
+		catch(err) {
+			throw "500:faild to create account";
+		}
+
+		delete result.password_hash;
+
+		response.success({user: result});
+	})().catch(err => {
+		if (typeof err == 'string') {
+			var reg = /^([0-9]+):(.+)$/.exec(err);
+			if (reg == undefined)
+				response.error(err);
+			else
+				response.error(reg[2], reg[1]);
+		}
+		else {
+			console.error(`internal error: ${err.stack}`, 500);
+		}
 	});
 }
