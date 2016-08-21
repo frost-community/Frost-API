@@ -1,6 +1,6 @@
 'use strict';
 
-exports.get = function (request, response, extensions) {
+exports.get = (request, response, extensions) => {
 	if (!request.haveParams([], response))
 		return;
 

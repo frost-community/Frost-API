@@ -46,7 +46,7 @@ var addRoute = (route, middles) => {
 				_app[m](path, middle);
 			});
 
-			_app[m](path, function (request, response) {
+			_app[m](path, (request, response) => {
 				var dirPath = '../routes';
 
 				path.substring(1).split(/\//).forEach((seg, i) => {
