@@ -5,7 +5,7 @@ const randomRange = require('../modules/random-range');
 const log = require('../modules/log');
 const dbConnector = require('../modules/db-connector')();
 
-exports.post = function (request, response, extensions) {
+exports.post = (request, response, extensions) => {
 
 	if (!request.haveParams(['screen_name', 'password'], response))
 		return;
@@ -41,9 +41,9 @@ exports.post = function (request, response, extensions) {
 		}
 
 		return result;
-	}).then((result) => {
+	})().then(result => {
 		response.success(result);
-	}, (err) => {
+	}).catch(err => {
 		if (typeof err == 'string')
 			response.error(err);
 		else
