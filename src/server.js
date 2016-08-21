@@ -2,7 +2,6 @@
 
 const bodyParser = require('body-parser');
 const express = require('express');
-const co = require('co');
 const routes = require('./routes');
 const loadConfig = require('./modules/load-config');
 
@@ -34,7 +33,7 @@ module.exports = () => {
 				return;
 			}
 
-			// TODO: insert user/application object in request
+			// TODO: insert user,application in request object
 			request.user = {};
 			request.application = {};
 

@@ -1,5 +1,7 @@
 'use strict';
 
+const log = require('./log');
+
 module.exports = (db) => {
 	const instance = {db: db};
 
@@ -9,10 +11,10 @@ module.exports = (db) => {
 	 * @param  {string} collectionName コレクション名
 	 * @param  {string} data
 	 */
-	var create = (collectionName, data) => new Promise((resolve, reject) => {
-		instance.db[collectionName].insert(data);
+	var createAsync = (async (collectionName, data) => {
+		return await instance.db.collection(collectionName).insert(data);
 	});
-	instance.create = create;
+	instance.createAsync = createAsync;
 
 	/**
 	 * ドキュメントを検索します
@@ -21,10 +23,10 @@ module.exports = (db) => {
 	 * @param  {Object} query
 	 * @param  {Object} projection
 	 */
-	var find = (collectionName, query, projection) => {
-		instance.db[collectionName].find(query, projection);
-	};
-	instance.find = find;
+	var findAsync = (async (collectionName, query, projection) => {
+		return await instance.db.collection(collectionName).find(query, projection);
+	});
+	instance.findAsync = findAsync;
 
 	/**
 	 * ドキュメントを更新します
@@ -33,13 +35,13 @@ module.exports = (db) => {
 	 * @param  {Object} data
 	 * @param  {Boolean} isMany
 	 */
-	var update = (collectionName, data, isMany) => new Promise((resolve, reject) => {
+	var updateAsync = (async (collectionName, data, isMany) => {
 		if (isMany == undefined)
 			isMany = false;
 
-		instance.db[collectionName].update(data, {$set: {data}}, !isMany, isMany);
+		return await instance.db.collection(collectionName).update(data, {$set: {data}}, !isMany, isMany);
 	});
-	instance.update = update;
+	instance.updateAsync = updateAsync;
 
 	/**
 	 * ドキュメントを削除します
@@ -47,10 +49,10 @@ module.exports = (db) => {
 	 * @param  {string} collectionName
 	 * @param  {Object} query
 	 */
-	var remove = (collectionName, query) => {
-		instance.db[collectionName].remove(query);
-	};
-	instance.remove = remove;
+	var removeAsync = (async (collectionName, query) => {
+		return await instance.db.collection(collectionName).remove(query);
+	});
+	instance.removeAsync = removeAsync;
 
 	return instance;
 }

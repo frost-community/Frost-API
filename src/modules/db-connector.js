@@ -12,7 +12,7 @@ module.exports = () => {
 	 * host, port, dbname, [user, password]
 	 * @return {Promise}
 	 */
-	instance.connect = (host, port, dbname, username, password) => new Promise((resolve, reject) => {
+	instance.connectAsync = (host, port, dbname, username, password) => new Promise((resolve, reject) => {
 		let authenticate = "";
 
 		if (username != undefined && password != undefined)
@@ -26,10 +26,9 @@ module.exports = () => {
 		});
 	});
 
-	instance.connectApidb = () => {
-		return instance.connect(config.api.database.host , config.api.database.port, config.api.database.database, config.api.database.username, config.api.database.password);
-	};
+	instance.connectApidbAsync = (async () => {
+		return await instance.connectAsync(config.api.database.host , config.api.database.port, config.api.database.database, config.api.database.username, config.api.database.password);
+	});
 
 	return instance;
 }
-
