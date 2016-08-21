@@ -35,7 +35,7 @@ exports.post = (request, response, extensions) => {
 		if (!/^[a-z0-9_]{4,15}$/.test(screenName) || /^(.)\1{3,}$/.test(screenName))
 			throw "screen_name is invalid format";
 
-		config.api.invalid_screen_names.forEach((invalidScreenName)=>{
+		config.api.invalid_screen_names.forEach(invalidScreenName => {
 			if (screenName === invalidScreenName)
 				throw "screen_name is invalid";
 		});
@@ -44,9 +44,7 @@ exports.post = (request, response, extensions) => {
 			throw "password is invalid format";
 
 		if ((await dbManager.findArrayAsync('users', {screen_name: screenName})).length !== 0)
-		{
 			throw "this screen_name is already exists";
-		}
 
 		try {
 			result = (await dbManager.createAsync('users', {screen_name: screenName, name: name, description: description, password_hash: hash})).ops[0];
