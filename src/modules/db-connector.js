@@ -1,10 +1,10 @@
 'use strict';
 
-var mongodb = require('mongodb');
+const mongodb = require('mongodb');
 const config = require('./load-config')();
 
-exports = () => {
-	var instance = {};
+module.exports = () => {
+	const instance = {};
 
 	/**
 	 * データベースに接続します
@@ -13,7 +13,7 @@ exports = () => {
 	 * @return {Promise}
 	 */
 	instance.connect = (host, port, dbname, username, password) => new Promise((resolve, reject) => {
-		var authenticate = "";
+		let authenticate = "";
 
 		if (username != undefined && password != undefined)
 			authenticate = `${username}:${password}@`;
@@ -22,11 +22,14 @@ exports = () => {
 			if (err)
 				return reject('faild to connect database');
 
-			return resolve(require('./database')(db));
+			return resolve(require('./db-manager')(db));
 		});
 	});
 
 	instance.connectApidb = () => {
-		return exports.connect(config.api.database.host , config.api.database.port, config.api.database.database, config.api.database.username, config.api.database.password);
+		return instance.connect(config.api.database.host , config.api.database.port, config.api.database.database, config.api.database.username, config.api.database.password);
 	};
+
+	return instance;
 }
+
