@@ -30,7 +30,6 @@ exports.post = (request, response, extensions) => {
 		const hash = `${sha256.digest('hex')}.${salt}`;
 
 		const dbManager = await dbConnector.connectApidbAsync();
-		let result;
 
 		if (!/^[a-z0-9_]{4,15}$/.test(screenName) || /^(.)\1{3,}$/.test(screenName))
 			throw "screen_name is invalid format";
@@ -45,6 +44,8 @@ exports.post = (request, response, extensions) => {
 
 		if ((await dbManager.findArrayAsync('users', {screen_name: screenName})).length !== 0)
 			throw "this screen_name is already exists";
+
+		let result;
 
 		try {
 			result = (await dbManager.createAsync('users', {screen_name: screenName, name: name, description: description, password_hash: hash})).ops[0];
