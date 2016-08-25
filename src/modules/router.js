@@ -1,7 +1,8 @@
 'use strict';
 
-const reqHelper = require('./request-helper');
+const apiResult = require('./api-result');
 const resHelper = require('./response-helper');
+const type = require('./type');
 
 const _routes = [];
 let _app;
@@ -47,20 +48,24 @@ var addRoute = (route, middles) => {
 			});
 
 			_app[m](path, (request, response) => {
+				resHelper(response);
 				var dirPath = '../routes';
 
 				path.substring(1).split(/\//).forEach((seg, i) => {
 					dirPath += '/' + seg.replace(/:/, '');
 				});
 
-				reqHelper(request);
-				resHelper(response);
-
 				(async () => {
 					const result = await require(dirPath)[m](request.body, extensions);
 					response.success(result);
 				})().catch(err => {
-					console.error(`internal error: ${err.stack}`, 500);
+					if (type(err) !== 'Error')
+						response.error(err);
+					else
+					{
+						console.log(`Internal Error: ${err.stack}`);
+						response.error(apiResult(500, 'internal error'));
+					}
 				});
 			});
 
