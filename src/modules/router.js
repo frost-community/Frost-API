@@ -48,6 +48,7 @@ var addRoute = (route, middles) => {
 			});
 
 			_app[m](path, (request, response) => {
+				console.log(path);
 				resHelper(response);
 				var dirPath = '../routes';
 
@@ -55,18 +56,29 @@ var addRoute = (route, middles) => {
 					dirPath += '/' + seg.replace(/:/, '');
 				});
 
-				(async () => {
-					const result = await require(dirPath)[m](request.body, extensions);
-					response.success(result);
-				})().catch(err => {
-					if (type(err) !== 'Error')
-						response.error(err);
-					else
-					{
-						console.log(`Internal Error: ${err.stack}`);
-						response.error(apiResult(500, 'internal error'));
-					}
-				});
+				const route = require(dirPath)[m];
+
+				try {
+					(async () => {
+						if (route == undefined)
+							throw new Error('endpoint not found\ntarget: ' + method + ' ' + path);
+
+						const result = await require(dirPath)[m](request.body, extensions);
+						response.success(result);
+					})().catch(err => {
+						if (type(err) !== 'Error')
+							response.error(err);
+						else
+						{
+							console.log(`Internal Error: ${err.stack}`);
+							response.error(apiResult(500, 'internal error', {details: err.stack}));
+						}
+					});
+				}
+				catch (err) {
+					console.log(`Internal Error (Async): ${err.stack}`);
+					response.error(apiResult(500, 'internal error (async)', {details: err.stack}));
+				}
 			});
 
 			_routes.push({method: m.toUpperCase(), path: path, extensions: extensions});
