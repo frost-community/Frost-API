@@ -56,7 +56,12 @@ var addRoute = (route, middles) => {
 				reqHelper(request);
 				resHelper(response);
 
-				require(dirPath)[m](request, response, extensions);
+				(async () => {
+					const result = await require(dirPath)[m](request.body, extensions);
+					response.success(result);
+				})().catch(err => {
+					console.error(`internal error: ${err.stack}`, 500);
+				});
 			});
 
 			_routes.push({method: m.toUpperCase(), path: path, extensions: extensions});

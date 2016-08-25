@@ -1,20 +1,21 @@
 'use strict';
 
+const apiResult = require('../modules/api-result');
 const crypto = require('crypto');
 const randomRange = require('../modules/random-range');
-const log = require('../modules/log');
 const dbConnector = require('../modules/db-connector')();
 const config = require('../modules/load-config')();
 
-exports.post = (request, response, extensions) => {
+exports.post = async (params, extensions) => new Promise((resolve, reject) => {
+	const missingParams = getMissingParams(params, ['screen_name', 'password']);
+	if (missingParams.length) {
+		return reject(apiResult(400, 'some required parameters are missing', {target_params: missingParams}));
+	}
 
-	if (!request.haveParams(['screen_name', 'password'], response))
-		return;
-
-	const screenName = request.body.screen_name;
-	const password = request.body.password;
-	let name = request.body.name;
-	let description = request.body.description;
+	const screenName = params.screen_name;
+	const password = params.password;
+	let name = params.name;
+	let description = params.description;
 
 	if (name == undefined || name === '')
 		name = 'froster';
@@ -22,51 +23,38 @@ exports.post = (request, response, extensions) => {
 	if (description == undefined)
 		description = '';
 
-	(async () => {
-		const salt = randomRange(1, 99999);
+	const salt = randomRange(1, 99999);
 
-		const sha256 = crypto.createHash('sha256');
-		sha256.update(`${password}.${salt}`);
-		const hash = `${sha256.digest('hex')}.${salt}`;
+	const sha256 = crypto.createHash('sha256');
+	sha256.update(`${password}.${salt}`);
+	const hash = `${sha256.digest('hex')}.${salt}`;
 
-		const dbManager = await dbConnector.connectApidbAsync();
+	const dbManager = await dbConnector.connectApidbAsync();
 
-		if (!/^[a-z0-9_]{4,15}$/.test(screenName) || /^(.)\1{3,}$/.test(screenName))
-			throw "screen_name is invalid format";
+	if (!/^[a-z0-9_]{4,15}$/.test(screenName) || /^(.)\1{3,}$/.test(screenName))
+		return reject(apiResult(400, "screen_name is invalid format"));
 
-		config.api.invalid_screen_names.forEach(invalidScreenName => {
-			if (screenName === invalidScreenName)
-				throw "screen_name is invalid";
-		});
+	for (var invalidScreenName in config.api.invalid_screen_names) {
+		if (screenName === invalidScreenName)
+			return reject(apiResult(400, "screen_name is invalid"));
+	}
 
-		if (/^[a-z0-9_-]{6,128}$/.test(password))
-			throw "password is invalid format";
+	if (/^[a-z0-9_-]{6,128}$/.test(password))
+		return reject(apiResult(400, "password is invalid"));
 
-		if ((await dbManager.findArrayAsync('users', {screen_name: screenName})).length !== 0)
-			throw "this screen_name is already exists";
+	if ((await dbManager.findArrayAsync('users', {screen_name: screenName})).length !== 0)
+		return reject(apiResult(400, "this screen_name is already exists"));
 
-		let result;
+	let result;
 
-		try {
-			result = (await dbManager.createAsync('users', {screen_name: screenName, name: name, description: description, password_hash: hash})).ops[0];
-		}
-		catch(err) {
-			throw "500:faild to create account";
-		}
+	try {
+		result = (await dbManager.createAsync('users', {screen_name: screenName, name: name, description: description, password_hash: hash})).ops[0];
+	}
+	catch(err) {
+		return reject(apiResult(500, "faild to create account"));
+	}
 
-		delete result.password_hash;
+	delete result.password_hash;
 
-		response.success({user: result});
-	})().catch(err => {
-		if (typeof err == 'string') {
-			var reg = /^([0-9]+):(.+)$/.exec(err);
-			if (reg == undefined)
-				response.error(err);
-			else
-				response.error(reg[2], reg[1]);
-		}
-		else {
-			console.error(`internal error: ${err.stack}`, 500);
-		}
-	});
-}
+	resolve(apiResult(200, null, {user: result}));
+});
