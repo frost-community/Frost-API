@@ -1,8 +1,12 @@
 'use strict';
 
-exports.post = (request, response, extensions) => {
-	if (!request.haveParams([], response))
-		return;
+const apiResult = require('../modules/api-result');
 
-	response.error('not implemented', 501);
-}
+exports.post = async (params, extensions) => new Promise((resolve, reject) => {
+	const missingParams = getMissingParams(params, []);
+	if (missingParams.length) {
+		return reject(apiResult(400, 'some required parameters are missing', {target_params: missingParams}));
+	}
+
+	reject(apiResult(501, 'not implemented'));
+});
