@@ -1,5 +1,7 @@
 'use strict';
 
+const merge = require('./merge');
+
 let _response;
 
 /**
@@ -18,37 +20,39 @@ module.exports = init;
 /**
  * リクエストが成功したことを示すオブジェクトをレスポンスとして返します
  *
- * @param  {Object|string} content レスポンスに含めるオブジェクトまたは文字列
- * @param  {Number} statusCode HTTPステータスコード
+ * @param  {ApiResult} apiResult APIコールの結果情報
  */
-var success = (content, statusCode) => {
-	statusCode = statusCode || 200;
+var success = (apiResult) => {
+	if (apiResult.statusCode == undefined)
+		apiResult.statusCode = 200;
 
-	if (typeof (content) === "string")
-	{
-		_response.status(statusCode).send({message: content});
-	}
-	else
-	{
-		_response.status(statusCode).send(content);
-	}
+	var sendData = {};
+
+	if (apiResult.message != undefined)
+		sendData.message = apiResult.message;
+
+	if (apiResult.data != undefined)
+		merge(sendData, apiResult.data);
+
+	_response.status(apiResult.statusCode).send(sendData);
 };
 
 /**
  * エラーオブジェクトをレスポンスとして返します
  *
- * @param  {Object|string} content レスポンスに含めるオブジェクトまたは文字列
- * @param  {Number} statusCode HTTPステータスコード
+ * @param  {ApiResult} apiResult APIコールの結果情報
  */
-var error = (content, statusCode) => {
-	statusCode = statusCode || 400;
+var error = (apiResult) => {
+	if (apiResult.statusCode == undefined)
+		apiResult.statusCode = 400;
 
-	if (typeof (content) === "string")
-	{
-		_response.status(statusCode).send({error: {message: content}});
-	}
-	else
-	{
-		_response.status(statusCode).send({error: content});
-	}
+	var sendData = {};
+
+	if (apiResult.message != undefined)
+		sendData.message = apiResult.message;
+
+	if (apiResult.data != undefined)
+		merge(sendData, apiResult.data);
+
+	_response.status(apiResult.statusCode).send({error: sendData});
 };
