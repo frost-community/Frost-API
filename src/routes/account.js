@@ -1,12 +1,13 @@
 'use strict';
 
-const apiResult = require('../modules/api-result');
 const crypto = require('crypto');
-const randomRange = require('../modules/random-range');
-const dbConnector = require('../modules/db-connector')();
+const apiResult = require('../modules/api-result');
 const config = require('../modules/load-config')();
+const dbConnector = require('../modules/db-connector')();
+const getMissingParams = require('../modules/get-missing-params');
+const randomRange = require('../modules/random-range');
 
-exports.post = async (params, extensions) => new Promise((resolve, reject) => {
+exports.post = (params, extensions) => new Promise((resolve, reject) => (async () => {
 	const missingParams = getMissingParams(params, ['screen_name', 'password']);
 	if (missingParams.length) {
 		return reject(apiResult(400, 'some required parameters are missing', {target_params: missingParams}));
@@ -39,8 +40,8 @@ exports.post = async (params, extensions) => new Promise((resolve, reject) => {
 			return reject(apiResult(400, "screen_name is invalid"));
 	}
 
-	if (/^[a-z0-9_-]{6,128}$/.test(password))
-		return reject(apiResult(400, "password is invalid"));
+	if (!/^[a-z0-9_-]{6,128}$/.test(password))
+		return reject(apiResult(400, "password is invalid format"));
 
 	if ((await dbManager.findArrayAsync('users', {screen_name: screenName})).length !== 0)
 		return reject(apiResult(400, "this screen_name is already exists"));
@@ -55,6 +56,5 @@ exports.post = async (params, extensions) => new Promise((resolve, reject) => {
 	}
 
 	delete result.password_hash;
-
 	resolve(apiResult(200, null, {user: result}));
-});
+})());
