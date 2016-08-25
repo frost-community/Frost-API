@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node ./",
     "clean": "rimraf ./built",
-    "build-copy": "cpx src/**/*.js built",
+    "build-copy": "cpx \"src/**/*.js\" built",
     "build-babel": "babel built --out-dir built",
     "build": "npm run clean && npm run build-copy && npm run build-babel && npm run test",
     "test": ""
@@ -15,13 +15,12 @@
   "author": "FrostDevelop team",
   "license": "MIT",
   "dependencies": {
+    "express": "v4.14.0",
     "body-parser": "^1.15.2",
     "cpx": "v1.3.2",
-    "express": "v4.14.0",
     "methods": "v1.1.2",
     "mongodb": "v2.2.6",
-    "rimraf": "v2.5.4",
-    "util": "v0.10.3"
+    "rimraf": "v2.5.4"
   },
   "devDependencies": {
     "babel-cli": "v6.11.4",
