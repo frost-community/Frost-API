@@ -4,15 +4,9 @@ const crypto = require('crypto');
 const apiResult = require('../modules/api-result');
 const config = require('../modules/load-config')();
 const dbConnector = require('../modules/db-connector')();
-const getMissingParams = require('../modules/get-missing-params');
 const randomRange = require('../modules/random-range');
 
-exports.post = (params, extensions) => new Promise((resolve, reject) => (async () => {
-	const missingParams = getMissingParams(params, ['screen_name', 'password']);
-	if (missingParams.length) {
-		return reject(apiResult(400, 'some required parameters are missing', {target_params: missingParams}));
-	}
-
+exports.post = (request, extensions) => new Promise((resolve, reject) => (async () => {
 	const screenName = params.screen_name;
 	const password = params.password;
 	let name = params.name;

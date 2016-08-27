@@ -5,7 +5,7 @@ module.exports = () => {
 		['get',  '/',                                 {}],
 
 		// Account
-		['post', '/account',                          {params: [], permissions:['account-special']}],
+		['post', '/account',                          {params: [{name: 'screen_name', type: "string"}, {name: 'password', type: 'string'}, {name: 'description', type: 'string', require: false}, {name: 'name', type: 'string', require: false}], permissions:['account-special']}],
 
 		// IceAuth
 		['post', '/ice-auth/request',                 {params: []}], // 認証リクエスト(リクエストキー取得)
@@ -13,7 +13,7 @@ module.exports = () => {
 		['post', '/ice-auth/authorize',               {params: []}],
 
 		// Applications
-		['post', '/applications',                     {params:[{name: "name", type: "string"}, {name: "description", type: "string"}, {name: "permissions", type: "array"}], permissions:['application-special']}],
+		['post', '/applications',                     {params:[{name: 'name', type: 'string'}, {name: 'description', type: 'string'}, {name: 'permissions', type: 'array'}], permissions:['application-special']}],
 		['get',  '/applications/:id',                 {params: [], permissions:['application']}],
 		['post', '/applications/:id/application-key', {params: [], permissions:['application-special']}],
 		['get',  '/applications/:id/application-key', {params: [], permissions:['application-special']}],
