@@ -2,7 +2,6 @@
 
 const apiResult = require('../modules/api-result');
 const dbConnector = require('../modules/db-connector')();
-const getMissingParams = require('../modules/get-missing-params');
 const type = require('../modules/type');
 
 exports.post = (request, extensions) => new Promise((resolve, reject) => (async () => {
