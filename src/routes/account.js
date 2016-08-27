@@ -52,6 +52,7 @@ exports.post = (params, extensions) => new Promise((resolve, reject) => (async (
 		result = (await dbManager.createAsync('users', {screen_name: screenName, name: name, description: description, password_hash: hash})).ops[0];
 	}
 	catch(err) {
+		console.log(err.stack);
 		return reject(apiResult(500, "faild to create account"));
 	}
 
