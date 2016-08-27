@@ -63,7 +63,7 @@ var addRoute = (route, middles) => {
 						if (route == undefined)
 							throw new Error('endpoint not found\ntarget: ' + method + ' ' + path);
 
-						const result = await require(dirPath)[m](request.body, extensions);
+						const result = await require(dirPath)[m](request, extensions);
 						response.success(result);
 					})().catch(err => {
 						if (type(err) !== 'Error')
