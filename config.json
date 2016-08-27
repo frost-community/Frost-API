@@ -1,0 +1,31 @@
+{
+  "api": {
+    "port": 8000,
+    "database": {
+      "host": "localhost",
+      "port": 27017,
+      "database": "frost",
+      "username": "frost-api",
+      "password": "frost-api"
+    },
+    "invalid_screen_names": [
+      "frost",
+      "help",
+      "home",
+      "mentions",
+      "login",
+      "logout",
+      "search",
+      "signin",
+      "signup",
+      "signout",
+      "welcome",
+      "static",
+      "application",
+      "developer"
+    ]
+  },
+  "web": {
+    "port": 8001
+  }
+}
