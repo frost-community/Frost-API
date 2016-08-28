@@ -11,14 +11,14 @@ module.exports = () => new Promise((resolve, reject) => (async () => {
 		// TODO
 		const doc = await dbManager.createAsync('authorizeRequests', {});
 
-		return authorizeRequestDoc(doc);
+		return authorizeRequestDoc(doc, dbManager);
 	})());
 
 	instance.find = () => new Promise((resolve, reject) => (async () => {
 		// TODO
 		const doc = await dbManager.findArrayAsync('authorizeRequests', {});
 
-		return authorizeRequestDoc(doc);
+		return authorizeRequestDoc(doc, dbManager);
 	})());
 
 	return instance;
