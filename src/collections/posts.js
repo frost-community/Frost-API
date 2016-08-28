@@ -9,16 +9,16 @@ module.exports = () => new Promise((resolve, reject) => (async () => {
 
 	instance.create = () => new Promise((resolve, reject) => (async () => {
 		// TODO
-		const doc = await dbManager.createAsync('posts', {});
+		const result = await dbManager.createAsync('posts', {});
 
-		return postDoc(doc, dbManager);
+		return postDoc(result.opt[0]._id, dbManager);
 	})());
 
 	instance.find = () => new Promise((resolve, reject) => (async () => {
 		// TODO
 		const doc = await dbManager.findArrayAsync('posts', {});
 
-		return postDoc(doc, dbManager);
+		return postDoc(doc._id, dbManager);
 	})());
 
 	return instance;

@@ -1,9 +1,9 @@
 'use strict';
 
-module.exports = (documentData, dbManager) => new Promise((resolve, reject) => (async () => {
+module.exports = (documentId, dbManager) => new Promise((resolve, reject) => (async () => {
 	const instance = {};
 
-	instance.documentData = documentData;
+	instance.documentId = documentId;
 	instance.dbManager = dbManager;
 
 	instance.generateAccessKey = () => new Promise((resolve, reject) => (async () => {
