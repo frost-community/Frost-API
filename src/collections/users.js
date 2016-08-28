@@ -9,14 +9,14 @@ module.exports = () => new Promise((resolve, reject) => (async () => {
 
 	instance.create = () => new Promise((resolve, reject) => (async () => {
 		// TODO
-		const doc = await dbManager.createAsync('user', {});
+		const doc = await dbManager.createAsync('users', {});
 
 		return userDoc(doc);
 	})());
 
 	instance.find = () => new Promise((resolve, reject) => (async () => {
 		// TODO
-		const doc = await dbManager.findArrayAsync('user', {});
+		const doc = await dbManager.findArrayAsync('users', {});
 
 		return userDoc(doc);
 	})());
