@@ -6,7 +6,13 @@ module.exports = (documentData, dbManager) => new Promise((resolve, reject) => (
 	instance.documentData = documentData;
 	instance.dbManager = dbManager;
 
-	// TODO: 各種操作用メソッドの追加
+	instance.generateAccessKey = () => new Promise((resolve, reject) => (async () => {
+		// TODO
+	})());
+
+	instance.getAccessKey = () => new Promise((resolve, reject) => (async () => {
+		// TODO
+	})());
 
 	return instance;
 })());
