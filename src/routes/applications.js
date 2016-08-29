@@ -4,7 +4,7 @@ const apiResult = require('../modules/api-result');
 const dbConnector = require('../modules/db-connector')();
 const type = require('../modules/type');
 
-exports.post = (request, extensions) => new Promise((resolve, reject) => (async () => {
+exports.post = async (request, extensions) => {
 	const userId = request.user._id;
 	const name = request.body.name;
 	const description = request.body.description;
@@ -13,7 +13,7 @@ exports.post = (request, extensions) => new Promise((resolve, reject) => (async 
 	const db = await dbConnector.connectApidbAsync();
 
 	if (await db.findArrayAsync('applications', {name: name}).length >= 1)
-		return reject(apiResult(400, 'already exists name'));
+		throw new Error(apiResult(400, 'already exists name'));
 
 	// TODO: analyze permissions
 
@@ -29,8 +29,8 @@ exports.post = (request, extensions) => new Promise((resolve, reject) => (async 
 	}
 	catch(err) {
 		console.log(err.stack);
-		return reject(apiResult(500, 'faild to create application'));
+		throw new Error(apiResult(500, 'faild to create application'));
 	}
 
-	return resolve(apiResult(200, null, {application: application}));
-})());
+	return apiResult(200, null, {application: application});
+};

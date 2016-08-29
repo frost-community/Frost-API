@@ -2,6 +2,6 @@
 
 const apiResult = require('../../modules/api-result');
 
-exports.post = (request, extensions) => new Promise((resolve, reject) => (async () => {
-	reject(apiResult(501, 'not implemented'));
-})());
+exports.post = async (request, extensions) => {
+	throw new Error(apiResult(501, 'not implemented'));
+};
