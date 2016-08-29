@@ -91,8 +91,8 @@ module.exports = () => {
 			}
 
 			const dbManager = await dbConnector.connectApidbAsync();
-			request.application = dbManager.findArrayAsync('applications', applicationId);
-			request.user = dbManager.findArrayAsync('users', userId);
+			request.application = dbManager.findArrayAsync('applications', {_id: applicationId});
+			request.user = dbManager.findArrayAsync('users', {_id: userId});
 
 			if (!applicationHelper.analyzePermissions(request.application.permissions)) {
 				response.status(500).send({error: {message: 'analyze permission error'}});
