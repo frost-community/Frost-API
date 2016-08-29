@@ -26,9 +26,12 @@ module.exports = () => {
 		});
 	});
 
-	instance.connectApidbAsync = (async () => {
-		return await instance.connectAsync(config.api.database.host , config.api.database.port, config.api.database.database, config.api.database.username, config.api.database.password);
-	});
+	instance.connectApidbAsync = async () => await instance.connectAsync(
+		config.api.database.host,
+		config.api.database.port,
+		config.api.database.database,
+		config.api.database.username,
+		config.api.database.password);
 
 	return instance;
 }
