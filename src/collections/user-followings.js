@@ -7,16 +7,15 @@ module.exports = async () => {
 	const instance = {};
 	const dbManager = await dbConnector.connectApidbAsync();
 
-	instance.create = async () => {
+	instance.createAsync = async () => {
 		// TODO
 		const result = await dbManager.createAsync('userFollowings', {});
 
 		return userFollowingDoc(result.ops[0]._id, dbManager);
 	};
 
-	instance.find = async () => {
-		// TODO
-		const doc = await dbManager.findArrayAsync('userFollowings', {});
+	instance.findAsync = async (query) => {
+		const doc = await dbManager.findArrayAsync('userFollowings', query);
 
 		return userFollowingDoc(doc._id, dbManager);
 	};
