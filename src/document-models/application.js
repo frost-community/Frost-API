@@ -1,22 +1,27 @@
 'use strict';
 
-module.exports = (documentId, dbManager) => new Promise((resolve, reject) => (async () => {
+module.exports = async (documentId, dbManager) => {
 	const instance = {};
 
 	instance.documentId = documentId;
 	instance.dbManager = dbManager;
 
-	instance.isHasPermission = () => new Promise((resolve, reject) => (async () => {
-		// TODO
-	})());
+	instance.isHasPermission = async (permissionName) => {
+		const app = await dbManager.findArrayAsync('applications', {_id: documentId})[0];
 
-	instance.generateApplicationKey = () => new Promise((resolve, reject) => (async () => {
-		// TODO
-	})());
+		if (app == undefined)
+			throw new Error('application not found');
 
-	instance.getApplicationKey = () => new Promise((resolve, reject) => (async () => {
+		return permissionName in app.permissions;
+	};
+
+	instance.generateApplicationKey = async () => {
 		// TODO
-	})());
+	};
+
+	instance.getApplicationKey = async () => {
+		// TODO
+	};
 
 	return instance;
-})());
+};

@@ -1,18 +1,18 @@
 'use strict';
 
-module.exports = (documentId, dbManager) => new Promise((resolve, reject) => (async () => {
+module.exports = async (documentId, dbManager) => {
 	const instance = {};
 
 	instance.documentId = documentId;
 	instance.dbManager = dbManager;
 
-	instance.generateAccessKey = () => new Promise((resolve, reject) => (async () => {
+	instance.generateAccessKey = async () => {
 		// TODO
-	})());
+	};
 
-	instance.getAccessKey = () => new Promise((resolve, reject) => (async () => {
+	instance.getAccessKey = async () => {
 		// TODO
-	})());
+	};
 
 	return instance;
-})());
+};

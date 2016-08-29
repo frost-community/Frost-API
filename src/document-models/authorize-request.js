@@ -1,22 +1,22 @@
 'use strict';
 
-module.exports = (documentId, dbManager) => new Promise((resolve, reject) => (async () => {
+module.exports = async (documentId, dbManager) => {
 	const instance = {};
 
 	instance.documentId = documentId;
 	instance.dbManager = dbManager;
 
-	instance.generatePinCode = () => new Promise((resolve, reject) => (async () => {
+	instance.generatePinCode = async () => {
 		// TODO
-	})());
+	};
 
-	instance.generateRequestKey = () => new Promise((resolve, reject) => (async () => {
+	instance.generateRequestKey = async () => {
 		// TODO
-	})());
+	};
 
-	instance.getRequestKey = () => new Promise((resolve, reject) => (async () => {
+	instance.getRequestKey = async () => {
 		// TODO
-	})());
+	};
 
 	return instance;
-})());
+};

@@ -1,6 +1,6 @@
 'use strict';
 
-module.exports = (documentId, dbManager) => new Promise((resolve, reject) => (async () => {
+module.exports = async (documentId, dbManager) => {
 	const instance = {};
 
 	instance.documentId = documentId;
@@ -9,4 +9,4 @@ module.exports = (documentId, dbManager) => new Promise((resolve, reject) => (as
 	// TODO: 各種操作用メソッドの追加
 
 	return instance;
-})());
+};
