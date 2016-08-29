@@ -5,6 +5,9 @@ const express = require('express');
 const routes = require('./routes');
 const loadConfig = require('./modules/load-config');
 const type = require('./modules/type');
+const dbConnector = require('./modules/db-connector')();
+const applicationHelper = require('./modules/application-helper');
+const applicationAccessHelper = require('./modules/application-access-helper');
 
 module.exports = () => {
 	console.log('--------------------');
@@ -51,7 +54,7 @@ module.exports = () => {
 		next();
 	};
 
-	const checkPermission = (request, response, next) => {
+	const checkPermission = async (request, response, next) => {
 		var extensions = router.findRoute(request.method, request.route.path).extensions;
 
 		if ('permissions' in extensions && extensions.permissions.length !== 0) {
@@ -68,13 +71,40 @@ module.exports = () => {
 				return;
 			}
 
-			// TODO: varify keys
+			if (!applicationHelper.verifyApplicationKey(applicationKey)) {
+				response.status(400).send({error: {message: 'X-Application-Key header is invalid'}});
+				return;
+			}
 
-			// TODO: insert user,application in request object
-			request.user = {};
-			request.application = {};
+			if (!applicationAccessHelper.verifyAccessKey(accessKey)) {
+				response.status(400).send({error: {message: 'X-Access-Key header is invalid'}});
+				return;
+			}
 
-			// TODO: check permissions
+			const applicationId = applicationHelper.keyToElements(applicationKey).applicationId;
+			const userId = applicationAccessHelper.keyToElements(accessKey).userId;
+
+			if (!dbManager.findArrayAsync('applicationAccesses', {application_id: applicationId, user_id: userId}))
+			{
+				response.status(400).send({error: {message: 'X-Access-Key header is invalid'}});
+				return;
+			}
+
+			const dbManager = await dbConnector.connectApidbAsync();
+			request.application = dbManager.findArrayAsync('applications', applicationId);
+			request.user = dbManager.findArrayAsync('users', userId);
+
+			if (!applicationHelper.analyzePermissions(request.application.permissions)) {
+				response.status(500).send({error: {message: 'analyze permission error'}});
+				return;
+			}
+
+			for (var i = 0; i < request.application.permissions.length; i++) {
+				if (!request.application.isHasPermission(request.application.permissions[i])) {
+					response.status(403).send({error: {message: 'you don\'t have any permissions'}});
+					return;
+				}
+			}
 		}
 
 		next();
