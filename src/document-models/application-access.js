@@ -1,5 +1,6 @@
 'use strict';
 
+const applicationAccessHelper = require('../modules/application-access-helper');
 const randomRange = require('../modules/random-range');
 
 module.exports = async (documentId, dbManager) => {

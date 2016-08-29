@@ -1,5 +1,6 @@
 'use strict';
 
+const authorizeRequestHelper = require('../modules/authorize-request-helper');
 const randomRange = require('../modules/random-range');
 
 module.exports = async (documentId, dbManager) => {
