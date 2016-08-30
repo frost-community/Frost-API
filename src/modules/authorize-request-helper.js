@@ -2,7 +2,7 @@
 
 const crypto = require('crypto');
 const config = require('./load-config')();
-const dbConnector = require('../modules/db-connector')();
+const dbConnector = require('./db-connector')();
 
 const buildRequestKeyHash = (authorizeRequestId, applicationId, keyCode) => {
 	const sha256 = crypto.createHash('sha256');
@@ -20,17 +20,28 @@ exports.buildRequestKey = buildRequestKey;
 const keyToElements = (key) => {
 	const reg = /([^-]+)-([^-]{64}).([^-]+)/.exec(key);
 
+	if (reg == undefined)
+		throw new Error('request key is invalid format');
+
 	return {authorizeRequestId: reg[1], hash: reg[2], keyCode: reg[3]};
 };
 exports.keyToElements = keyToElements;
 
 exports.verifyRequestKeyAsync = async (key) => {
-	const elements = keyToElements(key);
+	let elements;
+
+	try {
+		elements = keyToElements(key);
+	}
+	catch (err) {
+		return false;
+	}
+
 	const dbManager = await dbConnector.connectApidbAsync();
 	const doc = await dbManager.findArrayAsync('authorizeRequests', {_id: elements.authorizeRequestId})[0];
 
 	if (doc == undefined)
-		throw new Error('authorize request not found');
+		return false;
 
 	const correctKeyHash = buildRequestKeyHash(elements.authorizeRequestId, doc.application_id, elements.keyCode);
 	const isAvailabilityPeriod = true; // TODO: 絶対値(現在時刻 - docの生成時刻) < config.api.request_key_expire_sec;

@@ -2,6 +2,7 @@
 
 const crypto = require('crypto');
 const config = require('./load-config')();
+const dbConnector = require('./db-connector')();
 
 const buildAccessKeyHash = (applicationId, userId, keyCode) => {
 	const sha256 = crypto.createHash('sha256');
@@ -19,17 +20,28 @@ exports.buildAccessKey = buildAccessKey;
 const keyToElements = (key) => {
 	const reg = /([^-]+)-([^-]{64}).([^-]+)/.exec(key);
 
+	if (reg == undefined)
+		throw new Error('access key is invalid format');
+
 	return {userId: reg[1], hash: reg[2], keyCode: reg[3]};
 };
 exports.keyToElements = keyToElements;
 
-exports.verifyAccessKey = (key) => {
-	const elements = keyToElements(key);
+exports.verifyAccessKeyAsync = async (key) => {
+	let elements;
+
+	try {
+		elements = keyToElements(key);
+	}
+	catch (err) {
+		return false;
+	}
+
 	const dbManager = await dbConnector.connectApidbAsync();
 	const doc = await dbManager.findArrayAsync('applicationAccesses', {_id: elements.userId, key_code: elements.keyCode})[0];
 
 	if (doc == undefined)
-		throw new Error('application access not found');
+		return false;
 
 	const correctKeyHash = buildAccessKeyHash(doc.application_id, elements.userId, elements.keyCode);
 	const isPassed = elements.hash === correctKeyHash && elements.keyCode === doc.key_code;

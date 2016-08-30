@@ -2,6 +2,7 @@
 
 const crypto = require('crypto');
 const config = require('./load-config')();
+const dbConnector = require('./db-connector')();
 
 exports.analyzePermissions = () => {
 	// TODO
@@ -22,19 +23,31 @@ exports.buildApplicationKey = (applicationId, creatorId, keyCode) => {
 };
 
 const keyToElements = (key) => {
+	console.log("2-1");
 	const reg = /([^-]+)-([^-]{64}).([^-]+)/.exec(key);
+
+	if (reg == undefined)
+		throw new Error('application key is invalid format');
 
 	return {applicationId: reg[1], hash: reg[2], keyCode: reg[3]};
 };
 exports.keyToElements = keyToElements;
 
-exports.verifyApplicationKey = (key) => {
-	const elements = keyToElements(key);
+exports.verifyApplicationKeyAsync = async (key) => {
+	let elements;
+
+	try {
+		elements = keyToElements(key);
+	}
+	catch (err) {
+		return false;
+	}
+
 	const dbManager = await dbConnector.connectApidbAsync();
 	const doc = await dbManager.findArrayAsync('applications', {_id: elements.applicationId})[0];
 
 	if (doc == undefined)
-		throw new Error('application not found');
+		return false;
 
 	const correctKeyHash = buildApplicationKeyHash(elements.applicationId, doc.creator_id, elements.keyCode);
 	const isPassed = elements.hash === correctKeyHash && elements.keyCode === doc.key_code;

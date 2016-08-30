@@ -61,22 +61,22 @@ module.exports = () => {
 			const applicationKey = request.get('X-Application-Key');
 			const accessKey = request.get('X-Access-Key');
 
-			if (applicationKey === undefined) {
+			if (applicationKey == undefined) {
 				response.status(400).send({error: {message: 'X-Application-Key header is empty'}});
 				return;
 			}
 
-			if (accessKey === undefined) {
+			if (accessKey == undefined) {
 				response.status(400).send({error: {message: 'X-Access-Key header is empty'}});
 				return;
 			}
 
-			if (!applicationHelper.verifyApplicationKey(applicationKey)) {
+			if (!(await applicationHelper.verifyApplicationKeyAsync(applicationKey))) {
 				response.status(400).send({error: {message: 'X-Application-Key header is invalid'}});
 				return;
 			}
 
-			if (!applicationAccessHelper.verifyAccessKey(accessKey)) {
+			if (!(await applicationAccessHelper.verifyAccessKeyAsync(accessKey))) {
 				response.status(400).send({error: {message: 'X-Access-Key header is invalid'}});
 				return;
 			}
