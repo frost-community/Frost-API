@@ -94,11 +94,6 @@ module.exports = () => {
 			request.application = dbManager.findArrayAsync('applications', {_id: applicationId});
 			request.user = dbManager.findArrayAsync('users', {_id: userId});
 
-			if (!applicationHelper.analyzePermissions(request.application.permissions)) {
-				response.status(500).send({error: {message: 'analyze permission error'}});
-				return;
-			}
-
 			for (var i = 0; i < request.application.permissions.length; i++) {
 				if (!request.application.isHasPermission(request.application.permissions[i])) {
 					response.status(403).send({error: {message: 'you don\'t have any permissions'}});
