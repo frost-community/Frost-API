@@ -21,14 +21,23 @@ exports.buildApplicationKey = (applicationId, creatorId, keyCode) => {
 	return `${applicationId}-${buildApplicationKeyHash(applicationId, creatorId, keyCode)}.${keyCode}`;
 };
 
-exports.keyToElements = (key) => {
+const keyToElements = (key) => {
 	const reg = /([^-]+)-([^-]{64}).([^-]+)/.exec(key);
 
 	return {applicationId: reg[1], hash: reg[2], keyCode: reg[3]};
 };
+exports.keyToElements = keyToElements;
 
 exports.verifyApplicationKey = (key) => {
-	// TODO
+	const elements = keyToElements(key);
+	const dbManager = await dbConnector.connectApidbAsync();
+	const doc = await dbManager.findArrayAsync('applications', {_id: elements.applicationId})[0];
 
-	return true;
+	if (doc == undefined)
+		throw new Error('application not found');
+
+	const correctKeyHash = buildApplicationKeyHash(elements.applicationId, doc.creator_id, elements.keyCode);
+	const isPassed = elements.hash === correctKeyHash && elements.keyCode === doc.key_code;
+
+	return isPassed;
 };

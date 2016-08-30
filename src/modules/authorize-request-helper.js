@@ -2,6 +2,7 @@
 
 const crypto = require('crypto');
 const config = require('./load-config')();
+const dbConnector = require('../modules/db-connector')();
 
 const buildRequestKeyHash = (authorizeRequestId, applicationId, keyCode) => {
 	const sha256 = crypto.createHash('sha256');
@@ -11,18 +12,29 @@ const buildRequestKeyHash = (authorizeRequestId, applicationId, keyCode) => {
 };
 exports.buildRequestKeyHash = buildRequestKeyHash;
 
-exports.buildRequestKey = (authorizeRequestId, applicationId, keyCode) => {
+const buildRequestKey = (authorizeRequestId, applicationId, keyCode) => {
 	return `${authorizeRequestId}-${buildRequestKeyHash(authorizeRequestId, applicationId, keyCode)}.${keyCode}`;
 };
+exports.buildRequestKey = buildRequestKey;
 
-exports.keyToElements = (key) => {
+const keyToElements = (key) => {
 	const reg = /([^-]+)-([^-]{64}).([^-]+)/.exec(key);
 
 	return {authorizeRequestId: reg[1], hash: reg[2], keyCode: reg[3]};
 };
+exports.keyToElements = keyToElements;
 
-exports.verifyRequestKey = (key) => {
-	// TODO
+exports.verifyRequestKeyAsync = async (key) => {
+	const elements = keyToElements(key);
+	const dbManager = await dbConnector.connectApidbAsync();
+	const doc = await dbManager.findArrayAsync('authorizeRequests', {_id: elements.authorizeRequestId})[0];
 
-	return true;
+	if (doc == undefined)
+		throw new Error('authorize request not found');
+
+	const correctKeyHash = buildRequestKeyHash(elements.authorizeRequestId, doc.application_id, elements.keyCode);
+	const isAvailabilityPeriod = true; // TODO: 絶対値(現在時刻 - docの生成時刻) < config.api.request_key_expire_sec;
+	const isPassed = isAvailabilityPeriod && elements.hash === correctKeyHash && elements.keyCode === doc.key_code;
+
+	return isPassed;
 };
