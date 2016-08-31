@@ -23,7 +23,6 @@ exports.buildApplicationKey = (applicationId, creatorId, keyCode) => {
 };
 
 const keyToElements = (key) => {
-	console.log("2-1");
 	const reg = /([^-]+)-([^-]{64}).([^-]+)/.exec(key);
 
 	if (reg == undefined)

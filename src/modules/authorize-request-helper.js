@@ -3,6 +3,7 @@
 const crypto = require('crypto');
 const config = require('./load-config')();
 const dbConnector = require('./db-connector')();
+require('./object-id-extension')();
 
 const buildRequestKeyHash = (authorizeRequestId, applicationId, keyCode) => {
 	const sha256 = crypto.createHash('sha256');
@@ -44,7 +45,8 @@ exports.verifyRequestKeyAsync = async (key) => {
 		return false;
 
 	const correctKeyHash = buildRequestKeyHash(elements.authorizeRequestId, doc.application_id, elements.keyCode);
-	const isAvailabilityPeriod = true; // TODO: 絶対値(現在時刻 - docの生成時刻) < config.api.request_key_expire_sec;
+	const createdAt = doc._id.getUnixtime();
+	const isAvailabilityPeriod = Math.abs(Date.now() - createdAt) < config.api.request_key_expire_sec;
 	const isPassed = isAvailabilityPeriod && elements.hash === correctKeyHash && elements.keyCode === doc.key_code;
 
 	return isPassed;
