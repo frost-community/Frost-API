@@ -7,7 +7,7 @@ require('./object-id-extension')();
 
 const buildRequestKeyHash = (authorizeRequestId, applicationId, keyCode) => {
 	const sha256 = crypto.createHash('sha256');
-	sha256.update(`${config.api.secret_token.authorize_request}/${applicationId}/${authorizeRequestId}/${keyCode}`);
+	sha256.update(`${config.api.secret_token.authorize_request}/${applicationId.toString()}/${authorizeRequestId.toString()}/${keyCode}`);
 
 	return sha256.digest('hex');
 };
@@ -24,7 +24,7 @@ const keyToElements = (key) => {
 	if (reg == undefined)
 		throw new Error('request key is invalid format');
 
-	return {authorizeRequestId: reg[1], hash: reg[2], keyCode: reg[3]};
+	return {authorizeRequestId: new ObjectId(reg[1]), hash: reg[2], keyCode: reg[3]};
 };
 exports.keyToElements = keyToElements;
 

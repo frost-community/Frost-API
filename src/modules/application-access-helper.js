@@ -6,7 +6,7 @@ const dbConnector = require('./db-connector')();
 
 const buildAccessKeyHash = (applicationId, userId, keyCode) => {
 	const sha256 = crypto.createHash('sha256');
-	sha256.update(`${config.api.secret_token.application_access}/${applicationId}/${userId}/${keyCode}`);
+	sha256.update(`${config.api.secret_token.application_access}/${applicationId.toString()}/${userId.toString()}/${keyCode}`);
 
 	return sha256.digest('hex');
 };
@@ -23,7 +23,7 @@ const keyToElements = (key) => {
 	if (reg == undefined)
 		throw new Error('access key is invalid format');
 
-	return {userId: reg[1], hash: reg[2], keyCode: reg[3]};
+	return {userId: new ObjectId(reg[1]), hash: reg[2], keyCode: reg[3]};
 };
 exports.keyToElements = keyToElements;
 

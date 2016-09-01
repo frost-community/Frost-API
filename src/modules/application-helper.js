@@ -12,7 +12,7 @@ exports.analyzePermissions = () => {
 
 const buildApplicationKeyHash = (applicationId, creatorId, keyCode) => {
 	const sha256 = crypto.createHash('sha256');
-	sha256.update(`${config.api.secret_token.application}/${creatorId}/${applicationId}/${keyCode}`);
+	sha256.update(`${config.api.secret_token.application}/${creatorId.toString()}/${applicationId.toString()}/${keyCode}`);
 
 	return sha256.digest('hex');
 };
@@ -28,7 +28,7 @@ const keyToElements = (key) => {
 	if (reg == undefined)
 		throw new Error('application key is invalid format');
 
-	return {applicationId: reg[1], hash: reg[2], keyCode: reg[3]};
+	return {applicationId: new ObjectId(reg[1]), hash: reg[2], keyCode: reg[3]};
 };
 exports.keyToElements = keyToElements;
 
