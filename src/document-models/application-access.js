@@ -15,8 +15,8 @@ module.exports = async (documentId, dbManager) => {
 			tryCount++;
 			keyCode = randomRange(1, 99999);
 			const isExist = dbManager.findArrayAsync('applicationAccesses', {user_id: access.user_id, key_code: keyCode}).length === 0;
-
-		} while(isExist && tryCount < 4);
+		}
+		while(isExist && tryCount < 4);
 
 		if (isExist && tryCount >= 4)
 			throw new Error('the number of trials for key_code generation has reached its upper limit');
