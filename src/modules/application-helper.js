@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const ObjectId = require('mongodb').ObjectId;
 const config = require('./load-config')();
 const dbConnector = require('./db-connector')();
 
@@ -43,13 +44,13 @@ exports.verifyApplicationKeyAsync = async (key) => {
 	}
 
 	const dbManager = await dbConnector.connectApidbAsync();
-	const doc = await dbManager.findArrayAsync('applications', {_id: elements.applicationId})[0];
+	const doc = await dbManager.findAsync('applications', {_id: elements.applicationId});
 
 	if (doc == undefined)
 		return false;
 
 	const correctKeyHash = buildApplicationKeyHash(elements.applicationId, doc.creator_id, elements.keyCode);
-	const isPassed = elements.hash === correctKeyHash && elements.keyCode === doc.key_code;
+	const isPassed = elements.hash === correctKeyHash && parseInt(elements.keyCode) === doc.key_code;
 
 	return isPassed;
 };

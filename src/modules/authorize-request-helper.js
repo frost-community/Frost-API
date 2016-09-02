@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const ObjectId = require('mongodb').ObjectId;
 const config = require('./load-config')();
 const dbConnector = require('./db-connector')();
 require('./object-id-extension')();

@@ -12,14 +12,24 @@ module.exports = (db) => {
 	instance.createAsync = async (collectionName, data) => await instance.db.collection(collectionName).insert(data);
 
 	/**
-	 * ドキュメントを検索します
+	 * ドキュメントを検索して項目を取得します
 	 *
 	 * @param  {string} collectionName
 	 * @param  {Object} query
-	 * @param  {Object} projection
+	 * @param  {Object} option
+	 * @param  {Object|null} document
+	 */
+	instance.findAsync = async (collectionName, query, option) => (await instance.db.collection(collectionName).findOne(query, option));
+
+	/**
+	 * ドキュメントを検索して複数の項目を取得します
+	 *
+	 * @param  {string} collectionName
+	 * @param  {Object} query
+	 * @param  {Object} option
 	 * @param  {Object[]|null} documents
 	 */
-	instance.findArrayAsync = async (collectionName, query, projection) => (await instance.db.collection(collectionName).find(query, projection)).toArray();
+	instance.findArrayAsync = async (collectionName, query, option) => (await instance.db.collection(collectionName).findMany(query, option)).toArray();
 
 	/**
 	 * ドキュメントを更新します
