@@ -39,13 +39,13 @@ exports.verifyAccessKeyAsync = async (key) => {
 	}
 
 	const dbManager = await dbConnector.connectApidbAsync();
-	const doc = await dbManager.findArrayAsync('applicationAccesses', {_id: elements.userId, key_code: elements.keyCode})[0];
+	const doc = await dbManager.findAsync('applicationAccesses', {user_id: elements.userId, key_code: parseInt(elements.keyCode)});
 
 	if (doc == undefined)
 		return false;
 
 	const correctKeyHash = buildAccessKeyHash(doc.application_id, elements.userId, elements.keyCode);
-	const isPassed = elements.hash === correctKeyHash && elements.keyCode === doc.key_code;
+	const isPassed = elements.hash === correctKeyHash && parseInt(elements.keyCode) === doc.key_code;
 
 	return isPassed;
 };
