@@ -20,12 +20,12 @@ const buildRequestKey = (authorizeRequestId, applicationId, keyCode) => {
 exports.buildRequestKey = buildRequestKey;
 
 const keyToElements = (key) => {
-	const reg = /([^-]+)-([^-]{64}).([^-]+)/.exec(key);
+	const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
 
 	if (reg == undefined)
 		throw new Error('request key is invalid format');
 
-	return {authorizeRequestId: new ObjectId(reg[1]), hash: reg[2], keyCode: reg[3]};
+	return {authorizeRequestId: new ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
 };
 exports.keyToElements = keyToElements;
 
@@ -40,7 +40,7 @@ exports.verifyRequestKeyAsync = async (key) => {
 	}
 
 	const dbManager = await dbConnector.connectApidbAsync();
-	const doc = await dbManager.findArrayAsync('authorizeRequests', {_id: elements.authorizeRequestId})[0];
+	const doc = await dbManager.findAsync('authorizeRequests', {_id: elements.authorizeRequestId});
 
 	if (doc == undefined)
 		return false;
