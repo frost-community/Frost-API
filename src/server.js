@@ -84,12 +84,6 @@ module.exports = () => {
 			const applicationId = applicationHelper.keyToElements(applicationKey).applicationId;
 			const userId = applicationAccessHelper.keyToElements(accessKey).userId;
 
-			if (!dbManager.findArrayAsync('applicationAccesses', {application_id: applicationId, user_id: userId}))
-			{
-				response.status(400).send({error: {message: 'X-Access-Key header is invalid'}});
-				return;
-			}
-
 			const dbManager = await dbConnector.connectApidbAsync();
 			request.application = dbManager.findArrayAsync('applications', {_id: applicationId});
 			request.user = dbManager.findArrayAsync('users', {_id: userId});
