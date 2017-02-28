@@ -13,8 +13,8 @@ let _app;
  * @param  {any} app 対象のサーバアプリケーション
  */
 var init = app => {
-	if (app === null)
-		throw new Error('routes is unknown type');
+	if (app == null)
+		throw new Error('app is empty');
 
 	_app = app;
 
@@ -29,10 +29,10 @@ module.exports = init;
  * @param  {Function[]} middles
  */
 var addRoute = (route, middles) => {
-	if (!Array.isArray(route) || route === undefined)
-		throw new Error('routes is unknown type');
+	if (!Array.isArray(route) || route == null)
+		throw new Error('route is invalid type');
 
-	if (middles === undefined)
+	if (middles == null)
 		middles = [];
 
 	var method = route[0];
@@ -94,8 +94,8 @@ exports.addRoute = addRoute;
  * @param  {Function[]} middles
  */
 var addRoutes = (routes, middles) => {
-	if (!Array.isArray(routes) || routes === undefined)
-		throw new Error('routes is unknown type');
+	if (!Array.isArray(routes) || routes == null)
+		throw new Error('routes is invalid type');
 
 	routes.forEach(route => addRoute(route, middles));
 };
