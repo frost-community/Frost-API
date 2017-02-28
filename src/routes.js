@@ -2,35 +2,98 @@
 
 module.exports = () => {
 	var routes = [
-		['get',  '/',                                 {}],
+		['get',  '/', {}],
 
-		// Account
-		['post', '/account',                          {params: [{name: 'screen_name', type: "string"}, {name: 'password', type: 'string'}, {name: 'description', type: 'string', require: false}, {name: 'name', type: 'string', require: false}], permissions:['account-special']}],
+		// == Account ==
 
-		// IceAuth
-		['post', '/ice-auth/request',                 {params: []}], // 認証リクエスト(リクエストキー取得)
-		['get',  '/ice-auth/pin-code',                {params: [], permissions:['ice-auth-host']}], // リクエストキーからPINコード取得(認証ホスト専用)
-		['post', '/ice-auth/authorize',               {params: []}],
+		// アカウントを作成する
+		['post', '/account', {
+			params: [
+				{name: 'password', type: 'string'},
+				{name: 'description', type: 'string', require: false},
+				{name: 'name', type: 'string', require: false}
+			], permissions:['account-special']}],
 
-		// Applications
-		['post', '/applications',                     {params:[{name: 'name', type: 'string'}, {name: 'description', type: 'string'}, {name: 'permissions', type: 'array'}], permissions:['application-special']}],
-		['get',  '/applications/:id',                 {params: [], permissions:['application']}],
-		['post', '/applications/:id/application-key', {params: [], permissions:['application-special']}],
-		['get',  '/applications/:id/application-key', {params: [], permissions:['application-special']}],
+		// == IceAuth ==
 
-		// Users
-		['get',  '/users/:id',                        {permissions:['user-read']}],
-		['get',  '/users/:id/timeline',               {params: [], permissions:['user-read']}],
-		['get',  '/users/:id/followings',             {params: [], permissions:['user-read']}],
-		['get',  '/users/:id/followers',              {params: [], permissions:['user-read']}],
-		['post', '/users/:id/follow',                 {permissions:['user-write']}],
-		['del',  '/users/:id/follow',                 {permissions:['user-write']}],
+		// 認証リクエスト(リクエストキー取得)
+		['post', '/ice-auth/request', {
+			params: []}],
 
-		// Posts
-		['post', '/posts/status',                      {params: [], permissions:['post-write']}], // ステータスポストを作成する
-		['post', '/posts/article',                     {params: [], permissions:['post-write']}], // 記事を作成する
-		['get',  '/posts/timeline',                    {params: [], permissions:['post-read']}],
-		['get',  '/posts/{id}',                        {params: [], permissions:['post-read']}],
+		// リクエストキーからPINコード取得(認証ホスト専用)
+		['get',  '/ice-auth/pin-code', {
+			params: [], permissions:['ice-auth-host']}],
+
+		// 認証を試行する
+		['post', '/ice-auth/authorize', {
+			params: []}],
+
+		// == Applications ==
+
+		//アプリケーションを作成する
+		['post', '/applications', {
+			params:[
+				{name: 'name', type: 'string'},
+				{name: 'description', type: 'string'},
+				{name: 'permissions', type: 'array'}
+			], permissions:['application-special']}],
+
+		// idを指定してアプリケーション情報を取得する
+		['get',  '/applications/:id', {
+			params: [], permissions:['application']}],
+
+		// アプリケーションキーを生成する
+		['post', '/applications/:id/application-key', {
+			params: [], permissions:['application-special']}],
+
+		// idを指定してアプリケーションキーを取得する
+		['get',  '/applications/:id/application-key', {
+			params: [], permissions:['application-special']}],
+
+		// == Users ==
+
+		// idを指定してユーザー情報を取得する
+		['get',  '/users/:id', {
+			permissions:['user-read']}],
+
+		// 指定したユーザーのタイムラインを取得
+		['get',  '/users/:id/timeline', {
+			params: [], permissions:['user-read']}],
+
+		// フォローの一覧を取得
+		['get',  '/users/:id/followings', {
+			params: [], permissions:['user-read']}],
+
+		// フォロワーの一覧を取得
+		['get',  '/users/:id/followers', {
+			params: [], permissions:['user-read']}],
+
+		// 指定したユーザーをフォローする
+		['post', '/users/:id/follow', {
+			permissions:['user-write']}],
+
+		// 指定したユーザーへのフォローを解除する
+		['del',  '/users/:id/follow', {
+			permissions:['user-write']}],
+
+		// == Posts ==
+
+		// ステータスポストを作成する
+		['post', '/posts/status', {
+			params: [], permissions:['post-write']}],
+
+		// 記事を作成する
+		['post', '/posts/article', {
+			params: [], permissions:['post-write']}],
+
+		// ホームタイムラインを取得
+		['get',  '/posts/timeline', {
+			params: [], permissions:['post-read']}],
+
+		// idを指定してポストを取得
+		['get',  '/posts/{id}', {
+			params: [], permissions:['post-read']}],
+
 	];
 
 	return routes;
