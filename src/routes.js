@@ -30,7 +30,7 @@ module.exports = () => {
 
 		// == Applications ==
 
-		//アプリケーションを作成する
+		// アプリケーションを作成する
 		['post', '/applications', {
 			params:[
 				{name: 'name', type: 'string'},
