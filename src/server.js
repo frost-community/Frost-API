@@ -32,7 +32,7 @@ module.exports = () => {
 
 				const paramType = param.type;
 				const paramName = param.name;
-				const isRequire = param.require == null || param.require !== false; // requireにtrueが設定されている場合は必須項目になる。デフォルトでtrue
+				const isRequire = param.require != null ? param.require === true : true; // requireにtrueが設定されている場合は必須項目になる。デフォルトでtrue
 
 				if (isRequire) {
 					if (request.body[paramName] == null) {

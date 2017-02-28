@@ -6,10 +6,13 @@ const randomRange = require('../modules/random-range');
 module.exports = async (documentId, dbManager) => {
 	const instance = {};
 
+	instance.documentId = documentId;
+	instance.dbManager = dbManager;
+
 	instance.isHasPermission = async (permissionName) => {
 		const app = await dbManager.findArrayAsync('applications', {_id: documentId})[0];
 
-		if (app == undefined)
+		if (app == null)
 			throw new Error('application not found');
 
 		return permissionName in app.permissions;
@@ -26,7 +29,7 @@ module.exports = async (documentId, dbManager) => {
 	instance.getApplicationKey = async () => {
 		const app = await dbManager.findArrayAsync('applications', {_id: documentId})[0];
 
-		if (app == undefined)
+		if (app == null)
 			throw new Error('application not found');
 
 		return applicationHelper.buildApplicationKey(app._id, app.creator_id, app.key_code);

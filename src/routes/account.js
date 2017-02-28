@@ -12,10 +12,10 @@ exports.post = async (request, extensions) => {
 	let name = params.name;
 	let description = params.description;
 
-	if (name == undefined || name === '')
+	if (name == null || name === '')
 		name = 'froster';
 
-	if (description == undefined)
+	if (description == null)
 		description = '';
 
 	const salt = randomRange(1, 99999);
@@ -29,7 +29,7 @@ exports.post = async (request, extensions) => {
 	if (!/^[a-z0-9_]{4,15}$/.test(screenName) || /^(.)\1{3,}$/.test(screenName))
 		throw apiResult(400, "screen_name is invalid format");
 
-	for (var invalidScreenName in config.api.invalid_screen_names) {
+	for (var invalidScreenName of config.api.invalid_screen_names) {
 		if (screenName === invalidScreenName)
 			throw apiResult(400, "screen_name is invalid");
 	}

@@ -22,7 +22,7 @@ exports.buildRequestKey = buildRequestKey;
 const keyToElements = (key) => {
 	const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
 
-	if (reg == undefined)
+	if (reg == null)
 		throw new Error('request key is invalid format');
 
 	return {authorizeRequestId: new ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
@@ -42,7 +42,7 @@ exports.verifyRequestKeyAsync = async (key) => {
 	const dbManager = await dbConnector.connectApidbAsync();
 	const doc = await dbManager.findAsync('authorizeRequests', {_id: elements.authorizeRequestId});
 
-	if (doc == undefined)
+	if (doc == null)
 		return false;
 
 	const correctKeyHash = buildRequestKeyHash(elements.authorizeRequestId, doc.application_id, elements.keyCode);

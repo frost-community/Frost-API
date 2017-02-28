@@ -6,6 +6,9 @@ const randomRange = require('../modules/random-range');
 module.exports = async (documentId, dbManager) => {
 	const instance = {};
 
+	instance.documentId = documentId;
+	instance.dbManager = dbManager;
+
 	instance.generateAccessKey = async () => {
 
 		const access = dbManager.findArrayAsync('applicationAccesses', {_id: documentId})[0];
@@ -29,7 +32,7 @@ module.exports = async (documentId, dbManager) => {
 	instance.getAccessKey = async () => {
 		const access = await dbManager.findArrayAsync('applicationAccesses', {_id: documentId})[0];
 
-		if (access == undefined)
+		if (access == null)
 			throw new Error('application-access not found');
 
 		return applicationAccessHelper.buildAccessKey(access.application_id, access.user_id, access.key_code);

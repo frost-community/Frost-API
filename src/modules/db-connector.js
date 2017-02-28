@@ -15,7 +15,7 @@ module.exports = () => {
 	instance.connectAsync = (host, port, dbname, username, password) => new Promise((resolve, reject) => {
 		let authenticate = "";
 
-		if (username != undefined && password != undefined)
+		if (username != null && password != null)
 			authenticate = `${username}:${password}@`;
 
 		mongodb.MongoClient.connect(`mongodb://${authenticate}${host}:${port}/${dbname}`, (err, db) => {

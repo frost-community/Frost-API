@@ -26,7 +26,7 @@ exports.buildApplicationKey = (applicationId, creatorId, keyCode) => {
 const keyToElements = (key) => {
 	const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
 
-	if (reg == undefined)
+	if (reg == null)
 		throw new Error('application key is invalid format');
 
 	return {applicationId: new ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
@@ -46,7 +46,7 @@ exports.verifyApplicationKeyAsync = async (key) => {
 	const dbManager = await dbConnector.connectApidbAsync();
 	const doc = await dbManager.findAsync('applications', {_id: elements.applicationId, key_code: elements.keyCode});
 
-	if (doc == undefined)
+	if (doc == null)
 		return false;
 
 	const correctKeyHash = buildApplicationKeyHash(elements.applicationId, doc.creator_id, elements.keyCode);

@@ -41,35 +41,32 @@ var addRoute = (route, middles) => {
 
 	method = method.replace(/^del$/, 'delete');
 
-	require('methods').forEach(m => {
+	for (var m of require('methods')) {
 		if (method.toLowerCase() === m) {
-			middles.forEach(middle => {
+			for (var middle of middles)
 				_app[m](path, middle);
-			});
 
 			_app[m](path, (request, response) => {
 				console.log(path);
 				resHelper(response);
 				var dirPath = '../routes';
 
-				path.substring(1).split(/\//).forEach((seg, i) => {
+				for (var seg of path.substring(1).split(/\//))
 					dirPath += '/' + seg.replace(/:/, '');
-				});
 
 				const route = require(dirPath)[m];
 
 				try {
 					(async () => {
-						if (route == undefined)
-							throw new Error('endpoint not found\ntarget: ' + method + ' ' + path);
+						if (route == null)
+							throw new Error(`endpoint not found\ntarget: ${method} ${path}`);
 
 						const result = await require(dirPath)[m](request, extensions);
 						response.success(result);
 					})().catch(err => {
 						if (type(err) !== 'Error')
 							response.error(err);
-						else
-						{
+						else {
 							console.log(`Internal Error: ${err.stack}`);
 							response.error(apiResult(500, 'internal error', {details: err.stack}));
 						}
@@ -83,7 +80,7 @@ var addRoute = (route, middles) => {
 
 			_routes.push({method: m.toUpperCase(), path: path, extensions: extensions});
 		}
-	});
+	}
 }
 exports.addRoute = addRoute;
 
@@ -97,7 +94,8 @@ var addRoutes = (routes, middles) => {
 	if (!Array.isArray(routes) || routes == null)
 		throw new Error('routes is invalid type');
 
-	routes.forEach(route => addRoute(route, middles));
+	for (var route of routes)
+		addRoute(route, middles);
 };
 exports.addRoutes = addRoutes;
 
@@ -109,16 +107,10 @@ exports.addRoutes = addRoutes;
  * @return {Object} ルート情報
  */
 var findRoute = (method, path) => {
-	var result;
-
-	_routes.some((route) => {
+	for (var route of _routes)
 		if (method === route.method && path === route.path)
-		{
-			result = route;
-			return true;
-		}
-	});
+			return route;
 
-	return result;
+	return null;
 };
 exports.findRoute = findRoute;

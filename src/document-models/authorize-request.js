@@ -30,7 +30,7 @@ module.exports = async (documentId, dbManager) => {
 	instance.getRequestKey = async () => {
 		const request = await dbManager.findArrayAsync('authorizeRequests', {_id: documentId})[0];
 
-		if (request == undefined)
+		if (request == null)
 			throw new Error('authorize-request not found');
 
 		return authorizeRequestHelper.buildRequestKey(request._id, request.application_id, request.key_code);

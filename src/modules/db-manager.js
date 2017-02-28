@@ -39,7 +39,7 @@ module.exports = (db) => {
 	 * @param  {Boolean} isMany
 	 */
 	instance.updateAsync = async (collectionName, query, data, isMany) => {
-		if (isMany == undefined)
+		if (isMany == null)
 			isMany = false;
 
 		return await instance.db.collection(collectionName).update(query, {$set: {data}}, !isMany, isMany);

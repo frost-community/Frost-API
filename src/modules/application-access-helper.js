@@ -21,7 +21,7 @@ exports.buildAccessKey = buildAccessKey;
 const keyToElements = (key) => {
 	const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
 
-	if (reg == undefined)
+	if (reg == null)
 		throw new Error('access key is invalid format');
 
 	return {userId: new ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
@@ -41,7 +41,7 @@ exports.verifyAccessKeyAsync = async (key) => {
 	const dbManager = await dbConnector.connectApidbAsync();
 	const doc = await dbManager.findAsync('applicationAccesses', {user_id: elements.userId, key_code: elements.keyCode});
 
-	if (doc == undefined)
+	if (doc == null)
 		return false;
 
 	const correctKeyHash = buildAccessKeyHash(doc.application_id, elements.userId, elements.keyCode);
