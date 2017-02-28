@@ -1,10 +1,11 @@
 'use strict';
 
 const crypto = require('crypto');
-const apiResult = require('../modules/api-result');
-const config = require('../modules/load-config')();
-const dbConnector = require('../modules/db-connector')();
-const randomRange = require('../modules/random-range');
+
+const apiResult = require('../helpers/api-result');
+const config = require('../helpers/load-config')();
+const dbConnector = require('../helpers/db-connector')();
+const randomRange = require('../helpers/random-range');
 
 exports.post = async (request, extensions) => {
 	const screenName = params.screen_name;

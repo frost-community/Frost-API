@@ -1,9 +1,10 @@
 'use strict';
 
-const apiResult = require('../modules/api-result');
-const dbConnector = require('../modules/db-connector')();
-const type = require('../modules/type');
-const applicationHelper = require('../modules/application-helper');
+const apiResult = require('../helpers/api-result');
+const dbConnector = require('../helpers/db-connector')();
+const type = require('../helpers/type');
+
+const applicationModel = require('../models/application');
 
 exports.post = async (request, extensions) => {
 	const userId = request.user._id;
@@ -16,7 +17,7 @@ exports.post = async (request, extensions) => {
 	if ((await db.findArrayAsync('applications', {name: name})).length >= 1)
 		throw apiResult(400, 'already exists name');
 
-	if (!applicationHelper.analyzePermissions(request.application.permissions))
+	if (!applicationModel.analyzePermissions(request.application.permissions))
 		throw apiResult(400, 'permissions is invalid format');
 
 	let application;

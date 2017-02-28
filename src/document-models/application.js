@@ -1,7 +1,8 @@
 'use strict';
 
-const applicationHelper = require('../modules/application-helper');
-const randomRange = require('../modules/random-range');
+const randomRange = require('../helpers/random-range');
+
+const applicationModel = require('../models/application');
 
 module.exports = async (documentId, dbManager) => {
 	const instance = {};
@@ -23,7 +24,7 @@ module.exports = async (documentId, dbManager) => {
 		dbManager.updateAsync('applications', {_id: documentId}, {key_code: keyCode});
 		const app = await dbManager.findArrayAsync('applications', {_id: documentId})[0];
 
-		return applicationHelper.buildApplicationKey(app._id, app.creator_id, app.key_code);
+		return applicationModel.buildApplicationKey(app._id, app.creator_id, app.key_code);
 	};
 
 	instance.getApplicationKey = async () => {
@@ -32,7 +33,7 @@ module.exports = async (documentId, dbManager) => {
 		if (app == null)
 			throw new Error('application not found');
 
-		return applicationHelper.buildApplicationKey(app._id, app.creator_id, app.key_code);
+		return applicationModel.buildApplicationKey(app._id, app.creator_id, app.key_code);
 	};
 
 	return instance;

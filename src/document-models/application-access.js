@@ -1,7 +1,8 @@
 'use strict';
 
-const applicationAccessHelper = require('../modules/application-access-helper');
-const randomRange = require('../modules/random-range');
+const randomRange = require('../helpers/random-range');
+
+const applicationAccessModel = require('../models/application-access');
 
 module.exports = async (documentId, dbManager) => {
 	const instance = {};
@@ -26,7 +27,7 @@ module.exports = async (documentId, dbManager) => {
 
 		dbManager.updateAsync('applicationAccesses', {_id: documentId}, {key_code: keyCode});
 
-		return applicationAccessHelper.buildAccessKey(access.application_id, access.user_id, keyCode);
+		return applicationAccessModel.buildAccessKey(access.application_id, access.user_id, keyCode);
 	};
 
 	instance.getAccessKey = async () => {
@@ -35,7 +36,7 @@ module.exports = async (documentId, dbManager) => {
 		if (access == null)
 			throw new Error('application-access not found');
 
-		return applicationAccessHelper.buildAccessKey(access.application_id, access.user_id, access.key_code);
+		return applicationAccessModel.buildAccessKey(access.application_id, access.user_id, access.key_code);
 	};
 
 	return instance;

@@ -2,9 +2,10 @@
 
 const crypto = require('crypto');
 const ObjectId = require('mongodb').ObjectId;
-const config = require('./load-config')();
-const dbConnector = require('./db-connector')();
-require('./object-id-extension')();
+
+const config = require('../helpers/load-config')();
+const dbConnector = require('../helpers/db-connector')();
+require('../helpers/object-id-extension')();
 
 const buildRequestKeyHash = (authorizeRequestId, applicationId, keyCode) => {
 	const sha256 = crypto.createHash('sha256');

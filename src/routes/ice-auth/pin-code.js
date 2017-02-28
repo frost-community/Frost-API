@@ -1,6 +1,6 @@
 'use strict';
 
-const apiResult = require('../../modules/api-result');
+const apiResult = require('../../helpers/api-result');
 
 exports.get = async (request, extensions) => {
 	throw apiResult(501, 'not implemented');

@@ -2,12 +2,15 @@
 
 const bodyParser = require('body-parser');
 const express = require('express');
+
 const routes = require('./routes');
-const loadConfig = require('./modules/load-config');
-const type = require('./modules/type');
-const dbConnector = require('./modules/db-connector')();
-const applicationHelper = require('./modules/application-helper');
-const applicationAccessHelper = require('./modules/application-access-helper');
+
+const loadConfig = require('./helpers/load-config');
+const type = require('./helpers/type');
+const dbConnector = require('./helpers/db-connector')();
+
+const applicationModel = require('./models/application');
+const applicationAccessModel = require('./models/application-access');
 
 module.exports = () => {
 	console.log('--------------------');
@@ -18,7 +21,7 @@ module.exports = () => {
 	const app = express();
 	app.disable('x-powered-by');
 	app.use(bodyParser.json());
-	var router = require('./modules/router')(app);
+	var router = require('./helpers/router')(app);
 
 	const checkParams = (request, response, next) => {
 		var extensions = router.findRoute(request.method, request.route.path).extensions;
@@ -68,18 +71,18 @@ module.exports = () => {
 				return;
 			}
 
-			if (!(await applicationHelper.verifyApplicationKeyAsync(applicationKey))) {
+			if (!(await applicationModel.verifyApplicationKeyAsync(applicationKey))) {
 				response.status(400).send({error: {message: 'X-Application-Key header is invalid'}});
 				return;
 			}
 
-			if (!(await applicationAccessHelper.verifyAccessKeyAsync(accessKey))) {
+			if (!(await applicationAccessModel.verifyAccessKeyAsync(accessKey))) {
 				response.status(400).send({error: {message: 'X-Access-Key header is invalid'}});
 				return;
 			}
 
-			const applicationId = applicationHelper.keyToElements(applicationKey).applicationId;
-			const userId = applicationAccessHelper.keyToElements(accessKey).userId;
+			const applicationId = applicationModel.keyToElements(applicationKey).applicationId;
+			const userId = applicationAccessModel.keyToElements(accessKey).userId;
 
 			const dbManager = await dbConnector.connectApidbAsync();
 			request.application = dbManager.findArrayAsync('applications', {_id: applicationId});

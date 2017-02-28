@@ -1,6 +1,7 @@
 'use strict';
 
-const dbConnector = require('../modules/db-connector')();
+const dbConnector = require('../helpers/db-connector')();
+
 const authorizeRequestDoc = require('../document-models/authorize-request');
 
 module.exports = async () => {

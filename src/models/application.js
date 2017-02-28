@@ -2,8 +2,9 @@
 
 const crypto = require('crypto');
 const ObjectId = require('mongodb').ObjectId;
-const config = require('./load-config')();
-const dbConnector = require('./db-connector')();
+
+const config = require('../helpers/load-config')();
+const dbConnector = require('../helpers/db-connector')();
 
 exports.analyzePermissions = () => {
 	// TODO
