@@ -18,15 +18,24 @@ module.exports = () => {
 
 		// 認証リクエスト(リクエストキー取得)
 		['post', '/ice-auth/request', {
-			params: []}],
+			params: [
+				{name: 'application-key', type: 'string'}
+			]}],
 
-		// リクエストキーからPINコード取得(認証ホスト専用)
-		['get',  '/ice-auth/pin-code', {
-			params: [], permissions:['ice-auth-host']}],
+		// リクエストキーから検証トークン取得(認証ホスト専用エンドポイント)
+		['get',  '/ice-auth/verification-key', {
+			params: [
+				{name: 'application-key', type: 'string'},
+				{name: 'request-key', type: 'string'}
+			], permissions:['ice-auth-host']}],
 
-		// 認証を試行する
+		// verification-keyを検証して認証を試行する
 		['post', '/ice-auth/authorize', {
-			params: []}],
+			params: [
+				{name: 'application-key', type: 'string'},
+				{name: 'request-key', type: 'string'},
+				{name: 'verification-key', type: 'string'}
+			]}],
 
 		// == Applications ==
 
