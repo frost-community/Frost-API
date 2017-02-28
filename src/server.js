@@ -87,14 +87,14 @@ module.exports = () => {
 
 			for (var permission of request.application.permissions) {
 				if (!request.application.isHasPermission(request.application.permissions[i])) {
-					response.status(403).send({error: {message: 'you don\'t have any permissions'}});
+					response.status(403).send({error: {message: 'you do not have any permissions'}});
 					return;
 				}
 			}
 
 			for (var permission of request.application.permissions) {
 				if (!request.application.isHasPermission(request.application.permissions[i])) {
-					response.status(403).send({error: {message: 'you don\'t have any permissions'}});
+					response.status(403).send({error: {message: 'you do not have any permissions'}});
 					return;
 				}
 			}
