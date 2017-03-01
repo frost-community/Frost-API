@@ -1,0 +1,38 @@
+{
+    "env": {
+        "browser": true,
+        "es6": true
+    },
+    "extends": ["eslint:recommended", "plugin:node/recommended"],
+    "plugins": ["node"],
+    "parserOptions": {
+        "sourceType": "module",
+        "ecmaVersion": 8 // or 2017
+    },
+    "rules": {
+        "indent": [
+            "error",
+            "tab"
+        ],
+        "linebreak-style": [
+            "error",
+            "unix"
+        ],
+        "quotes": [
+            "error",
+            "single"
+        ],
+        "semi": [
+            "error",
+            "always"
+        ],
+        "no-unused-vars": [
+          "warn"
+        ],
+        "no-console": 0,
+        "node/no-unsupported-features": [
+          "warn",
+          {"version": 7}
+        ]
+    }
+}

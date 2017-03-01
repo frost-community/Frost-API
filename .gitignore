@@ -1,8 +1,6 @@
-vendor/
-composer.lock
-node_modules/
-assets/
+node_modules
+built
+assets
 .htaccess
 .idea
 .vscode
-config.php

@@ -1,0 +1,34 @@
+{
+  "name": "frost-api",
+  "version": "0.0.0",
+  "description": "Frost API Server",
+  "private": true,
+  "main": "./built/index.js",
+  "scripts": {
+    "start": "node ./",
+    "clean": "rimraf ./built",
+    "build-copy": "cpx \"src/**/*.js\" built",
+    "build": "npm run clean && npm run build-copy && npm run test",
+    "test": "eslint ./built/**/*.js"
+  },
+  "author": "team FrostDevelop",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "v1.16.1",
+    "cpx": "v1.5.0",
+    "express": "v4.14.1",
+    "methods": "v1.1.2",
+    "mongodb": "v2.2.24",
+    "rimraf": "v2.6.1"
+  },
+  "devDependencies": {
+    "eslint": "^3.16.1",
+    "eslint-config-standard": "^7.0.0",
+    "eslint-plugin-node": "^4.1.0",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-standard": "^2.0.1"
+  },
+  "files": [
+    "*"
+  ]
+}
