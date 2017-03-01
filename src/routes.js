@@ -2,7 +2,7 @@
 
 module.exports = () => {
 	var routes = [
-		['get',  '/', {}],
+		['get', '/', {}],
 
 		// == Account ==
 
@@ -106,4 +106,4 @@ module.exports = () => {
 	];
 
 	return routes;
-}
+};

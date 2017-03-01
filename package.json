@@ -8,27 +8,27 @@
     "start": "node ./",
     "clean": "rimraf ./built",
     "build-copy": "cpx \"src/**/*.js\" built",
-    "build-babel": "babel built --out-dir built",
-    "build": "npm run clean && npm run build-copy && npm run build-babel && npm run test",
-    "test": ""
+    "build": "npm run clean && npm run build-copy && npm run test",
+    "test": "eslint ./built/**/*.js"
   },
-  "author": "FrostDevelop team",
+  "author": "team FrostDevelop",
   "license": "MIT",
   "dependencies": {
-    "express": "v4.14.0",
-    "body-parser": "^1.15.2",
-    "cpx": "v1.3.2",
+    "body-parser": "v1.16.1",
+    "cpx": "v1.5.0",
+    "express": "v4.14.1",
     "methods": "v1.1.2",
-    "mongodb": "v2.2.6",
-    "rimraf": "v2.5.4"
+    "mongodb": "v2.2.24",
+    "rimraf": "v2.6.1"
   },
   "devDependencies": {
-    "babel-cli": "v6.11.4",
-    "babel-plugin-transform-async-to-generator": "v6.8.0"
+    "eslint": "^3.16.1",
+    "eslint-config-standard": "^7.0.0",
+    "eslint-plugin-node": "^4.1.0",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-standard": "^2.0.1"
   },
-  "babel": {
-    "plugins": [
-      "transform-async-to-generator"
-    ]
-  }
+  "files": [
+    "*"
+  ]
 }

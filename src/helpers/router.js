@@ -35,33 +35,39 @@ var addRoute = (route, middles) => {
 	if (middles == null)
 		middles = [];
 
-	var method = route[0];
+	var method = route[0].toLowerCase();
 	const path = route[1];
 	var extensions = route[2];
 
 	method = method.replace(/^del$/, 'delete');
 
 	for (var m of require('methods')) {
-		if (method.toLowerCase() === m) {
+		if (method === m) {
 			for (var middle of middles)
 				_app[m](path, middle);
 
 			_app[m](path, (request, response) => {
-				console.log(path);
+				console.log(`access: ${method.toUpperCase()} ${path}`);
 				resHelper(response);
-				var dirPath = '../routes';
+				var dirPath = __dirname + '/../routes';
 
-				for (var seg of path.substring(1).split(/\//))
+				for (var seg of path.substring(1).split(/\//)) {
 					dirPath += '/' + seg.replace(/:/, '');
+				}
 
-				const route = require(dirPath)[m];
+				if (dirPath.match(/\/$/))
+					dirPath += 'index';
+
+				dirPath = dirPath.replace(/\//g, require('path').sep);
+
+				const routeFunc = require(dirPath)[method];
 
 				try {
 					(async () => {
-						if (route == null)
+						if (routeFunc == null)
 							throw new Error(`endpoint not found\ntarget: ${method} ${path}`);
 
-						const result = await require(dirPath)[m](request, extensions);
+						const result = await routeFunc(request, extensions);
 						response.success(result);
 					})().catch(err => {
 						if (type(err) !== 'Error')
@@ -78,10 +84,10 @@ var addRoute = (route, middles) => {
 				}
 			});
 
-			_routes.push({method: m.toUpperCase(), path: path, extensions: extensions});
+			_routes.push({method: m, path: path, extensions: extensions});
 		}
 	}
-}
+};
 exports.addRoute = addRoute;
 
 /**
@@ -108,7 +114,7 @@ exports.addRoutes = addRoutes;
  */
 var findRoute = (method, path) => {
 	for (var route of _routes)
-		if (method === route.method && path === route.path)
+		if (method.toLowerCase() === route.method && path === route.path)
 			return route;
 
 	return null;

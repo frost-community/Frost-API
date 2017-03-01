@@ -13,7 +13,7 @@ module.exports = () => {
 	 * @return {Promise}
 	 */
 	instance.connectAsync = (host, port, dbname, username, password) => new Promise((resolve, reject) => {
-		let authenticate = "";
+		let authenticate = '';
 
 		if (username != null && password != null)
 			authenticate = `${username}:${password}@`;
@@ -34,4 +34,4 @@ module.exports = () => {
 		config.api.database.password);
 
 	return instance;
-}
+};

@@ -54,4 +54,4 @@ module.exports = (db) => {
 	instance.removeAsync = async (collectionName, query) => await instance.db.collection(collectionName).remove(query);
 
 	return instance;
-}
+};

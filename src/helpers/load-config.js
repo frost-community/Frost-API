@@ -8,6 +8,6 @@ const fs = require('fs');
  * @return {Object} JSONデータのパース結果
  */
 var load = () => {
-	return JSON.parse(fs.readFileSync(__dirname + '/../../config.json', 'utf8'));
-}
+	return JSON.parse(fs.readFileSync(process.cwd() + '/config.json', 'utf8'));
+};
 module.exports = load;

@@ -8,14 +8,12 @@ const merge = require('./merge');
  * @param  {any} response レスポンス
  */
 module.exports = response => {
-	var instance = {};
-
 	/**
 	 * リクエストが成功したことを示すオブジェクトをレスポンスとして返します
 	 *
 	 * @param  {ApiResult} apiResult APIコールの結果情報
 	 */
-	instance.success = (apiResult) => {
+	response.success = (apiResult) => {
 		if (apiResult.statusCode == null)
 			apiResult.statusCode = 200;
 
@@ -27,7 +25,7 @@ module.exports = response => {
 		if (apiResult.data != null)
 			merge(sendData, apiResult.data);
 
-		_response.status(apiResult.statusCode).send(sendData);
+		response.status(apiResult.statusCode).send(sendData);
 	};
 
 	/**
@@ -35,7 +33,7 @@ module.exports = response => {
 	 *
 	 * @param  {ApiResult} apiResult APIコールの結果情報
 	 */
-	instance.error = (apiResult) => {
+	response.error = (apiResult) => {
 		if (apiResult.statusCode == null)
 			apiResult.statusCode = 400;
 
@@ -47,8 +45,6 @@ module.exports = response => {
 		if (apiResult.data != null)
 			merge(sendData, apiResult.data);
 
-		_response.status(apiResult.statusCode).send({error: sendData});
+		response.status(apiResult.statusCode).send({error: sendData});
 	};
-
-	return instance;
 };
