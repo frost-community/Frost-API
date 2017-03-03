@@ -18,7 +18,7 @@ module.exports = async (documentId, dbManager) => {
 		do {
 			tryCount++;
 			keyCode = randomRange(1, 99999);
-			const isExist = dbManager.findArrayAsync('applicationAccesses', {user_id: access.user_id, key_code: keyCode}).length === 0;
+			isExist = dbManager.findArrayAsync('applicationAccesses', {user_id: access.user_id, key_code: keyCode}).length === 0;
 		}
 		while(isExist && tryCount < 4);
 

@@ -2,7 +2,6 @@
 
 const apiResult = require('../helpers/api-result');
 const dbConnector = require('../helpers/db-connector')();
-const type = require('../helpers/type');
 
 const applicationModel = require('../models/application');
 

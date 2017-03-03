@@ -29,9 +29,9 @@
         "no-unused-vars": [
           "warn"
         ],
-        "no-console": 0,
+        "no-console": "off",
         "node/no-unsupported-features": [
-          "warn",
+          "off",
           {"version": 7}
         ]
     }
