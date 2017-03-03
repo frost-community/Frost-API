@@ -10,7 +10,7 @@ module.exports = async (documentId, dbManager) => {
 	instance.documentId = documentId;
 	instance.dbManager = dbManager;
 
-	instance.generateAccessKey = async () => {
+	instance.generateAccessKeyAsync = async () => {
 
 		const access = dbManager.findArrayAsync('applicationAccesses', {_id: documentId})[0];
 		var keyCode, isExist, tryCount = 0;
@@ -30,7 +30,7 @@ module.exports = async (documentId, dbManager) => {
 		return applicationAccessModel.buildAccessKey(access.application_id, access.user_id, keyCode);
 	};
 
-	instance.getAccessKey = async () => {
+	instance.getAccessKeyAsync = async () => {
 		const access = await dbManager.findArrayAsync('applicationAccesses', {_id: documentId})[0];
 
 		if (access == null)

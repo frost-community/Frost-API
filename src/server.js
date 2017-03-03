@@ -11,8 +11,8 @@ const type = require('./helpers/type');
 const applicationModel = require('./models/application');
 const applicationAccessModel = require('./models/application-access');
 
-const applications = require('./collections/applications');
-const users = require('./collections/users');
+const applicationsAsync = require('./collections/applications');
+const usersAsync = require('./collections/users');
 
 module.exports = () => {
 	console.log('--------------------');
@@ -96,11 +96,11 @@ module.exports = () => {
 						const applicationId = applicationModel.keyToElements(applicationKey).applicationId;
 						const userId = applicationAccessModel.keyToElements(accessKey).userId;
 
-						request.application = (await applications()).findAsync({_id: applicationId});
-						request.user = await (await users()).findAsync({_id: userId});
+						request.application = (await applicationsAsync()).findAsync({_id: applicationId});
+						request.user = await (await usersAsync()).findAsync({_id: userId});
 
 						for (var permission of extensions.permissions) {
-							if (!request.application.isHasPermission(permission)) {
+							if (!await request.application.hasPermissionAsync(permission)) {
 								response.status(403).send({error: {message: 'you do not have any permissions'}});
 								return;
 							}

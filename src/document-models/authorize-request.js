@@ -10,7 +10,7 @@ module.exports = async (documentId, dbManager) => {
 	instance.documentId = documentId;
 	instance.dbManager = dbManager;
 
-	instance.generatePinCode = async () => {
+	instance.generatePinCodeAsync = async () => {
 		var pinCode = '';
 		for (var i = 0; i < 6; i++)
 			pinCode += String(randomRange(0, 9));
@@ -20,7 +20,7 @@ module.exports = async (documentId, dbManager) => {
 		return pinCode;
 	};
 
-	instance.generateRequestKey = async () => {
+	instance.generateRequestKeyAsync = async () => {
 		const keyCode = randomRange(1, 99999);
 		dbManager.updateAsync('authorizeRequests', {_id: documentId}, {key_code: keyCode});
 		const request = await dbManager.findArrayAsync('authorizeRequests', {_id: documentId})[0];
@@ -28,7 +28,7 @@ module.exports = async (documentId, dbManager) => {
 		return authorizeRequestModel.buildRequestKey(request._id, request.application_id, request.key_code);
 	};
 
-	instance.getRequestKey = async () => {
+	instance.getRequestKeyAsync = async () => {
 		const request = await dbManager.findArrayAsync('authorizeRequests', {_id: documentId})[0];
 
 		if (request == null)

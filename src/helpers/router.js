@@ -60,14 +60,14 @@ var addRoute = (route, middles) => {
 
 				dirPath = dirPath.replace(/\//g, require('path').sep);
 
-				const routeFunc = require(dirPath)[method];
+				const routeFuncAsync = require(dirPath)[method];
 
 				try {
 					(async () => {
-						if (routeFunc == null)
+						if (routeFuncAsync == null)
 							throw new Error(`endpoint not found\ntarget: ${method} ${path}`);
 
-						const result = await routeFunc(request, extensions);
+						const result = await routeFuncAsync(request, extensions);
 						response.success(result);
 					})().catch(err => {
 						if (type(err) !== 'Error')

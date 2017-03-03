@@ -10,7 +10,7 @@ module.exports = async (documentId, dbManager) => {
 	instance.documentId = documentId;
 	instance.dbManager = dbManager;
 
-	instance.isHasPermission = async (permissionName) => {
+	instance.hasPermissionAsync = async (permissionName) => {
 		const app = await dbManager.findArrayAsync('applications', {_id: documentId})[0];
 
 		if (app == null)
@@ -19,7 +19,7 @@ module.exports = async (documentId, dbManager) => {
 		return permissionName in app.permissions;
 	};
 
-	instance.generateApplicationKey = async () => {
+	instance.generateApplicationKeyAsync = async () => {
 		const keyCode = randomRange(1, 99999);
 		dbManager.updateAsync('applications', {_id: documentId}, {key_code: keyCode});
 		const app = await dbManager.findArrayAsync('applications', {_id: documentId})[0];
@@ -27,7 +27,7 @@ module.exports = async (documentId, dbManager) => {
 		return applicationModel.buildApplicationKey(app._id, app.creator_id, app.key_code);
 	};
 
-	instance.getApplicationKey = async () => {
+	instance.getApplicationKeyAsync = async () => {
 		const app = await dbManager.findArrayAsync('applications', {_id: documentId})[0];
 
 		if (app == null)
