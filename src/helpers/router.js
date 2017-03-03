@@ -49,7 +49,7 @@ var addRoute = (route, middles) => {
 			_app[m](path, (request, response) => {
 				console.log(`access: ${method.toUpperCase()} ${path}`);
 				resHelper(response);
-				var dirPath = __dirname + '/../routes';
+				var dirPath = `${__dirname}/../routes`;
 
 				for (var seg of path.substring(1).split(/\//)) {
 					dirPath += '/' + seg.replace(/:/, '');
