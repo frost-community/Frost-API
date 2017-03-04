@@ -1,8 +1,8 @@
 'use strict';
 
-const dbConnector = require('../helpers/db-connector')();
+const dbConnector = require('../helpers/dbConnector')();
 
-const applicationAccessDoc = require('../document-models/application-access');
+const applicationAccessDoc = require('../documentModels/applicationAccess');
 
 module.exports = async () => {
 	const instance = {};
@@ -10,13 +10,13 @@ module.exports = async () => {
 
 	instance.createAsync = async () => {
 		// TODO
-		const result = await dbManager.createAsync('application-accesses', {});
+		const result = await dbManager.createAsync('applicationAccesses', {});
 
 		return applicationAccessDoc(result.ops[0]._id, dbManager);
 	};
 
 	instance.findAsync = async (query) => {
-		const doc = await dbManager.findArrayAsync('application-accesses', query);
+		const doc = await dbManager.findArrayAsync('applicationAccesses', query);
 
 		return applicationAccessDoc(doc._id, dbManager);
 	};

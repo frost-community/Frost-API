@@ -1,8 +1,8 @@
 'use strict';
 
-const dbConnector = require('../helpers/db-connector')();
+const dbConnector = require('../helpers/dbConnector')();
 
-const postDoc = require('../document-models/post');
+const postDoc = require('../documentModels/post');
 
 module.exports = async () => {
 	const instance = {};

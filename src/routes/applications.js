@@ -1,7 +1,7 @@
 'use strict';
 
-const apiResult = require('../helpers/api-result');
-const dbConnector = require('../helpers/db-connector')();
+const apiResult = require('../helpers/apiResult');
+const dbConnector = require('../helpers/dbConnector')();
 
 const applicationModel = require('../models/application');
 

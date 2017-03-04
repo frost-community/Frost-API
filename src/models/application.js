@@ -3,8 +3,8 @@
 const crypto = require('crypto');
 const ObjectId = require('mongodb').ObjectId;
 
-const config = require('../helpers/load-config')();
-const dbConnector = require('../helpers/db-connector')();
+const config = require('../helpers/loadConfig')();
+const dbConnector = require('../helpers/dbConnector')();
 
 exports.analyzePermissions = () => {
 	// TODO
@@ -12,19 +12,19 @@ exports.analyzePermissions = () => {
 	return true;
 };
 
-const buildApplicationKeyHash = (applicationId, creatorId, keyCode) => {
+const buildKeyHash = (applicationId, creatorId, keyCode) => {
 	const sha256 = crypto.createHash('sha256');
 	sha256.update(`${config.api.secretToken.application}/${creatorId.toString()}/${applicationId.toString()}/${keyCode}`);
 
 	return sha256.digest('hex');
 };
-exports.buildApplicationKeyHash = buildApplicationKeyHash;
+exports.buildKeyHash = buildKeyHash;
 
-exports.buildApplicationKey = (applicationId, creatorId, keyCode) => {
-	return `${applicationId}-${buildApplicationKeyHash(applicationId, creatorId, keyCode)}.${keyCode}`;
+exports.buildKey = (applicationId, creatorId, keyCode) => {
+	return `${applicationId}-${buildKeyHash(applicationId, creatorId, keyCode)}.${keyCode}`;
 };
 
-const keyToElements = (key) => {
+const splitKey = (key) => {
 	const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
 
 	if (reg == null)
@@ -32,13 +32,13 @@ const keyToElements = (key) => {
 
 	return {applicationId: new ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
 };
-exports.keyToElements = keyToElements;
+exports.splitKey = splitKey;
 
-exports.verifyApplicationKeyAsync = async (key) => {
+exports.verifyKeyAsync = async (key) => {
 	let elements;
 
 	try {
-		elements = keyToElements(key);
+		elements = splitKey(key);
 	}
 	catch (err) {
 		return false;
@@ -50,7 +50,7 @@ exports.verifyApplicationKeyAsync = async (key) => {
 	if (doc == null)
 		return false;
 
-	const correctKeyHash = buildApplicationKeyHash(elements.applicationId, doc.creatorId, elements.keyCode);
+	const correctKeyHash = buildKeyHash(elements.applicationId, doc.creatorId, elements.keyCode);
 	const isPassed = elements.hash === correctKeyHash && elements.keyCode === doc.keyCode;
 
 	return isPassed;

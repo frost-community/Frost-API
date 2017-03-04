@@ -2,10 +2,10 @@
 
 const crypto = require('crypto');
 
-const apiResult = require('../helpers/api-result');
-const config = require('../helpers/load-config')();
-const dbConnector = require('../helpers/db-connector')();
-const randomRange = require('../helpers/random-range');
+const apiResult = require('../helpers/apiResult');
+const config = require('../helpers/loadConfig')();
+const dbConnector = require('../helpers/dbConnector')();
+const randomRange = require('../helpers/randomRange');
 
 exports.post = async (request, extensions) => {
 	const screenName = request.body.screenName;

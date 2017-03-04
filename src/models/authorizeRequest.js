@@ -3,24 +3,24 @@
 const crypto = require('crypto');
 const ObjectId = require('mongodb').ObjectId;
 
-const config = require('../helpers/load-config')();
-const dbConnector = require('../helpers/db-connector')();
-require('../helpers/object-id-extension')();
+const config = require('../helpers/loadConfig')();
+const dbConnector = require('../helpers/dbConnector')();
+// require('../helpers/objectIdExtension')();
 
-const buildRequestKeyHash = (authorizeRequestId, applicationId, keyCode) => {
+const buildKeyHash = (authorizeRequestId, applicationId, keyCode) => {
 	const sha256 = crypto.createHash('sha256');
 	sha256.update(`${config.api.secretToken.authorizeRequest}/${applicationId.toString()}/${authorizeRequestId.toString()}/${keyCode}`);
 
 	return sha256.digest('hex');
 };
-exports.buildRequestKeyHash = buildRequestKeyHash;
+exports.buildKeyHash = buildKeyHash;
 
-const buildRequestKey = (authorizeRequestId, applicationId, keyCode) => {
-	return `${authorizeRequestId}-${buildRequestKeyHash(authorizeRequestId, applicationId, keyCode)}.${keyCode}`;
+const buildKey = (authorizeRequestId, applicationId, keyCode) => {
+	return `${authorizeRequestId}-${buildKeyHash(authorizeRequestId, applicationId, keyCode)}.${keyCode}`;
 };
-exports.buildRequestKey = buildRequestKey;
+exports.buildKey = buildKey;
 
-const keyToElements = (key) => {
+const splitKey = (key) => {
 	const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
 
 	if (reg == null)
@@ -28,13 +28,13 @@ const keyToElements = (key) => {
 
 	return {authorizeRequestId: new ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
 };
-exports.keyToElements = keyToElements;
+exports.splitKey = splitKey;
 
-exports.verifyRequestKeyAsync = async (key) => {
+exports.verifyKeyAsync = async (key) => {
 	let elements;
 
 	try {
-		elements = keyToElements(key);
+		elements = splitKey(key);
 	}
 	catch (err) {
 		return false;
@@ -46,9 +46,9 @@ exports.verifyRequestKeyAsync = async (key) => {
 	if (doc == null)
 		return false;
 
-	const correctKeyHash = buildRequestKeyHash(elements.authorizeRequestId, doc.applicationId, elements.keyCode);
-	const createdAt = doc._id.getUnixtime();
-	const isAvailabilityPeriod = Math.abs(Date.now() - createdAt) < config.api.request_key_expire_sec;
+	const correctKeyHash = buildKeyHash(elements.authorizeRequestId, doc.applicationId, elements.keyCode);
+	// const createdAt = doc._id.getUnixtime();
+	const isAvailabilityPeriod = true; // Math.abs(Date.now() - createdAt) < config.api.request_key_expire_sec;
 	const isPassed = isAvailabilityPeriod && elements.hash === correctKeyHash && elements.keyCode === doc.keyCode;
 
 	return isPassed;

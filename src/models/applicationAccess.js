@@ -3,23 +3,23 @@
 const crypto = require('crypto');
 const ObjectId = require('mongodb').ObjectId;
 
-const config = require('../helpers/load-config')();
-const dbConnector = require('../helpers/db-connector')();
+const config = require('../helpers/loadConfig')();
+const dbConnector = require('../helpers/dbConnector')();
 
-const buildAccessKeyHash = (applicationId, userId, keyCode) => {
+const buildKeyHash = (applicationId, userId, keyCode) => {
 	const sha256 = crypto.createHash('sha256');
 	sha256.update(`${config.api.secretToken.applicationAccess}/${applicationId.toString()}/${userId.toString()}/${keyCode}`);
 
 	return sha256.digest('hex');
 };
-exports.buildAccessKeyHash = buildAccessKeyHash;
+exports.buildKeyHash = buildKeyHash;
 
-const buildAccessKey = (applicationId, userId, keyCode) => {
-	return `${userId}-${buildAccessKeyHash(applicationId, userId, keyCode)}.${keyCode}`;
+const buildKey = (applicationId, userId, keyCode) => {
+	return `${userId}-${buildKeyHash(applicationId, userId, keyCode)}.${keyCode}`;
 };
-exports.buildAccessKey = buildAccessKey;
+exports.buildKey = buildKey;
 
-const keyToElements = (key) => {
+const splitKey = (key) => {
 	const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
 
 	if (reg == null)
@@ -27,13 +27,13 @@ const keyToElements = (key) => {
 
 	return {userId: new ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
 };
-exports.keyToElements = keyToElements;
+exports.splitKey = splitKey;
 
-exports.verifyAccessKeyAsync = async (key) => {
+exports.verifyKeyAsync = async (key) => {
 	let elements;
 
 	try {
-		elements = keyToElements(key);
+		elements = splitKey(key);
 	}
 	catch (err) {
 		return false;
@@ -45,7 +45,7 @@ exports.verifyAccessKeyAsync = async (key) => {
 	if (doc == null)
 		return false;
 
-	const correctKeyHash = buildAccessKeyHash(doc.applicationId, elements.userId, elements.keyCode);
+	const correctKeyHash = buildKeyHash(doc.applicationId, elements.userId, elements.keyCode);
 	const isPassed = elements.hash === correctKeyHash && elements.keyCode === doc.keyCode;
 
 	return isPassed;

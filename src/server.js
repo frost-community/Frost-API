@@ -5,11 +5,11 @@ const express = require('express');
 
 const routes = require('./routes');
 
-const loadConfig = require('./helpers/load-config');
+const loadConfig = require('./helpers/loadConfig');
 const type = require('./helpers/type');
 
 const applicationModel = require('./models/application');
-const applicationAccessModel = require('./models/application-access');
+const applicationAccessModel = require('./models/applicationAccess');
 
 const applicationsAsync = require('./collections/applications');
 const usersAsync = require('./collections/users');
@@ -83,18 +83,18 @@ module.exports = () => {
 							return;
 						}
 
-						if (!(await applicationModel.verifyApplicationKeyAsync(applicationKey))) {
+						if (!(await applicationModel.verifyKeyAsync(applicationKey))) {
 							response.status(400).send({error: {message: 'X-Application-Key header is invalid'}});
 							return;
 						}
 
-						if (!(await applicationAccessModel.verifyAccessKeyAsync(accessKey))) {
+						if (!(await applicationAccessModel.verifyKeyAsync(accessKey))) {
 							response.status(400).send({error: {message: 'X-Access-Key header is invalid'}});
 							return;
 						}
 
-						const applicationId = applicationModel.keyToElements(applicationKey).applicationId;
-						const userId = applicationAccessModel.keyToElements(accessKey).userId;
+						const applicationId = applicationModel.splitKey(applicationKey).applicationId;
+						const userId = applicationAccessModel.splitKey(accessKey).userId;
 
 						request.application = (await applicationsAsync()).findAsync({_id: applicationId});
 						request.user = await (await usersAsync()).findAsync({_id: userId});
@@ -119,7 +119,7 @@ module.exports = () => {
 			})();
 		}
 		catch(err) {
-			console.log('checkPermission failed B');
+			console.log('checkPermission failed B (${err})');
 			throw err;
 		}
 	};

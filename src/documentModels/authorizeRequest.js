@@ -1,8 +1,8 @@
 'use strict';
 
-const randomRange = require('../helpers/random-range');
+const randomRange = require('../helpers/randomRange');
 
-const authorizeRequestModel = require('../models/authorize-request');
+const authorizeRequestModel = require('../models/authorizeRequest');
 
 module.exports = async (documentId, dbManager) => {
 	const instance = {};
@@ -25,16 +25,16 @@ module.exports = async (documentId, dbManager) => {
 		dbManager.updateAsync('authorizeRequests', {_id: documentId}, {keyCode: keyCode});
 		const request = await dbManager.findArrayAsync('authorizeRequests', {_id: documentId})[0];
 
-		return authorizeRequestModel.buildRequestKey(request._id, request.applicationId, request.keyCode);
+		return authorizeRequestModel.buildKey(request._id, request.applicationId, request.keyCode);
 	};
 
 	instance.getRequestKeyAsync = async () => {
 		const request = await dbManager.findArrayAsync('authorizeRequests', {_id: documentId})[0];
 
 		if (request == null)
-			throw new Error('authorize-request not found');
+			throw new Error('authorizeRequest not found');
 
-		return authorizeRequestModel.buildRequestKey(request._id, request.applicationId, request.keyCode);
+		return authorizeRequestModel.buildKey(request._id, request.applicationId, request.keyCode);
 	};
 
 	return instance;

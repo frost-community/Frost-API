@@ -1,7 +1,7 @@
 'use strict';
 
 const mongodb = require('mongodb');
-const config = require('./load-config')();
+const config = require('./loadConfig')();
 
 module.exports = () => {
 	const instance = {};
@@ -22,7 +22,7 @@ module.exports = () => {
 			if (err)
 				return reject('faild to connect database');
 
-			return resolve(require('./db-manager')(db));
+			return resolve(require('./dbManager')(db));
 		});
 	});
 

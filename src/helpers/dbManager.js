@@ -19,7 +19,7 @@ module.exports = (db) => {
 	 * @param  {Object} option
 	 * @param  {Object|null} document
 	 */
-	instance.findAsync = async (collectionName, query, option) => (await instance.db.collection(collectionName).findOne(query, option));
+	instance.findAsync = async (collectionName, query, option) => await instance.db.collection(collectionName).findOne(query, option);
 
 	/**
 	 * ドキュメントを検索して複数の項目を取得します
@@ -29,7 +29,15 @@ module.exports = (db) => {
 	 * @param  {Object} option
 	 * @param  {Object[]|null} documents
 	 */
-	instance.findArrayAsync = async (collectionName, query, option) => (await instance.db.collection(collectionName).findMany(query, option)).toArray();
+	instance.findArrayAsync = (collectionName, query, option) => new Promise((resolve, reject) => {
+		var docs = instance.db.collection(collectionName).findMany(query, option);
+		docs.toArray((err, docArray) => {
+			if (err != null || docArray == null || docArray.length === 0)
+				reject('result is empty');
+
+			resolve(docArray);
+		});
+	});
 
 	/**
 	 * ドキュメントを更新します

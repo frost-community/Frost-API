@@ -1,7 +1,7 @@
 'use strict';
 
-const apiResult = require('./api-result');
-const resHelper = require('./response-helper');
+const apiResult = require('./apiResult');
+const resHelper = require('./responseHelper');
 const type = require('./type');
 
 const _routes = [];
