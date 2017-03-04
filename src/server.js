@@ -4,8 +4,6 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const routes = require('./routes');
 const loadConfig = require('./helpers/loadConfig');
-const checkParams = require('./helpers/middlewares/checkParams');
-const checkPermission = require('./helpers/middlewares/checkPermission');
 
 module.exports = () => {
 	console.log('--------------------');
@@ -16,7 +14,10 @@ module.exports = () => {
 	const app = express();
 	app.disable('x-powered-by');
 	app.use(bodyParser.json());
-	let router = require('./helpers/router')(app);
+	const router = require('./helpers/router')(app);
+
+	const checkParams = require('./helpers/middlewares/checkParams')(router).execute;
+	const checkPermission = require('./helpers/middlewares/checkPermission')(router).execute;
 
 	router.addRoutes(routes(), [checkPermission, checkParams]);
 
