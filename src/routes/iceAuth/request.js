@@ -2,9 +2,7 @@
 
 const apiResult = require('../../helpers/apiResult');
 
-const authorizeRequestsAsync = require('../../collections/authorizeRequests');
-const applications = require('../../collections/applications');
-
+const authorizeRequests = require('../../collections/authorizeRequests');
 const applicationModel = require('../../models/application');
 
 exports.post = async (request, extensions) => {
@@ -14,8 +12,8 @@ exports.post = async (request, extensions) => {
 		return apiResult(400, 'applicationKey is invalid');
 
 	const applicationId = applicationModel.splitKey(applicationKey).applicationId;
-	const application = await (await applications).findAsync(applicationId);
-	const key = await application.generateApplicationKeyAsync();
+	const doc = await (await authorizeRequests()).createAsync(applicationId);
+	const key = await doc.generateRequestKeyAsync();
 
 	return apiResult(200, 'successful', {requestKey: key});
 };
