@@ -34,6 +34,9 @@ module.exports = async (documentId, dbManager) => {
 		if (request == null)
 			throw new Error('authorizeRequest not found');
 
+		if (request.keyCode == null)
+			throw new Error('key not found');
+
 		return authorizeRequestModel.buildKey(request._id, request.applicationId, request.keyCode);
 	};
 
