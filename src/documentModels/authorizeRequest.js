@@ -11,8 +11,8 @@ module.exports = async (documentId, dbManager) => {
 	instance.dbManager = dbManager;
 
 	instance.generatePinCodeAsync = async () => {
-		var pinCode = '';
-		for (var i = 0; i < 6; i++)
+		let pinCode = '';
+		for (let i = 0; i < 6; i++)
 			pinCode += String(randomRange(0, 9));
 
 		dbManager.updateAsync('authorizeRequests', {_id: documentId}, {pinCode: pinCode});

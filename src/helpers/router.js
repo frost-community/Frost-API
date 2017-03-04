@@ -12,7 +12,7 @@ let _app;
  *
  * @param  {any} app 対象のサーバアプリケーション
  */
-var init = app => {
+let init = app => {
 	if (app == null)
 		throw new Error('app is empty');
 
@@ -28,30 +28,30 @@ module.exports = init;
  * @param  {string[]} route
  * @param  {Function[]} middles
  */
-var addRoute = (route, middles) => {
+let addRoute = (route, middles) => {
 	if (!Array.isArray(route) || route == null)
 		throw new Error('route is invalid type');
 
 	if (middles == null)
 		middles = [];
 
-	var method = route[0].toLowerCase();
+	let method = route[0].toLowerCase();
 	const path = route[1];
-	var extensions = route[2];
+	let extensions = route[2];
 
 	method = method.replace(/^del$/, 'delete');
 
-	for (var m of require('methods')) {
+	for (let m of require('methods')) {
 		if (method === m) {
-			for (var middle of middles)
+			for (let middle of middles)
 				_app[m](path, middle);
 
 			_app[m](path, (request, response) => {
 				console.log(`access: ${method.toUpperCase()} ${path}`);
 				resHelper(response);
-				var dirPath = `${__dirname}/../routes`;
+				let dirPath = `${__dirname}/../routes`;
 
-				for (var seg of path.substring(1).split(/\//)) {
+				for (let seg of path.substring(1).split(/\//)) {
 					dirPath += '/' + seg.replace(/:/, '');
 				}
 
@@ -96,11 +96,11 @@ exports.addRoute = addRoute;
  * @param  {string[][]} routes
  * @param  {Function[]} middles
  */
-var addRoutes = (routes, middles) => {
+let addRoutes = (routes, middles) => {
 	if (!Array.isArray(routes) || routes == null)
 		throw new Error('routes is invalid type');
 
-	for (var route of routes)
+	for (let route of routes)
 		addRoute(route, middles);
 };
 exports.addRoutes = addRoutes;
@@ -112,8 +112,8 @@ exports.addRoutes = addRoutes;
  * @param  {string} path
  * @return {Object} ルート情報
  */
-var findRoute = (method, path) => {
-	for (var route of _routes)
+let findRoute = (method, path) => {
+	for (let route of _routes)
 		if (method.toLowerCase() === route.method && path === route.path)
 			return route;
 

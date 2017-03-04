@@ -23,14 +23,14 @@ module.exports = () => {
 	const app = express();
 	app.disable('x-powered-by');
 	app.use(bodyParser.json());
-	var router = require('./helpers/router')(app);
+	let router = require('./helpers/router')(app);
 
 	const checkParams = (request, response, next) => {
 		try {
-			var extensions = router.findRoute(request.method.toLowerCase(), request.route.path).extensions;
+			let extensions = router.findRoute(request.method.toLowerCase(), request.route.path).extensions;
 
 			if ('params' in extensions && extensions.params.length !== 0) {
-				for(var param of extensions.params) {
+				for(let param of extensions.params) {
 					if (param.type == null || param.name == null) {
 						response.status(500).send({error: {message: 'internal error', details: 'extentions.params elements are missing'}});
 						throw new Error('extentions.params elements are missing');
@@ -66,8 +66,8 @@ module.exports = () => {
 		try {
 			(async () => {
 				try {
-					var route = router.findRoute(request.method, request.route.path);
-					var extensions = route.extensions;
+					let route = router.findRoute(request.method, request.route.path);
+					let extensions = route.extensions;
 
 					if ('permissions' in extensions && extensions.permissions.length !== 0) {
 						const applicationKey = request.get('X-Application-Key');
@@ -99,7 +99,7 @@ module.exports = () => {
 						request.application = (await applicationsAsync()).findAsync({_id: applicationId});
 						request.user = await (await usersAsync()).findAsync({_id: userId});
 
-						for (var permission of extensions.permissions) {
+						for (let permission of extensions.permissions) {
 							if (!await request.application.hasPermissionAsync(permission)) {
 								response.status(403).send({error: {message: 'you do not have any permissions'}});
 								return;

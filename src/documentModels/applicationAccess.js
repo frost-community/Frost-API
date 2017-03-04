@@ -13,7 +13,7 @@ module.exports = async (documentId, dbManager) => {
 	instance.generateAccessKeyAsync = async () => {
 
 		const access = dbManager.findArrayAsync('applicationAccesses', {_id: documentId})[0];
-		var keyCode, isExist, tryCount = 0;
+		let keyCode, isExist, tryCount = 0;
 
 		do {
 			tryCount++;

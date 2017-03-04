@@ -30,7 +30,7 @@ module.exports = (db) => {
 	 * @param  {Object[]|null} documents
 	 */
 	instance.findArrayAsync = (collectionName, query, option) => new Promise((resolve, reject) => {
-		var docs = instance.db.collection(collectionName).findMany(query, option);
+		let docs = instance.db.collection(collectionName).findMany(query, option);
 		docs.toArray((err, docArray) => {
 			if (err != null || docArray == null || docArray.length === 0)
 				reject('result is empty');
