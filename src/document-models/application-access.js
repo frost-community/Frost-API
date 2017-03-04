@@ -18,16 +18,16 @@ module.exports = async (documentId, dbManager) => {
 		do {
 			tryCount++;
 			keyCode = randomRange(1, 99999);
-			isExist = dbManager.findArrayAsync('applicationAccesses', {user_id: access.user_id, key_code: keyCode}).length === 0;
+			isExist = dbManager.findArrayAsync('applicationAccesses', {userId: access.userId, keyCode: keyCode}).length === 0;
 		}
 		while(isExist && tryCount < 4);
 
 		if (isExist && tryCount >= 4)
-			throw new Error('the number of trials for key_code generation has reached its upper limit');
+			throw new Error('the number of trials for keyCode generation has reached its upper limit');
 
-		dbManager.updateAsync('applicationAccesses', {_id: documentId}, {key_code: keyCode});
+		dbManager.updateAsync('applicationAccesses', {_id: documentId}, {keyCode: keyCode});
 
-		return applicationAccessModel.buildAccessKey(access.application_id, access.user_id, keyCode);
+		return applicationAccessModel.buildAccessKey(access.applicationId, access.userId, keyCode);
 	};
 
 	instance.getAccessKeyAsync = async () => {
@@ -36,7 +36,7 @@ module.exports = async (documentId, dbManager) => {
 		if (access == null)
 			throw new Error('application-access not found');
 
-		return applicationAccessModel.buildAccessKey(access.application_id, access.user_id, access.key_code);
+		return applicationAccessModel.buildAccessKey(access.applicationId, access.userId, access.keyCode);
 	};
 
 	return instance;

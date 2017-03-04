@@ -21,10 +21,10 @@ module.exports = async (documentId, dbManager) => {
 
 	instance.generateApplicationKeyAsync = async () => {
 		const keyCode = randomRange(1, 99999);
-		dbManager.updateAsync('applications', {_id: documentId}, {key_code: keyCode});
+		dbManager.updateAsync('applications', {_id: documentId}, {keyCode: keyCode});
 		const app = await dbManager.findArrayAsync('applications', {_id: documentId})[0];
 
-		return applicationModel.buildApplicationKey(app._id, app.creator_id, app.key_code);
+		return applicationModel.buildApplicationKey(app._id, app.creatorId, app.keyCode);
 	};
 
 	instance.getApplicationKeyAsync = async () => {
@@ -33,7 +33,7 @@ module.exports = async (documentId, dbManager) => {
 		if (app == null)
 			throw new Error('application not found');
 
-		return applicationModel.buildApplicationKey(app._id, app.creator_id, app.key_code);
+		return applicationModel.buildApplicationKey(app._id, app.creatorId, app.keyCode);
 	};
 
 	return instance;

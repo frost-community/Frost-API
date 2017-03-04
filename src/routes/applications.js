@@ -24,7 +24,7 @@ exports.post = async (request, extensions) => {
 	try {
 		application = await db.createAsync('applications', {
 			name: name,
-			creator_id: userId,
+			creatorId: userId,
 			description: description,
 			permissions: permissions
 		});

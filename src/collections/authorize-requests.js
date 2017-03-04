@@ -8,11 +8,10 @@ module.exports = async () => {
 	const instance = {};
 	const dbManager = await dbConnector.connectApidbAsync();
 
-	instance.createAsync = async () => {
-		// TODO
-		const result = await dbManager.createAsync('authorizeRequests', {});
+	instance.createAsync = async (applicationId) => {
+		const doc = await dbManager.createAsync('authorizeRequests', {applicationId: applicationId});
 
-		return authorizeRequestDoc(result.ops[0]._id, dbManager);
+		return authorizeRequestDoc(doc.ops[0]._id, dbManager);
 	};
 
 	instance.findAsync = async (query) => {

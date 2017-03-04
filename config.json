@@ -8,12 +8,12 @@
       "username": "frost-api",
       "password": "frost-api"
     },
-    "secret_token": {
+    "secretToken": {
       "application": "application-secret-token",
-      "application_access": "application-access-secret-token",
-      "authorize_request": "authorize-request-secret-token"
+      "applicationAccess": "application-access-secret-token",
+      "authorizeRequest": "authorize-request-secret-token"
     },
-    "invalid_screen_names": [
+    "invalidScreenNames": [
       "frost",
       "help",
       "home",

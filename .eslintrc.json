@@ -10,6 +10,10 @@
         "ecmaVersion": 8 // or 2017
     },
     "rules": {
+        "camelcase": "error",
+        "comma-spacing": [
+          "error", {"before": false, "after": true}
+        ],
         "indent": [
             "error",
             "tab"
@@ -18,14 +22,6 @@
             "error",
             "unix"
         ],
-        "quotes": [
-            "error",
-            "single"
-        ],
-        "semi": [
-            "error",
-            "always"
-        ],
         "no-unused-vars": [
           "warn"
         ],
@@ -33,6 +29,14 @@
         "node/no-unsupported-features": [
           "off",
           {"version": 7}
+        ],
+        "quotes": [
+            "error",
+            "single"
+        ],
+        "semi": [
+            "error",
+            "always"
         ]
     }
 }

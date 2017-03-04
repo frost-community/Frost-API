@@ -14,7 +14,7 @@ exports.analyzePermissions = () => {
 
 const buildApplicationKeyHash = (applicationId, creatorId, keyCode) => {
 	const sha256 = crypto.createHash('sha256');
-	sha256.update(`${config.api.secret_token.application}/${creatorId.toString()}/${applicationId.toString()}/${keyCode}`);
+	sha256.update(`${config.api.secretToken.application}/${creatorId.toString()}/${applicationId.toString()}/${keyCode}`);
 
 	return sha256.digest('hex');
 };
@@ -45,13 +45,13 @@ exports.verifyApplicationKeyAsync = async (key) => {
 	}
 
 	const dbManager = await dbConnector.connectApidbAsync();
-	const doc = await dbManager.findAsync('applications', {_id: elements.applicationId, key_code: elements.keyCode});
+	const doc = await dbManager.findAsync('applications', {_id: elements.applicationId, keyCode: elements.keyCode});
 
 	if (doc == null)
 		return false;
 
-	const correctKeyHash = buildApplicationKeyHash(elements.applicationId, doc.creator_id, elements.keyCode);
-	const isPassed = elements.hash === correctKeyHash && elements.keyCode === doc.key_code;
+	const correctKeyHash = buildApplicationKeyHash(elements.applicationId, doc.creatorId, elements.keyCode);
+	const isPassed = elements.hash === correctKeyHash && elements.keyCode === doc.keyCode;
 
 	return isPassed;
 };

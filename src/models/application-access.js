@@ -8,7 +8,7 @@ const dbConnector = require('../helpers/db-connector')();
 
 const buildAccessKeyHash = (applicationId, userId, keyCode) => {
 	const sha256 = crypto.createHash('sha256');
-	sha256.update(`${config.api.secret_token.application_access}/${applicationId.toString()}/${userId.toString()}/${keyCode}`);
+	sha256.update(`${config.api.secretToken.applicationAccess}/${applicationId.toString()}/${userId.toString()}/${keyCode}`);
 
 	return sha256.digest('hex');
 };
@@ -40,13 +40,13 @@ exports.verifyAccessKeyAsync = async (key) => {
 	}
 
 	const dbManager = await dbConnector.connectApidbAsync();
-	const doc = await dbManager.findAsync('applicationAccesses', {user_id: elements.userId, key_code: elements.keyCode});
+	const doc = await dbManager.findAsync('applicationAccesses', {userId: elements.userId, keyCode: elements.keyCode});
 
 	if (doc == null)
 		return false;
 
-	const correctKeyHash = buildAccessKeyHash(doc.application_id, elements.userId, elements.keyCode);
-	const isPassed = elements.hash === correctKeyHash && elements.keyCode === doc.key_code;
+	const correctKeyHash = buildAccessKeyHash(doc.applicationId, elements.userId, elements.keyCode);
+	const isPassed = elements.hash === correctKeyHash && elements.keyCode === doc.keyCode;
 
 	return isPassed;
 };

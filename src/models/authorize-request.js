@@ -9,7 +9,7 @@ require('../helpers/object-id-extension')();
 
 const buildRequestKeyHash = (authorizeRequestId, applicationId, keyCode) => {
 	const sha256 = crypto.createHash('sha256');
-	sha256.update(`${config.api.secret_token.authorize_request}/${applicationId.toString()}/${authorizeRequestId.toString()}/${keyCode}`);
+	sha256.update(`${config.api.secretToken.authorizeRequest}/${applicationId.toString()}/${authorizeRequestId.toString()}/${keyCode}`);
 
 	return sha256.digest('hex');
 };
@@ -46,10 +46,10 @@ exports.verifyRequestKeyAsync = async (key) => {
 	if (doc == null)
 		return false;
 
-	const correctKeyHash = buildRequestKeyHash(elements.authorizeRequestId, doc.application_id, elements.keyCode);
+	const correctKeyHash = buildRequestKeyHash(elements.authorizeRequestId, doc.applicationId, elements.keyCode);
 	const createdAt = doc._id.getUnixtime();
 	const isAvailabilityPeriod = Math.abs(Date.now() - createdAt) < config.api.request_key_expire_sec;
-	const isPassed = isAvailabilityPeriod && elements.hash === correctKeyHash && elements.keyCode === doc.key_code;
+	const isPassed = isAvailabilityPeriod && elements.hash === correctKeyHash && elements.keyCode === doc.keyCode;
 
 	return isPassed;
 };
