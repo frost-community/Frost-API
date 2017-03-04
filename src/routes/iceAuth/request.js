@@ -3,7 +3,7 @@
 const apiResult = require('../../helpers/apiResult');
 
 const authorizeRequestsAsync = require('../../collections/authorizeRequests');
-const applications = require('../../collections/application');
+const applications = require('../../collections/applications');
 
 const applicationModel = require('../../models/application');
 
