@@ -9,7 +9,9 @@
     "clean": "rimraf ./built",
     "build-copy": "cpx \"src/**/*.js\" built",
     "build": "npm run clean && npm run build-copy && npm run test",
-    "test": "eslint ./built/**/*.js"
+    "test-lint": "eslint ./built/**/*.js",
+    "test-mocha": "mocha",
+    "test": "npm run test-lint && npm run test-mocha"
   },
   "author": "team FrostDevelop",
   "license": "MIT",
@@ -26,7 +28,9 @@
     "eslint-config-standard": "^7.0.0",
     "eslint-plugin-node": "^4.1.0",
     "eslint-plugin-promise": "^3.5.0",
-    "eslint-plugin-standard": "^2.0.1"
+    "eslint-plugin-standard": "^2.0.1",
+    "mocha": "^3.2.0",
+    "sinon": "^1.17.7"
   },
   "files": [
     "*"

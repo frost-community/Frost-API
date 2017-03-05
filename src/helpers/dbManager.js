@@ -9,7 +9,8 @@ module.exports = (db) => {
 	 * @param  {string} collectionName コレクション名
 	 * @param  {string} data
 	 */
-	instance.createAsync = async (collectionName, data) => await instance.db.collection(collectionName).insert(data);
+	instance.createAsync = async (collectionName, data) =>
+		await instance.db.collection(collectionName).insert(data);
 
 	/**
 	 * ドキュメントを検索して項目を取得します
@@ -19,7 +20,8 @@ module.exports = (db) => {
 	 * @param  {Object} option
 	 * @param  {Object|null} document
 	 */
-	instance.findAsync = async (collectionName, query, option) => await instance.db.collection(collectionName).findOne(query, option);
+	instance.findAsync = async (collectionName, query, option) =>
+		await instance.db.collection(collectionName).findOne(query, option);
 
 	/**
 	 * ドキュメントを検索して複数の項目を取得します
@@ -29,15 +31,8 @@ module.exports = (db) => {
 	 * @param  {Object} option
 	 * @param  {Object[]|null} documents
 	 */
-	instance.findArrayAsync = (collectionName, query, option) => new Promise((resolve, reject) => {
-		let docs = instance.db.collection(collectionName).findMany(query, option);
-		docs.toArray((err, docArray) => {
-			if (err != null || docArray == null || docArray.length === 0)
-				reject('result is empty');
-
-			resolve(docArray);
-		});
-	});
+	instance.findArrayAsync = async (collectionName, query, option) =>
+		await instance.db.collection(collectionName).find(query, option).toArray();
 
 	/**
 	 * ドキュメントを更新します
@@ -59,7 +54,8 @@ module.exports = (db) => {
 	 * @param  {string} collectionName
 	 * @param  {Object} query
 	 */
-	instance.removeAsync = async (collectionName, query) => await instance.db.collection(collectionName).remove(query);
+	instance.removeAsync = async (collectionName, query) =>
+		await instance.db.collection(collectionName).remove(query);
 
 	return instance;
 };
