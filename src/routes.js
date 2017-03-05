@@ -17,24 +17,24 @@ module.exports = () => {
 		// == IceAuth ==
 
 		// 認証リクエスト(リクエストキー取得)
-		['post', '/iceAuth/request', {
+		['post', '/ice-auth/request', {
 			params: [
-				{name: 'applicationKey', type: 'string'}
+				{name: 'application-key', type: 'string'}
 			]}],
 
-		// リクエストキーから検証トークン(PINコード)取得(認証ホスト専用エンドポイント)
-		['get',  '/iceAuth/verificationKey', {
+		// リクエストキーからverification-key(PINコード)取得(認証ホスト専用エンドポイント)
+		['get',  '/ice-auth/verification-key', {
 			params: [
-				{name: 'applicationKey', type: 'string'},
-				{name: 'requestKey', type: 'string'}
+				{name: 'application-key', type: 'string'},
+				{name: 'request-key', type: 'string'}
 			], permissions:['iceAuthHost']}],
 
-		// verificationKeyを検証して認証を試行する
-		['post', '/iceAuth/authorize', {
+		// verification-keyを検証して認証を試行する
+		['post', '/ice-auth/authorize', {
 			params: [
-				{name: 'applicationKey', type: 'string'},
-				{name: 'requestKey', type: 'string'},
-				{name: 'verificationKey', type: 'string'}
+				{name: 'application-key', type: 'string'},
+				{name: 'request-key', type: 'string'},
+				{name: 'verification-key', type: 'string'}
 			]}],
 
 		// == Applications ==
@@ -52,11 +52,11 @@ module.exports = () => {
 			params: [], permissions:['application']}],
 
 		// アプリケーションキーを生成する
-		['post', '/applications/:id/applicationKey', {
+		['post', '/applications/:id/application-key', {
 			params: [], permissions:['applicationSpecial']}],
 
 		// idを指定してアプリケーションキーを取得する
-		['get',  '/applications/:id/applicationKey', {
+		['get',  '/applications/:id/application-key', {
 			params: [], permissions:['applicationSpecial']}],
 
 		// == Users ==
