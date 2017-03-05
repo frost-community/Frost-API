@@ -30,7 +30,7 @@ exports.post = async (request, extensions) => {
 	if (!/^[a-z0-9_]{4,15}$/.test(screenName) || /^(.)\1{3,}$/.test(screenName))
 		throw apiResult(400, 'screenName is invalid format');
 
-	for (let invalidScreenName of config.api.invalidScreenNames) {
+	for (const invalidScreenName of config.api.invalidScreenNames) {
 		if (screenName === invalidScreenName)
 			throw apiResult(400, 'screenName is invalid');
 	}

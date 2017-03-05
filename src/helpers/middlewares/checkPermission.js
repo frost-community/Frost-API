@@ -7,14 +7,14 @@ const applicationsAsync = require('../../collections/applications');
 const usersAsync = require('../../collections/users');
 
 module.exports = (router) => {
-	let instance = {};
+	const instance = {};
 
 	instance.execute = (request, response, next) => {
 		try {
 			(async () => {
 				try {
-					let route = router.findRoute(request.method, request.route.path);
-					let extensions = route.extensions;
+					const route = router.findRoute(request.method, request.route.path);
+					const extensions = route.extensions;
 
 					if ('permissions' in extensions && extensions.permissions.length !== 0) {
 						const applicationKey = request.get('X-Application-Key');
@@ -46,7 +46,7 @@ module.exports = (router) => {
 						request.application = (await applicationsAsync()).findAsync({_id: applicationId});
 						request.user = await (await usersAsync()).findAsync({_id: userId});
 
-						for (let permission of extensions.permissions) {
+						for (const permission of extensions.permissions) {
 							if (!await request.application.hasPermissionAsync(permission)) {
 								response.status(403).send({error: {message: 'you do not have any permissions'}});
 								return;

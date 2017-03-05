@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = () => {
-	let routes = [
+	const routes = [
 		['get', '/', {}],
 
 		// == Account ==
@@ -22,7 +22,7 @@ module.exports = () => {
 				{name: 'applicationKey', type: 'string'}
 			]}],
 
-		// リクエストキーから検証トークン取得(認証ホスト専用エンドポイント)
+		// リクエストキーから検証トークン(PINコード)取得(認証ホスト専用エンドポイント)
 		['get',  '/iceAuth/verificationKey', {
 			params: [
 				{name: 'applicationKey', type: 'string'},

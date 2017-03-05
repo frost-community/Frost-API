@@ -3,14 +3,14 @@
 const type = require('../type');
 
 module.exports = (router) => {
-	let instance = {};
+	const instance = {};
 
 	instance.execute = (request, response, next) => {
 		try {
-			let extensions = router.findRoute(request.method.toLowerCase(), request.route.path).extensions;
+			const extensions = router.findRoute(request.method.toLowerCase(), request.route.path).extensions;
 
 			if ('params' in extensions && extensions.params.length !== 0) {
-				for(let param of extensions.params) {
+				for(const param of extensions.params) {
 					if (param.type == null || param.name == null) {
 						response.status(500).send({error: {message: 'internal error', details: 'extentions.params elements are missing'}});
 						throw new Error('extentions.params elements are missing');
