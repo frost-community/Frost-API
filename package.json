@@ -10,7 +10,7 @@
     "build-copy": "cpx \"src/**/*.js\" built",
     "build": "npm run clean && npm run build-copy && npm run test",
     "test-lint": "eslint ./built/**/*.js",
-    "test-mocha": "mocha",
+    "test-mocha": "mocha test/tests.js",
     "test": "npm run test-lint && npm run test-mocha"
   },
   "author": "team FrostDevelop",
