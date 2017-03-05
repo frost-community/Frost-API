@@ -38,7 +38,7 @@ describe('dbManager', () => {
 			try {
 				assert(testDb != null);
 				const document = await testDb.findAsync('hoges', {piyo: 'fuga'});
-				assert(document != null);
+				assert('nyao' in document && document.nyao === 'nya');
 				done();
 			}
 			catch(e) {
