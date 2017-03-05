@@ -3,6 +3,20 @@
 const assert = require('assert');
 const config = require('../built/helpers/loadConfig')();
 
+
+describe('routes', () => {
+	const routes = require('../built/routes');
+	it('権限リストにある権限名のみを利用している', (done) => {
+		for(const route of routes) {
+			if ('permissions' in route[2]) {
+				for(const permission of route[2].permissions) {
+					assert(require('../built/helpers/permission').permissionTypes.indexOf(permission) > -1);
+				}
+			}
+		}
+	});
+});
+
 describe('dbManager', () => {
 	const db = require('../built/helpers/dbConnector')();
 	let testDb;
