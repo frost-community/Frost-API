@@ -3,6 +3,9 @@ language: node_js
 node_js:
   - "7.7.0"
 
+services:
+  - mongodb
+
 cache:
   directories:
   - node_modules

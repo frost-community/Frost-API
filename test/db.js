@@ -10,7 +10,7 @@ describe('DB', () => {
 	it('DBに接続してそのインスタンスが取得できる', (done) => {
 		(async () => {
 			try {
-				testDb = await db.connectAsync(config.api.database.host, config.api.database.port, 'test');
+				testDb = await db.connectAsync('localhost', 'test');
 				assert(testDb != null);
 				done();
 			}
