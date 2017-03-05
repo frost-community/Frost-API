@@ -4,3 +4,4 @@ assets
 .htaccess
 .idea
 .vscode
+*.log
