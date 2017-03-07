@@ -1,6 +1,8 @@
 'use strict';
 
+const sinon = require('sinon');
 const assert = require('assert');
+const proxyquire = require('proxyquire');
 
 describe('routes', () => {
 	const routes = require('../built/routes')();
@@ -32,5 +34,47 @@ describe('randomRange', () => {
 			const value = random(64, 1024);
 			assert(value >= 64 && value <= 1024);
 		}
+	});
+});
+
+describe('API', () => {
+	describe('アカウントを作成する時', () => {
+		it('正しくリクエストされた場合は成功する', (done) => {
+			(async () => {
+				try {
+					const routeAccount = proxyquire('../built/routes/account', {
+						'../helpers/dbConnector': () => {
+							return {
+								connectApidbAsync: async () => {
+									return {
+										findArrayAsync: async () => {
+											return [];
+										}, createAsync: async () => {
+											return {ops: [{hoge: 'hoge', passwordHash: 'abcdefg'}]}
+										}
+									}
+								}
+							}
+						}
+					});
+
+					const request = {
+						body: {
+							screenName: 'hogehoge',
+							password: 'a1b2c3d4e5f6g',
+							name: 'froster',
+							description: 'testhoge'
+						}
+					};
+					const res = await routeAccount.post(request, null);
+
+					assert(res.statusCode == 200);
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
 	});
 });

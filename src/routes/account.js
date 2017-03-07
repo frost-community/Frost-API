@@ -39,7 +39,7 @@ exports.post = async (request, extensions) => {
 		throw apiResult(400, 'password is invalid format');
 
 	if ((await dbManager.findArrayAsync('users', {screenName: screenName})).length !== 0)
-		throw new apiResult(400, 'this screenName is already exists');
+		throw apiResult(400, 'this screenName is already exists');
 
 	let result;
 
