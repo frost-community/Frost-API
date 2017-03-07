@@ -1,5 +1,6 @@
 ![logo](logo.png)
 
+## Status
 [![Build Status](https://img.shields.io/travis/Frost-Dev/Frost-API.svg?style=flat-square)](https://travis-ci.org/Frost-Dev/Frost-API)
 
 ## Reference
