@@ -45,8 +45,8 @@ describe('API', () => {
 				let config = require('../built/helpers/loadConfig')();
 				config.api.database = {
 					database: 'test',
-					username: 'root',
-					password: ''
+					host: 'localhost',
+					username: 'root'
 				};
 				return config;
 			}

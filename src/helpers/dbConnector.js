@@ -12,13 +12,8 @@ module.exports = () => {
 	 * host, dbname, [user, password]
 	 * @return {Promise}
 	 */
-	instance.connectAsync = (host, dbname, username, password) => new Promise((resolve, reject) => {
-		let authenticate = '';
-
-		if (username != null && password != null)
-			authenticate = `${username}:${password}@`;
-
-		mongodb.MongoClient.connect(`mongodb://${authenticate}${host}/${dbname}`, (err, db) => {
+	instance.connectAsync = (host, dbname, authenticate) => new Promise((resolve, reject) => {
+		mongodb.MongoClient.connect(`mongodb://${authenticate}@${host}/${dbname}`, (err, db) => {
 			if (err)
 				return reject('faild to connect database');
 
@@ -27,11 +22,12 @@ module.exports = () => {
 	});
 
 	instance.connectApidbAsync = async () => {
+		const host = config.api.database.port != null ? `${config.api.database.host}:${config.api.database.port}` : config.api.database.host;
+		const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
 		await instance.connectAsync(
-			`${config.api.database.host}:${config.api.database.port}`,
+			host,
 			config.api.database.database,
-			config.api.database.username,
-			config.api.database.password);
+			authenticate);
 	};
 
 	return instance;
