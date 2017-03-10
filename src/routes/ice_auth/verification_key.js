@@ -7,7 +7,7 @@ const authorizeRequests = require('../../collections/authorizeRequests');
 const applicationModel = require('../../models/application');
 const authorizeRequestsModel = require('../../models/authorizeRequest');
 
-exports.get = async (request, extensions) => {
+exports.get = async (request, extensions, config) => {
 	const applicationKey = request.body.application_key;
 	const requestKey = request.body.request_key;
 

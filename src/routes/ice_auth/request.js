@@ -5,7 +5,7 @@ const apiResult = require('../../helpers/apiResult');
 const authorizeRequests = require('../../collections/authorizeRequests');
 const applicationModel = require('../../models/application');
 
-exports.post = async (request, extensions) => {
+exports.post = async (request, extensions, config) => {
 	const applicationKey = request.body.application_key;
 
 	if (await applicationModel.verifyKeyAsync(applicationKey))
