@@ -3,11 +3,10 @@
 const crypto = require('crypto');
 
 const apiResult = require('../helpers/apiResult');
-const config = require('../helpers/loadConfig')();
 const dbConnector = require('../helpers/dbConnector')();
 const randomRange = require('../helpers/randomRange');
 
-exports.post = async (request, extensions) => {
+exports.post = async (request, extensions, config) => {
 	const screenName = request.body.screenName;
 	const password = request.body.password;
 	let name = request.body.name;
@@ -25,7 +24,7 @@ exports.post = async (request, extensions) => {
 	sha256.update(`${password}.${salt}`);
 	const hash = `${sha256.digest('hex')}.${salt}`;
 
-	const dbManager = await dbConnector.connectApidbAsync();
+	const dbManager = await dbConnector.connectApidbAsync(config);
 
 	if (!/^[a-z0-9_]{4,15}$/.test(screenName) || /^(.)\1{3,}$/.test(screenName))
 		throw apiResult(400, 'screenName is invalid format');

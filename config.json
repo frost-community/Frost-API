@@ -8,6 +8,13 @@
       "username": "frost-api",
       "password": "frost-api"
     },
+    "testDatabase": {
+      "host": "localhost",
+      "port": null,
+      "database": "test",
+      "username": "root",
+      "password": null
+    },
     "secretToken": {
       "application": "application-secret-token",
       "applicationAccess": "application-access-secret-token",

@@ -67,7 +67,7 @@ const addRoute = (route, middles) => {
 						if (routeFuncAsync == null)
 							throw new Error(`endpoint not found\ntarget: ${method} ${path}`);
 
-						const result = await routeFuncAsync(request, extensions);
+						const result = await routeFuncAsync(request, extensions, require('./loadConfig')());
 						response.success(result);
 					})().catch(err => {
 						if (type(err) !== 'Error')
