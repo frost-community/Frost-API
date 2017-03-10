@@ -19,11 +19,11 @@ describe('API', () => {
 		})();
 	});
 
-	describe('アカウントを作成する時', () => {
+	describe('POST /account - アカウントを作成する', () => {
 		beforeEach(done => {
 			(async () => {
 				try {
-					dbManager.removeAsync('users', {});
+					await dbManager.removeAsync('users', {});
 
 					done();
 				}
@@ -149,11 +149,11 @@ describe('API', () => {
 		});
 	});
 
-	describe('アプリケーションを作成する時', () => {
+	describe('POST /applications - アプリケーションを作成する', () => {
 		beforeEach(done => {
 			(async () => {
 				try {
-					dbManager.removeAsync('applicaitons', {});
+					await dbManager.removeAsync('applications', {});
 
 					done();
 				}
@@ -163,7 +163,7 @@ describe('API', () => {
 			})();
 		});
 
-		it('全部空だと失敗する', done => {
+		it('正しくリクエストされた場合は成功する', done => {
 			(async () => {
 				try {
 					let res = await require('../built/routes/applications').post({
@@ -172,8 +172,32 @@ describe('API', () => {
 							permissions: []
 						},
 						body: {
-							name: '',
-							description: '',
+							name: 'hoge',
+							description: 'hogehoge',
+							permissions: ''
+						}
+					}, null, config);
+					assert.equal(res.message, null);
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
+
+		it('nameが4文字未満の場合は失敗', done => {
+			(async () => {
+				try {
+					let res = await require('../built/routes/applications').post({
+						user: {_id: ''},
+						application: {
+							permissions: []
+						},
+						body: {
+							name: 'abc',
+							description: 'hogehoge',
 							permissions: ''
 						}
 					}, null, config);
