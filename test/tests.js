@@ -39,34 +39,32 @@ describe('randomRange', () => {
 
 describe('API', () => {
 	describe('アカウントを作成する時', () => {
+
+		const testDbConnector = proxyquire('../built/helpers/dbConnector', {
+			'./loadConfig': () => {
+				let config = require('../built/helpers/loadConfig')();
+				config.api.database = {
+					database: 'test',
+					username: 'root',
+					password: ''
+				};
+				return config;
+			}
+		});
+
+		const routeAccount = proxyquire('../built/routes/account', {'../helpers/dbConnector': testDbConnector});
+
 		it('正しくリクエストされた場合は成功する', (done) => {
 			(async () => {
 				try {
-					const routeAccount = proxyquire('../built/routes/account', {
-						'../helpers/dbConnector': () => {
-							return {
-								connectApidbAsync: async () => {
-									return {
-										findArrayAsync: async () => {
-											return [];
-										}, createAsync: async () => {
-											return {ops: [{hoge: 'hoge', passwordHash: 'abcdefg'}]}
-										}
-									}
-								}
-							}
-						}
-					});
-
-					const request = {
+					const res = await routeAccount.post({
 						body: {
 							screenName: 'hogehoge',
 							password: 'a1b2c3d4e5f6g',
 							name: 'froster',
 							description: 'testhoge'
 						}
-					};
-					const res = await routeAccount.post(request, null);
+					}, null);
 
 					assert(res.statusCode == 200);
 					done();
