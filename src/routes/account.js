@@ -26,19 +26,29 @@ exports.post = async (request, extensions, config) => {
 
 	const dbManager = await dbConnector.connectApidbAsync(config);
 
+	// screenName
 	if (!/^[a-z0-9_]{4,15}$/.test(screenName) || /^(.)\1{3,}$/.test(screenName))
-		throw apiResult(400, 'screenName is invalid format');
+		return apiResult(400, 'screenName is invalid format');
 
 	for (const invalidScreenName of config.api.invalidScreenNames) {
 		if (screenName === invalidScreenName)
-			throw apiResult(400, 'screenName is invalid');
+			return apiResult(400, 'screenName is invalid');
 	}
 
-	if (!/^[a-z0-9_-]{6,128}$/.test(password))
-		throw apiResult(400, 'password is invalid format');
+	// password
+	if (!/^[a-z0-9_-]{6,}$/.test(password))
+		return apiResult(400, 'password is invalid format');
+
+	// name
+	if (!/^.{1,32}$/.test(name))
+		return apiResult(400, 'name is invalid format');
+
+	// description
+	if (!/^.{0,256}$/.test(description))
+		return apiResult(400, 'description is invalid format');
 
 	if ((await dbManager.findArrayAsync('users', {screenName: screenName})).length !== 0)
-		throw apiResult(400, 'this screenName is already exists');
+		return apiResult(400, 'this screenName is already exists');
 
 	let result;
 
@@ -47,7 +57,7 @@ exports.post = async (request, extensions, config) => {
 	}
 	catch(err) {
 		console.log(err.stack);
-		throw apiResult(500, 'faild to create account');
+		return apiResult(500, 'faild to create account');
 	}
 
 	delete result.passwordHash;
