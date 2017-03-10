@@ -44,7 +44,7 @@ describe('API', () => {
 							description: 'testhoge'
 						}
 					}, null, config);
-					assert.equal(res.message, null);
+					assert.equal(res.statusCode, 200);
 
 					done();
 				}
@@ -177,7 +177,7 @@ describe('API', () => {
 							permissions: ''
 						}
 					}, null, config);
-					assert.equal(res.message, null);
+					assert.equal(res.statusCode, 200);
 
 					done();
 				}
@@ -201,7 +201,7 @@ describe('API', () => {
 							permissions: ''
 						}
 					}, null, config);
-					assert.notEqual(res.message, null);
+					assert.equal(res.message, 'name is invalid format');
 
 					done();
 				}
