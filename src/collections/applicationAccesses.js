@@ -16,9 +16,25 @@ module.exports = async () => {
 	};
 
 	instance.findAsync = async (query) => {
-		const doc = await dbManager.findArrayAsync('applicationAccesses', query);
+		const result = await dbManager.findAsync('applicationAccesses', query);
 
-		return applicationAccessDoc(doc._id, dbManager);
+		if (result == null)
+			return null;
+
+		return applicationAccessDoc(result._id, dbManager);
+	};
+
+	instance.findManyAsync = async (query) => {
+		const results = await dbManager.findArrayAsync('applicationAccesses', query);
+
+		if (results == null || results.length === 0)
+			return null;
+
+		const res = [];
+		for (const result of results)
+			res.push(applicationAccessDoc(result._id, dbManager));
+
+		return res;
 	};
 
 	return instance;
