@@ -36,7 +36,7 @@ describe('API', () => {
 		it('正しくリクエストされた場合は成功する', done => {
 			(async () => {
 				try {
-					const res = await require('../built/routes/account').post({
+					let res = await require('../built/routes/account').post({
 						body: {
 							screenName: 'hogehoge',
 							password: 'a1b2c3d4e5f6g',
@@ -88,7 +88,7 @@ describe('API', () => {
 		it('passwordが6文字未満のときは失敗する', done => {
 			(async () => {
 				try {
-					const res = await require('../built/routes/account').post({
+					let res = await require('../built/routes/account').post({
 						body: {
 							screenName: 'hogehoge',
 							password: 'a1b2c',
@@ -97,6 +97,48 @@ describe('API', () => {
 						}
 					}, null, config);
 					assert.equal(res.message, 'password is invalid format');
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
+
+		it('nameが33文字以上のときは失敗する', done => {
+			(async () => {
+				try {
+					let res = await require('../built/routes/account').post({
+						body: {
+							screenName: 'hogehoge',
+							password: 'a1b2c3d4e5f6g',
+							name: 'superFrostersuperFrostersuperFros',
+							description: 'testhoge'
+						}
+					}, null, config);
+					assert.equal(res.message, 'name is invalid format');
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
+
+		it('descriptionが257文字以上のときは失敗する', done => {
+			(async () => {
+				try {
+					let res = await require('../built/routes/account').post({
+						body: {
+							screenName: 'hogehoge',
+							password: 'a1b2c3d4e5f6g',
+							name: '',
+							description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget'
+						}
+					}, null, config);
+					assert.equal(res.message, 'description is invalid format');
 
 					done();
 				}
