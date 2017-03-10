@@ -148,4 +148,43 @@ describe('API', () => {
 			})();
 		});
 	});
+
+	describe('アプリケーションを作成する時', () => {
+		beforeEach(done => {
+			(async () => {
+				try {
+					dbManager.removeAsync('applicaitons', {});
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
+
+		it('全部空だと失敗する', done => {
+			(async () => {
+				try {
+					let res = await require('../built/routes/applications').post({
+						user: {_id: ''},
+						application: {
+							permissions: []
+						},
+						body: {
+							name: '',
+							description: '',
+							permissions: ''
+						}
+					}, null, config);
+					assert.notEqual(res.message, null);
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
+	});
 });
