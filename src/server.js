@@ -27,7 +27,7 @@ module.exports = () => {
 				config = JSON.parse((await requestAsync(urlConfigFile)).body);
 
 				let configPath;
-				if (ans == 'y' || ans == 'Y')
+				if (ans == 'y' || ans == 'yes')
 					configPath = `${process.cwd()}/../config.json`;
 				else
 					configPath = `${process.cwd()}/config.json`;
