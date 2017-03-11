@@ -35,6 +35,9 @@ exports.post = async (request, extensions, config) => {
 			return apiResult(400, 'screenName is invalid');
 	}
 
+	if ((await dbManager.findArrayAsync('users', {screenName: screenName})).length !== 0)
+		return apiResult(400, 'this screenName is already exists');
+
 	// password
 	if (!/^[a-z0-9_-]{6,}$/.test(password))
 		return apiResult(400, 'password is invalid format');
@@ -46,9 +49,6 @@ exports.post = async (request, extensions, config) => {
 	// description
 	if (!/^.{0,256}$/.test(description))
 		return apiResult(400, 'description is invalid format');
-
-	if ((await dbManager.findArrayAsync('users', {screenName: screenName})).length !== 0)
-		return apiResult(400, 'this screenName is already exists');
 
 	let result;
 

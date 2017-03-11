@@ -17,13 +17,14 @@ exports.post = async (request, extensions, config) => {
 	if (!/^.{1,32}$/.test(name))
 		return apiResult(400, 'name is invalid format');
 
+	if ((await db.findArrayAsync('applications', {name: name})).length >= 1)
+		return apiResult(400, 'already exists name');
+
 	// description
 	if (!/^.{0,256}$/.test(description))
 		return apiResult(400, 'description is invalid format');
 
-	if ((await db.findArrayAsync('applications', {name: name})).length >= 1)
-		return apiResult(400, 'already exists name');
-
+	// permissions
 	if (!applicationModel.analyzePermissions(request.application.permissions))
 		return apiResult(400, 'permissions is invalid format');
 
