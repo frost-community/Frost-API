@@ -14,6 +14,10 @@ module.exports = () => {
 				{name: 'name', type: 'string', require: false}
 			], permissions:['account_special']}],
 
+		// ホームタイムラインを取得
+		['get',  '/account/timeline', {
+			params: [], permissions:['post_read']}],
+
 		// == IceAuth ==
 
 		// 認証リクエスト(リクエストキー取得)
@@ -95,14 +99,9 @@ module.exports = () => {
 		['post', '/posts/article', {
 			params: [], permissions:['post_write']}],
 
-		// ホームタイムラインを取得
-		['get',  '/posts/timeline', {
-			params: [], permissions:['post_read']}],
-
 		// idを指定してポストを取得
-		['get',  '/posts/{id}', {
+		['get',  '/posts/:id', {
 			params: [], permissions:['post_read']}],
-
 	];
 
 	return routes;
