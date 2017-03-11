@@ -31,7 +31,14 @@ module.exports = async (config) => {
 	};
 
 	instance.findIdAsync = async (id) => {
-		return await instance.findAsync({_id: type(id) == 'ObjectID' ? id : objectId(id)});
+		try {
+			id = (type(id) == 'ObjectID') ? id : objectId(id);
+		}
+		catch(e) {
+			return null;
+		}
+
+		return await instance.findAsync({_id: id});
 	};
 
 	instance.findManyAsync = async (query) => {
