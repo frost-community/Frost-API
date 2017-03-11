@@ -32,9 +32,8 @@ module.exports = () => {
 					configPath = `${process.cwd()}/config.json`;
 
 				const configJson = (await requestAsync(urlConfigFile)).body;
-				config = JSON.parse(configJson);
-
 				fs.writeFileSync(configPath, configJson);
+				config = JSON.parse(configJson);
 			}
 		}
 
