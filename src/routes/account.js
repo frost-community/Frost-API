@@ -50,16 +50,27 @@ exports.post = async (request, extensions, config) => {
 	if (!/^.{0,256}$/.test(description))
 		return apiResult(400, 'description is invalid format');
 
-	let result;
+	let document;
 
 	try {
-		result = (await dbManager.createAsync('users', {screenName: screenName, name: name, description: description, passwordHash: hash})).ops[0];
+		document = (await dbManager.createAsync('users', {screenName: screenName, name: name, description: description, passwordHash: hash}));
 	}
 	catch(err) {
 		console.log(err.stack);
 		return apiResult(500, 'faild to create account');
 	}
 
-	delete result.passwordHash;
-	return apiResult(200, 'success', {user: result});
+	if (!(document.result.n == 1 && document.result.ok == 1))
+		return apiResult(500, 'faild to create account');
+
+	delete document.ops[0].passwordHash;
+
+	let res = {};
+	Object.assign(res, {user: document.ops[0]});
+
+	// _idを文字列に変換し、idとして返す
+	res.user.id = res.user._id.toString();
+	delete res.user._id;
+
+	return apiResult(200, 'success', res);
 };

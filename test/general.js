@@ -3,7 +3,7 @@
 const assert = require('assert');
 const config = require('../built/helpers/loadConfig')();
 
-describe('General', () => {
+describe('General -', () => {
 	describe('routes', () => {
 		const routes = require('../built/routes')();
 

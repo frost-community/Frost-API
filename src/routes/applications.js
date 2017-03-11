@@ -25,13 +25,13 @@ exports.post = async (request, extensions, config) => {
 		return apiResult(400, 'description is invalid format');
 
 	// permissions
-	if (!applicationModel.analyzePermissions(request.application.permissions))
+	if (!applicationModel.analyzePermissions(permissions))
 		return apiResult(400, 'permissions is invalid format');
 
-	let application;
+	let document;
 
 	try {
-		application = await db.createAsync('applications', {
+		document = await db.createAsync('applications', {
 			name: name,
 			creatorId: userId,
 			description: description,
@@ -43,5 +43,15 @@ exports.post = async (request, extensions, config) => {
 		return apiResult(500, 'faild to create application');
 	}
 
-	return apiResult(200, 'success', {application: application});
+	if (!(document.result.n == 1 && document.result.ok == 1))
+		return apiResult(500, 'faild to create application');
+
+	let res = {};
+	Object.assign(res, {application: document.ops[0]});
+
+	// _idを文字列に変換し、idとして返す
+	res.application.id = res.application._id.toString();
+	delete res.application._id;
+
+	return apiResult(200, 'success', res);
 };
