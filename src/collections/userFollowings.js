@@ -39,7 +39,7 @@ module.exports = async (config) => {
 
 		const res = [];
 		for (const document of documents)
-			res.push(postDoc(document, dbManager));
+			res.push(userFollowingDoc(document, dbManager));
 
 		return res;
 	};

@@ -20,7 +20,7 @@ exports.connectAsync = (host, dbname, authenticate) => new Promise((resolve, rej
 exports.connectApidbAsync = async (config) => {
 	const host = config.api.database.port != null ? `${config.api.database.host}:${config.api.database.port}` : config.api.database.host;
 	const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
-	return await instance.connectAsync(
+	return await exports.connectAsync(
 		host,
 		config.api.database.database,
 		authenticate);
