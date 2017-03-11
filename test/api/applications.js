@@ -159,31 +159,53 @@ describe('API', () => {
 	});
 
 	describe('GET  /applications/id', () => {
-		let account, app;
+		let accountA, appA, accountB, appB;
 		before(done => {
 			(async () => {
 				try {
 					let res = await routeAccount.post({
 						body: {
-							screenName: 'testuser',
+							screenName: 'testuser_a',
 							password: 'abcdefg',
 							name: 'froster',
 							description: 'this is testuser.'
 						}
 					}, null, config);
 					assert.equal(res.statusCode, 200);
-					account = res.data.user;
+					accountA = res.data.user;
+
+					res = await routeAccount.post({
+						body: {
+							screenName: 'testuser_b',
+							password: 'abcdefg',
+							name: 'froster',
+							description: 'this is testuser.'
+						}
+					}, null, config);
+					assert.equal(res.statusCode, 200);
+					accountB = res.data.user;
 
 					res = await routeApp.post({
-						user: {id: account.id},
+						user: {id: accountA.id},
 						body: {
-							name: 'testapp',
+							name: 'testapp_a',
 							description: 'this is testapp.',
 							permissions: []
 						}
 					}, null, config);
 					assert.equal(res.statusCode, 200);
-					app = res.data.application;
+					appA = res.data.application;
+
+					res = await routeApp.post({
+						user: {id: accountB.id},
+						body: {
+							name: 'testapp_b',
+							description: 'this is testapp.',
+							permissions: []
+						}
+					}, null, config);
+					assert.equal(res.statusCode, 200);
+					appB = res.data.application;
 
 					done();
 				}
@@ -211,8 +233,8 @@ describe('API', () => {
 			(async () => {
 				try {
 					let res = await routeAppId.get({
-						user: {id: account.id},
-						params: {id: app.id},
+						user: {id: accountA.id},
+						params: {id: appA.id},
 						body: {}
 					}, null, config);
 
@@ -220,13 +242,51 @@ describe('API', () => {
 
 					assert.deepEqual(res.data, {
 						application: {
-							id: app.id,
-							creatorId: account.id,
-							name: app.name,
-							description: app.description,
-							permissions: app.permissions
+							id: appA.id,
+							creatorId: accountA.id,
+							name: appA.name,
+							description: appA.description,
+							permissions: appA.permissions
 						}
 					});
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
+
+		it('所有していないアプリケーションを指定された場合は失敗する', done => {
+			(async () => {
+				try {
+					let res = await routeAppId.get({
+						user: {id: accountA.id},
+						params: {id: appB.id},
+						body: {}
+					}, null, config);
+
+					assert.equal(res.statusCode, 400);
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
+
+		it('存在しないアプリケーションを指定された場合は失敗する', done => {
+			(async () => {
+				try {
+					let res = await routeAppId.get({
+						user: {id: accountA.id},
+						params: {id: 'abcdefg1234'},
+						body: {}
+					}, null, config);
+
+					assert.equal(res.statusCode, 400);
 
 					done();
 				}
