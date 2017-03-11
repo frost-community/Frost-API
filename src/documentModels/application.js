@@ -1,7 +1,6 @@
 'use strict';
 
 const randomRange = require('../helpers/randomRange');
-
 const applicationModel = require('../models/application');
 
 module.exports = async (document, dbManager) => {

@@ -1,10 +1,9 @@
 'use strict';
 
 const crypto = require('crypto');
-const ObjectId = require('mongodb').ObjectId;
-
 const config = require('../helpers/loadConfig')();
 const dbConnector = require('../helpers/dbConnector');
+const objectId = require('mongodb').ObjectId;
 
 exports.analyzePermissions = () => {
 	// TODO
@@ -30,7 +29,7 @@ const splitKey = (key) => {
 	if (reg == null)
 		throw new Error('application key is invalid format');
 
-	return {applicationId: new ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
+	return {applicationId: objectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
 };
 exports.splitKey = splitKey;
 

@@ -8,6 +8,7 @@ const routes = require('./routes');
 const loadConfig = require('./helpers/loadConfig');
 const requestAsync = require('async-request');
 const urlConfigFile = 'https://raw.githubusercontent.com/Frost-Dev/Frost-API/develop/config.json';
+const sanitize = require('mongo-sanitize');
 
 module.exports = () => {
 	(async () => {
@@ -42,6 +43,12 @@ module.exports = () => {
 			app.disable('x-powered-by');
 			app.use(bodyParser.json());
 			const router = require('./helpers/router')(app, config);
+
+			app.use((req, res, next) => {
+				req.body = sanitize(req.body);
+				req.params = sanitize(req.params);
+				next();
+			});
 
 			const checkParams = require('./helpers/middlewares/checkParams')(router).execute;
 			const checkPermission = require('./helpers/middlewares/checkPermission')(router).execute;

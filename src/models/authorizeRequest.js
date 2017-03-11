@@ -1,11 +1,9 @@
 'use strict';
 
 const crypto = require('crypto');
-const ObjectId = require('mongodb').ObjectId;
-
 const config = require('../helpers/loadConfig')();
 const dbConnector = require('../helpers/dbConnector');
-// require('../helpers/objectIdExtension')();
+const objectId = require('mongodb').ObjectId;
 
 const buildKeyHash = (authorizeRequestId, applicationId, keyCode) => {
 	const sha256 = crypto.createHash('sha256');
@@ -26,7 +24,7 @@ const splitKey = (key) => {
 	if (reg == null)
 		throw new Error('request key is invalid format');
 
-	return {authorizeRequestId: new ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
+	return {authorizeRequestId: objectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
 };
 exports.splitKey = splitKey;
 
