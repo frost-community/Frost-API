@@ -3,6 +3,8 @@
 const assert = require('assert');
 const config = require('../../built/helpers/loadConfig')();
 const route = require('../../built/routes/applications');
+const routeId = require('../../built/routes/applications/id');
+const routeIdApplicationKey = require('../../built/routes/applications/id/application_key');
 const dbConnector = require('../../built/helpers/dbConnector')();
 
 describe('API', () => {
@@ -52,16 +54,15 @@ describe('API', () => {
 
 					assert.equal(res.statusCode, 200);
 
-					var expectation = {
+					delete res.data.application.id;
+					assert.deepEqual(res.data, {
 						application: {
 							name: 'hoge',
 							creatorId: '1234abcd',
 							description: 'hogehoge',
 							permissions: []
 						}
-					};
-					delete res.data.application.id;
-					assert.deepEqual(res.data, expectation);
+					});
 					done();
 				}
 				catch(e) {
@@ -133,12 +134,71 @@ describe('API', () => {
 	});
 
 	describe('GET  /applications/id', () => {
-		it('正しくリクエストされた場合は成功する');
+		it('正しくリクエストされた場合は成功する', done => {
+			(async () => {
+				try {
+					let res = await routeId.get({params: {id: 'application_id_hoge'}}, null, config);
+
+					assert.equal(res.statusCode, 200);
+
+					delete res.data.application.id;
+					assert.deepEqual(res.data, {
+						application: {
+							name: 'hoge',
+							creatorId: '1234abcd',
+							description: 'hogehoge',
+							permissions: []
+						}
+					});
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
 	});
+
 	describe('POST /applications/id/application_key', () => {
-		it('正しくリクエストされた場合は成功する');
+		it('正しくリクエストされた場合は成功する', done => {
+			(async () => {
+				try {
+					let res = await routeIdApplicationKey.post({params: {id: 'application_id_hoge'}}, null, config);
+
+					assert.equal(res.statusCode, 200);
+
+					assert.deepEqual(res.data, {
+						application_key: 'application_key_hoge'
+					});
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
 	});
+
 	describe('GET  /applications/id/application_key', () => {
-		it('正しくリクエストされた場合は成功する');
+		it('正しくリクエストされた場合は成功する', done => {
+			(async () => {
+				try {
+					let res = await routeIdApplicationKey.get({params: {id: 'application_id_hoge'}}, null, config);
+
+					assert.equal(res.statusCode, 200);
+
+					assert.deepEqual(res.data, {
+						application_key: 'application_key_hoge'
+					});
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
 	});
 });

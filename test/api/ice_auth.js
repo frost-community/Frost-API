@@ -2,7 +2,9 @@
 
 const assert = require('assert');
 const config = require('../../built/helpers/loadConfig')();
-const route = require('../../built/routes/account');
+const routeRequest = require('../../built/routes/ice_auth/request');
+const routeVerificationKey = require('../../built/routes/ice_auth/verification_key');
+const routeAuthorize = require('../../built/routes/ice_auth/authorize');
 const dbConnector = require('../../built/helpers/dbConnector')();
 
 describe('API', () => {
@@ -22,14 +24,83 @@ describe('API', () => {
 	});
 
 	describe('POST /ice_auth/request', () => {
-		it('正しくリクエストされた場合は成功する');
+		it('正しくリクエストされた場合は成功する', done => {
+			(async () => {
+				try {
+					let res = await routeRequest.post({
+						body: {
+							application_key: 'application_key_hoge'
+						}
+					}, null, config);
+
+					assert.equal(res.statusCode, 200);
+
+					delete res.data.user.id;
+					assert.deepEqual(res.data, {
+						request_key: 'request_key_hoge'
+					});
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
 	});
 
 	describe('GET  /ice_auth/verification_key', () => {
-		it('正しくリクエストされた場合は成功する');
+		it('正しくリクエストされた場合は成功する', done => {
+			(async () => {
+				try {
+					let res = await routeVerificationKey.get({
+						body: {
+							application_key: 'application_key_hoge',
+							request_key: 'request_key_hoge'
+						}
+					}, null, config);
+
+					assert.equal(res.statusCode, 200);
+
+					delete res.data.user.id;
+					assert.deepEqual(res.data, {
+						verification_key: 'verification_key_hoge'
+					});
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
 	});
 
 	describe('POST /ice_auth/authorize', () => {
-		it('正しくリクエストされた場合は成功する');
+		it('正しくリクエストされた場合は成功する', done => {
+			(async () => {
+				try {
+					let res = await routeAuthorize.post({
+						body: {
+							application_key: 'application_key_hoge',
+							request_key: 'request_key_hoge',
+							verification_key: 'verification_key_hoge'
+						}
+					}, null, config);
+
+					assert.equal(res.statusCode, 200);
+
+					delete res.data.user.id;
+					assert.deepEqual(res.data, {
+						access_key: 'access_key_hoge'
+					});
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
 	});
 });

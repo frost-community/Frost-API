@@ -162,6 +162,28 @@ describe('API', () => {
 	});
 
 	describe('GET  /account', () => {
-		it('正しくリクエストされた場合は成功する');
+		it('正しくリクエストされた場合は成功する', done => {
+			(async () => {
+				try {
+					let res = await route.get({user: {id: 'user_id_hoge'}}, null, config);
+
+					assert.equal(res.statusCode, 200);
+
+					delete res.data.user.id;
+					assert.deepEqual(res.data, {
+						user: {
+							screenName: 'hogehoge',
+							name: 'froster',
+							description: 'testhoge'
+						}
+					});
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
 	});
 });
