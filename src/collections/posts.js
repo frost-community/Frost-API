@@ -1,7 +1,8 @@
 'use strict';
 
 const dbConnector = require('../helpers/dbConnector');
-const postDoc = require('../documentModels/post');
+const targetDocumentModel = require('../documentModels/post');
+const collectionName = 'posts';
 
 module.exports = async (config) => {
 	const instance = {};
@@ -13,18 +14,18 @@ module.exports = async (config) => {
 
 	instance.createAsync = async () => {
 		// TODO
-		const result = await dbManager.createAsync('posts', {});
+		const result = await dbManager.createAsync(collectionName, {});
 
-		return postDoc(result.ops[0], dbManager);
+		return targetDocumentModel(result.ops[0], dbManager);
 	};
 
 	instance.findAsync = async (query) => {
-		const document = await dbManager.findArrayAsync('posts', query);
+		const document = await dbManager.findArrayAsync(collectionName, query);
 
 		if (document == null)
 			return null;
 
-		return postDoc(document, dbManager);
+		return targetDocumentModel(document, dbManager);
 	};
 
 	instance.findIdAsync = async (id) => {
@@ -32,14 +33,14 @@ module.exports = async (config) => {
 	};
 
 	instance.findManyAsync = async (query) => {
-		const documents = await dbManager.findArrayAsync('posts', query);
+		const documents = await dbManager.findArrayAsync(collectionName, query);
 
 		if (documents == null || documents.length === 0)
 			return null;
 
 		const res = [];
 		for (const document of documents)
-			res.push(postDoc(document, dbManager));
+			res.push(targetDocumentModel(document, dbManager));
 
 		return res;
 	};

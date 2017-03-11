@@ -1,7 +1,8 @@
 'use strict';
 
 const dbConnector = require('../helpers/dbConnector');
-const authorizeRequestDoc = require('../documentModels/authorizeRequest');
+const targetDocumentModel = require('../documentModels/authorizeRequest');
+const collectionName = 'authorizeRequests';
 
 module.exports = async (config) => {
 	const instance = {};
@@ -13,18 +14,18 @@ module.exports = async (config) => {
 
 	instance.createAsync = async (applicationId) => {
 
-		const result = await dbManager.createAsync('authorizeRequests', {applicationId: applicationId});
+		const result = await dbManager.createAsync(collectionName, {applicationId: applicationId});
 
-		return authorizeRequestDoc(result.ops[0], dbManager);
+		return targetDocumentModel(result.ops[0], dbManager);
 	};
 
 	instance.findAsync = async (query) => {
-		const document = await dbManager.findArrayAsync('authorizeRequests', query);
+		const document = await dbManager.findArrayAsync(collectionName, query);
 
 		if (document == null)
 			return null;
 
-		return authorizeRequestDoc(document, dbManager);
+		return targetDocumentModel(document, dbManager);
 	};
 
 	instance.findIdAsync = async (id) => {
@@ -32,14 +33,14 @@ module.exports = async (config) => {
 	};
 
 	instance.findManyAsync = async (query) => {
-		const documents = await dbManager.findArrayAsync('authorizeRequests', query);
+		const documents = await dbManager.findArrayAsync(collectionName, query);
 
 		if (documents == null || documents.length === 0)
 			return null;
 
 		const res = [];
 		for (const document of documents)
-			res.push(authorizeRequestDoc(document, dbManager));
+			res.push(targetDocumentModel(document, dbManager));
 
 		return res;
 	};

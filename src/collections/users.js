@@ -1,7 +1,8 @@
 'use strict';
 
 const dbConnector = require('../helpers/dbConnector');
-const userDoc = require('../documentModels/user');
+const targetDocumentModel = require('../documentModels/user');
+const collectionName = 'users';
 
 module.exports = async (config) => {
 	const instance = {};
@@ -13,18 +14,18 @@ module.exports = async (config) => {
 
 	instance.createAsync = async (screenName, passwordHash, description) => {
 		// TODO
-		const result = await dbManager.createAsync('users', {});
+		const result = await dbManager.createAsync(collectionName, {});
 
-		return userDoc(result.ops[0], dbManager);
+		return targetDocumentModel(result.ops[0], dbManager);
 	};
 
 	instance.findAsync = async (query) => {
-		const document = await dbManager.findArrayAsync('users', query);
+		const document = await dbManager.findArrayAsync(collectionName, query);
 
 		if (document == null)
 			return null;
 
-		return userDoc(document, dbManager);
+		return targetDocumentModel(document, dbManager);
 	};
 
 	instance.findIdAsync = async (id) => {
@@ -32,14 +33,14 @@ module.exports = async (config) => {
 	};
 
 	instance.findManyAsync = async (query) => {
-		const documents = await dbManager.findArrayAsync('users', query);
+		const documents = await dbManager.findArrayAsync(collectionName, query);
 
 		if (documents == null || documents.length === 0)
 			return null;
 
 		const res = [];
 		for (const document of documents)
-			res.push(userDoc(document, dbManager));
+			res.push(targetDocumentModel(document, dbManager));
 
 		return res;
 	};
