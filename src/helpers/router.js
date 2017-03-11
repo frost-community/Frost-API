@@ -64,13 +64,14 @@ const addRoute = (route, middles) => {
 					dirPath += 'index';
 
 				dirPath = dirPath.replace(/\//g, require('path').sep);
+				const routeFuncAsync = require(dirPath)[method];
 
 				(async () => {
 					try {
 						if (routeFuncAsync == null)
 							throw new Error(`endpoint not found\ntarget: ${method} ${path}`);
 
-						const result = await require(dirPath)[method](request, extensions, _config)();
+						const result = await routeFuncAsync(request, extensions, _config)();
 						response.success(result);
 					}
 					catch (err) {
