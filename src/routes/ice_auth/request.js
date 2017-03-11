@@ -8,7 +8,7 @@ const applicationModel = require('../../models/application');
 exports.post = async (request, extensions, config) => {
 	const applicationKey = request.body.application_key;
 
-	if (await applicationModel.verifyKeyAsync(applicationKey))
+	if (!await applicationModel.verifyKeyAsync(applicationKey))
 		return apiResult(400, 'application_key is invalid');
 
 	const applicationId = applicationModel.splitKey(applicationKey).applicationId;
