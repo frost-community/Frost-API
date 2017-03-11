@@ -20,7 +20,7 @@ module.exports = async (config) => {
 	};
 
 	instance.findAsync = async (query) => {
-		const document = await dbManager.findArrayAsync(collectionName, query);
+		const document = await dbManager.findAsync(collectionName, query);
 
 		if (document == null)
 			return null;

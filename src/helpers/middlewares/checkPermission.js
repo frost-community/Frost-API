@@ -43,8 +43,8 @@ module.exports = (router) => {
 						const applicationId = applicationModel.splitKey(applicationKey).applicationId;
 						const userId = applicationAccessModel.splitKey(accessKey).userId;
 
-						request.application = (await applicationsAsync()).findAsync({_id: applicationId});
-						request.user = await (await usersAsync()).findAsync({_id: userId});
+						request.application = (await applicationsAsync()).findIdAsync(applicationId);
+						request.user = await (await usersAsync()).findIdAsync(userId);
 
 						for (const permission of extensions.permissions) {
 							if (!await request.application.hasPermissionAsync(permission)) {
