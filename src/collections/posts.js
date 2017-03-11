@@ -1,12 +1,15 @@
 'use strict';
 
 const dbConnector = require('../helpers/dbConnector')();
-
 const postDoc = require('../documentModels/post');
 
-module.exports = async () => {
+module.exports = async (config) => {
 	const instance = {};
-	const dbManager = await dbConnector.connectApidbAsync();
+
+	if (config == null)
+		config = require('../helpers/loadConfig')();
+
+	const dbManager = await dbConnector.connectApidbAsync(config);
 
 	instance.createAsync = async () => {
 		// TODO

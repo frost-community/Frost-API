@@ -1,12 +1,15 @@
 'use strict';
 
 const dbConnector = require('../helpers/dbConnector')();
-
 const authorizeRequestDoc = require('../documentModels/authorizeRequest');
 
-module.exports = async () => {
+module.exports = async (config) => {
 	const instance = {};
-	const dbManager = await dbConnector.connectApidbAsync();
+
+	if (config == null)
+		config = require('../helpers/loadConfig')();
+
+	const dbManager = await dbConnector.connectApidbAsync(config);
 
 	instance.createAsync = async (applicationId) => {
 		const doc = await dbManager.createAsync('authorizeRequests', {applicationId: applicationId});
