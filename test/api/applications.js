@@ -2,9 +2,10 @@
 
 const assert = require('assert');
 const config = require('../../built/helpers/loadConfig')();
-const route = require('../../built/routes/applications');
-const routeId = require('../../built/routes/applications/id');
-const routeIdApplicationKey = require('../../built/routes/applications/id/application_key');
+const routeAccount = require('../../built/routes/account');
+const routeApp = require('../../built/routes/applications');
+const routeAppId = require('../../built/routes/applications/id');
+const routeAppIdApplicationKey = require('../../built/routes/applications/id/application_key');
 const dbConnector = require('../../built/helpers/dbConnector')();
 
 describe('API', () => {
@@ -24,6 +25,30 @@ describe('API', () => {
 	});
 
 	describe('POST /applications', () => {
+		let user;
+		before(done => {
+			(async () => {
+				try {
+					const res = await routeAccount.post({
+						body: {
+							screenName: 'testuser',
+							password: 'abcdefg',
+							name: 'froster',
+							description: 'this is testuser.'
+						}
+					}, null, config);
+					assert.equal(res.statusCode, 200);
+					user = res.data.user;
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+
+		});
+
 		afterEach(done => {
 			(async () => {
 				try {
@@ -37,11 +62,24 @@ describe('API', () => {
 			})();
 		});
 
+		after(done => {
+			(async () => {
+				try {
+					await dbManager.removeAsync('users', {});
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
+
 		it('正しくリクエストされた場合は成功する', done => {
 			(async () => {
 				try {
-					let res = await route.post({
-						user: {_id: '1234abcd'},
+					let res = await routeApp.post({
+						user: {id: user.id},
 						application: {
 							permissions: []
 						},
@@ -58,7 +96,7 @@ describe('API', () => {
 					assert.deepEqual(res.data, {
 						application: {
 							name: 'hoge',
-							creatorId: '1234abcd',
+							creatorId: user.id,
 							description: 'hogehoge',
 							permissions: []
 						}
@@ -74,8 +112,8 @@ describe('API', () => {
 		it('nameが空もしくは33文字以上の場合は失敗する', done => {
 			(async () => {
 				try {
-					let res = await route.post({
-						user: {_id: ''},
+					let res = await routeApp.post({
+						user: {id: user.id},
 						application: {
 							permissions: []
 						},
@@ -87,8 +125,8 @@ describe('API', () => {
 					}, null, config);
 					assert.equal(res.statusCode, 400);
 
-					res = await route.post({
-						user: {_id: ''},
+					res = await routeApp.post({
+						user: {id: user.id},
 						application: {
 							permissions: []
 						},
@@ -111,8 +149,8 @@ describe('API', () => {
 		it('descriptionが257文字以上のときは失敗する', done => {
 			(async () => {
 				try {
-					let res = await route.post({
-						user: {_id: ''},
+					let res = await routeApp.post({
+						user: {id: user.id},
 						application: {
 							permissions: []
 						},
@@ -137,7 +175,7 @@ describe('API', () => {
 		it('正しくリクエストされた場合は成功する', done => {
 			(async () => {
 				try {
-					let res = await routeId.get({params: {id: 'application_id_hoge'}}, null, config);
+					let res = await routeAppId.get({params: {id: 'application_id_hoge'}}, null, config);
 
 					assert.equal(res.statusCode, 200);
 
@@ -164,7 +202,7 @@ describe('API', () => {
 		it('正しくリクエストされた場合は成功する', done => {
 			(async () => {
 				try {
-					let res = await routeIdApplicationKey.post({params: {id: 'application_id_hoge'}}, null, config);
+					let res = await routeAppIdApplicationKey.post({params: {id: 'application_id_hoge'}}, null, config);
 
 					assert.equal(res.statusCode, 200);
 
@@ -185,7 +223,7 @@ describe('API', () => {
 		it('正しくリクエストされた場合は成功する', done => {
 			(async () => {
 				try {
-					let res = await routeIdApplicationKey.get({params: {id: 'application_id_hoge'}}, null, config);
+					let res = await routeAppIdApplicationKey.get({params: {id: 'application_id_hoge'}}, null, config);
 
 					assert.equal(res.statusCode, 200);
 

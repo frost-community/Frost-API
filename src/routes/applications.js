@@ -6,7 +6,7 @@ const dbConnector = require('../helpers/dbConnector')();
 const applicationModel = require('../models/application');
 
 exports.post = async (request, extensions, config) => {
-	const userId = request.user._id;
+	const userId = request.user.id;
 	const name = request.body.name;
 	const description = request.body.description;
 	const permissions = request.body.permissions;
