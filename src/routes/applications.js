@@ -14,10 +14,10 @@ exports.post = async (request, extensions, config) => {
 	const db = await dbConnector.connectApidbAsync(config);
 
 	if ((await db.findArrayAsync('applications', {name: name})).length >= 1)
-		throw apiResult(400, 'already exists name');
+		return apiResult(400, 'already exists name');
 
 	if (!applicationModel.analyzePermissions(request.application.permissions))
-		throw apiResult(400, 'permissions is invalid format');
+		return apiResult(400, 'permissions is invalid format');
 
 	let application;
 
@@ -31,7 +31,7 @@ exports.post = async (request, extensions, config) => {
 	}
 	catch(err) {
 		console.log(err.stack);
-		throw apiResult(500, 'faild to create application');
+		return apiResult(500, 'faild to create application');
 	}
 
 	return apiResult(200, 'successful', {application: application});

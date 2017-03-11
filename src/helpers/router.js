@@ -60,28 +60,23 @@ const addRoute = (route, middles) => {
 
 				dirPath = dirPath.replace(/\//g, require('path').sep);
 
-				const routeFuncAsync = require(dirPath)[method];
-
-				try {
-					(async () => {
+				(async () => {
+					try {
 						if (routeFuncAsync == null)
 							throw new Error(`endpoint not found\ntarget: ${method} ${path}`);
 
-						const result = await routeFuncAsync(request, extensions, require('./loadConfig')());
+						const result = await require(dirPath)[method](request, extensions, require('./loadConfig')());
 						response.success(result);
-					})().catch(err => {
+					}
+					catch (err) {
 						if (type(err) !== 'Error')
 							response.error(err);
 						else {
-							console.log(`Internal Error: ${err.stack}`);
+							console.log(`Internal Error (Async): ${err.stack}`);
 							response.error(apiResult(500, 'internal error', {details: err.stack}));
 						}
-					});
-				}
-				catch (err) {
-					console.log(`Internal Error (Async): ${err.stack}`);
-					response.error(apiResult(500, 'internal error (async)', {details: err.stack}));
-				}
+					}
+				})();
 			});
 
 			_routes.push({method: m, path: path, extensions: extensions});
