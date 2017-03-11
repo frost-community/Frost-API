@@ -13,6 +13,14 @@ exports.post = async (request, extensions, config) => {
 
 	const db = await dbConnector.connectApidbAsync(config);
 
+	// name
+	if (!/^.{1,32}$/.test(name))
+		return apiResult(400, 'name is invalid format');
+
+	// description
+	if (!/^.{0,256}$/.test(description))
+		return apiResult(400, 'description is invalid format');
+
 	if ((await db.findArrayAsync('applications', {name: name})).length >= 1)
 		return apiResult(400, 'already exists name');
 

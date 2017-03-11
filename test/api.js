@@ -187,7 +187,7 @@ describe('API', () => {
 			})();
 		});
 
-		it('nameが4文字未満の場合は失敗', done => {
+		it('nameが空もしくは33文字以上の場合は失敗する', done => {
 			(async () => {
 				try {
 					let res = await require('../built/routes/applications').post({
@@ -196,8 +196,45 @@ describe('API', () => {
 							permissions: []
 						},
 						body: {
-							name: 'abc',
+							name: '',
 							description: 'hogehoge',
+							permissions: ''
+						}
+					}, null, config);
+					assert.equal(res.statusCode, 400);
+
+					res = await require('../built/routes/applications').post({
+						user: {_id: ''},
+						application: {
+							permissions: []
+						},
+						body: {
+							name: 'superFrostersuperFrostersuperFros',
+							description: 'hogehoge',
+							permissions: ''
+						}
+					}, null, config);
+					assert.equal(res.statusCode, 400);
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
+
+		it('descriptionが257文字以上のときは失敗する', done => {
+			(async () => {
+				try {
+					let res = await require('../built/routes/applications').post({
+						user: {_id: ''},
+						application: {
+							permissions: []
+						},
+						body: {
+							name: 'hoge',
+							description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget',
 							permissions: ''
 						}
 					}, null, config);
