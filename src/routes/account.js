@@ -74,3 +74,7 @@ exports.post = async (request, extensions, config) => {
 
 	return apiResult(200, 'success', res);
 };
+
+exports.get = async (request, extensions, config) => {
+	return apiResult(501, 'not implemented');
+};
