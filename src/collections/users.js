@@ -1,6 +1,8 @@
 'use strict';
 
 const dbConnector = require('../helpers/dbConnector');
+const objectId = require('mongodb').ObjectID;
+const type = require('../helpers/type');
 const targetDocumentModel = require('../documentModels/user');
 const collectionName = 'users';
 
@@ -29,7 +31,7 @@ module.exports = async (config) => {
 	};
 
 	instance.findIdAsync = async (id) => {
-		return await instance.findAsync({_id: id});
+		return await instance.findAsync({_id: type(id) == 'ObjectID' ? id : objectId(id)});
 	};
 
 	instance.findManyAsync = async (query) => {
