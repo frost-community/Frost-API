@@ -21,6 +21,11 @@ module.exports = () => {
 
 	router.addRoutes(routes(), [checkPermission, checkParams]);
 
+	app.use((req, res, next) => {
+		require('./helpers/responseHelper')(res);
+		res.error(require('./helpers/apiResult')(404, 'not found'));
+	});
+
 	app.listen(config.api.port, () => {
 		console.log(`listen on port: ${config.api.port}`);
 	});
