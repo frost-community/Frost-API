@@ -14,9 +14,10 @@ exports.get = async (request, extensions, config) => {
 	if (await applicationModel.verifyKeyAsync(applicationKey))
 		return apiResult(400, 'application_key is invalid');
 
-	if (await authorizeRequests.verifyKeyAsync(requestKey))
+	if (await authorizeRequestsModel.verifyKeyAsync(requestKey))
 		return apiResult(400, 'request_key is invalid');
 
 	// TODO
 
+	return apiResult(501, 'not implemented');
 };
