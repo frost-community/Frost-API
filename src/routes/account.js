@@ -61,5 +61,5 @@ exports.post = async (request, extensions, config) => {
 	}
 
 	delete result.passwordHash;
-	return apiResult(200, 'successful', {user: result});
+	return apiResult(200, 'success', {user: result});
 };

@@ -15,5 +15,5 @@ exports.post = async (request, extensions, config) => {
 	const doc = await (await authorizeRequests()).createAsync(applicationId);
 	const key = await doc.getRequestKeyAsync();
 
-	return apiResult(200, 'successful', {'request_key': key});
+	return apiResult(200, 'success', {'request_key': key});
 };

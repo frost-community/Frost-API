@@ -34,5 +34,5 @@ exports.post = async (request, extensions, config) => {
 		return apiResult(500, 'faild to create application');
 	}
 
-	return apiResult(200, 'successful', {application: application});
+	return apiResult(200, 'success', {application: application});
 };

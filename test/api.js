@@ -65,7 +65,7 @@ describe('API', () => {
 							description: 'testhoge'
 						}
 					}, null, config);
-					assert.equal(res.message, 'screenName is invalid format');
+					assert.equal(res.statusCode, 400);
 
 					res = await require('../built/routes/account').post({
 						body: {
@@ -75,7 +75,7 @@ describe('API', () => {
 							description: 'testhoge'
 						}
 					}, null, config);
-					assert.equal(res.message, 'screenName is invalid format');
+					assert.equal(res.statusCode, 400);
 
 					done();
 				}
@@ -96,7 +96,7 @@ describe('API', () => {
 							description: 'testhoge'
 						}
 					}, null, config);
-					assert.equal(res.message, 'password is invalid format');
+					assert.equal(res.statusCode, 400);
 
 					done();
 				}
@@ -117,7 +117,7 @@ describe('API', () => {
 							description: 'testhoge'
 						}
 					}, null, config);
-					assert.equal(res.message, 'name is invalid format');
+					assert.equal(res.statusCode, 400);
 
 					done();
 				}
@@ -138,7 +138,7 @@ describe('API', () => {
 							description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget'
 						}
 					}, null, config);
-					assert.equal(res.message, 'description is invalid format');
+					assert.equal(res.statusCode, 400);
 
 					done();
 				}
@@ -201,7 +201,7 @@ describe('API', () => {
 							permissions: ''
 						}
 					}, null, config);
-					assert.equal(res.message, 'name is invalid format');
+					assert.equal(res.statusCode, 400);
 
 					done();
 				}
