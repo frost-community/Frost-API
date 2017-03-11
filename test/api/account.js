@@ -161,7 +161,7 @@ describe('API', () => {
 		});
 	});
 
-	describe('GET /account', () => {
+	describe('GET  /account', () => {
 		it('正しくリクエストされた場合は成功する');
 	});
 });

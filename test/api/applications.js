@@ -132,13 +132,13 @@ describe('API', () => {
 		});
 	});
 
-	describe('GET /applications/id', () => {
+	describe('GET  /applications/id', () => {
 		it('正しくリクエストされた場合は成功する');
 	});
 	describe('POST /applications/id/application_key', () => {
 		it('正しくリクエストされた場合は成功する');
 	});
-	describe('GET /applications/id/application_key', () => {
+	describe('GET  /applications/id/application_key', () => {
 		it('正しくリクエストされた場合は成功する');
 	});
 });
