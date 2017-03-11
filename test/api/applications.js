@@ -6,7 +6,7 @@ const routeAccount = require('../../built/routes/account');
 const routeApp = require('../../built/routes/applications');
 const routeAppId = require('../../built/routes/applications/id');
 const routeAppIdApplicationKey = require('../../built/routes/applications/id/application_key');
-const dbConnector = require('../../built/helpers/dbConnector')();
+const dbConnector = require('../../built/helpers/dbConnector');
 
 describe('API', () => {
 	let dbManager;
@@ -25,7 +25,7 @@ describe('API', () => {
 	});
 
 	describe('POST /applications', () => {
-		let user;
+		let account;
 		before(done => {
 			(async () => {
 				try {
@@ -38,7 +38,7 @@ describe('API', () => {
 						}
 					}, null, config);
 					assert.equal(res.statusCode, 200);
-					user = res.data.user;
+					account = res.data.user;
 
 					done();
 				}
@@ -46,7 +46,6 @@ describe('API', () => {
 					done(e);
 				}
 			})();
-
 		});
 
 		afterEach(done => {
@@ -79,10 +78,7 @@ describe('API', () => {
 			(async () => {
 				try {
 					let res = await routeApp.post({
-						user: {id: user.id},
-						application: {
-							permissions: []
-						},
+						user: {id: account.id},
 						body: {
 							name: 'hoge',
 							description: 'hogehoge',
@@ -96,7 +92,7 @@ describe('API', () => {
 					assert.deepEqual(res.data, {
 						application: {
 							name: 'hoge',
-							creatorId: user.id,
+							creatorId: account.id,
 							description: 'hogehoge',
 							permissions: []
 						}
@@ -113,10 +109,7 @@ describe('API', () => {
 			(async () => {
 				try {
 					let res = await routeApp.post({
-						user: {id: user.id},
-						application: {
-							permissions: []
-						},
+						user: {id: account.id},
 						body: {
 							name: '',
 							description: 'hogehoge',
@@ -126,10 +119,7 @@ describe('API', () => {
 					assert.equal(res.statusCode, 400);
 
 					res = await routeApp.post({
-						user: {id: user.id},
-						application: {
-							permissions: []
-						},
+						user: {id: account.id},
 						body: {
 							name: 'superFrostersuperFrostersuperFros',
 							description: 'hogehoge',
@@ -150,10 +140,7 @@ describe('API', () => {
 			(async () => {
 				try {
 					let res = await routeApp.post({
-						user: {id: user.id},
-						application: {
-							permissions: []
-						},
+						user: {id: account.id},
 						body: {
 							name: 'hoge',
 							description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget',
@@ -172,20 +159,72 @@ describe('API', () => {
 	});
 
 	describe('GET  /applications/id', () => {
+		let account, app;
+		before(done => {
+			(async () => {
+				try {
+					let res = await routeAccount.post({
+						body: {
+							screenName: 'testuser',
+							password: 'abcdefg',
+							name: 'froster',
+							description: 'this is testuser.'
+						}
+					}, null, config);
+					assert.equal(res.statusCode, 200);
+					account = res.data.user;
+
+					res = await routeApp.post({
+						user: {id: account.id},
+						body: {
+							name: 'testapp',
+							description: 'this is testapp.',
+							permissions: []
+						}
+					}, null, config);
+					assert.equal(res.statusCode, 200);
+					app = res.data.application;
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
+
+		after(done => {
+			(async () => {
+				try {
+					await dbManager.removeAsync('users', {});
+					await dbManager.removeAsync('applications', {});
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
+
 		it('正しくリクエストされた場合は成功する', done => {
 			(async () => {
 				try {
-					let res = await routeAppId.get({params: {id: 'application_id_hoge'}}, null, config);
+					let res = await routeAppId.get({
+						user: {id: account.id},
+						params: {id: app.id},
+						body: {}
+					}, null, config);
 
 					assert.equal(res.statusCode, 200);
 
-					delete res.data.application.id;
 					assert.deepEqual(res.data, {
 						application: {
-							name: 'hoge',
-							creatorId: '1234abcd',
-							description: 'hogehoge',
-							permissions: []
+							id: app.id,
+							creatorId: account.id,
+							name: app.name,
+							description: app.description,
+							permissions: app.permissions
 						}
 					});
 
