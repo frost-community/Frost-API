@@ -5,7 +5,7 @@ const config = require('../../built/helpers/loadConfig')();
 const route = require('../../built/routes/applications');
 const dbConnector = require('../../built/helpers/dbConnector')();
 
-describe('API -', () => {
+describe('API', () => {
 	let dbManager;
 	before(done => {
 		(async () => {
