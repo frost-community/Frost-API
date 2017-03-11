@@ -4,15 +4,19 @@ const randomRange = require('../helpers/randomRange');
 
 const applicationAccessModel = require('../models/applicationAccess');
 
-module.exports = async (documentId, dbManager) => {
+module.exports = async (document, dbManager) => {
 	const instance = {};
 
-	instance.documentId = documentId;
+	// id加工
+	document.id = document._id.toString();
+	delete document._id;
+
+	instance.document = document;
 	instance.dbManager = dbManager;
 
 	instance.generateAccessKeyAsync = async () => {
 
-		const access = dbManager.findArrayAsync('applicationAccesses', {_id: documentId})[0];
+		const access = dbManager.findArrayAsync('applicationAccesses', {_id: document.id})[0];
 		let keyCode, isExist, tryCount = 0;
 
 		do {
@@ -25,13 +29,13 @@ module.exports = async (documentId, dbManager) => {
 		if (isExist && tryCount >= 4)
 			throw new Error('the number of trials for keyCode generation has reached its upper limit');
 
-		dbManager.updateAsync('applicationAccesses', {_id: documentId}, {keyCode: keyCode});
+		dbManager.updateAsync('applicationAccesses', {_id: document.id}, {keyCode: keyCode});
 
 		return applicationAccessModel.buildKey(access.applicationId, access.userId, keyCode);
 	};
 
 	instance.getAccessKeyAsync = async () => {
-		const access = await dbManager.findArrayAsync('applicationAccesses', {_id: documentId})[0];
+		const access = await dbManager.findArrayAsync('applicationAccesses', {_id: document.id})[0];
 
 		if (access == null)
 			throw new Error('applicationAccess not found');
