@@ -14,7 +14,7 @@ module.exports = () => {
 	const app = express();
 	app.disable('x-powered-by');
 	app.use(bodyParser.json());
-	const router = require('./helpers/router')(app);
+	const router = require('./helpers/router')(app, config);
 
 	const checkParams = require('./helpers/middlewares/checkParams')(router).execute;
 	const checkPermission = require('./helpers/middlewares/checkPermission')(router).execute;

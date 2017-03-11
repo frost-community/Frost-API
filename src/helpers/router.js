@@ -6,17 +6,22 @@ const type = require('./type');
 
 const _routes = [];
 let _app;
+let _config;
 
 /**
  * このモジュールを初期化します
  *
  * @param  {any} app 対象のサーバアプリケーション
  */
-const init = app => {
+const init = (app, config) => {
 	if (app == null)
 		throw new Error('app is empty');
 
+	if (config == null)
+		throw new Error('config is empty');
+
 	_app = app;
+	_config = config;
 
 	return this;
 };
@@ -65,7 +70,7 @@ const addRoute = (route, middles) => {
 						if (routeFuncAsync == null)
 							throw new Error(`endpoint not found\ntarget: ${method} ${path}`);
 
-						const result = await require(dirPath)[method](request, extensions, require('./loadConfig')());
+						const result = await require(dirPath)[method](request, extensions, _config)();
 						response.success(result);
 					}
 					catch (err) {
