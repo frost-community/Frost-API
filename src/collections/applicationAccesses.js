@@ -1,6 +1,6 @@
 'use strict';
 
-const dbConnector = require('../helpers/dbConnector')();
+const dbConnector = require('../helpers/dbConnector');
 const applicationAccessDoc = require('../documentModels/applicationAccess');
 
 module.exports = async (config) => {
@@ -15,27 +15,31 @@ module.exports = async (config) => {
 		// TODO
 		const result = await dbManager.createAsync('applicationAccesses', {});
 
-		return applicationAccessDoc(result.ops[0]._id, dbManager);
+		return applicationAccessDoc(result.ops[0], dbManager);
 	};
 
 	instance.findAsync = async (query) => {
-		const result = await dbManager.findAsync('applicationAccesses', query);
+		const document = await dbManager.findAsync('applicationAccesses', query);
 
-		if (result == null)
+		if (document == null)
 			return null;
 
-		return applicationAccessDoc(result._id, dbManager);
+		return applicationAccessDoc(document, dbManager);
+	};
+
+	instance.findIdAsync = async (id) => {
+		return await instance.findAsync({_id: id});
 	};
 
 	instance.findManyAsync = async (query) => {
-		const results = await dbManager.findArrayAsync('applicationAccesses', query);
+		const documents = await dbManager.findArrayAsync('applicationAccesses', query);
 
-		if (results == null || results.length === 0)
+		if (documents == null || documents.length === 0)
 			return null;
 
 		const res = [];
-		for (const result of results)
-			res.push(applicationAccessDoc(result._id, dbManager));
+		for (const document of documents)
+			res.push(applicationAccessDoc(document, dbManager));
 
 		return res;
 	};

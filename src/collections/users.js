@@ -1,6 +1,6 @@
 'use strict';
 
-const dbConnector = require('../helpers/dbConnector')();
+const dbConnector = require('../helpers/dbConnector');
 const userDoc = require('../documentModels/user');
 
 module.exports = async (config) => {
@@ -11,17 +11,37 @@ module.exports = async (config) => {
 
 	const dbManager = await dbConnector.connectApidbAsync(config);
 
-	instance.createAsync = async () => {
+	instance.createAsync = async (screenName, passwordHash, description) => {
 		// TODO
 		const result = await dbManager.createAsync('users', {});
 
-		return userDoc(result.ops[0]._id, dbManager);
+		return userDoc(result.ops[0], dbManager);
 	};
 
 	instance.findAsync = async (query) => {
-		const doc = await dbManager.findArrayAsync('users', query);
+		const document = await dbManager.findArrayAsync('users', query);
 
-		return userDoc(doc._id, dbManager);
+		if (document == null)
+			return null;
+
+		return userDoc(document, dbManager);
+	};
+
+	instance.findIdAsync = async (id) => {
+		return await instance.findAsync({_id: id});
+	};
+
+	instance.findManyAsync = async (query) => {
+		const documents = await dbManager.findArrayAsync('users', query);
+
+		if (documents == null || documents.length === 0)
+			return null;
+
+		const res = [];
+		for (const document of documents)
+			res.push(userDoc(document, dbManager));
+
+		return res;
 	};
 
 	return instance;
