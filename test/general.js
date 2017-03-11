@@ -38,7 +38,7 @@ describe('General -', () => {
 	});
 
 	describe('database', () => {
-		const db = require('../built/helpers/dbConnector')();
+		const db = require('../built/helpers/dbConnector');
 		let testDb;
 
 		it('DBに接続してそのインスタンスが取得できる', (done) => {

@@ -3,7 +3,7 @@
 const crypto = require('crypto');
 
 const apiResult = require('../helpers/apiResult');
-const dbConnector = require('../helpers/dbConnector')();
+const dbConnector = require('../helpers/dbConnector');
 const randomRange = require('../helpers/randomRange');
 
 exports.post = async (request, extensions, config) => {

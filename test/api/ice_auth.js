@@ -5,7 +5,7 @@ const config = require('../../built/helpers/loadConfig')();
 const routeRequest = require('../../built/routes/ice_auth/request');
 const routeVerificationKey = require('../../built/routes/ice_auth/verification_key');
 const routeAuthorize = require('../../built/routes/ice_auth/authorize');
-const dbConnector = require('../../built/helpers/dbConnector')();
+const dbConnector = require('../../built/helpers/dbConnector');
 
 describe('API', () => {
 	let dbManager;
