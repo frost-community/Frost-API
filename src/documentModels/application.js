@@ -1,9 +1,10 @@
 'use strict';
 
 const randomRange = require('../helpers/randomRange');
-const applicationModel = require('../models/application');
+const applicationModelAsync = require('../models/application');
+const applications = require('../helpers/collections').applications;
 
-module.exports = async (document, dbManager) => {
+module.exports = async (document, config) => {
 	const instance = {};
 
 	// id加工
@@ -11,10 +12,11 @@ module.exports = async (document, dbManager) => {
 	delete document._id;
 
 	instance.document = document;
-	instance.dbManager = dbManager;
+	instance.collection = await applications(config);
+	const applicationModel = await applicationModelAsync(config);
 
 	instance.hasPermissionAsync = async (permissionName) => {
-		const app = await dbManager.findArrayAsync('applications', {_id: document.id})[0];
+		const app = await instance.collection.findIdAsync(document.id);
 
 		if (app == null)
 			throw new Error('application not found');
@@ -24,14 +26,14 @@ module.exports = async (document, dbManager) => {
 
 	instance.generateApplicationKeyAsync = async () => {
 		const keyCode = randomRange(1, 99999);
-		dbManager.updateAsync('applications', {_id: document.id}, {keyCode: keyCode});
-		const app = await dbManager.findArrayAsync('applications', {_id: document.id})[0];
+		await instance.collection.updateAsync({_id: document.id}, {keyCode: keyCode});
+		const app = await instance.collection.findIdAsync(document.id);
 
 		return applicationModel.buildKey(app._id, app.creatorId, app.keyCode);
 	};
 
 	instance.getApplicationKeyAsync = async () => {
-		const app = await dbManager.findArrayAsync('applications', {_id: document.id})[0];
+		const app = await instance.collection.findIdAsync(document.id);
 
 		if (app == null)
 			throw new Error('application not found');

@@ -1,7 +1,7 @@
 'use strict';
 
 const apiResult = require('../../helpers/apiResult');
-const applications = require('../../collections/applications');
+const applications = require('../../helpers/collections').applications;
 
 exports.get = async (request, extensions, config) => {
 	const applicationDoc = await (await applications(config)).findIdAsync(request.params.id);

@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const apiResult = require('../helpers/apiResult');
 const dbConnector = require('../helpers/dbConnector');
 const randomRange = require('../helpers/randomRange');
+const users = require('../helpers/collections').users;
 
 exports.post = async (request, extensions, config) => {
 	const screenName = request.body.screenName;
@@ -24,8 +25,6 @@ exports.post = async (request, extensions, config) => {
 	sha256.update(`${password}.${salt}`);
 	const hash = `${sha256.digest('hex')}.${salt}`;
 
-	const dbManager = await dbConnector.connectApidbAsync(config);
-
 	// screenName
 	if (!/^[a-z0-9_]{4,15}$/.test(screenName) || /^(.)\1{3,}$/.test(screenName))
 		return apiResult(400, 'screenName is invalid format');
@@ -35,7 +34,7 @@ exports.post = async (request, extensions, config) => {
 			return apiResult(400, 'screenName is invalid');
 	}
 
-	if ((await dbManager.findArrayAsync('users', {screenName: screenName})).length !== 0)
+	if (await (await users(config)).findAsync({screenName: screenName}) != null)
 		return apiResult(400, 'this screenName is already exists');
 
 	// password
@@ -50,29 +49,22 @@ exports.post = async (request, extensions, config) => {
 	if (!/^.{0,256}$/.test(description))
 		return apiResult(400, 'description is invalid format');
 
-	let document;
+	let userDocument;
 
 	try {
-		document = (await dbManager.createAsync('users', {screenName: screenName, name: name, description: description, passwordHash: hash}));
+		userDocument = await (await users(config)).createAsync({screenName: screenName, passwordHash: hash, name: name, description: description});
 	}
 	catch(err) {
 		console.log(err.stack);
 		return apiResult(500, 'faild to create account');
 	}
 
-	if (!(document.result.n == 1 && document.result.ok == 1))
+	if (userDocument == null)
 		return apiResult(500, 'faild to create account');
 
-	delete document.ops[0].passwordHash;
+	delete userDocument.document.passwordHash;
 
-	let res = {};
-	Object.assign(res, {user: document.ops[0]});
-
-	// _idを文字列に変換し、idとして返す
-	res.user.id = res.user._id.toString();
-	delete res.user._id;
-
-	return apiResult(200, 'success', res);
+	return apiResult(200, 'success', {user: userDocument.document});
 };
 
 exports.get = async (request, extensions, config) => {

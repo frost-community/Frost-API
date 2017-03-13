@@ -2,14 +2,17 @@
 
 const apiResult = require('../../helpers/apiResult');
 
-const applications = require('../../collections/applications');
-const authorizeRequests = require('../../collections/authorizeRequests');
-const applicationModel = require('../../models/application');
-const authorizeRequestsModel = require('../../models/authorizeRequest');
+const applications = require('../../helpers/collections').applications;
+const authorizeRequests = require('../../helpers/collections').authorizeRequests;
+const applicationModelAsync = require('../../models/application');
+const authorizeRequestsModelAsync = require('../../models/authorizeRequest');
 
 exports.get = async (request, extensions, config) => {
 	const applicationKey = request.body.application_key;
 	const requestKey = request.body.request_key;
+
+	const applicationModel = await applicationModelAsync(config);
+	const authorizeRequestsModel = await authorizeRequestsModelAsync(config);
 
 	if (await applicationModel.verifyKeyAsync(applicationKey))
 		return apiResult(400, 'application_key is invalid');

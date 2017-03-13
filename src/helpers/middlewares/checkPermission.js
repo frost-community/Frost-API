@@ -1,13 +1,16 @@
 'use strict';
 
-const applicationModel = require('../../models/application');
-const applicationAccessModel = require('../../models/applicationAccess');
+const applicationModelAsync = require('../../models/application');
+const applicationAccessModelAsync = require('../../models/applicationAccess');
 
-const applicationsAsync = require('../../collections/applications');
-const usersAsync = require('../../collections/users');
+const applications = require('../collections').applications;
+const users = require('../collections/').users;
 
-module.exports = (router) => {
+module.exports = async (config, router) => {
 	const instance = {};
+
+	const applicationModel = await applicationModelAsync(config);
+	const applicationAccessModel = await applicationAccessModelAsync(config);
 
 	instance.execute = (request, response, next) => {
 		try {
@@ -43,8 +46,8 @@ module.exports = (router) => {
 						const applicationId = applicationModel.splitKey(applicationKey).applicationId;
 						const userId = applicationAccessModel.splitKey(accessKey).userId;
 
-						request.application = (await applicationsAsync()).findIdAsync(applicationId);
-						request.user = await (await usersAsync()).findIdAsync(userId);
+						request.application = (await applications()).findIdAsync(applicationId);
+						request.user = await (await users()).findIdAsync(userId);
 
 						for (const permission of extensions.permissions) {
 							if (!await request.application.hasPermissionAsync(permission)) {

@@ -1,10 +1,10 @@
 'use strict';
 
 const randomRange = require('../helpers/randomRange');
+const authorizeRequestModelAsync = require('../models/authorizeRequest');
+const authorizeRequests = require('../helpers/collections').authorizeRequests;
 
-const authorizeRequestModel = require('../models/authorizeRequest');
-
-module.exports = async (document, dbManager) => {
+module.exports = async (document, config) => {
 	const instance = {};
 
 	// id加工
@@ -12,20 +12,21 @@ module.exports = async (document, dbManager) => {
 	delete document._id;
 
 	instance.document = document;
-	instance.dbManager = dbManager;
+	instance.collection = await authorizeRequests(config);
+	const authorizeRequestModel = await authorizeRequestModelAsync(config);
 
 	instance.getVerificationKeyAsync = async () => {
 		let pinCode = '';
 		for (let i = 0; i < 6; i++)
 			pinCode += String(randomRange(0, 9));
 
-		dbManager.updateAsync('authorizeRequests', {_id: document.id}, {pinCode: pinCode});
+		await instance.collection.updateAsync({_id: document.id}, {pinCode: pinCode});
 
 		return pinCode;
 	};
 
 	instance.getRequestKeyAsync = async () => {
-		const request = await dbManager.findArrayAsync('authorizeRequests', {_id: document.id})[0];
+		let request = await instance.collection.findIdAsync(document.id);
 
 		if (request == null)
 			throw new Error('authorizeRequest not found');
@@ -34,11 +35,12 @@ module.exports = async (document, dbManager) => {
 		{
 			// 生成が必要な場合
 			const keyCode = randomRange(1, 99999);
-			dbManager.updateAsync('authorizeRequests', {_id: document.id}, {keyCode: keyCode});
-			const request = await dbManager.findArrayAsync('authorizeRequests', {_id: document.id})[0];
+			const hoge = await instance.collection.updateAsync({_id: document.id}, {keyCode: keyCode});
+			console.log(hoge);
+			request = await instance.collection.findIdAsync(document.id);
 		}
 
-		return authorizeRequestModel.buildKey(request._id, request.applicationId, request.keyCode);
+		return authorizeRequestModel.buildKey(request.id, request.applicationId, request.keyCode);
 	};
 
 	return instance;

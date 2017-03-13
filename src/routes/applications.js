@@ -2,8 +2,8 @@
 
 const apiResult = require('../helpers/apiResult');
 const dbConnector = require('../helpers/dbConnector');
-
-const applicationModel = require('../models/application');
+const applicationsAsync = require('../helpers/collections').applications;
+const applicationModelAsync = require('../models/application');
 
 exports.post = async (request, extensions, config) => {
 	const userId = request.user.id;
@@ -11,13 +11,14 @@ exports.post = async (request, extensions, config) => {
 	const description = request.body.description;
 	const permissions = request.body.permissions;
 
-	const db = await dbConnector.connectApidbAsync(config);
+	const applications = await applicationsAsync(config);
+	const applicationModel = await applicationModelAsync(config);
 
 	// name
 	if (!/^.{1,32}$/.test(name))
 		return apiResult(400, 'name is invalid format');
 
-	if ((await db.findArrayAsync('applications', {name: name})).length >= 1)
+	if (await applications.findAsync({name: name}) != null)
 		return apiResult(400, 'already exists name');
 
 	// description
@@ -28,10 +29,10 @@ exports.post = async (request, extensions, config) => {
 	if (!applicationModel.analyzePermissions(permissions))
 		return apiResult(400, 'permissions is invalid format');
 
-	let document;
+	let applicationDocument;
 
 	try {
-		document = await db.createAsync('applications', {
+		applicationDocument = await applications.createAsync({
 			name: name,
 			creatorId: userId,
 			description: description,
@@ -43,15 +44,8 @@ exports.post = async (request, extensions, config) => {
 		return apiResult(500, 'faild to create application');
 	}
 
-	if (!(document.result.n == 1 && document.result.ok == 1))
+	if (applicationDocument == null)
 		return apiResult(500, 'faild to create application');
 
-	let res = {};
-	Object.assign(res, {application: document.ops[0]});
-
-	// _idを文字列に変換し、idとして返す
-	res.application.id = res.application._id.toString();
-	delete res.application._id;
-
-	return apiResult(200, 'success', res);
+	return apiResult(200, 'success', {application: applicationDocument.document});
 };

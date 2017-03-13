@@ -1,6 +1,9 @@
 'use strict';
 
-module.exports = async (document, dbManager) => {
+//const postModelAsync = require('../models/post');
+const posts = require('../helpers/collections').posts;
+
+module.exports = async (document, config) => {
 	const instance = {};
 
 	// id加工
@@ -8,7 +11,8 @@ module.exports = async (document, dbManager) => {
 	delete document._id;
 
 	instance.document = document;
-	instance.dbManager = dbManager;
+	instance.collection = await posts(config);
+	//const postModel = await postModelAsync(config);
 
 	// TODO: 各種操作用メソッドの追加
 

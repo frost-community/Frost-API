@@ -1,51 +1,55 @@
 'use strict';
 
+const applicationAccesses = require('../helpers/collections').applicationAccesses;
 const crypto = require('crypto');
 const config = require('../helpers/loadConfig')();
 const dbConnector = require('../helpers/dbConnector');
 const objectId = require('mongodb').ObjectId;
 
-const buildKeyHash = (applicationId, userId, keyCode) => {
-	const sha256 = crypto.createHash('sha256');
-	sha256.update(`${config.api.secretToken.applicationAccess}/${applicationId.toString()}/${userId.toString()}/${keyCode}`);
+module.exports = async (config) => {
+	const instance = {};
 
-	return sha256.digest('hex');
-};
-exports.buildKeyHash = buildKeyHash;
+	instance.buildKeyHash = (applicationId, userId, keyCode) => {
+		const sha256 = crypto.createHash('sha256');
+		sha256.update(`${config.api.secretToken.applicationAccess}/${applicationId.toString()}/${userId.toString()}/${keyCode}`);
 
-const buildKey = (applicationId, userId, keyCode) => {
-	return `${userId}-${buildKeyHash(applicationId, userId, keyCode)}.${keyCode}`;
-};
-exports.buildKey = buildKey;
+		return sha256.digest('hex');
+	};
 
-const splitKey = (key) => {
-	const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
+	instance.buildKey = (applicationId, userId, keyCode) => {
+		return `${userId}-${instance.buildKeyHash(applicationId, userId, keyCode)}.${keyCode}`;
+	};
 
-	if (reg == null)
-		throw new Error('access key is invalid format');
+	instance.splitKey = (key) => {
+		const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
 
-	return {userId: objectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
-};
-exports.splitKey = splitKey;
+		if (reg == null)
+			throw new Error('access key is invalid format');
 
-exports.verifyKeyAsync = async (key) => {
-	let elements;
+		return {userId: objectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
+	};
 
-	try {
-		elements = splitKey(key);
-	}
-	catch (err) {
-		return false;
-	}
+	instance.verifyKeyAsync = async (key) => {
+		let elements;
 
-	const dbManager = await dbConnector.connectApidbAsync();
-	const doc = await dbManager.findAsync('applicationAccesses', {userId: elements.userId, keyCode: elements.keyCode});
+		try {
+			elements = instance.splitKey(key);
+		}
+		catch (err) {
+			return false;
+		}
 
-	if (doc == null)
-		return false;
+		const collection = await applicationAccesses(config);
+		const doc = await collection.findAsync({userId: elements.userId, keyCode: elements.keyCode});
 
-	const correctKeyHash = buildKeyHash(doc.applicationId, elements.userId, elements.keyCode);
-	const isPassed = elements.hash === correctKeyHash && elements.keyCode === doc.keyCode;
+		if (doc == null)
+			return false;
 
-	return isPassed;
+		const correctKeyHash = instance.buildKeyHash(doc.applicationId, elements.userId, elements.keyCode);
+		const isPassed = elements.hash === correctKeyHash && elements.keyCode === doc.keyCode;
+
+		return isPassed;
+	};
+
+	return instance;
 };

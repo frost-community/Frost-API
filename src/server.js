@@ -4,7 +4,6 @@ const fs = require('fs');
 const stdi = require('./helpers/readline');
 const bodyParser = require('body-parser');
 const express = require('express');
-const routes = require('./routes');
 const loadConfig = require('./helpers/loadConfig');
 const requestAsync = require('async-request');
 const urlConfigFile = 'https://raw.githubusercontent.com/Frost-Dev/Frost-API/develop/config.json';
@@ -49,10 +48,10 @@ module.exports = () => {
 				next();
 			});
 
-			const checkParams = require('./helpers/middlewares/checkParams')(router).execute;
-			const checkPermission = require('./helpers/middlewares/checkPermission')(router).execute;
+			const checkParams = require('./helpers/middlewares/checkParams')(config, router).execute;
+			const checkPermission = require('./helpers/middlewares/checkPermission')(config, router).execute;
 
-			router.addRoutes(routes(), [checkPermission, checkParams]);
+			router.addRoutes(require('./routes')(), [checkPermission, checkParams]);
 
 			app.use((req, res) => {
 				require('./helpers/responseHelper')(res);
