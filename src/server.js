@@ -52,8 +52,6 @@ module.exports = () => {
 				const checkParams = (await require('./helpers/middlewares/checkParams')(config, router)).execute;
 				const checkPermission = (await require('./helpers/middlewares/checkPermission')(config, router)).execute;
 
-				console.log(router);
-
 				router.addRoutes(require('./routes')(), [checkPermission, checkParams]);
 
 				app.use((req, res) => {
@@ -67,7 +65,7 @@ module.exports = () => {
 			}
 		}
 		catch(e) {
-			console.log(e);
+			console.log(`Server Error: ${e}`);
 		}
 	})();
 };
