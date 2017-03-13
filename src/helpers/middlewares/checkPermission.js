@@ -4,7 +4,7 @@ const applicationModelAsync = require('../../models/application');
 const applicationAccessModelAsync = require('../../models/applicationAccess');
 
 const applications = require('../collections').applications;
-const users = require('../collections/').users;
+const users = require('../collections').users;
 
 module.exports = async (config, router) => {
 	const instance = {};
