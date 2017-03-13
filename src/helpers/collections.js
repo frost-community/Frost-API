@@ -38,7 +38,7 @@ const collectionBase = async (collectionName, targetDocumentModel, config) => {
 		return await instance.findAsync({_id: parsedId});
 	};
 
-	instance.findManyAsync = async (query) => {
+	instance.findArrayAsync = async (query) => {
 		const documents = await dbManager.findArrayAsync(collectionName, query);
 
 		if (documents == null || documents.length === 0)
@@ -50,6 +50,8 @@ const collectionBase = async (collectionName, targetDocumentModel, config) => {
 
 		return res;
 	};
+
+	instance.updateAsync = async (query, data) => await dbManager.updateAsync(collectionName, query, data);
 
 	instance.removeAsync = async (query) => await dbManager.removeAsync(collectionName, query);
 
