@@ -2,8 +2,6 @@
 
 const authorizeRequests = require('../helpers/collections').authorizeRequests;
 const crypto = require('crypto');
-const config = require('../helpers/loadConfig')();
-const dbConnector = require('../helpers/dbConnector');
 const objectId = require('mongodb').ObjectId;
 
 module.exports = async (config) => {
@@ -24,7 +22,7 @@ module.exports = async (config) => {
 		const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
 
 		if (reg == null)
-			return null;
+			throw new Error('falid to split key');
 
 		return {authorizeRequestId: objectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
 	};
