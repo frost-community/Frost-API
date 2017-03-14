@@ -28,7 +28,7 @@ const collectionBase = async (collectionName, targetDocumentModel, config) => {
 	};
 
 	instance.findIdAsync = async (id) => {
-		let parsedId;
+		let parsedId = id;
 		try {
 			if (type(id) == 'String')
 				parsedId = mongo.ObjectID(id);
@@ -56,7 +56,7 @@ const collectionBase = async (collectionName, targetDocumentModel, config) => {
 	instance.updateAsync = async (query, data) => await dbManager.updateAsync(collectionName, query, data);
 
 	instance.updateIdAsync = async (id, data) => {
-		let parsedId;
+		let parsedId = id;
 		try {
 			if (type(id) == 'String')
 				parsedId = mongo.ObjectID(id);

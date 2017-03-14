@@ -43,10 +43,10 @@ module.exports = async (config) => {
 		if (doc == null)
 			return false;
 
-		const correctKeyHash = instance.buildKeyHash(elements.authorizeRequestId, doc.applicationId, elements.keyCode);
+		const correctKeyHash = instance.buildKeyHash(elements.authorizeRequestId, doc.document.applicationId, elements.keyCode);
 		// const createdAt = doc._id.getUnixtime();
 		const isAvailabilityPeriod = true; // Math.abs(Date.now() - createdAt) < config.api.request_key_expire_sec;
-		const isPassed = isAvailabilityPeriod && elements.hash === correctKeyHash && elements.keyCode === doc.keyCode;
+		const isPassed = isAvailabilityPeriod && elements.hash === correctKeyHash && elements.keyCode === doc.document.keyCode;
 
 		return isPassed;
 	};

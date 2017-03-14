@@ -1,8 +1,8 @@
 'use strict';
 
-const applications = require('../helpers/collections').applications;
+const applicationsAsync = require('../helpers/collections').applications;
 const crypto = require('crypto');
-const objectId = require('mongodb').ObjectId;
+const mongo = require('mongodb');
 
 module.exports = async (config) => {
 	const instance = {};
@@ -30,7 +30,7 @@ module.exports = async (config) => {
 		if (reg == null)
 			throw new Error('falid to split key');
 
-		return {applicationId: objectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
+		return {applicationId: mongo.ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
 	};
 
 	instance.verifyKeyAsync = async (key) => {
@@ -43,14 +43,14 @@ module.exports = async (config) => {
 			return false;
 		}
 
-		const collection = await applications(config);
-		const doc = await collection.findAsync({_id: elements.applicationId, keyCode: elements.keyCode});
+		const applications = await applicationsAsync(config);
+		const doc = await applications.findAsync({_id: elements.applicationId, keyCode: elements.keyCode});
 
 		if (doc == null)
 			return false;
 
-		const correctKeyHash = instance.buildKeyHash(elements.applicationId, doc.creatorId, elements.keyCode);
-		const isPassed = elements.hash === correctKeyHash && elements.keyCode === doc.keyCode;
+		const correctKeyHash = instance.buildKeyHash(elements.applicationId, doc.document.creatorId, elements.keyCode);
+		const isPassed = elements.hash === correctKeyHash && elements.keyCode === doc.document.keyCode;
 
 		return isPassed;
 	};
