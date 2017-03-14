@@ -23,84 +23,92 @@ describe('API', () => {
 		})();
 	});
 
-	describe('POST /ice_auth/request', () => {
-		it('正しくリクエストされた場合は成功する', done => {
-			(async () => {
-				try {
-					let res = await routeRequest.post({
-						body: {
-							application_key: 'application_key_hoge'
+	describe('/ice_auth', () => {
+		describe('/request', () => {
+			describe('[POST]', () => {
+				it('正しくリクエストされた場合は成功する', done => {
+					(async () => {
+						try {
+							let res = await routeRequest.post({
+								body: {
+									application_key: 'application_key_hoge'
+								}
+							}, null, config);
+
+							assert.equal(res.statusCode, 200);
+
+							delete res.data.user.id;
+							assert.deepEqual(res.data, {
+								request_key: 'request_key_hoge'
+							});
+
+							done();
 						}
-					}, null, config);
-
-					assert.equal(res.statusCode, 200);
-
-					delete res.data.user.id;
-					assert.deepEqual(res.data, {
-						request_key: 'request_key_hoge'
-					});
-
-					done();
-				}
-				catch(e) {
-					done(e);
-				}
-			})();
+						catch(e) {
+							done(e);
+						}
+					})();
+				});
+			});
 		});
-	});
 
-	describe('GET  /ice_auth/verification_key', () => {
-		it('正しくリクエストされた場合は成功する', done => {
-			(async () => {
-				try {
-					let res = await routeVerificationKey.get({
-						body: {
-							application_key: 'application_key_hoge',
-							request_key: 'request_key_hoge'
+		describe('/verification_key', () => {
+			describe('[GET]', () => {
+				it('正しくリクエストされた場合は成功する', done => {
+					(async () => {
+						try {
+							let res = await routeVerificationKey.get({
+								body: {
+									application_key: 'application_key_hoge',
+									request_key: 'request_key_hoge'
+								}
+							}, null, config);
+
+							assert.equal(res.statusCode, 200);
+
+							delete res.data.user.id;
+							assert.deepEqual(res.data, {
+								verification_key: 'verification_key_hoge'
+							});
+
+							done();
 						}
-					}, null, config);
-
-					assert.equal(res.statusCode, 200);
-
-					delete res.data.user.id;
-					assert.deepEqual(res.data, {
-						verification_key: 'verification_key_hoge'
-					});
-
-					done();
-				}
-				catch(e) {
-					done(e);
-				}
-			})();
+						catch(e) {
+							done(e);
+						}
+					})();
+				});
+			});
 		});
-	});
 
-	describe('POST /ice_auth/authorize', () => {
-		it('正しくリクエストされた場合は成功する', done => {
-			(async () => {
-				try {
-					let res = await routeAuthorize.post({
-						body: {
-							application_key: 'application_key_hoge',
-							request_key: 'request_key_hoge',
-							verification_key: 'verification_key_hoge'
+		describe('/authorize', () => {
+			describe('[POST]', () => {
+				it('正しくリクエストされた場合は成功する', done => {
+					(async () => {
+						try {
+							let res = await routeAuthorize.post({
+								body: {
+									application_key: 'application_key_hoge',
+									request_key: 'request_key_hoge',
+									verification_key: 'verification_key_hoge'
+								}
+							}, null, config);
+
+							assert.equal(res.statusCode, 200);
+
+							delete res.data.user.id;
+							assert.deepEqual(res.data, {
+								access_key: 'access_key_hoge'
+							});
+
+							done();
 						}
-					}, null, config);
-
-					assert.equal(res.statusCode, 200);
-
-					delete res.data.user.id;
-					assert.deepEqual(res.data, {
-						access_key: 'access_key_hoge'
-					});
-
-					done();
-				}
-				catch(e) {
-					done(e);
-				}
-			})();
+						catch(e) {
+							done(e);
+						}
+					})();
+				});
+			});
 		});
 	});
 });

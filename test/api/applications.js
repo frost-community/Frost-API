@@ -104,7 +104,7 @@ describe('API', () => {
 			})();
 		});
 
-		describe('POST', () => {
+		describe('[POST]', () => {
 			// general以外のアプリケーションを削除
 			afterEach(done => {
 				(async () => {
@@ -203,114 +203,118 @@ describe('API', () => {
 			});
 		});
 
-		describe('GET  /applications/id', () => {
-			it('正しくリクエストされた場合は成功する', done => {
-				(async () => {
-					try {
-						let res = await routeAppId.get({
-							user: {id: accountA.id},
-							params: {id: appA.id},
-							body: {}
-						}, null, config);
+		describe('/id', () => {
+			describe('[GET]', () => {
+				it('正しくリクエストされた場合は成功する', done => {
+					(async () => {
+						try {
+							let res = await routeAppId.get({
+								user: {id: accountA.id},
+								params: {id: appA.id},
+								body: {}
+							}, null, config);
 
-						assert.equal(res.statusCode, 200);
+							assert.equal(res.statusCode, 200);
 
-						assert.deepEqual(res.data, {
-							application: {
-								id: appA.id,
-								creatorId: accountA.id,
-								name: appA.name,
-								description: appA.description,
-								permissions: appA.permissions
+							assert.deepEqual(res.data, {
+								application: {
+									id: appA.id,
+									creatorId: accountA.id,
+									name: appA.name,
+									description: appA.description,
+									permissions: appA.permissions
+								}
+							});
+
+							done();
+						}
+						catch(e) {
+							done(e);
+						}
+					})();
+				});
+
+				it('所有していないアプリケーションを指定された場合は失敗する', done => {
+					(async () => {
+						try {
+							let res = await routeAppId.get({
+								user: {id: accountA.id},
+								params: {id: appB.id},
+								body: {}
+							}, null, config);
+
+							assert.equal(res.statusCode, 400);
+
+							done();
+						}
+						catch(e) {
+							done(e);
+						}
+					})();
+				});
+
+				it('存在しないアプリケーションを指定された場合は失敗する', done => {
+					(async () => {
+						try {
+							let res = await routeAppId.get({
+								user: {id: accountA.id},
+								params: {id: 'abcdefg1234'},
+								body: {}
+							}, null, config);
+
+							assert.equal(res.statusCode, 400);
+
+							done();
+						}
+						catch(e) {
+							done(e);
+						}
+					})();
+				});
+			});
+
+			describe('/application_key', () => {
+				describe('[POST]', () => {
+					it('正しくリクエストされた場合は成功する', done => {
+						(async () => {
+							try {
+								let res = await routeAppIdApplicationKey.post({params: {id: 'application_id_hoge'}}, null, config);
+
+								assert.equal(res.statusCode, 200);
+
+								assert.deepEqual(res.data, {
+									application_key: 'application_key_hoge'
+								});
+
+								done();
 							}
-						});
+							catch(e) {
+								done(e);
+							}
+						})();
+					});
+				});
 
-						done();
-					}
-					catch(e) {
-						done(e);
-					}
-				})();
-			});
+				describe('[GET]', () => {
+					it('正しくリクエストされた場合は成功する', done => {
+						(async () => {
+							try {
+								let res = await routeAppIdApplicationKey.get({params: {id: 'application_id_hoge'}}, null, config);
 
-			it('所有していないアプリケーションを指定された場合は失敗する', done => {
-				(async () => {
-					try {
-						let res = await routeAppId.get({
-							user: {id: accountA.id},
-							params: {id: appB.id},
-							body: {}
-						}, null, config);
+								assert.equal(res.statusCode, 200);
 
-						assert.equal(res.statusCode, 400);
+								assert.deepEqual(res.data, {
+									application_key: 'application_key_hoge'
+								});
 
-						done();
-					}
-					catch(e) {
-						done(e);
-					}
-				})();
-			});
-
-			it('存在しないアプリケーションを指定された場合は失敗する', done => {
-				(async () => {
-					try {
-						let res = await routeAppId.get({
-							user: {id: accountA.id},
-							params: {id: 'abcdefg1234'},
-							body: {}
-						}, null, config);
-
-						assert.equal(res.statusCode, 400);
-
-						done();
-					}
-					catch(e) {
-						done(e);
-					}
-				})();
-			});
-		});
-
-		describe('POST /applications/id/application_key', () => {
-			it('正しくリクエストされた場合は成功する', done => {
-				(async () => {
-					try {
-						let res = await routeAppIdApplicationKey.post({params: {id: 'application_id_hoge'}}, null, config);
-
-						assert.equal(res.statusCode, 200);
-
-						assert.deepEqual(res.data, {
-							application_key: 'application_key_hoge'
-						});
-
-						done();
-					}
-					catch(e) {
-						done(e);
-					}
-				})();
-			});
-		});
-
-		describe('GET  /applications/id/application_key', () => {
-			it('正しくリクエストされた場合は成功する', done => {
-				(async () => {
-					try {
-						let res = await routeAppIdApplicationKey.get({params: {id: 'application_id_hoge'}}, null, config);
-
-						assert.equal(res.statusCode, 200);
-
-						assert.deepEqual(res.data, {
-							application_key: 'application_key_hoge'
-						});
-
-						done();
-					}
-					catch(e) {
-						done(e);
-					}
-				})();
+								done();
+							}
+							catch(e) {
+								done(e);
+							}
+						})();
+					});
+				});
 			});
 		});
 	});
