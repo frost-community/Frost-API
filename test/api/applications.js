@@ -271,6 +271,23 @@ describe('Applications API', () => {
 							}
 						})();
 					});
+
+					it('所有していないアプリケーションを指定された場合は失敗する', done => {
+						(async () => {
+							try {
+								let res = await routeAppIdApplicationKey.post({
+									user: userB,
+									params: {id: appA.id},
+								}, null, config);
+								assert.equal(res.message, 'you do not own this application');
+
+								done();
+							}
+							catch(e) {
+								done(e);
+							}
+						})();
+					});
 				});
 
 				describe('[GET]', () => {
@@ -288,6 +305,29 @@ describe('Applications API', () => {
 									params: {id: appA.id},
 								}, null, config);
 								assert.equal(res.message, 'success');
+
+								done();
+							}
+							catch(e) {
+								done(e);
+							}
+						})();
+					});
+
+					it('所有していないアプリケーションを指定された場合は失敗する', done => {
+						(async () => {
+							try {
+								let res = await routeAppIdApplicationKey.post({
+									user: userB,
+									params: {id: appB.id},
+								}, null, config);
+								assert.equal(res.message, 'success');
+
+								res = await routeAppIdApplicationKey.get({
+									user: userA,
+									params: {id: appB.id},
+								}, null, config);
+								assert.equal(res.message, 'you do not own this application');
 
 								done();
 							}
