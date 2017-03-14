@@ -1,13 +1,13 @@
 'use strict';
 
 // const userFollowingModelAsync = require('../models/userFollowing');
-const userFollowings = require('../helpers/collections').userFollowings;
+const userFollowingsAsync = require('../helpers/collections').userFollowings;
 
 module.exports = async (document, config) => {
 	const instance = {};
 
 	instance.document = document;
-	instance.collection = await userFollowings(config);
+	const userFollowings = await userFollowingsAsync(config);
 	//const userFollowingModel = await userFollowingModelAsync(config);
 
 	// TODO: 各種操作用メソッドの追加
@@ -21,6 +21,11 @@ module.exports = async (document, config) => {
 		delete res._id;
 
 		return res;
+	};
+
+	// 最新の情報を取得して同期する
+	instance.sync = async () => {
+		instance.document = (await userFollowings.findIdAsync(instance.document._id)).document;
 	};
 
 	return instance;

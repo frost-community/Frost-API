@@ -1,13 +1,13 @@
 'use strict';
 
 //const postModelAsync = require('../models/post');
-const posts = require('../helpers/collections').posts;
+const postsAsync = require('../helpers/collections').posts;
 
 module.exports = async (document, config) => {
 	const instance = {};
 
 	instance.document = document;
-	instance.collection = await posts(config);
+	const posts = await postsAsync(config);
 	//const postModel = await postModelAsync(config);
 
 	// TODO: 各種操作用メソッドの追加
@@ -21,6 +21,11 @@ module.exports = async (document, config) => {
 		delete res._id;
 
 		return res;
+	};
+
+	// 最新の情報を取得して同期する
+	instance.sync = async () => {
+		instance.document = (await posts.findIdAsync(instance.document._id)).document;
 	};
 
 	return instance;

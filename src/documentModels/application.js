@@ -2,17 +2,17 @@
 
 const randomRange = require('../helpers/randomRange');
 const applicationModelAsync = require('../models/application');
-const applications = require('../helpers/collections').applications;
+const applicationsAsync = require('../helpers/collections').applications;
 
 module.exports = async (document, config) => {
 	const instance = {};
 
 	instance.document = document;
-	instance.collection = await applications(config);
+	const applications = await applicationsAsync(config);
 	const applicationModel = await applicationModelAsync(config);
 
 	instance.hasPermissionAsync = async (permissionName) => {
-		const app = await instance.collection.findIdAsync(instance.document._id);
+		const app = await applications.findIdAsync(instance.document._id);
 
 		if (app == null)
 			throw new Error('application not found');
@@ -22,13 +22,13 @@ module.exports = async (document, config) => {
 
 	instance.generateApplicationKeyAsync = async () => {
 		const keyCode = randomRange(1, 99999);
-		await instance.collection.updateIdAsync(instance.document._id.toString(), {keyCode: keyCode});
-		const app = await instance.collection.findIdAsync(instance.document._id.toString());
+		await applications.updateIdAsync(instance.document._id.toString(), {keyCode: keyCode});
+		const app = await applications.findIdAsync(instance.document._id.toString());
 		return applicationModel.buildKey(app.document._id, app.document.creatorId, app.document.keyCode);
 	};
 
 	instance.getApplicationKeyAsync = async () => {
-		const app = await instance.collection.findIdAsync(instance.document._id.toString());
+		const app = await applications.findIdAsync(instance.document._id.toString());
 
 		if (app == null)
 			throw new Error('application not found');
@@ -48,6 +48,11 @@ module.exports = async (document, config) => {
 		res.creatorId = res.creatorId.toString();
 
 		return res;
+	};
+
+	// 最新の情報を取得して同期する
+	instance.sync = async () => {
+		instance.document = (await applications.findIdAsync(instance.document._id)).document;
 	};
 
 	return instance;

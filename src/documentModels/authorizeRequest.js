@@ -2,13 +2,13 @@
 
 const randomRange = require('../helpers/randomRange');
 const authorizeRequestModelAsync = require('../models/authorizeRequest');
-const authorizeRequests = require('../helpers/collections').authorizeRequests;
+const authorizeRequestsAsync = require('../helpers/collections').authorizeRequests;
 
 module.exports = async (document, config) => {
 	const instance = {};
 
 	instance.document = document;
-	instance.collection = await authorizeRequests(config);
+	const authorizeRequests = await authorizeRequestsAsync(config);
 	const authorizeRequestModel = await authorizeRequestModelAsync(config);
 
 	instance.getVerificationKeyAsync = async () => {
@@ -16,27 +16,20 @@ module.exports = async (document, config) => {
 		for (let i = 0; i < 6; i++)
 			pinCode += String(randomRange(0, 9));
 
-		await instance.collection.updateAsync({_id: instance.document._id}, {pinCode: pinCode});
+		await authorizeRequests.updateAsync({_id: instance.document._id}, {pinCode: pinCode});
 
 		return pinCode;
 	};
 
 	instance.getRequestKeyAsync = async () => {
-		let request = await instance.collection.findIdAsync(instance.document._id);
-
-		if (request == null)
-			throw new Error('authorizeRequest not found');
-
-		if (request.keyCode == null)
-		{
+		if (instance.document.keyCode == null) {
 			// 生成が必要な場合
 			const keyCode = randomRange(1, 99999);
-			const hoge = await instance.collection.updateAsync({_id: instance.document._id}, {keyCode: keyCode});
-			console.log(hoge);
-			request = await instance.collection.findIdAsync(instance.document._id);
+			const cmdResult = await authorizeRequests.updateIdAsync(instance.document._id, {keyCode: keyCode});
+			await instance.sync();
 		}
 
-		return authorizeRequestModel.buildKey(request._id, request.applicationId, request.keyCode);
+		return authorizeRequestModel.buildKey(instance.document._id, instance.document.applicationId, instance.document.keyCode);
 	};
 
 	instance.serialize = () => {
@@ -48,6 +41,11 @@ module.exports = async (document, config) => {
 		delete res._id;
 
 		return res;
+	};
+
+	// 最新の情報を取得して同期する
+	instance.sync = async () => {
+		instance.document = (await authorizeRequests.findIdAsync(instance.document._id)).document;
 	};
 
 	return instance;

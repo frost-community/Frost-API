@@ -5,6 +5,7 @@ const config = require('../../built/helpers/loadConfig')();
 const collections = require('../../built/helpers/collections');
 const usersAsync = collections.users;
 const applicationsAsync = collections.applications;
+const authorizeRequestModelAsync = require('../../built/models/authorizeRequest');
 const routeRequest = require('../../built/routes/ice_auth/request');
 const routeVerificationKey = require('../../built/routes/ice_auth/verification_key');
 const routeAuthorize = require('../../built/routes/ice_auth/authorize');
@@ -12,13 +13,14 @@ const routeAuthorize = require('../../built/routes/ice_auth/authorize');
 describe('IceAuth API', () => {
 	describe('/ice_auth', () => {
 		// load collections
-		let users, applications;
+		let users, applications, authorizeRequestModel;
 		before(done => {
 			(async () => {
 				try {
 					config.api.database = config.api.testDatabase;
 					users = await usersAsync(config);
 					applications = await applicationsAsync(config);
+					authorizeRequestModel = await authorizeRequestModelAsync(config);
 
 					await users.removeAsync();
 					await applications.removeAsync();
@@ -42,14 +44,14 @@ describe('IceAuth API', () => {
 						name: 'froster',
 						description: 'this is generaluser.'
 					});
-					user = res.document;
+					user = res;
 
 					res = await applications.createAsync({
 						name: 'generalapp',
 						description: 'this is generalapp.',
 						permissions: []
 					});
-					app = res.document;
+					app = res;
 
 					done();
 				}
@@ -79,18 +81,15 @@ describe('IceAuth API', () => {
 				it('正しくリクエストされた場合は成功する', done => {
 					(async () => {
 						try {
+							const applicationKey = await app.generateApplicationKeyAsync();
+
 							let res = await routeRequest.post({
 								body: {
-									application_key: 'application_key_hoge'
+									application_key: applicationKey
 								}
 							}, null, config);
-
 							assert.equal(res.message, 'success');
-
-							delete res.data.user.id;
-							assert.deepEqual(res.data, {
-								request_key: 'request_key_hoge'
-							});
+							assert(await authorizeRequestModel.verifyKeyAsync(res.data.request_key));
 
 							done();
 						}
@@ -116,7 +115,6 @@ describe('IceAuth API', () => {
 
 							assert.equal(res.message, 'success');
 
-							delete res.data.user.id;
 							assert.deepEqual(res.data, {
 								verification_key: 'verification_key_hoge'
 							});
@@ -146,7 +144,6 @@ describe('IceAuth API', () => {
 
 							assert.equal(res.message, 'success');
 
-							delete res.data.user.id;
 							assert.deepEqual(res.data, {
 								access_key: 'access_key_hoge'
 							});
