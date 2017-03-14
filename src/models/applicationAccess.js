@@ -24,7 +24,7 @@ module.exports = async (config) => {
 		const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
 
 		if (reg == null)
-			throw new Error('access key is invalid format');
+			return null;
 
 		return {userId: objectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
 	};
