@@ -11,7 +11,7 @@ exports.get = async (request, extensions, config) => {
 	if (applicationDoc == null)
 		return apiResult(400, 'application is not found');
 
-	// 対象アプリケーションの所有者かどうかをチェック
+	// 対象アプリケーションの所有者かどうか
 	if (applicationDoc.document.creatorId.toString() !== request.user._id.toString())
 		return apiResult(400, 'you do not own this application');
 
@@ -31,7 +31,7 @@ exports.post = async (request, extensions, config) => {
 	if (applicationDoc == null)
 		return apiResult(400, 'application is not found');
 
-	// 対象アプリケーションの所有者かどうかをチェック
+	// 対象アプリケーションの所有者かどうか
 	if (applicationDoc.document.creatorId.toString() !== request.user._id.toString())
 		return apiResult(400, 'you do not own this application');
 
