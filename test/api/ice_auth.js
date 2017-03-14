@@ -44,16 +44,27 @@ describe('IceAuth API', () => {
 					});
 					user = res.document;
 
-					res = await routeApp.post({
-						user: userA,
-						body: {
-							name: 'generalapp',
-							description: 'this is generalapp.',
-							permissions: []
-						}
-					}, null, config);
-					assert.equal(res.message, 'success');
-					app = res.data.application;
+					res = await applications.createAsync({
+						name: 'generalapp',
+						description: 'this is generalapp.',
+						permissions: []
+					});
+					app = res.document;
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
+
+		// remove all users, all applications
+		afterEach(done => {
+			(async () => {
+				try {
+					await users.removeAsync({});
+					await applications.removeAsync({});
 
 					done();
 				}
