@@ -3,7 +3,6 @@
 const randomRange = require('../helpers/randomRange');
 const applicationModelAsync = require('../models/application');
 const applications = require('../helpers/collections').applications;
-const type = require('../helpers/type');
 
 module.exports = async (document, config) => {
 	const instance = {};

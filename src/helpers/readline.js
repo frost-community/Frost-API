@@ -5,7 +5,7 @@ const ioInterface = require('readline').createInterface({
 	output: process.stdout
 });
 
-exports.questionAsync = (query) => new Promise((resolve, reject) => {
+exports.questionAsync = (query) => new Promise((resolve) => {
 	ioInterface.question(query, (ans) => {
 		resolve(ans);
 	});

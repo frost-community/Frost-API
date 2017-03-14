@@ -3,7 +3,6 @@
 const crypto = require('crypto');
 
 const apiResult = require('../helpers/apiResult');
-const dbConnector = require('../helpers/dbConnector');
 const randomRange = require('../helpers/randomRange');
 const users = require('../helpers/collections').users;
 
