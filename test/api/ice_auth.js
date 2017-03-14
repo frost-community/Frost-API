@@ -2,28 +2,67 @@
 
 const assert = require('assert');
 const config = require('../../built/helpers/loadConfig')();
+const collections = require('../../built/helpers/collections');
+const usersAsync = collections.users;
+const applicationsAsync = collections.applications;
 const routeRequest = require('../../built/routes/ice_auth/request');
 const routeVerificationKey = require('../../built/routes/ice_auth/verification_key');
 const routeAuthorize = require('../../built/routes/ice_auth/authorize');
-const dbConnector = require('../../built/helpers/dbConnector');
 
 describe('IceAuth API', () => {
-	let dbManager;
-	before(done => {
-		(async () => {
-			try {
-				config.api.database = config.api.testDatabase;
-				dbManager = await dbConnector.connectApidbAsync(config);
-
-				done();
-			}
-			catch(e) {
-				done(e);
-			}
-		})();
-	});
-
 	describe('/ice_auth', () => {
+		// load collections
+		let users, applications;
+		before(done => {
+			(async () => {
+				try {
+					config.api.database = config.api.testDatabase;
+					users = await usersAsync(config);
+					applications = await applicationsAsync(config);
+
+					await users.removeAsync();
+					await applications.removeAsync();
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
+
+		// add general user, general application
+		let user, app;
+		beforeEach(done => {
+			(async () => {
+				try {
+					let res = await users.createAsync({
+						screenName: 'generaluser',
+						password: 'abcdefg',
+						name: 'froster',
+						description: 'this is generaluser.'
+					});
+					user = res.document;
+
+					res = await routeApp.post({
+						user: userA,
+						body: {
+							name: 'generalapp',
+							description: 'this is generalapp.',
+							permissions: []
+						}
+					}, null, config);
+					assert.equal(res.message, 'success');
+					app = res.data.application;
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
+
 		describe('/request', () => {
 			describe('[POST]', () => {
 				it('正しくリクエストされた場合は成功する', done => {
