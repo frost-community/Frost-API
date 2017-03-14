@@ -7,7 +7,7 @@ const routeVerificationKey = require('../../built/routes/ice_auth/verification_k
 const routeAuthorize = require('../../built/routes/ice_auth/authorize');
 const dbConnector = require('../../built/helpers/dbConnector');
 
-describe('API', () => {
+describe('IceAuth API', () => {
 	let dbManager;
 	before(done => {
 		(async () => {
@@ -35,7 +35,7 @@ describe('API', () => {
 								}
 							}, null, config);
 
-							assert.equal(res.statusCode, 200);
+							assert.equal(res.message, 'success');
 
 							delete res.data.user.id;
 							assert.deepEqual(res.data, {
@@ -64,7 +64,7 @@ describe('API', () => {
 								}
 							}, null, config);
 
-							assert.equal(res.statusCode, 200);
+							assert.equal(res.message, 'success');
 
 							delete res.data.user.id;
 							assert.deepEqual(res.data, {
@@ -94,7 +94,7 @@ describe('API', () => {
 								}
 							}, null, config);
 
-							assert.equal(res.statusCode, 200);
+							assert.equal(res.message, 'success');
 
 							delete res.data.user.id;
 							assert.deepEqual(res.data, {

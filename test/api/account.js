@@ -5,7 +5,7 @@ const config = require('../../built/helpers/loadConfig')();
 const route = require('../../built/routes/account');
 const dbConnector = require('../../built/helpers/dbConnector');
 
-describe('API', () => {
+describe('Account API', () => {
 	let dbManager;
 	before(done => {
 		(async () => {
@@ -48,7 +48,7 @@ describe('API', () => {
 							}
 						}, null, config);
 
-						assert.equal(res.statusCode, 200);
+						assert.equal(res.message, 'success');
 
 						delete res.data.user.id;
 						assert.deepEqual(res.data, {
@@ -78,7 +78,7 @@ describe('API', () => {
 								description: 'testhoge'
 							}
 						}, null, config);
-						assert.equal(res.statusCode, 400);
+						assert.equal(res.message, 'screenName is invalid format');
 
 						res = await route.post({
 							body: {
@@ -88,7 +88,7 @@ describe('API', () => {
 								description: 'testhoge'
 							}
 						}, null, config);
-						assert.equal(res.statusCode, 400);
+						assert.equal(res.message, 'screenName is invalid format');
 
 						done();
 					}
@@ -109,7 +109,7 @@ describe('API', () => {
 								description: 'testhoge'
 							}
 						}, null, config);
-						assert.equal(res.statusCode, 400);
+						assert.equal(res.message, 'password is invalid format');
 
 						done();
 					}
@@ -130,7 +130,7 @@ describe('API', () => {
 								description: 'testhoge'
 							}
 						}, null, config);
-						assert.equal(res.statusCode, 400);
+						assert.equal(res.message, 'name is invalid format');
 
 						done();
 					}
@@ -151,7 +151,7 @@ describe('API', () => {
 								description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget'
 							}
 						}, null, config);
-						assert.equal(res.statusCode, 400);
+						assert.equal(res.message, 'description is invalid format');
 
 						done();
 					}

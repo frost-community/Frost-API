@@ -62,9 +62,7 @@ exports.post = async (request, extensions, config) => {
 	if (userDocument == null)
 		return apiResult(500, 'faild to create account');
 
-	delete userDocument.document.passwordHash;
-
-	return apiResult(200, 'success', {user: userDocument.document});
+	return apiResult(200, 'success', {user: userDocument.serialize()});
 };
 
 exports.get = async (request, extensions, config) => {

@@ -1,6 +1,7 @@
 'use strict';
 
 const dbConnector = require('./dbConnector');
+const type = require('./type');
 const mongo = require('mongodb');
 
 const collectionBase = async (collectionName, targetDocumentModel, config) => {
@@ -29,7 +30,8 @@ const collectionBase = async (collectionName, targetDocumentModel, config) => {
 	instance.findIdAsync = async (id) => {
 		let parsedId;
 		try {
-			parsedId = mongo.ObjectID(id);
+			if (type(id) == 'String')
+				parsedId = mongo.ObjectID(id);
 		}
 		catch(e) {
 			return null;
@@ -52,6 +54,19 @@ const collectionBase = async (collectionName, targetDocumentModel, config) => {
 	};
 
 	instance.updateAsync = async (query, data) => await dbManager.updateAsync(collectionName, query, data);
+
+	instance.updateIdAsync = async (id, data) => {
+		let parsedId;
+		try {
+			if (type(id) == 'String')
+				parsedId = mongo.ObjectID(id);
+		}
+		catch(e) {
+			return null;
+		}
+
+		return await instance.updateAsync({_id: parsedId}, data);
+	};
 
 	instance.removeAsync = async (query) => await dbManager.removeAsync(collectionName, query);
 

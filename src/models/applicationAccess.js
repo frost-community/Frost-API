@@ -11,7 +11,7 @@ module.exports = async (config) => {
 
 	instance.buildKeyHash = (applicationId, userId, keyCode) => {
 		const sha256 = crypto.createHash('sha256');
-		sha256.update(`${config.api.secretToken.applicationAccess}/${applicationId.toString()}/${userId.toString()}/${keyCode}`);
+		sha256.update(`${config.api.secretToken.applicationAccess}/${applicationId}/${userId}/${keyCode}`);
 
 		return sha256.digest('hex');
 	};

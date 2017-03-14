@@ -10,75 +10,69 @@ const routeApp = require('../../built/routes/applications');
 const routeAppId = require('../../built/routes/applications/id');
 const routeAppIdApplicationKey = require('../../built/routes/applications/id/application_key');
 
-describe('API', () => {
-	// load collections
-	let users, applications;
-	before(done => {
-		(async () => {
-			try {
-				config.api.database = config.api.testDatabase;
-				users = await usersAsync(config);
-				applications = await applicationsAsync(config);
-
-				await users.removeAsync();
-				await applications.removeAsync();
-
-				done();
-			}
-			catch(e) {
-				done(e);
-			}
-		})();
-	});
-
+describe('Applications API', () => {
 	describe('/applications', () => {
-		// add general users, general applications
-		let accountA, accountB, appA, appB;
+		// load collections
+		let users, applications;
 		before(done => {
 			(async () => {
 				try {
-					let res = await routeAccount.post({
-						body: {
-							screenName: 'generaluser_a',
-							password: 'abcdefg',
-							name: 'froster',
-							description: 'this is generaluser.'
-						}
-					}, null, config);
-					assert.equal(res.statusCode, 200);
-					accountA = res.data.user;
+					config.api.database = config.api.testDatabase;
+					users = await usersAsync(config);
+					applications = await applicationsAsync(config);
 
-					res = await routeAccount.post({
-						body: {
-							screenName: 'generaluser_b',
-							password: 'abcdefg',
-							name: 'froster',
-							description: 'this is generaluser.'
-						}
-					}, null, config);
-					assert.equal(res.statusCode, 200);
-					accountB = res.data.user;
+					await users.removeAsync();
+					await applications.removeAsync();
+
+					done();
+				}
+				catch(e) {
+					done(e);
+				}
+			})();
+		});
+
+		// add general users, general applications
+		let userA, userB, appA, appB;
+		beforeEach(done => {
+			(async () => {
+				try {
+					let res = await users.createAsync({
+						screenName: 'generaluser_a',
+						password: 'abcdefg',
+						name: 'froster',
+						description: 'this is generaluser.'
+					});
+					userA = res.document;
+
+					res = await users.createAsync({
+						screenName: 'generaluser_b',
+						password: 'abcdefg',
+						name: 'froster',
+						description: 'this is generaluser.'
+					});
+					userB = res.document;
 
 					res = await routeApp.post({
-						user: {id: accountA.id},
+						user: userA,
 						body: {
 							name: 'generalapp_a',
 							description: 'this is generalapp.',
 							permissions: []
 						}
 					}, null, config);
-					assert.equal(res.statusCode, 200);
+					assert.equal(res.message, 'success');
 					appA = res.data.application;
 
 					res = await routeApp.post({
-						user: {id: accountB.id},
+						user: userB,
 						body: {
 							name: 'generalapp_b',
 							description: 'this is generalapp.',
 							permissions: []
 						}
 					}, null, config);
-					assert.equal(res.statusCode, 200);
+					assert.equal(res.message, 'success');
 					appB = res.data.application;
 
 					done();
@@ -89,12 +83,12 @@ describe('API', () => {
 			})();
 		});
 
-		// remove general users, general applications
-		after(done => {
+		// remove all users, all applications
+		afterEach(done => {
 			(async () => {
 				try {
-					await users.removeAsync({screenName: /general/});
-					await applications.removeAsync({screenName: /general/});
+					await users.removeAsync({});
+					await applications.removeAsync({});
 
 					done();
 				}
@@ -105,25 +99,11 @@ describe('API', () => {
 		});
 
 		describe('[POST]', () => {
-			// general以外のアプリケーションを削除
-			afterEach(done => {
-				(async () => {
-					try {
-						await applications.removeAsync({screenName: /^(general)/});
-
-						done();
-					}
-					catch(e) {
-						done(e);
-					}
-				})();
-			});
-
 			it('正しくリクエストされた場合は成功する', done => {
 				(async () => {
 					try {
 						let res = await routeApp.post({
-							user: {id: accountA.id},
+							user: userA,
 							body: {
 								name: 'temp',
 								description: 'hogehoge',
@@ -131,13 +111,13 @@ describe('API', () => {
 							}
 						}, null, config);
 
-						assert.equal(res.statusCode, 200);
+						assert.equal(res.message, 'success');
 
 						delete res.data.application.id;
 						assert.deepEqual(res.data, {
 							application: {
 								name: 'temp',
-								creatorId: accountA.id,
+								creatorId: userA._id.toString(),
 								description: 'hogehoge',
 								permissions: []
 							}
@@ -154,24 +134,24 @@ describe('API', () => {
 				(async () => {
 					try {
 						let res = await routeApp.post({
-							user: {id: accountA.id},
+							user: userA,
 							body: {
 								name: '',
 								description: 'hogehoge',
 								permissions: ''
 							}
 						}, null, config);
-						assert.equal(res.statusCode, 400);
+						assert.equal(res.message, 'name is invalid format');
 
 						res = await routeApp.post({
-							user: {id: accountA.id},
+							user: userA,
 							body: {
 								name: 'superFrostersuperFrostersuperFros',
 								description: 'hogehoge',
 								permissions: ''
 							}
 						}, null, config);
-						assert.equal(res.statusCode, 400);
+						assert.equal(res.message, 'name is invalid format');
 
 						done();
 					}
@@ -185,14 +165,14 @@ describe('API', () => {
 				(async () => {
 					try {
 						let res = await routeApp.post({
-							user: {id: accountA.id},
+							user: userA,
 							body: {
 								name: 'temp',
 								description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget',
 								permissions: ''
 							}
 						}, null, config);
-						assert.equal(res.statusCode, 400);
+						assert.equal(res.message, 'description is invalid format');
 
 						done();
 					}
@@ -209,17 +189,17 @@ describe('API', () => {
 					(async () => {
 						try {
 							let res = await routeAppId.get({
-								user: {id: accountA.id},
+								user: userA,
 								params: {id: appA.id},
 								body: {}
 							}, null, config);
 
-							assert.equal(res.statusCode, 200);
+							assert.equal(res.message, 'success');
 
 							assert.deepEqual(res.data, {
 								application: {
 									id: appA.id,
-									creatorId: accountA.id,
+									creatorId: userA._id.toString(),
 									name: appA.name,
 									description: appA.description,
 									permissions: appA.permissions
@@ -238,12 +218,12 @@ describe('API', () => {
 					(async () => {
 						try {
 							let res = await routeAppId.get({
-								user: {id: accountA.id},
+								user: userA,
 								params: {id: appB.id},
 								body: {}
 							}, null, config);
 
-							assert.equal(res.statusCode, 400);
+							assert.equal(res.message, 'you do not own this application');
 
 							done();
 						}
@@ -257,12 +237,12 @@ describe('API', () => {
 					(async () => {
 						try {
 							let res = await routeAppId.get({
-								user: {id: accountA.id},
+								user: userA,
 								params: {id: 'abcdefg1234'},
 								body: {}
 							}, null, config);
 
-							assert.equal(res.statusCode, 400);
+							assert.equal(res.message, 'application is not found');
 
 							done();
 						}
@@ -278,13 +258,11 @@ describe('API', () => {
 					it('正しくリクエストされた場合は成功する', done => {
 						(async () => {
 							try {
-								let res = await routeAppIdApplicationKey.post({params: {id: 'application_id_hoge'}}, null, config);
-
-								assert.equal(res.statusCode, 200);
-
-								assert.deepEqual(res.data, {
-									application_key: 'application_key_hoge'
-								});
+								let res = await routeAppIdApplicationKey.post({
+									user: userA,
+									params: {id: appA.id},
+								}, null, config);
+								assert.equal(res.message, 'success');
 
 								done();
 							}
@@ -299,13 +277,17 @@ describe('API', () => {
 					it('正しくリクエストされた場合は成功する', done => {
 						(async () => {
 							try {
-								let res = await routeAppIdApplicationKey.get({params: {id: 'application_id_hoge'}}, null, config);
+								let res = await routeAppIdApplicationKey.post({
+									user: userA,
+									params: {id: appA.id},
+								}, null, config);
+								assert.equal(res.message, 'success');
 
-								assert.equal(res.statusCode, 200);
-
-								assert.deepEqual(res.data, {
-									application_key: 'application_key_hoge'
-								});
+								res = await routeAppIdApplicationKey.get({
+									user: userA,
+									params: {id: appA.id},
+								}, null, config);
+								assert.equal(res.message, 'success');
 
 								done();
 							}

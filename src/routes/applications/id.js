@@ -10,8 +10,8 @@ exports.get = async (request, extensions, config) => {
 		return apiResult(400, 'application is not found');
 
 	// 対象アプリケーションの所有者かどうかをチェック
-	if (applicationDoc.document.creatorId !== request.user.id)
+	if (applicationDoc.document.creatorId.toString() !== request.user._id.toString())
 		return apiResult(400, 'you do not own this application');
 
-	return apiResult(200, 'success', {application: applicationDoc.document});
+	return apiResult(200, 'success', {application: applicationDoc.serialize()});
 };

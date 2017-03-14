@@ -6,7 +6,7 @@ const applicationsAsync = require('../helpers/collections').applications;
 const applicationModelAsync = require('../models/application');
 
 exports.post = async (request, extensions, config) => {
-	const userId = request.user.id;
+	const userId = request.user._id;
 	const name = request.body.name;
 	const description = request.body.description;
 	const permissions = request.body.permissions;
@@ -40,12 +40,11 @@ exports.post = async (request, extensions, config) => {
 		});
 	}
 	catch(err) {
-		console.log(err.stack);
 		return apiResult(500, 'faild to create application');
 	}
 
 	if (applicationDocument == null)
 		return apiResult(500, 'faild to create application');
 
-	return apiResult(200, 'success', {application: applicationDocument.document});
+	return apiResult(200, 'success', {application: applicationDocument.serialize()});
 };
