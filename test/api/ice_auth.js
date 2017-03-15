@@ -40,7 +40,7 @@ describe('IceAuth API', () => {
 				try {
 					let res = await users.createAsync({
 						screenName: 'generaluser',
-						password: 'abcdefg',
+						passwordHash: 'abcdefg',
 						name: 'froster',
 						description: 'this is generaluser.'
 					});

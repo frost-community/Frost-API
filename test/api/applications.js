@@ -39,7 +39,7 @@ describe('Applications API', () => {
 				try {
 					let res = await users.createAsync({
 						screenName: 'generaluser_a',
-						password: 'abcdefg',
+						passwordHash: 'abcdefg',
 						name: 'froster',
 						description: 'this is generaluser.'
 					});
@@ -47,7 +47,7 @@ describe('Applications API', () => {
 
 					res = await users.createAsync({
 						screenName: 'generaluser_b',
-						password: 'abcdefg',
+						passwordHash: 'abcdefg',
 						name: 'froster',
 						description: 'this is generaluser.'
 					});
