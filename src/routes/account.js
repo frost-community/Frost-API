@@ -50,7 +50,12 @@ exports.post = async (request, extensions, db, config) => {
 	let userDocument;
 
 	try {
-		userDocument = await db.users.createAsync({screenName: screenName, passwordHash: hash, name: name, description: description});
+		userDocument = await db.users.createAsync({
+			screenName: screenName,
+			passwordHash: hash,
+			name: name,
+			description: description
+		});
 	}
 	catch(err) {
 		console.log(err.stack);
