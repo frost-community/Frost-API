@@ -1,12 +1,9 @@
 'use strict';
 
-const ioInterface = require('readline').createInterface({
-	input: process.stdin,
-	output: process.stdout
-});
-
-exports.questionAsync = (query) => new Promise((resolve) => {
-	ioInterface.question(query, (ans) => {
+module.exports = (message) => new Promise((resolve) => {
+	const rl = require('readline').createInterface(process.stdin, process.stdout);
+	rl.question(message, (ans) => {
 		resolve(ans);
+		rl.close();
 	});
 });
