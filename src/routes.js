@@ -27,7 +27,7 @@ module.exports = () => {
 			]}],
 
 		// リクエストキーからverification_key(PINコード)取得(認証ホスト専用エンドポイント)
-		['get',  '/ice_auth/verification_key', {
+		['get',  '/ice_auth/verification_code', {
 			params: [
 				{name: 'application_key', type: 'string'},
 				{name: 'request_key', type: 'string'}
@@ -38,7 +38,7 @@ module.exports = () => {
 			params: [
 				{name: 'application_key', type: 'string'},
 				{name: 'request_key', type: 'string'},
-				{name: 'verification_key', type: 'string'}
+				{name: 'verification_code', type: 'string'}
 			]}],
 
 		// == Applications ==

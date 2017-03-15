@@ -12,14 +12,14 @@ module.exports = async (document, db, config) => {
 	instance.document = document;
 	const authorizeRequestModel = await authorizeRequestModelAsync(db, config);
 
-	instance.getVerificationKeyAsync = async () => {
-		let pinCode = '';
+	instance.getVerificationCodeAsync = async () => {
+		let verificationCode = '';
 		for (let i = 0; i < 6; i++)
-			pinCode += String(randomRange(0, 9));
+			verificationCode += String(randomRange(0, 9));
 
-		await db.authorizeRequests.updateAsync({_id: instance.document._id}, {pinCode: pinCode});
+		await db.authorizeRequests.updateAsync({_id: instance.document._id}, {verificationCode: verificationCode});
 
-		return pinCode;
+		return verificationCode;
 	};
 
 	instance.getRequestKeyAsync = async () => {
