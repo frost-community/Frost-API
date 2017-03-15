@@ -11,10 +11,10 @@ exports.get = async (request, extensions, db, config) => {
 	const applicationModel = await applicationModelAsync(db, config);
 	const authorizeRequestsModel = await authorizeRequestsModelAsync(db, config);
 
-	if (await applicationModel.verifyKeyAsync(applicationKey))
+	if (!await applicationModel.verifyKeyAsync(applicationKey))
 		return apiResult(400, 'application_key is invalid');
 
-	if (await authorizeRequestsModel.verifyKeyAsync(requestKey))
+	if (!await authorizeRequestsModel.verifyKeyAsync(requestKey))
 		return apiResult(400, 'request_key is invalid');
 
 	const applicationId = applicationModel.splitKey(applicationKey).applicationId;
