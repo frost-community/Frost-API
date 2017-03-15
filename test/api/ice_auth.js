@@ -103,18 +103,23 @@ describe('IceAuth API', () => {
 				it('正しくリクエストされた場合は成功する', done => {
 					(async () => {
 						try {
-							let res = await routeVerificationCode.get({
+							const applicationKey = await app.generateApplicationKeyAsync();
+
+							let res = await routeRequest.post({
 								body: {
-									application_key: 'application_key_hoge',
-									request_key: 'request_key_hoge'
+									application_key: applicationKey
 								}
 							}, null, db, config);
-
 							assert.equal(res.message, 'success');
 
-							assert.deepEqual(res.data, {
-								verification_code: 'verification_code_hoge'
-							});
+							res = await routeVerificationCode.get({
+								body: {
+									application_key: applicationKey,
+									request_key: res.data.request_key
+								}
+							}, null, db, config);
+							assert.equal(res.message, 'success');
+							assert.notEqual(res.data.verification_code, null);
 
 							done();
 						}
