@@ -2,28 +2,25 @@
 
 const assert = require('assert');
 const config = require('../../built/helpers/loadConfig')();
-const collections = require('../../built/helpers/collections');
-const usersAsync = collections.users;
-const applicationsAsync = collections.applications;
 const authorizeRequestModelAsync = require('../../built/models/authorizeRequest');
 const routeRequest = require('../../built/routes/ice_auth/request');
 const routeVerificationKey = require('../../built/routes/ice_auth/verification_key');
 const routeAuthorize = require('../../built/routes/ice_auth/authorize');
+const dbAsync = require('../../built/helpers/db');
 
 describe('IceAuth API', () => {
 	describe('/ice_auth', () => {
 		// load collections
-		let users, applications, authorizeRequestModel;
+		let db, authorizeRequestModel;
 		before(done => {
 			(async () => {
 				try {
 					config.api.database = config.api.testDatabase;
-					users = await usersAsync(config);
-					applications = await applicationsAsync(config);
-					authorizeRequestModel = await authorizeRequestModelAsync(config);
+					db = await dbAsync(config);
+					authorizeRequestModel = await authorizeRequestModelAsync(db, config);
 
-					await users.removeAsync();
-					await applications.removeAsync();
+					await db.users.removeAsync();
+					await db.applications.removeAsync();
 
 					done();
 				}
@@ -38,7 +35,7 @@ describe('IceAuth API', () => {
 		beforeEach(done => {
 			(async () => {
 				try {
-					let res = await users.createAsync({
+					let res = await db.users.createAsync({
 						screenName: 'generaluser',
 						passwordHash: 'abcdefg',
 						name: 'froster',
@@ -46,7 +43,7 @@ describe('IceAuth API', () => {
 					});
 					user = res;
 
-					res = await applications.createAsync({
+					res = await db.applications.createAsync({
 						name: 'generalapp',
 						description: 'this is generalapp.',
 						permissions: []
@@ -65,8 +62,8 @@ describe('IceAuth API', () => {
 		afterEach(done => {
 			(async () => {
 				try {
-					await users.removeAsync({});
-					await applications.removeAsync({});
+					await db.users.removeAsync({});
+					await db.applications.removeAsync({});
 
 					done();
 				}
@@ -87,7 +84,7 @@ describe('IceAuth API', () => {
 								body: {
 									application_key: applicationKey
 								}
-							}, null, config);
+							}, null, db, config);
 							assert.equal(res.message, 'success');
 							assert(await authorizeRequestModel.verifyKeyAsync(res.data.request_key));
 
@@ -111,7 +108,7 @@ describe('IceAuth API', () => {
 									application_key: 'application_key_hoge',
 									request_key: 'request_key_hoge'
 								}
-							}, null, config);
+							}, null, db, config);
 
 							assert.equal(res.message, 'success');
 
@@ -140,7 +137,7 @@ describe('IceAuth API', () => {
 									request_key: 'request_key_hoge',
 									verification_key: 'verification_key_hoge'
 								}
-							}, null, config);
+							}, null, db, config);
 
 							assert.equal(res.message, 'success');
 

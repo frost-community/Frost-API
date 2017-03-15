@@ -2,7 +2,7 @@
 
 const type = require('../type');
 
-module.exports = async (config, router) => {
+module.exports = async (router, db, config) => {
 	const instance = {};
 
 	instance.execute = (request, response, next) => {

@@ -1,7 +1,10 @@
 'use strict';
 
-module.exports = (db) => {
-	const instance = {db: db};
+module.exports = (connection) => {
+	const instance = {connection: connection};
+
+	if (connection == null)
+		throw new Error('missing arguments');
 
 	/**
 	 * ドキュメントを作成します
@@ -10,7 +13,7 @@ module.exports = (db) => {
 	 * @param  {string} data
 	 */
 	instance.createAsync = async (collectionName, data) =>
-		await instance.db.collection(collectionName).insert(data);
+		await instance.connection.collection(collectionName).insert(data);
 
 	/**
 	 * ドキュメントを検索して項目を取得します
@@ -21,7 +24,7 @@ module.exports = (db) => {
 	 * @param  {Object|null} document
 	 */
 	instance.findAsync = async (collectionName, query, option) =>
-		await instance.db.collection(collectionName).findOne(query, option);
+		await instance.connection.collection(collectionName).findOne(query, option);
 
 	/**
 	 * ドキュメントを検索して複数の項目を取得します
@@ -32,7 +35,7 @@ module.exports = (db) => {
 	 * @param  {Object[]|null} documents
 	 */
 	instance.findArrayAsync = async (collectionName, query, option) =>
-		await instance.db.collection(collectionName).find(query, option).toArray();
+		await instance.connection.collection(collectionName).find(query, option).toArray();
 
 	/**
 	 * ドキュメントを更新します
@@ -41,7 +44,7 @@ module.exports = (db) => {
 	 * @param  {Object} data
 	 * @param  {Boolean} isMany
 	 */
-	instance.updateAsync = async (collectionName, query, data) => await instance.db.collection(collectionName).update(query, {$set: data});
+	instance.updateAsync = async (collectionName, query, data) => await instance.connection.collection(collectionName).update(query, {$set: data});
 
 	/**
 	 * ドキュメントを削除します
@@ -50,7 +53,7 @@ module.exports = (db) => {
 	 * @param  {Object} query
 	 */
 	instance.removeAsync = async (collectionName, query) =>
-		await instance.db.collection(collectionName).remove(query);
+		await instance.connection.collection(collectionName).remove(query);
 
 	return instance;
 };

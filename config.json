@@ -12,8 +12,8 @@
       "host": "localhost",
       "port": null,
       "database": "test",
-      "username": "root",
-      "password": null
+      "username": "test",
+      "password": "test"
     },
     "secretToken": {
       "application": "application-secret-token",

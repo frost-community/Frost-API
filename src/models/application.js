@@ -1,11 +1,13 @@
 'use strict';
 
-const applicationsAsync = require('../helpers/collections').applications;
 const crypto = require('crypto');
 const mongo = require('mongodb');
 
-module.exports = async (config) => {
+module.exports = async (db, config) => {
 	const instance = {};
+
+	if (db == null || config == null)
+		throw new Error('missing arguments');
 
 	instance.analyzePermissions = () => {
 		// TODO
@@ -43,8 +45,7 @@ module.exports = async (config) => {
 			return false;
 		}
 
-		const applications = await applicationsAsync(config);
-		const doc = await applications.findAsync({_id: elements.applicationId, keyCode: elements.keyCode});
+		const doc = await db.applications.findAsync({_id: elements.applicationId, keyCode: elements.keyCode});
 
 		if (doc == null)
 			return false;

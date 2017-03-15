@@ -3,15 +3,15 @@
 const assert = require('assert');
 const config = require('../../built/helpers/loadConfig')();
 const route = require('../../built/routes/account');
-const dbConnector = require('../../built/helpers/dbConnector');
+const dbAsync = require('../../built/helpers/db');
 
 describe('Account API', () => {
-	let dbManager;
+	let db;
 	before(done => {
 		(async () => {
 			try {
 				config.api.database = config.api.testDatabase;
-				dbManager = await dbConnector.connectApidbAsync(config);
+				db = await dbAsync(config);
 
 				done();
 			}
@@ -26,7 +26,7 @@ describe('Account API', () => {
 			afterEach(done => {
 				(async () => {
 					try {
-						await dbManager.removeAsync('users', {});
+						await db.users.removeAsync({});
 
 						done();
 					}
@@ -46,7 +46,7 @@ describe('Account API', () => {
 								name: 'froster',
 								description: 'testhoge'
 							}
-						}, null, config);
+						}, null, db, config);
 
 						assert.equal(res.message, 'success');
 
@@ -77,7 +77,7 @@ describe('Account API', () => {
 								name: 'froster',
 								description: 'testhoge'
 							}
-						}, null, config);
+						}, null, db, config);
 						assert.equal(res.message, 'screenName is invalid format');
 
 						res = await route.post({
@@ -87,7 +87,7 @@ describe('Account API', () => {
 								name: 'froster',
 								description: 'testhoge'
 							}
-						}, null, config);
+						}, null, db, config);
 						assert.equal(res.message, 'screenName is invalid format');
 
 						done();
@@ -108,7 +108,7 @@ describe('Account API', () => {
 								name: 'froster',
 								description: 'testhoge'
 							}
-						}, null, config);
+						}, null, db, config);
 						assert.equal(res.message, 'password is invalid format');
 
 						done();
@@ -129,7 +129,7 @@ describe('Account API', () => {
 								name: 'superFrostersuperFrostersuperFros',
 								description: 'testhoge'
 							}
-						}, null, config);
+						}, null, db, config);
 						assert.equal(res.message, 'name is invalid format');
 
 						done();
@@ -150,7 +150,7 @@ describe('Account API', () => {
 								name: '',
 								description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget'
 							}
-						}, null, config);
+						}, null, db, config);
 						assert.equal(res.message, 'description is invalid format');
 
 						done();

@@ -2,21 +2,22 @@
 
 const randomRange = require('../helpers/randomRange');
 const authorizeRequestModelAsync = require('../models/authorizeRequest');
-const authorizeRequestsAsync = require('../helpers/collections').authorizeRequests;
 
-module.exports = async (document, config) => {
+module.exports = async (document, db, config) => {
 	const instance = {};
 
+	if (document == null || db == null || config == null)
+		throw new Error('missing arguments');
+
 	instance.document = document;
-	const authorizeRequests = await authorizeRequestsAsync(config);
-	const authorizeRequestModel = await authorizeRequestModelAsync(config);
+	const authorizeRequestModel = await authorizeRequestModelAsync(db, config);
 
 	instance.getVerificationKeyAsync = async () => {
 		let pinCode = '';
 		for (let i = 0; i < 6; i++)
 			pinCode += String(randomRange(0, 9));
 
-		await authorizeRequests.updateAsync({_id: instance.document._id}, {pinCode: pinCode});
+		await db.authorizeRequests.updateAsync({_id: instance.document._id}, {pinCode: pinCode});
 
 		return pinCode;
 	};
@@ -25,7 +26,7 @@ module.exports = async (document, config) => {
 		if (instance.document.keyCode == null) {
 			// 生成が必要な場合
 			const keyCode = randomRange(1, 99999);
-			const cmdResult = await authorizeRequests.updateIdAsync(instance.document._id, {keyCode: keyCode});
+			const cmdResult = await db.authorizeRequests.updateIdAsync(instance.document._id, {keyCode: keyCode});
 			await instance.sync();
 		}
 
@@ -45,7 +46,7 @@ module.exports = async (document, config) => {
 
 	// 最新の情報を取得して同期する
 	instance.sync = async () => {
-		instance.document = (await authorizeRequests.findIdAsync(instance.document._id)).document;
+		instance.document = (await db.authorizeRequests.findIdAsync(instance.document._id)).document;
 	};
 
 	return instance;

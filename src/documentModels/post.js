@@ -1,14 +1,15 @@
 'use strict';
 
 //const postModelAsync = require('../models/post');
-const postsAsync = require('../helpers/collections').posts;
 
-module.exports = async (document, config) => {
+module.exports = async (document, db, config) => {
 	const instance = {};
 
+	if (document == null || db == null || config == null)
+		throw new Error('missing arguments');
+
 	instance.document = document;
-	const posts = await postsAsync(config);
-	//const postModel = await postModelAsync(config);
+	//const postModel = await postModelAsync(db, config);
 
 	// TODO: 各種操作用メソッドの追加
 
@@ -25,7 +26,7 @@ module.exports = async (document, config) => {
 
 	// 最新の情報を取得して同期する
 	instance.sync = async () => {
-		instance.document = (await posts.findIdAsync(instance.document._id)).document;
+		instance.document = (await db.posts.findIdAsync(instance.document._id)).document;
 	};
 
 	return instance;

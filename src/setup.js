@@ -4,9 +4,7 @@ const fs = require('fs');
 const requestAsync = require('async-request');
 const i = require('./helpers/readline');
 const loadConfig = require('./helpers/loadConfig');
-const collections = require('./helpers/collections');
-const usersAsync = collections.users;
-const applicationsAsync = collections.applications;
+const dbAsync = require('./helpers/db');
 const urlConfigFile = 'https://raw.githubusercontent.com/Frost-Dev/Frost-API/develop/config.json';
 const questionResult = (ans) => (ans.toLowerCase()).indexOf('y') === 0;
 
@@ -36,10 +34,9 @@ module.exports = async () => {
 			if (questionResult(await i('generate an application and its key for authentication host (Frost-Web etc.)? (y/n) > '))) {
 				const appName = await i('application name[Frost Web]: > ');
 
-				const users = await usersAsync(config);
-				const applications = await applicationsAsync(config);
+				const db = await dbAsync(config);
 
-				const user = await users.createAsync({
+				const user = await db.users.createAsync({
 					screenName: 'frost',
 					passwordHash: null,
 					name: 'Frost公式',
@@ -47,7 +44,7 @@ module.exports = async () => {
 				});
 				console.log('user created.');
 
-				const application = await applications.createAsync({
+				const application = await db.applications.createAsync({
 					name: appName,
 					creatorId: user.document._id,
 					description: user.document.description,

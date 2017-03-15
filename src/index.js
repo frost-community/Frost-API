@@ -13,5 +13,4 @@ commander
 	else {
 		await require('./server')();
 	}
-	process.exit(0);
 })();

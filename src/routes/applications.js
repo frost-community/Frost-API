@@ -1,23 +1,21 @@
 'use strict';
 
 const apiResult = require('../helpers/apiResult');
-const applicationsAsync = require('../helpers/collections').applications;
 const applicationModelAsync = require('../models/application');
 
-exports.post = async (request, extensions, config) => {
+exports.post = async (request, extensions, db, config) => {
 	const userId = request.user._id;
 	const name = request.body.name;
 	const description = request.body.description;
 	const permissions = request.body.permissions;
 
-	const applications = await applicationsAsync(config);
-	const applicationModel = await applicationModelAsync(config);
+	const applicationModel = await applicationModelAsync(db, config);
 
 	// name
 	if (!/^.{1,32}$/.test(name))
 		return apiResult(400, 'name is invalid format');
 
-	if (await applications.findAsync({name: name}) != null)
+	if (await db.applications.findAsync({name: name}) != null)
 		return apiResult(400, 'already exists name');
 
 	// description
@@ -31,7 +29,7 @@ exports.post = async (request, extensions, config) => {
 	let applicationDocument;
 
 	try {
-		applicationDocument = await applications.createAsync({
+		applicationDocument = await db.applications.createAsync({
 			name: name,
 			creatorId: userId,
 			description: description,

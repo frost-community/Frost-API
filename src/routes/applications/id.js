@@ -1,10 +1,9 @@
 'use strict';
 
 const apiResult = require('../../helpers/apiResult');
-const applications = require('../../helpers/collections').applications;
 
-exports.get = async (request, extensions, config) => {
-	const applicationDoc = await (await applications(config)).findIdAsync(request.params.id);
+exports.get = async (request, extensions, db, config) => {
+	const applicationDoc = await db.applications.findIdAsync(request.params.id);
 
 	if (applicationDoc == null)
 		return apiResult(400, 'application is not found');

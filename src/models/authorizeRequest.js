@@ -1,11 +1,13 @@
 'use strict';
 
-const authorizeRequests = require('../helpers/collections').authorizeRequests;
 const crypto = require('crypto');
 const objectId = require('mongodb').ObjectId;
 
-module.exports = async (config) => {
+module.exports = async (db, config) => {
 	const instance = {};
+
+	if (db == null || config == null)
+		throw new Error('missing arguments');
 
 	instance.buildKeyHash = (authorizeRequestId, applicationId, keyCode) => {
 		const sha256 = crypto.createHash('sha256');
@@ -37,8 +39,7 @@ module.exports = async (config) => {
 			return false;
 		}
 
-		const collection = await authorizeRequests(config);
-		const doc = await collection.findIdAsync(elements.authorizeRequestId);
+		const doc = await db.authorizeRequests.findIdAsync(elements.authorizeRequestId);
 
 		if (doc == null)
 			return false;

@@ -3,14 +3,11 @@
 const applicationModelAsync = require('../../models/application');
 const applicationAccessModelAsync = require('../../models/applicationAccess');
 
-const applications = require('../collections').applications;
-const users = require('../collections').users;
-
-module.exports = async (config, router) => {
+module.exports = async (router, db, config) => {
 	const instance = {};
 
-	const applicationModel = await applicationModelAsync(config);
-	const applicationAccessModel = await applicationAccessModelAsync(config);
+	const applicationModel = await applicationModelAsync(db, config);
+	const applicationAccessModel = await applicationAccessModelAsync(db, config);
 
 	instance.execute = (request, response, next) => {
 		try {
@@ -46,8 +43,8 @@ module.exports = async (config, router) => {
 						const applicationId = applicationModel.splitKey(applicationKey).applicationId;
 						const userId = applicationAccessModel.splitKey(accessKey).userId;
 
-						request.application = (await applications()).findIdAsync(applicationId);
-						request.user = await (await users()).findIdAsync(userId);
+						request.application = await db.applications.findIdAsync(applicationId);
+						request.user = await await db.users.findIdAsync(userId);
 
 						for (const permission of extensions.permissions) {
 							if (!await request.application.hasPermissionAsync(permission)) {

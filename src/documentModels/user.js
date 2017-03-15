@@ -1,14 +1,15 @@
 'use strict';
 
 // const userModelAsync = require('../models/user');
-const usersAsync = require('../helpers/collections').users;
 
-module.exports = async (document, config) => {
+module.exports = async (document, db, config) => {
 	const instance = {};
 
+	if (document == null || db == null || config == null)
+		throw new Error('missing arguments');
+
 	instance.document = document;
-	const users = await usersAsync(config);
-	//const userModel = await userModelAsync(config);
+	//const userModel = await userModelAsync(db, config);
 
 	// TODO: 各種操作用メソッドの追加
 
@@ -28,7 +29,7 @@ module.exports = async (document, config) => {
 
 	// 最新の情報を取得して同期する
 	instance.sync = async () => {
-		instance.document = (await users.findIdAsync(instance.document._id)).document;
+		instance.document = (await db.users.findIdAsync(instance.document._id)).document;
 	};
 
 	return instance;

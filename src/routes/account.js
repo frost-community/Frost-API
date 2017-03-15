@@ -4,9 +4,8 @@ const crypto = require('crypto');
 
 const apiResult = require('../helpers/apiResult');
 const randomRange = require('../helpers/randomRange');
-const users = require('../helpers/collections').users;
 
-exports.post = async (request, extensions, config) => {
+exports.post = async (request, extensions, db, config) => {
 	const screenName = request.body.screenName;
 	const password = request.body.password;
 	let name = request.body.name;
@@ -33,7 +32,7 @@ exports.post = async (request, extensions, config) => {
 			return apiResult(400, 'screenName is invalid');
 	}
 
-	if (await (await users(config)).findAsync({screenName: screenName}) != null)
+	if (await db.users.findAsync({screenName: screenName}) != null)
 		return apiResult(400, 'this screenName is already exists');
 
 	// password
@@ -51,7 +50,7 @@ exports.post = async (request, extensions, config) => {
 	let userDocument;
 
 	try {
-		userDocument = await (await users(config)).createAsync({screenName: screenName, passwordHash: hash, name: name, description: description});
+		userDocument = await db.users.createAsync({screenName: screenName, passwordHash: hash, name: name, description: description});
 	}
 	catch(err) {
 		console.log(err.stack);

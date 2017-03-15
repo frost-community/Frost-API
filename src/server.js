@@ -6,6 +6,7 @@ const express = require('express');
 const loadConfig = require('./helpers/loadConfig');
 const sanitize = require('mongo-sanitize');
 const questionResult = (ans) => (ans.toLowerCase()).indexOf('y') === 0;
+const dbAsync = require('./helpers/db');
 
 module.exports = async () => {
 	try {
@@ -25,7 +26,10 @@ module.exports = async () => {
 			const app = express();
 			app.disable('x-powered-by');
 			app.use(bodyParser.json());
-			const router = require('./helpers/router')(app, config);
+
+			const db = await dbAsync(config);
+
+			const router = require('./helpers/router')(app, db);
 
 			app.use((req, res, next) => {
 				req.body = sanitize(req.body);
@@ -33,8 +37,8 @@ module.exports = async () => {
 				next();
 			});
 
-			const checkParams = (await require('./helpers/middlewares/checkParams')(config, router)).execute;
-			const checkPermission = (await require('./helpers/middlewares/checkPermission')(config, router)).execute;
+			const checkParams = (await require('./helpers/middlewares/checkParams')(db, router)).execute;
+			const checkPermission = (await require('./helpers/middlewares/checkPermission')(db, router)).execute;
 
 			router.addRoutes(require('./routes')(), [checkPermission, checkParams]);
 

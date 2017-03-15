@@ -2,37 +2,38 @@
 
 const randomRange = require('../helpers/randomRange');
 const applicationAccessModelAsync = require('../models/applicationAccess');
-const applicationAccessesAsync = require('../helpers/collections').applicationAccesses;
 
-module.exports = async (document, config) => {
+module.exports = async (document, db, config) => {
 	const instance = {};
 
+	if (document == null || db == null || config == null)
+		throw new Error('missing arguments');
+
 	instance.document = document;
-	const applicationAccesses = await applicationAccessesAsync(config);
-	const applicationAccessModel = await applicationAccessModelAsync(config);
+	const applicationAccessModel = await applicationAccessModelAsync(db, config);
 
 	instance.generateAccessKeyAsync = async () => {
 
-		const access = await applicationAccesses.findIdAsync(instance.document._id);
+		const access = await db.applicationAccesses.findIdAsync(instance.document._id);
 		let keyCode, isExist, tryCount = 0;
 
 		do {
 			tryCount++;
 			keyCode = randomRange(1, 99999);
-			isExist = await applicationAccesses.findAsync({userId: access.userId, keyCode: keyCode}) != null;
+			isExist = await db.applicationAccesses.findAsync({userId: access.userId, keyCode: keyCode}) != null;
 		}
 		while(isExist && tryCount < 4);
 
 		if (isExist && tryCount >= 4)
 			throw new Error('the number of trials for keyCode generation has reached its upper limit');
 
-		await applicationAccesses.updateAsync({_id: instance.document._id}, {keyCode: keyCode});
+		await db.applicationAccesses.updateAsync({_id: instance.document._id}, {keyCode: keyCode});
 
 		return applicationAccessModel.buildKey(access.applicationId, access.userId, keyCode);
 	};
 
 	instance.getAccessKeyAsync = async () => {
-		const access = await applicationAccesses.findIdAsync(instance.document._id);
+		const access = await db.applicationAccesses.findIdAsync(instance.document._id);
 
 		if (access == null)
 			throw new Error('applicationAccess not found');
@@ -53,7 +54,7 @@ module.exports = async (document, config) => {
 
 	// 最新の情報を取得して同期する
 	instance.sync = async () => {
-		instance.document = (await applicationAccesses.findIdAsync(instance.document._id)).document;
+		instance.document = (await db.applicationAccesses.findIdAsync(instance.document._id)).document;
 	};
 
 	return instance;

@@ -38,13 +38,13 @@ describe('General -', () => {
 	});
 
 	describe('database', () => {
-		const db = require('../built/helpers/dbConnector');
+		const dbConnector = require('../built/helpers/dbConnector');
 		let testDb;
 
 		it('DBに接続してそのインスタンスが取得できる', (done) => {
 			(async () => {
 				try {
-					testDb = await db.connectAsync(config.api.testDatabase.host, config.api.testDatabase.database);
+					testDb = await dbConnector.connectAsync(config.api.testDatabase.host, config.api.testDatabase.database);
 					assert(testDb != null);
 					done();
 				}

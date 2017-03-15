@@ -8,16 +8,25 @@ const mongodb = require('mongodb');
  * host, dbname, [user, password]
  * @return {Promise}
  */
-exports.connectAsync = (host, dbname, authenticate) => new Promise((resolve, reject) => {
-	mongodb.MongoClient.connect(`mongodb://${authenticate}@${host}/${dbname}`, (err, db) => {
-		if (err || db == null)
+module.exports.connectAsync = (host, dbname, authenticate) => new Promise((resolve, reject) => {
+	if (host == null || dbname == null)
+		reject('missing arguments');
+
+	mongodb.MongoClient.connect(`mongodb://${authenticate}@${host}/${dbname}`, (err, connection) => {
+		if (err || connection == null)
 			return reject('faild to connect database');
 
-		return resolve(require('./dbManager')(db));
+		return resolve(require('./dbProvider')(connection));
 	});
 });
 
-exports.connectApidbAsync = async (config) => {
+/**
+ * APIデータベースに接続します
+ */
+module.exports.connectApidbAsync = async (config) => {
+	if (config == null)
+		throw new Error('missing arguments');
+
 	const host = config.api.database.port != null ? `${config.api.database.host}:${config.api.database.port}` : config.api.database.host;
 	const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
 	return await exports.connectAsync(
