@@ -4,7 +4,7 @@ const assert = require('assert');
 const config = require('../../built/helpers/loadConfig')();
 const authorizeRequestModelAsync = require('../../built/models/authorizeRequest');
 const routeRequest = require('../../built/routes/ice_auth/request');
-const routeVerificationKey = require('../../built/routes/ice_auth/verification_key');
+const routeVerificationCode = require('../../built/routes/ice_auth/verification_code');
 const routeAuthorize = require('../../built/routes/ice_auth/authorize');
 const dbAsync = require('../../built/helpers/db');
 
@@ -98,12 +98,12 @@ describe('IceAuth API', () => {
 			});
 		});
 
-		describe('/verification_key', () => {
+		describe('/verification_code', () => {
 			describe('[GET]', () => {
 				it('正しくリクエストされた場合は成功する', done => {
 					(async () => {
 						try {
-							let res = await routeVerificationKey.get({
+							let res = await routeVerificationCode.get({
 								body: {
 									application_key: 'application_key_hoge',
 									request_key: 'request_key_hoge'
@@ -113,7 +113,7 @@ describe('IceAuth API', () => {
 							assert.equal(res.message, 'success');
 
 							assert.deepEqual(res.data, {
-								verification_key: 'verification_key_hoge'
+								verification_code: 'verification_code_hoge'
 							});
 
 							done();
@@ -135,7 +135,7 @@ describe('IceAuth API', () => {
 								body: {
 									application_key: 'application_key_hoge',
 									request_key: 'request_key_hoge',
-									verification_key: 'verification_key_hoge'
+									verification_code: 'verification_code_hoge'
 								}
 							}, null, db, config);
 

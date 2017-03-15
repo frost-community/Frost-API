@@ -17,7 +17,10 @@ exports.get = async (request, extensions, db, config) => {
 	if (await authorizeRequestsModel.verifyKeyAsync(requestKey))
 		return apiResult(400, 'request_key is invalid');
 
-	// TODO
+	const applicationId = applicationModel.splitKey(applicationKey).applicationId;
+	const authorizeRequestId = authorizeRequestsModel.splitKey(requestKey).authorizeRequestId;
 
-	return apiResult(501, 'not implemented');
+	const doc = await db.authorizeRequests.findAsync({_id: authorizeRequestId, applicationId: applicationId});
+
+	return apiResult(200, 'success', {'verification_code': doc.document.verificationCode});
 };

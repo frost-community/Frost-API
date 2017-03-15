@@ -14,6 +14,7 @@ exports.post = async (request, extensions, db, config) => {
 	const applicationId = applicationModel.splitKey(applicationKey).applicationId;
 	const doc = await db.authorizeRequests.createAsync({applicationId: applicationId});
 	const key = await doc.getRequestKeyAsync();
+	await doc.getVerificationCodeAsync();
 
 	return apiResult(200, 'success', {'request_key': key});
 };
