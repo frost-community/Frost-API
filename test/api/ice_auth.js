@@ -119,7 +119,7 @@ describe('IceAuth API', () => {
 								}
 							}, null, db, config);
 							assert.equal(res.message, 'success');
-							assert.notEqual(res.data.verification_code, null);
+							assert(/^[A-Z0-9]+$/.test(res.data.verification_code));
 
 							done();
 						}
