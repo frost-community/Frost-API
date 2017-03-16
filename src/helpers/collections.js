@@ -85,12 +85,12 @@ class Applications extends CollectionBase {
 }
 exports.Applications = Applications;
 
-class ApplicationAccess extends CollectionBase {
+class ApplicationAccesses extends CollectionBase {
 	constructor(db, config) {
 		super('applicationAccesses', require('../documentModels/applicationAccess'), db, config);
 	}
 }
-exports.ApplicationAccess = ApplicationAccess;
+exports.ApplicationAccesses = ApplicationAccesses;
 
 class AuthorizeRequests extends CollectionBase {
 	constructor(db, config) {

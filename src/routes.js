@@ -20,26 +20,31 @@ module.exports = () => {
 
 		// == IceAuth ==
 
-		// 認証リクエスト(リクエストキー取得)
-		['post', '/ice_auth/request', {
+		// 認証リクエスト(ice_auth_key取得)
+		['post', '/ice_auth', {
 			params: [
 				{name: 'application_key', type: 'string'}
-			]}],
+			], permissions:[]}],
 
-		// リクエストキーからverification_key(PINコード)取得(認証ホスト専用エンドポイント)
+		// verification_code(PINコード)を取得 (認証ホスト専用)
 		['get',  '/ice_auth/verification_code', {
 			params: [
-				{name: 'application_key', type: 'string'},
-				{name: 'request_key', type: 'string'}
+				{name: 'ice_auth_key', type: 'string'}
 			], permissions:['ice_auth_host']}],
 
-		// verification_keyを検証して認証を試行する
-		['post', '/ice_auth/authorize', {
+		// 認証の対象ユーザーを設定(認証ホスト専用)
+		['post', '/ice_auth/target_user', {
 			params: [
-				{name: 'application_key', type: 'string'},
-				{name: 'request_key', type: 'string'},
+				{name: 'ice_auth_key', type: 'string'},
+				{name: 'user_id', type: 'string'}
+			], permissions:['ice_auth_host']}],
+
+		// verification_codeを検証して、access_keyを作成
+		['post', '/ice_auth/access_key', {
+			params: [
+				{name: 'ice_auth_key', type: 'string'},
 				{name: 'verification_code', type: 'string'}
-			]}],
+			], permissions:[]}],
 
 		// == Applications ==
 
@@ -67,7 +72,7 @@ module.exports = () => {
 
 		// idを指定してユーザー情報を取得する
 		['get',  '/users/:id', {
-			permissions:['user_read']}],
+			params: [], permissions:['user_read']}],
 
 		// 指定したユーザーのタイムラインを取得
 		['get',  '/users/:id/timeline', {
@@ -83,11 +88,11 @@ module.exports = () => {
 
 		// 指定したユーザーをフォローする
 		['post', '/users/:id/follow', {
-			permissions:['user_write']}],
+			params: [], permissions:['user_write']}],
 
 		// 指定したユーザーへのフォローを解除する
 		['del',  '/users/:id/follow', {
-			permissions:['user_write']}],
+			params: [], permissions:['user_write']}],
 
 		// == Posts ==
 

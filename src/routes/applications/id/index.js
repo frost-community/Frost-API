@@ -1,6 +1,6 @@
 'use strict';
 
-const apiResult = require('../../helpers/apiResult');
+const apiResult = require('../../../helpers/apiResult');
 
 exports.get = async (request, extensions, db, config) => {
 	const applicationDoc = await db.applications.findIdAsync(request.params.id);

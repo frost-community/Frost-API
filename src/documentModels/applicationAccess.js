@@ -20,7 +20,7 @@ module.exports = async (document, db, config) => {
 		do {
 			tryCount++;
 			keyCode = randomRange(1, 99999);
-			isExist = await db.applicationAccesses.findAsync({userId: access.userId, keyCode: keyCode}) != null;
+			isExist = await db.applicationAccesses.findAsync({userId: access.document.userId, keyCode: keyCode}) != null;
 		}
 		while(isExist && tryCount < 4);
 
@@ -29,7 +29,7 @@ module.exports = async (document, db, config) => {
 
 		await db.applicationAccesses.updateAsync({_id: instance.document._id}, {keyCode: keyCode});
 
-		return applicationAccessModel.buildKey(access.applicationId, access.userId, keyCode);
+		return applicationAccessModel.buildKey(access.document.applicationId, access.document.userId, keyCode);
 	};
 
 	instance.getAccessKeyAsync = async () => {

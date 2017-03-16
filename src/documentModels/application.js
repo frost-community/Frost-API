@@ -18,7 +18,7 @@ module.exports = async (document, db, config) => {
 		if (app == null)
 			throw new Error('application not found');
 
-		return permissionName in app.permissions;
+		return permissionName in app.document.permissions;
 	};
 
 	instance.generateApplicationKeyAsync = async () => {

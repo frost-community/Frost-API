@@ -3,7 +3,7 @@
 const dbConnector = require('./dbConnector');
 const collections = require('./collections');
 const Applications = collections.Applications;
-const ApplicationAccess = collections.ApplicationAccess;
+const ApplicationAccesses = collections.ApplicationAccesses;
 const AuthorizeRequests = collections.AuthorizeRequests;
 const Posts = collections.Posts;
 const Users = collections.Users;
@@ -26,8 +26,8 @@ class DB {
 		return new Applications(this, this._config);
 	}
 
-	get applicationAccess() {
-		return new ApplicationAccess(this, this._config);
+	get applicationAccesses() {
+		return new ApplicationAccesses(this, this._config);
 	}
 
 	get authorizeRequests() {

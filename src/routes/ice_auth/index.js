@@ -16,5 +16,5 @@ exports.post = async (request, extensions, db, config) => {
 	const key = await doc.getRequestKeyAsync();
 	await doc.getVerificationCodeAsync();
 
-	return apiResult(200, 'success', {'request_key': key});
+	return apiResult(200, 'success', {'ice_auth_key': key});
 };

@@ -44,8 +44,8 @@ module.exports = async (db, config) => {
 		if (doc == null)
 			return false;
 
-		const correctKeyHash = instance.buildKeyHash(doc.applicationId, elements.userId, elements.keyCode);
-		const isPassed = elements.hash === correctKeyHash && elements.keyCode === doc.keyCode;
+		const correctKeyHash = instance.buildKeyHash(doc.document.applicationId, elements.userId, elements.keyCode);
+		const isPassed = elements.hash === correctKeyHash && elements.keyCode === doc.document.keyCode;
 
 		return isPassed;
 	};
