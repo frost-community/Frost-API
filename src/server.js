@@ -6,7 +6,7 @@ const express = require('express');
 const loadConfig = require('./helpers/loadConfig');
 const sanitize = require('mongo-sanitize');
 const questionResult = (ans) => (ans.toLowerCase()).indexOf('y') === 0;
-const dbAsync = require('./helpers/db');
+const DB = require('./helpers/db').DB;
 
 module.exports = async () => {
 	try {
@@ -27,7 +27,8 @@ module.exports = async () => {
 			app.disable('x-powered-by');
 			app.use(bodyParser.json());
 
-			const db = await dbAsync(config);
+			const db = new DB(config);
+			await db.connectAsync();
 
 			const router = require('./helpers/router')(app, db);
 
