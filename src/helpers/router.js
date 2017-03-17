@@ -9,7 +9,7 @@ const type = require('./type');
  *
  * @param  {any} app 対象のサーバアプリケーション
  */
-module.exports = (app, config) => {
+module.exports = (app, db, config) => {
 	const instance = {};
 
 	if (app == null)
@@ -65,7 +65,7 @@ module.exports = (app, config) => {
 							if (routeFuncAsync == null)
 								throw new Error(`endpoint not found\ntarget: ${method} ${path}`);
 
-							const result = await routeFuncAsync(request, extensions, config);
+							const result = await routeFuncAsync(request, extensions, db, config);
 							response.success(result);
 						}
 						catch (err) {

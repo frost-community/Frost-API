@@ -30,7 +30,7 @@ module.exports = async () => {
 			const db = new DB(config);
 			await db.connectAsync();
 
-			const router = require('./helpers/router')(app, db);
+			const router = require('./helpers/router')(app, db, config);
 
 			app.use((req, res, next) => {
 				req.body = sanitize(req.body);
@@ -38,8 +38,8 @@ module.exports = async () => {
 				next();
 			});
 
-			const checkParams = (await require('./helpers/middlewares/checkParams')(db, router)).execute;
-			const checkPermission = (await require('./helpers/middlewares/checkPermission')(db, router)).execute;
+			const checkParams = (await require('./helpers/middlewares/checkParams')(router, db, config)).execute;
+			const checkPermission = (await require('./helpers/middlewares/checkPermission')(router, db, config)).execute;
 
 			router.addRoutes(require('./routes')(), [checkPermission, checkParams]);
 
