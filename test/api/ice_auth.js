@@ -69,6 +69,8 @@ describe('IceAuth API', () => {
 				try {
 					await db.users.removeAsync({});
 					await db.applications.removeAsync({});
+					await db.authorizeRequests.removeAsync({});
+					await db.applicationAccesses.removeAsync({});
 
 					done();
 				}
