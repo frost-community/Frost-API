@@ -2,7 +2,6 @@
 
 const randomRange = require('../helpers/randomRange');
 const applicationModelAsync = require('../models/application');
-const arrayToObject = require('../helpers/arrayToObject');
 
 module.exports = async (document, db, config) => {
 	const instance = {};
@@ -14,7 +13,7 @@ module.exports = async (document, db, config) => {
 	const applicationModel = await applicationModelAsync(db, config);
 
 	instance.hasPermission = (permissionName) => {
-		return permissionName in arrayToObject(instance.document.permissions);
+		return instance.document.permissions.indexOf(permissionName) != -1;
 	};
 
 	instance.generateApplicationKeyAsync = async () => {
