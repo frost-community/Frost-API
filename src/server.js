@@ -39,9 +39,10 @@ module.exports = async () => {
 			});
 
 			const checkParams = (await require('./helpers/middlewares/checkParams')(router, db, config)).execute;
+			const checkHeaders = (await require('./helpers/middlewares/checkHeaders')(router, db, config)).execute;
 			const checkPermission = (await require('./helpers/middlewares/checkPermission')(router, db, config)).execute;
 
-			router.addRoutes(require('./routes')(), [checkPermission, checkParams]);
+			router.addRoutes(require('./routes')(), [checkPermission, checkHeaders, checkParams]);
 
 			app.use((req, res) => {
 				require('./helpers/responseHelper')(res);

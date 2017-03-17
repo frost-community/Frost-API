@@ -117,8 +117,9 @@ describe('IceAuth API', () => {
 							assert.equal(res.message, 'success');
 
 							res = await routeVerificationCode.get({
-								body: {
-									ice_auth_key: res.data.ice_auth_key
+								get: (h) => {
+									if (h == 'X-Ice-Auth-Key') return res.data.ice_auth_key;
+									return null;
 								}
 							}, null, db, config);
 							assert.equal(res.message, 'success');
@@ -149,6 +150,10 @@ describe('IceAuth API', () => {
 
 							// target_user
 							res = await routeTargetUser.post({
+								get: (h) => {
+									if (h == 'X-Ice-Auth-Key') return res.data.ice_auth_key;
+									return null;
+								},
 								body: {
 									ice_auth_key: res.data.ice_auth_key,
 									user_id: user.document._id.toString()
@@ -184,8 +189,11 @@ describe('IceAuth API', () => {
 
 							// target_user
 							res = await routeTargetUser.post({
+								get: (h) => {
+									if (h == 'X-Ice-Auth-Key') return iceAuthKey;
+									return null;
+								},
 								body: {
-									ice_auth_key: iceAuthKey,
 									user_id: user.document._id.toString()
 								}
 							}, null, db, config);
@@ -193,8 +201,11 @@ describe('IceAuth API', () => {
 
 							// access_key
 							res = await routeAccessKey.post({
+								get: (h) => {
+									if (h == 'X-Ice-Auth-Key') return iceAuthKey;
+									return null;
+								},
 								body: {
-									ice_auth_key: iceAuthKey,
 									verification_code: authorizeRequestDoc.document.verificationCode
 								}
 							}, null, db, config);

@@ -5,12 +5,12 @@ const authorizeRequestsModelAsync = require('../../models/authorizeRequest');
 const mongo = require('mongodb');
 
 exports.post = async (request, extensions, db, config) => {
-	const iceAuthKey = request.body.ice_auth_key;
+	const iceAuthKey = request.get('X-Ice-Auth-Key');
 	const userId = request.body.user_id;
 
 	const authorizeRequestsModel = await authorizeRequestsModelAsync(db, config);
 	if (!await authorizeRequestsModel.verifyKeyAsync(iceAuthKey))
-		return apiResult(400, 'ice_auth_key is invalid');
+		return apiResult(400, 'X-Ice-Auth-Key header is invalid');
 
 	if (db.users.findIdAsync(userId) == null)
 		return apiResult(400, 'user_id is invalid');
