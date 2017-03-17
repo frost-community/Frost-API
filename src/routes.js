@@ -14,10 +14,6 @@ module.exports = () => {
 				{name: 'name', type: 'string', require: false}
 			], permissions:['account_special']}],
 
-		// ホームタイムラインを取得
-		['get',  '/account/timeline', {
-			params: [], permissions:['post_read']}],
-
 		// == IceAuth ==
 
 		// 認証リクエスト(ice_auth_key取得)
