@@ -32,7 +32,10 @@ module.exports = async () => {
 
 		if (config != null) {
 			if (questionResult(await i('generate an application and its key for authentication host (Frost-Web etc.)? (y/n) > '))) {
-				const appName = await i('application name[Frost Web]: > ');
+				let appName = await i('application name[Frost Web]: > ');
+
+				if (appName == '')
+					appName = 'Frost Web';
 
 				const db = new DB(config);
 				await db.connectAsync();
@@ -64,9 +67,18 @@ module.exports = async () => {
 				});
 				console.log(`application created. ${application.document}`);
 
-				const key = await application.generateApplicationKeyAsync();
-				console.log(`application_key generated. (key: ${key})`);
+				const applicationKey = await application.generateApplicationKeyAsync();
+				console.log(`application_key generated. (key: ${applicationKey})`);
 
+				const applicationAccess = await db.applicationAccesses.createAsync({
+					applicationId: application.document._id,
+					userId: user.document._id,
+					keyCode: null
+				});
+				console.log(`applicationAccess created. ${applicationAccess.document}`);
+
+				const accessKey = await applicationAccess.generateAccessKeyAsync();
+				console.log(`access_key generated. (key: ${accessKey})`);
 			}
 		}
 	}
