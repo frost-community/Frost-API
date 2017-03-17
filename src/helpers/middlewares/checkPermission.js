@@ -42,11 +42,12 @@ module.exports = async (router, db, config) => {
 					const applicationId = applicationModel.splitKey(applicationKey).applicationId;
 					const userId = applicationAccessModel.splitKey(accessKey).userId;
 
-					request.application = (await db.applications.findIdAsync(applicationId)).document;
+					const applicationDoc = (await db.applications.findIdAsync(applicationId));
+					request.application = applicationDoc.document;
 					request.user = (await db.users.findIdAsync(userId)).document;
 
 					for (const permission of extensions.permissions) {
-						if (!await request.application.hasPermissionAsync(permission)) {
+						if (!applicationDoc.hasPermission(permission)) {
 							response.status(403).send({error: {message: 'you do not have any permissions'}});
 							return;
 						}
