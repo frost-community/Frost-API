@@ -6,7 +6,7 @@ const applicationModelAsync = require('../../models/application');
 exports.post = async (request, extensions, db, config) => {
 	const userId = request.user._id;
 	const name = request.body.name;
-	const description = request.body.description;
+	let description = request.body.description;
 	const permissions = request.body.permissions;
 
 	const applicationModel = await applicationModelAsync(db, config);
@@ -19,6 +19,8 @@ exports.post = async (request, extensions, db, config) => {
 		return apiResult(400, 'already exists name');
 
 	// description
+	if (description == null)
+		description = '';
 	if (!/^.{0,256}$/.test(description))
 		return apiResult(400, 'description is invalid format');
 

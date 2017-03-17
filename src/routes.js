@@ -52,7 +52,7 @@ module.exports = () => {
 		['post', '/applications', {
 			params:[
 				{name: 'name', type: 'string'},
-				{name: 'description', type: 'string'},
+				{name: 'description', type: 'string', require: false},
 				{name: 'permissions', type: 'array'}
 			], permissions:['application_special']}],
 
