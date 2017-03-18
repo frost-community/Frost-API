@@ -1,9 +1,8 @@
 'use strict';
 
 class ApiResult {
-	constructor(statusCode, message, data) {
+	constructor(statusCode, data) {
 		this.statusCode = statusCode;
-		this.message = message;
 		this.data = data;
 	}
 }

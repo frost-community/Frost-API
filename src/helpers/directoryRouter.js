@@ -69,14 +69,17 @@ class DirectoryRouter {
 								throw new Error(`endpoint not found\ntarget: ${method} ${path}`);
 
 							const result = await routeFuncAsync(request, extensions, this.db, this.config);
-							response.success(result);
+							if (result.statusCode == 200 || result.statusCode == null)
+								response.success(result);
+							else
+								response.error(result);
 						}
 						catch (err) {
 							if (type(err) !== 'Error')
 								response.error(err);
 							else {
 								console.log(`Internal Error (Async): ${err.stack}`);
-								response.error(new ApiResult(500, 'internal error', {details: err.stack}));
+								response.error(new ApiResult(500, {message: 'internal error', details: err.stack}));
 							}
 						}
 					})();

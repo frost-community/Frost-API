@@ -116,14 +116,21 @@ module.exports = () => {
 		// == Posts ==
 
 		// ステータスポストを作成する
-		['post', '/posts/status', {
+		['post', '/posts/post_status', {
 			params: [
 
 			], permissions:['post_write']
 		}],
 
 		// 記事を作成する
-		['post', '/posts/article', {
+		['post', '/posts/post_article', {
+			params: [
+
+			], permissions:['post_write']
+		}],
+
+		// 投稿リンクを作成する
+		['post', '/posts/post_link', {
 			params: [
 
 			], permissions:['post_write']

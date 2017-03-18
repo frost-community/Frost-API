@@ -1,6 +1,6 @@
 'use strict';
 
-const merge = require('./merge');
+const type = require('./type');
 
 /**
  * このモジュールを初期化します
@@ -14,19 +14,17 @@ module.exports = response => {
 	 * @param  {ApiResult} apiResult APIコールの結果情報
 	 */
 	response.success = (apiResult) => {
+		let sendData = {};
+
 		if (apiResult.statusCode == null)
 			apiResult.statusCode = 200;
 
-		if (apiResult.message == null && apiResult.data == null)
-			apiResult.message = 'success';
-
-		const sendData = {};
-
-		if (apiResult.message != null)
-			sendData.message = apiResult.message;
-
-		if (apiResult.data != null)
-			merge(sendData, apiResult.data);
+		if (type(apiResult.data) == 'String')
+			sendData.message = apiResult.data;
+		else if (apiResult.data != null)
+			sendData = apiResult.data;
+		else
+			sendData.message = 'success';
 
 		response.status(apiResult.statusCode).send(sendData);
 	};
@@ -37,19 +35,17 @@ module.exports = response => {
 	 * @param  {ApiResult} apiResult APIコールの結果情報
 	 */
 	response.error = (apiResult) => {
+		let sendData = {};
+
 		if (apiResult.statusCode == null)
 			apiResult.statusCode = 400;
 
-		if (apiResult.message == null && apiResult.data == null)
+		if (type(apiResult.data) == 'String')
+			sendData.message = apiResult.data;
+		else if (apiResult.data != null)
+			sendData = apiResult.data;
+		else
 			apiResult.message = 'failure';
-
-		const sendData = {};
-
-		if (apiResult.message != null)
-			sendData.message = apiResult.message;
-
-		if (apiResult.data != null)
-			merge(sendData, apiResult.data);
 
 		response.status(apiResult.statusCode).send({error: sendData});
 	};
