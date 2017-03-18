@@ -4,29 +4,32 @@ const apiResult = require('./apiResult');
 const resHelper = require('./responseHelper');
 const type = require('./type');
 
-/**
- * このモジュールを初期化します
- *
- * @param  {any} app 対象のサーバアプリケーション
- */
-module.exports = (app, db, config) => {
-	const instance = {};
+class DirectoryRouter {
+	/**
+	 * このモジュールを初期化します
+	 *
+	 * @param  {Object} app 対象のサーバアプリケーション
+	 * @param  {Object} db 対象のDB
+	 * @param  {[]} config 対象のconfig
+	 */
+	constructor(app, db, config) {
+		if (app == null || db == null || config == null)
+			throw new Error('missing arguments');
 
-	if (app == null)
-		throw new Error('app is empty');
-
-	if (config == null)
-		throw new Error('config is empty');
-
-	const routes = [];
+		this.app = app;
+		this.db = db;
+		this.config = config;
+		this.routes = [];
+	}
 
 	/**
 	 * ルートを追加します
 	 *
 	 * @param  {string[]} route
 	 * @param  {Function[]} middles
+	 * @return {void}
 	 */
-	instance.addRoute = (route, middles) => {
+	addRoute(route, middles) {
 		if (!Array.isArray(route) || route == null)
 			throw new Error('route is invalid type');
 
@@ -42,10 +45,10 @@ module.exports = (app, db, config) => {
 		for (const m of require('methods')) {
 			if (method === m) {
 				for (const middle of middles) {
-					app[m](path, middle);
+					this.app[m](path, middle);
 				}
 
-				app[m](path, (request, response) => {
+				this.app[m](path, (request, response) => {
 					console.log(`access: ${method.toUpperCase()} ${path}`);
 					resHelper(response);
 					let dirPath = `${__dirname}/../routes`;
@@ -65,7 +68,7 @@ module.exports = (app, db, config) => {
 							if (routeFuncAsync == null)
 								throw new Error(`endpoint not found\ntarget: ${method} ${path}`);
 
-							const result = await routeFuncAsync(request, extensions, db, config);
+							const result = await routeFuncAsync(request, extensions, this.db, this.config);
 							response.success(result);
 						}
 						catch (err) {
@@ -79,24 +82,25 @@ module.exports = (app, db, config) => {
 					})();
 				});
 
-				routes.push({method: m, path: path, extensions: extensions});
+				this.routes.push({method: m, path: path, extensions: extensions});
 			}
 		}
-	};
+	}
 
 	/**
 	 * 複数のルートを追加します
 	 *
 	 * @param  {string[][]} routes
 	 * @param  {Function[]} middles
+	 * @return {void}
 	 */
-	instance.addRoutes = (routes, middles) => {
+	addRoutes(routes, middles) {
 		if (!Array.isArray(routes) || routes == null)
 			throw new Error('routes is invalid type');
 
 		for (const route of routes)
-			instance.addRoute(route, middles);
-	};
+			this.addRoute(route, middles);
+	}
 
 	/**
 	 * 該当するルートを取得します
@@ -105,13 +109,12 @@ module.exports = (app, db, config) => {
 	 * @param  {string} path
 	 * @return {Object} ルート情報
 	 */
-	instance.findRoute = (method, path) => {
+	findRoute(method, path) {
 		for (const route of routes)
 			if (method.toLowerCase() === route.method && path === route.path)
 				return route;
 
 		return null;
-	};
-
-	return instance;
-};
+	}
+}
+exports.DirectoryRouter = DirectoryRouter;
