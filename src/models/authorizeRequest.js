@@ -1,7 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
-const mongo = require('mongodb');;
+const mongo = require('mongodb');
 
 class AuthorizeRequest {
 	constructor(db, config) {
@@ -67,4 +67,4 @@ class AuthorizeRequest {
 		return isPassed;
 	}
 }
-exports.AuthorizeRequest = AuthorizeRequest;
+module.exports = AuthorizeRequest;

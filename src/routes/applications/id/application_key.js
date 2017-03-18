@@ -15,7 +15,7 @@ exports.get = async (request, extensions, db, config) => {
 	if (applicationDoc.document.keyCode == null)
 		return apiResult(400, 'application_key has not been generated yet');
 
-	const key = await applicationDoc.getApplicationKeyAsync();
+	const key = applicationDoc.getApplicationKey();
 
 	return apiResult(200, 'success', {'application_key': key});
 };

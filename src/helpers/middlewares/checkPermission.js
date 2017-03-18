@@ -1,13 +1,13 @@
 'use strict';
 
-const applicationModelAsync = require('../../models/application');
-const applicationAccessModelAsync = require('../../models/applicationAccess');
+const ApplicationModel = require('../../models/Application');
+const ApplicationAccessModel = require('../../models/ApplicationAccess');
 
-module.exports = async (directoryRouter, db, config) => {
+module.exports = (directoryRouter, db, config) => {
 	const instance = {};
 
-	const applicationModel = await applicationModelAsync(db, config);
-	const applicationAccessModel = await applicationAccessModelAsync(db, config);
+	const applicationModel = new ApplicationModel(db, config);
+	const applicationAccessModel = new ApplicationAccessModel(db, config);
 
 	instance.execute = (request, response, next) => {
 		(async () => {
@@ -29,12 +29,12 @@ module.exports = async (directoryRouter, db, config) => {
 						return;
 					}
 
-					if (!(await applicationModel.verifyKeyAsync(applicationKey))) {
+					if (!await applicationModel.verifyKeyAsync(applicationKey)) {
 						response.status(400).send({error: {message: 'X-Application-Key header is invalid'}});
 						return;
 					}
 
-					if (!(await applicationAccessModel.verifyKeyAsync(accessKey))) {
+					if (!await applicationAccessModel.verifyKeyAsync(accessKey)) {
 						response.status(400).send({error: {message: 'X-Access-Key header is invalid'}});
 						return;
 					}

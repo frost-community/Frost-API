@@ -65,4 +65,4 @@ class ApplicationAccess {
 		return isPassed;
 	}
 }
-exports.ApplicationAccess = ApplicationAccess;
+module.exports = ApplicationAccess;

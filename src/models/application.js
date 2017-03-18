@@ -23,7 +23,7 @@ class Application {
 			throw new Error('missing arguments');
 
 		const sha256 = crypto.createHash('sha256');
-		sha256.update(`${config.api.secretToken.application}/${creatorId}/${applicationId}/${keyCode}`);
+		sha256.update(`${this.config.api.secretToken.application}/${creatorId}/${applicationId}/${keyCode}`);
 
 		return sha256.digest('hex');
 	}
@@ -69,6 +69,6 @@ class Application {
 		const isPassed = elements.hash === correctKeyHash && elements.keyCode === doc.document.keyCode;
 
 		return isPassed;
-	};
+	}
 }
-exports.Application = Application;
+module.exports = Application;

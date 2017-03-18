@@ -2,13 +2,13 @@
 
 const assert = require('assert');
 const config = require('../../built/helpers/loadConfig')();
-const authorizeRequestModelAsync = require('../../built/models/authorizeRequest');
-const applicationAccessModelAsync = require('../../built/models/applicationAccess');
+const AuthorizeRequestModel = require('../../built/models/AuthorizeRequest');
+const ApplicationAccessModel = require('../../built/models/ApplicationAccess');
 const route = require('../../built/routes/ice_auth');
 const routeVerificationCode = require('../../built/routes/ice_auth/verification_code');
 const routeTargetUser = require('../../built/routes/ice_auth/target_user');
 const routeAccessKey = require('../../built/routes/ice_auth/access_key');
-const DB = require('../../built/helpers/db').DB;
+const DB = require('../../built/helpers/DB');
 
 describe('IceAuth API', () => {
 	describe('/ice_auth', () => {
@@ -21,8 +21,8 @@ describe('IceAuth API', () => {
 					db = new DB(config);
 					await db.connectAsync();
 
-					authorizeRequestModel = await authorizeRequestModelAsync(db, config);
-					applicationAccessModel = await applicationAccessModelAsync(db, config);
+					authorizeRequestModel = new AuthorizeRequestModel(db, config);
+					applicationAccessModel = new ApplicationAccessModel(db, config);
 
 					await db.users.removeAsync();
 					await db.applications.removeAsync();
@@ -49,6 +49,7 @@ describe('IceAuth API', () => {
 					user = res;
 
 					res = await db.applications.createAsync({
+						creatorId: user.document._id,
 						name: 'generalapp',
 						description: 'this is generalapp.',
 						permissions: []
@@ -79,7 +80,6 @@ describe('IceAuth API', () => {
 				}
 			})();
 		});
-
 
 		describe('[POST]', () => {
 			it('正しくリクエストされた場合は成功する', done => {

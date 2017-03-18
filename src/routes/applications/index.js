@@ -1,7 +1,7 @@
 'use strict';
 
 const apiResult = require('../../helpers/apiResult');
-const applicationModelAsync = require('../../models/application');
+const ApplicationModel = require('../../models/Application');
 
 exports.post = async (request, extensions, db, config) => {
 	const userId = request.user._id;
@@ -9,7 +9,7 @@ exports.post = async (request, extensions, db, config) => {
 	let description = request.body.description;
 	const permissions = request.body.permissions;
 
-	const applicationModel = await applicationModelAsync(db, config);
+	const applicationModel = new ApplicationModel(db, config);
 
 	// name
 	if (!/^.{1,32}$/.test(name))

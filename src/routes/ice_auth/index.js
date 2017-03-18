@@ -1,12 +1,12 @@
 'use strict';
 
 const apiResult = require('../../helpers/apiResult');
-const applicationModelAsync = require('../../models/application');
+const ApplicationModel = require('../../models/Application');
 
 exports.post = async (request, extensions, db, config) => {
 	const applicationKey = request.body.application_key;
 
-	const applicationModel = await applicationModelAsync(db, config);
+	const applicationModel = new ApplicationModel(db, config);
 
 	if (!await applicationModel.verifyKeyAsync(applicationKey))
 		return apiResult(400, 'application_key is invalid');
