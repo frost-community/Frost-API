@@ -1,10 +1,10 @@
 'use strict';
 
-module.exports = (statusCode, message, data) => {
-	const instance = {};
-	instance.statusCode = statusCode;
-	instance.message = message;
-	instance.data = data;
-
-	return instance;
-};
+class ApiResult {
+	constructor(statusCode, message, data) {
+		this.statusCode = statusCode;
+		this.message = message;
+		this.data = data;
+	}
+}
+module.exports = ApiResult;

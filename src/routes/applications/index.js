@@ -1,6 +1,6 @@
 'use strict';
 
-const apiResult = require('../../helpers/apiResult');
+const ApiResult = require('../../helpers/apiResult');
 const ApplicationModel = require('../../models/application');
 
 exports.post = async (request, extensions, db, config) => {
@@ -13,20 +13,20 @@ exports.post = async (request, extensions, db, config) => {
 
 	// name
 	if (!/^.{1,32}$/.test(name))
-		return apiResult(400, 'name is invalid format');
+		return new ApiResult(400, 'name is invalid format');
 
 	if (await db.applications.findAsync({name: name}) != null)
-		return apiResult(400, 'already exists name');
+		return new ApiResult(400, 'already exists name');
 
 	// description
 	if (description == null)
 		description = '';
 	if (!/^.{0,256}$/.test(description))
-		return apiResult(400, 'description is invalid format');
+		return new ApiResult(400, 'description is invalid format');
 
 	// permissions
 	if (!applicationModel.analyzePermissions(permissions))
-		return apiResult(400, 'permissions is invalid format');
+		return new ApiResult(400, 'permissions is invalid format');
 
 	let applicationDocument;
 
@@ -39,11 +39,11 @@ exports.post = async (request, extensions, db, config) => {
 		});
 	}
 	catch(err) {
-		return apiResult(500, 'faild to create application');
+		return new ApiResult(500, 'faild to create application');
 	}
 
 	if (applicationDocument == null)
-		return apiResult(500, 'faild to create application');
+		return new ApiResult(500, 'faild to create application');
 
-	return apiResult(200, 'success', {application: applicationDocument.serialize()});
+	return new ApiResult(200, 'success', {application: applicationDocument.serialize()});
 };

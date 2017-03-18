@@ -1,6 +1,6 @@
 'use strict';
 
-const dbConnector = require('./dbConnector');
+const DbProvider = require('./dbProvider');
 const collections = require('./collections');
 const Applications = collections.Applications;
 const ApplicationAccesses = collections.ApplicationAccesses;
@@ -9,7 +9,7 @@ const Posts = collections.Posts;
 const Users = collections.Users;
 const UserFollowings = collections.UserFollowings;
 
-class DB {
+class Db {
 	constructor(config) {
 		if (config == null)
 			throw new Error('missing arguments');
@@ -19,7 +19,7 @@ class DB {
 	}
 
 	async connectAsync() {
-		this.dbProvider = await dbConnector.connectApidbAsync(this._config);
+		this.dbProvider = await DbProvider.connectApidbAsync(this._config);
 	}
 
 	get applications() {
@@ -46,4 +46,4 @@ class DB {
 		return new UserFollowings(this, this._config);
 	}
 }
-module.exports = DB;
+module.exports = Db;

@@ -2,7 +2,7 @@
 
 const crypto = require('crypto');
 
-const apiResult = require('../helpers/apiResult');
+const ApiResult = require('../helpers/apiResult');
 const randomRange = require('../helpers/randomRange');
 
 exports.post = async (request, extensions, db, config) => {
@@ -25,27 +25,27 @@ exports.post = async (request, extensions, db, config) => {
 
 	// screenName
 	if (!/^[a-z0-9_]{4,15}$/.test(screenName) || /^(.)\1{3,}$/.test(screenName))
-		return apiResult(400, 'screenName is invalid format');
+		return new ApiResult(400, 'screenName is invalid format');
 
 	for (const invalidScreenName of config.api.invalidScreenNames) {
 		if (screenName === invalidScreenName)
-			return apiResult(400, 'screenName is invalid');
+			return new ApiResult(400, 'screenName is invalid');
 	}
 
 	if (await db.users.findAsync({screenName: screenName}) != null)
-		return apiResult(400, 'this screenName is already exists');
+		return new ApiResult(400, 'this screenName is already exists');
 
 	// password
 	if (!/^[a-z0-9_-]{6,}$/.test(password))
-		return apiResult(400, 'password is invalid format');
+		return new ApiResult(400, 'password is invalid format');
 
 	// name
 	if (!/^.{1,32}$/.test(name))
-		return apiResult(400, 'name is invalid format');
+		return new ApiResult(400, 'name is invalid format');
 
 	// description
 	if (!/^.{0,256}$/.test(description))
-		return apiResult(400, 'description is invalid format');
+		return new ApiResult(400, 'description is invalid format');
 
 	let userDocument;
 
@@ -59,15 +59,15 @@ exports.post = async (request, extensions, db, config) => {
 	}
 	catch(err) {
 		console.log(err.stack);
-		return apiResult(500, 'faild to create account');
+		return new ApiResult(500, 'faild to create account');
 	}
 
 	if (userDocument == null)
-		return apiResult(500, 'faild to create account');
+		return new ApiResult(500, 'faild to create account');
 
-	return apiResult(200, 'success', {user: userDocument.serialize()});
+	return new ApiResult(200, 'success', {user: userDocument.serialize()});
 };
 
 exports.get = async (request, extensions, config) => {
-	return apiResult(501, 'not implemented');
+	return new ApiResult(501, 'not implemented');
 };

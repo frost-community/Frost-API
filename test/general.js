@@ -19,7 +19,7 @@ describe('General -', () => {
 			for(const route of routes) {
 				if ('permissions' in route[2]) {
 					for(const permission of route[2].permissions) {
-						assert(require('../built/helpers/permission').permissionTypes.indexOf(permission) > -1);
+						assert(require('../built/helpers/permission').permissionTypes.indexOf(permission) != -1);
 					}
 				}
 			}
@@ -38,7 +38,7 @@ describe('General -', () => {
 	});
 
 	describe('database', () => {
-		const dbConnector = require('../built/helpers/dbConnector');
+		const DbProvider = require('../built/helpers/dbProvider');
 		let testDb;
 
 		it('DBに接続してそのインスタンスが取得できる', (done) => {
@@ -46,7 +46,7 @@ describe('General -', () => {
 				try {
 					const host = config.api.testDatabase.port != null ? `${config.api.testDatabase.host}:${config.api.testDatabase.port}` : config.api.testDatabase.host;
 					const authenticate = config.api.testDatabase.password != null ? `${config.api.testDatabase.username}:${config.api.testDatabase.password}` : config.api.testDatabase.username;
-					testDb = await dbConnector.connectAsync(host, config.api.testDatabase.database, authenticate);
+					testDb = await DbProvider.connectAsync(host, config.api.testDatabase.database, authenticate);
 					assert(testDb != null);
 					done();
 				}

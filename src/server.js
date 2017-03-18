@@ -5,8 +5,11 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const loadConfig = require('./helpers/loadConfig');
 const sanitize = require('mongo-sanitize');
-const DB = require('./helpers/db');
+const Db = require('./helpers/db');
 const DirectoryRouter = require('./helpers/directoryRouter');
+const CheckParams = require('./helpers/middlewares/checkParams');
+const CheckHeaders = require('./helpers/middlewares/checkHeaders');
+const CheckPermission = require('./helpers/middlewares/checkPermission');
 
 const questionResult = (ans) => (ans.toLowerCase()).indexOf('y') === 0;
 
@@ -29,7 +32,7 @@ module.exports = async () => {
 			app.disable('x-powered-by');
 			app.use(bodyParser.json());
 
-			const db = new DB(config);
+			const db = new Db(config);
 			await db.connectAsync();
 
 			const directoryRouter = new DirectoryRouter(app, db, config);
@@ -40,15 +43,15 @@ module.exports = async () => {
 				next();
 			});
 
-			const checkParams = require('./helpers/middlewares/checkParams')(directoryRouter, db, config).execute;
-			const checkHeaders = require('./helpers/middlewares/checkHeaders')(directoryRouter, db, config).execute;
-			const checkPermission = require('./helpers/middlewares/checkPermission')(directoryRouter, db, config).execute;
+			const checkParams = new CheckParams(directoryRouter, db, config).execute;
+			const checkHeaders = new CheckHeaders(directoryRouter, db, config).execute;
+			const checkPermission = new CheckPermission(directoryRouter, db, config).execute;
 
 			directoryRouter.addRoutes(require('./routes')(), [checkPermission, checkHeaders, checkParams]);
 
 			app.use((req, res) => {
 				require('./helpers/responseHelper')(res);
-				res.error(require('./helpers/apiResult')(404, 'not found'));
+				res.error(new require('./helpers/apiResult')(404, 'not found'));
 			});
 
 			app.listen(config.api.port, () => {

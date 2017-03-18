@@ -8,7 +8,7 @@ const route = require('../../built/routes/ice_auth');
 const routeVerificationCode = require('../../built/routes/ice_auth/verification_code');
 const routeTargetUser = require('../../built/routes/ice_auth/target_user');
 const routeAccessKey = require('../../built/routes/ice_auth/access_key');
-const DB = require('../../built/helpers/db');
+const Db = require('../../built/helpers/db');
 
 describe('IceAuth API', () => {
 	describe('/ice_auth', () => {
@@ -18,7 +18,7 @@ describe('IceAuth API', () => {
 			(async () => {
 				try {
 					config.api.database = config.api.testDatabase;
-					db = new DB(config);
+					db = new Db(config);
 					await db.connectAsync();
 
 					authorizeRequestModel = new AuthorizeRequestModel(db, config);

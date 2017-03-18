@@ -1,6 +1,6 @@
 'use strict';
 
-const apiResult = require('./apiResult');
+const ApiResult = require('./apiResult');
 const resHelper = require('./responseHelper');
 const type = require('./type');
 
@@ -76,7 +76,7 @@ class DirectoryRouter {
 								response.error(err);
 							else {
 								console.log(`Internal Error (Async): ${err.stack}`);
-								response.error(apiResult(500, 'internal error', {details: err.stack}));
+								response.error(new ApiResult(500, 'internal error', {details: err.stack}));
 							}
 						}
 					})();

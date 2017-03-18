@@ -3,16 +3,17 @@
 const ApplicationModel = require('../../models/application');
 const ApplicationAccessModel = require('../../models/applicationAccess');
 
-module.exports = (directoryRouter, db, config) => {
-	const instance = {};
+class CheckPermission {
+	constructor(directoryRouter, db, config) {
+		this.directoryRouter = directoryRouter;
+		this.applicationModel = new ApplicationModel(db, config);
+		this.applicationAccessModel = new ApplicationAccessModel(db, config);
+	}
 
-	const applicationModel = new ApplicationModel(db, config);
-	const applicationAccessModel = new ApplicationAccessModel(db, config);
-
-	instance.execute = (request, response, next) => {
-		(async () => {
+	execute(request, response, next) {
+		const f = async () => {
 			try {
-				const route = directoryRouter.findRoute(request.method, request.route.path);
+				const route = this.directoryRouter.findRoute(request.method, request.route.path);
 				const extensions = route.extensions;
 
 				if ('permissions' in extensions && extensions.permissions.length !== 0) {
@@ -29,22 +30,22 @@ module.exports = (directoryRouter, db, config) => {
 						return;
 					}
 
-					if (!await applicationModel.verifyKeyAsync(applicationKey)) {
+					if (!await this.applicationModel.verifyKeyAsync(applicationKey)) {
 						response.status(400).send({error: {message: 'X-Application-Key header is invalid'}});
 						return;
 					}
 
-					if (!await applicationAccessModel.verifyKeyAsync(accessKey)) {
+					if (!await this.applicationAccessModel.verifyKeyAsync(accessKey)) {
 						response.status(400).send({error: {message: 'X-Access-Key header is invalid'}});
 						return;
 					}
 
-					const applicationId = applicationModel.splitKey(applicationKey).applicationId;
-					const userId = applicationAccessModel.splitKey(accessKey).userId;
+					const applicationId = this.applicationModel.splitKey(applicationKey).applicationId;
+					const userId = this.applicationAccessModel.splitKey(accessKey).userId;
 
-					const applicationDoc = (await db.applications.findIdAsync(applicationId));
+					const applicationDoc = (await this.db.applications.findIdAsync(applicationId));
 					request.application = applicationDoc.document;
-					request.user = (await db.users.findIdAsync(userId)).document;
+					request.user = (await this.db.users.findIdAsync(userId)).document;
 
 					for (const permission of extensions.permissions) {
 						if (!applicationDoc.hasPermission(permission)) {
@@ -63,8 +64,8 @@ module.exports = (directoryRouter, db, config) => {
 				console.log(`checkPermission failed (${err})`);
 				throw err;
 			}
-		})();
-	};
-
-	return instance;
-};
+		};
+		f.call(this, []);
+	}
+}
+module.exports = CheckPermission;

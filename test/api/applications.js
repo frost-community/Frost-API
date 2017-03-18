@@ -6,7 +6,7 @@ const routeAccount = require('../../built/routes/account');
 const routeApp = require('../../built/routes/applications');
 const routeAppId = require('../../built/routes/applications/id');
 const routeAppIdApplicationKey = require('../../built/routes/applications/id/application_key');
-const DB = require('../../built/helpers/db');
+const Db = require('../../built/helpers/db');
 
 describe('Applications API', () => {
 	describe('/applications', () => {
@@ -16,7 +16,7 @@ describe('Applications API', () => {
 			(async () => {
 				try {
 					config.api.database = config.api.testDatabase;
-					db = new DB(config);
+					db = new Db(config);
 					await db.connectAsync();
 
 					await db.users.removeAsync();

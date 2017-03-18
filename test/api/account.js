@@ -3,7 +3,7 @@
 const assert = require('assert');
 const config = require('../../built/helpers/loadConfig')();
 const route = require('../../built/routes/account');
-const DB = require('../../built/helpers/db');
+const Db = require('../../built/helpers/db');
 
 describe('Account API', () => {
 	let db;
@@ -11,7 +11,7 @@ describe('Account API', () => {
 		(async () => {
 			try {
 				config.api.database = config.api.testDatabase;
-				db = new DB(config);
+				db = new Db(config);
 				await db.connectAsync();
 
 				done();

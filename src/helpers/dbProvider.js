@@ -1,10 +1,14 @@
 'use strict';
 
-module.exports = (connection) => {
-	const instance = {connection: connection};
+const mongo = require('mongodb');
 
-	if (connection == null)
-		throw new Error('missing arguments');
+class DbProvider {
+	constructor(connection) {
+		if (connection == null)
+			throw new Error('missing arguments');
+
+		this.connection = connection;
+	}
 
 	/**
 	 * ドキュメントを作成します
@@ -12,8 +16,9 @@ module.exports = (connection) => {
 	 * @param  {string} collectionName コレクション名
 	 * @param  {string} data
 	 */
-	instance.createAsync = async (collectionName, data) =>
-		await instance.connection.collection(collectionName).insert(data);
+	async createAsync(collectionName, data) {
+		return await this.connection.collection(collectionName).insert(data);
+	}
 
 	/**
 	 * ドキュメントを検索して項目を取得します
@@ -23,8 +28,9 @@ module.exports = (connection) => {
 	 * @param  {Object} option
 	 * @param  {Object|null} document
 	 */
-	instance.findAsync = async (collectionName, query, option) =>
-		await instance.connection.collection(collectionName).findOne(query, option);
+	async findAsync(collectionName, query, option) {
+		return await this.connection.collection(collectionName).findOne(query, option);
+	}
 
 	/**
 	 * ドキュメントを検索して複数の項目を取得します
@@ -34,8 +40,9 @@ module.exports = (connection) => {
 	 * @param  {Object} option
 	 * @param  {Object[]|null} documents
 	 */
-	instance.findArrayAsync = async (collectionName, query, option) =>
-		await instance.connection.collection(collectionName).find(query, option).toArray();
+	async findArrayAsync(collectionName, query, option) {
+		return await this.connection.collection(collectionName).find(query, option).toArray();
+	}
 
 	/**
 	 * ドキュメントを更新します
@@ -44,7 +51,9 @@ module.exports = (connection) => {
 	 * @param  {Object} data
 	 * @param  {Boolean} isMany
 	 */
-	instance.updateAsync = async (collectionName, query, data) => await instance.connection.collection(collectionName).update(query, {$set: data});
+	async updateAsync(collectionName, query, data) {
+		return await this.connection.collection(collectionName).update(query, {$set: data});
+	}
 
 	/**
 	 * ドキュメントを削除します
@@ -52,8 +61,43 @@ module.exports = (connection) => {
 	 * @param  {string} collectionName
 	 * @param  {Object} query
 	 */
-	instance.removeAsync = async (collectionName, query) =>
-		await instance.connection.collection(collectionName).remove(query);
+	async removeAsync(collectionName, query) {
+		return await this.connection.collection(collectionName).remove(query);
+	}
 
-	return instance;
-};
+	/**
+	 * データベースに接続します
+	 *
+	 * host, dbname, [authenticate]
+	 * @return {Promise}
+	 */
+	static connectAsync(host, dbname, authenticate) {
+		return new Promise((resolve, reject) => {
+			if (host == null || dbname == null)
+				reject('missing arguments');
+
+			mongo.MongoClient.connect(`mongodb://${authenticate}@${host}/${dbname}`, (err, connection) => {
+				if (err || connection == null)
+					return reject('faild to connect database');
+
+				return resolve(new DbProvider(connection));
+			});
+		});
+	}
+
+	/**
+	 * APIデータベースに接続します
+	 */
+	static async connectApidbAsync(config) {
+		if (config == null)
+			throw new Error('missing arguments');
+
+		const host = config.api.database.port != null ? `${config.api.database.host}:${config.api.database.port}` : config.api.database.host;
+		const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
+		return await DbProvider.connectAsync(
+			host,
+			config.api.database.database,
+			authenticate);
+	}
+}
+module.exports = DbProvider;

@@ -1,7 +1,7 @@
 'use strict';
 
-const apiResult = require('../helpers/apiResult');
+const ApiResult = require('../helpers/apiResult');
 
 exports.get = async (request, extensions, db, config) => {
-	return apiResult(200, 'Frost API Server');
+	return new ApiResult(200, 'Frost API Server');
 };

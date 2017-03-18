@@ -1,11 +1,15 @@
 'use strict';
 
-module.exports = (directoryRouter, db, config) => {
-	const instance = {};
+class CheckHeaders {
+	constructor(directoryRouter, db, config) {
+		this.directoryRouter = directoryRouter;
+		this.db = db;
+		this.config = config;
+	}
 
-	instance.execute = (request, response, next) => {
+	execute(request, response, next) {
 		try {
-			const extensions = directoryRouter.findRoute(request.method.toLowerCase(), request.route.path).extensions;
+			const extensions = this.directoryRouter.findRoute(request.method.toLowerCase(), request.route.path).extensions;
 
 			if ('headers' in extensions && extensions.headers.length !== 0) {
 				for(const header of extensions.headers) {
@@ -27,7 +31,6 @@ module.exports = (directoryRouter, db, config) => {
 		}
 
 		next();
-	};
-
-	return instance;
-};
+	}
+}
+module.exports = CheckHeaders;
