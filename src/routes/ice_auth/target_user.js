@@ -1,21 +1,20 @@
 'use strict';
 
 const ApiResult = require('../../helpers/apiResult');
-const AuthorizeRequestModel = require('../../models/authorizeRequest');
+const AuthorizeRequest = require('../../documentModels/authorizeRequest');
 const mongo = require('mongodb');
 
 exports.post = async (request, extensions, db, config) => {
 	const iceAuthKey = request.get('X-Ice-Auth-Key');
 	const userId = request.body.user_id;
 
-	const authorizeRequestModel = new AuthorizeRequestModel(db, config);
-	if (!await authorizeRequestModel.verifyKeyAsync(iceAuthKey))
+	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, db, config))
 		return new ApiResult(400, 'X-Ice-Auth-Key header is invalid');
 
 	if (db.users.findIdAsync(userId) == null)
 		return new ApiResult(400, 'user_id is invalid');
 
-	const authorizeRequestId = authorizeRequestModel.splitKey(iceAuthKey).authorizeRequestId;
+	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, db, config).authorizeRequestId;
 	await db.authorizeRequests.updateIdAsync(authorizeRequestId, {targetUserId: mongo.ObjectId(userId)});
 
 	return new ApiResult(200, 'success', {'target_user_id': userId});

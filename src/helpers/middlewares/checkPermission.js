@@ -1,13 +1,13 @@
 'use strict';
 
-const ApplicationModel = require('../../models/application');
-const ApplicationAccessModel = require('../../models/applicationAccess');
+const Application = require('../../documentModels/application');
+const ApplicationAccess = require('../../documentModels/applicationAccess');
 
 class CheckPermission {
 	constructor(directoryRouter, db, config) {
 		this.directoryRouter = directoryRouter;
-		this.applicationModel = new ApplicationModel(db, config);
-		this.applicationAccessModel = new ApplicationAccessModel(db, config);
+		this._db = db;
+		this._config = config;
 	}
 
 	execute(request, response, next) {
@@ -30,25 +30,25 @@ class CheckPermission {
 						return;
 					}
 
-					if (!await this.applicationModel.verifyKeyAsync(applicationKey)) {
+					if (!await Application.verifyKeyAsync(applicationKey, this._db, this._config)) {
 						response.status(400).send({error: {message: 'X-Application-Key header is invalid'}});
 						return;
 					}
 
-					if (!await this.applicationAccessModel.verifyKeyAsync(accessKey)) {
+					if (!await ApplicationAccess.verifyKeyAsync(accessKey, this._db, this._config)) {
 						response.status(400).send({error: {message: 'X-Access-Key header is invalid'}});
 						return;
 					}
 
-					const applicationId = this.applicationModel.splitKey(applicationKey).applicationId;
-					const userId = this.applicationAccessModel.splitKey(accessKey).userId;
+					const applicationId = Application.splitKey(applicationKey, this._db, this._config).applicationId;
+					const userId = ApplicationAccess.splitKey(accessKey, this._db, this._config).userId;
 
-					const applicationDoc = (await this.db.applications.findIdAsync(applicationId));
-					request.application = applicationDoc.document;
-					request.user = (await this.db.users.findIdAsync(userId)).document;
+					const application = (await this._db.applications.findIdAsync(applicationId));
+					request.application = application.document;
+					request.user = (await this._db.users.findIdAsync(userId)).document;
 
 					for (const permission of extensions.permissions) {
-						if (!applicationDoc.hasPermission(permission)) {
+						if (!application.hasPermission(permission)) {
 							response.status(403).send({error: {message: 'you do not have any permissions'}});
 							return;
 						}

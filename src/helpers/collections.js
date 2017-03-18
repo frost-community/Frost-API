@@ -17,9 +17,7 @@ class CollectionBase {
 	async createAsync(data) {
 		const result = await this.db.dbProvider.createAsync(this.collectionName, data);
 
-		const hoge = require(this.documentModelName);
-
-		return new hoge(result.ops[0], this.db, this._config);
+		return new (require(this.documentModelName))(result.ops[0], this.db, this._config);
 	}
 
 	async findAsync(query) {
@@ -28,9 +26,7 @@ class CollectionBase {
 		if (document == null)
 			return null;
 
-		const hoge = require(this.documentModelName);
-
-		return new hoge(document, this.db, this._config);
+		return new (require(this.documentModelName))(document, this.db, this._config);
 	}
 
 	async findIdAsync(id) {
@@ -54,8 +50,7 @@ class CollectionBase {
 
 		const res = [];
 		for (const document of documents) {
-			const hoge = require(this.documentModelName);
-			res.push(new hoge(document, this.db, this._config));
+			res.push(new (require(this.documentModelName))(document, this.db, this._config));
 		}
 
 		return res;

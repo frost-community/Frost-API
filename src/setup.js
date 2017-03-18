@@ -4,7 +4,7 @@ const fs = require('fs');
 const requestAsync = require('async-request');
 const i = require('./helpers/readline');
 const loadConfig = require('./helpers/loadConfig');
-const DB = require('./helpers/db');
+const Db = require('./helpers/db');
 
 const urlConfigFile = 'https://raw.githubusercontent.com/Frost-Dev/Frost-API/develop/config.json';
 const questionResult = (ans) => (ans.toLowerCase()).indexOf('y') === 0;
@@ -38,7 +38,7 @@ module.exports = async () => {
 				if (appName == '')
 					appName = 'Frost Web';
 
-				const db = new DB(config);
+				const db = new Db(config);
 				await db.connectAsync();
 
 				const user = await db.users.createAsync({

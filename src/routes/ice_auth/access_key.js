@@ -1,31 +1,30 @@
 'use strict';
 
 const ApiResult = require('../../helpers/apiResult');
-const AuthorizeRequestModel = require('../../models/authorizeRequest');
+const AuthorizeRequest = require('../../documentModels/authorizeRequest');
 
 exports.post = async (request, extensions, db, config) => {
 	const iceAuthKey = request.get('X-Ice-Auth-Key');
 	const verificationCode = request.body.verification_code;
 
-	const authorizeRequestModel = new AuthorizeRequestModel(db, config);
-	if (!await authorizeRequestModel.verifyKeyAsync(iceAuthKey))
+	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, db, config))
 		return new ApiResult(400, 'X-Ice-Auth-Key header is invalid');
 
-	const authorizeRequestId = authorizeRequestModel.splitKey(iceAuthKey).authorizeRequestId;
-	const doc = await db.authorizeRequests.findAsync({_id: authorizeRequestId});
+	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, db, config).authorizeRequestId;
+	const authorizeRequest = await db.authorizeRequests.findAsync({_id: authorizeRequestId});
 
-	if (doc.document.targetUserId == null)
+	if (authorizeRequest.document.targetUserId == null)
 		return new ApiResult(400, 'authorization has not been done yet');
 
-	if (verificationCode !== doc.document.verificationCode)
+	if (verificationCode !== authorizeRequest.document.verificationCode)
 		return new ApiResult(400, 'verification_code is invalid');
 
-	const accessDoc = await db.applicationAccesses.createAsync({
-		applicationId: doc.document.applicationId,
-		userId: doc.document.targetUserId,
+	const applicationAccess = await db.applicationAccesses.createAsync({
+		applicationId: authorizeRequest.document.applicationId,
+		userId: authorizeRequest.document.targetUserId,
 		keyCode: null
 	});
-	const key = await accessDoc.generateAccessKeyAsync();
+	const key = await applicationAccess.generateAccessKeyAsync();
 
 	return new ApiResult(200, 'success', {'access_key': key});
 };

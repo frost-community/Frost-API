@@ -3,8 +3,6 @@
 class CheckHeaders {
 	constructor(directoryRouter, db, config) {
 		this.directoryRouter = directoryRouter;
-		this.db = db;
-		this.config = config;
 	}
 
 	execute(request, response, next) {

@@ -2,27 +2,24 @@
 
 const assert = require('assert');
 const config = require('../../built/helpers/loadConfig')();
-const AuthorizeRequestModel = require('../../built/models/authorizeRequest');
-const ApplicationAccessModel = require('../../built/models/applicationAccess');
+const Db = require('../../built/helpers/db');
+const AuthorizeRequest = require('../../built/documentModels/authorizeRequest');
+const ApplicationAccess = require('../../built/documentModels/applicationAccess');
 const route = require('../../built/routes/ice_auth');
 const routeVerificationCode = require('../../built/routes/ice_auth/verification_code');
 const routeTargetUser = require('../../built/routes/ice_auth/target_user');
 const routeAccessKey = require('../../built/routes/ice_auth/access_key');
-const Db = require('../../built/helpers/db');
 
 describe('IceAuth API', () => {
 	describe('/ice_auth', () => {
 		// load collections
-		let db, authorizeRequestModel, applicationAccessModel;
+		let db;
 		before(done => {
 			(async () => {
 				try {
 					config.api.database = config.api.testDatabase;
 					db = new Db(config);
 					await db.connectAsync();
-
-					authorizeRequestModel = new AuthorizeRequestModel(db, config);
-					applicationAccessModel = new ApplicationAccessModel(db, config);
 
 					await db.users.removeAsync();
 					await db.applications.removeAsync();
@@ -93,7 +90,7 @@ describe('IceAuth API', () => {
 							}
 						}, null, db, config);
 						assert.equal(res.message, 'success');
-						assert(await authorizeRequestModel.verifyKeyAsync(res.data.ice_auth_key));
+						assert(await AuthorizeRequest.verifyKeyAsync(res.data.ice_auth_key, db, config));
 
 						done();
 					}
@@ -184,7 +181,7 @@ describe('IceAuth API', () => {
 							}, null, db, config);
 							assert.equal(res.message, 'success');
 
-							const authorizeRequestDoc = await db.authorizeRequests.findIdAsync(authorizeRequestModel.splitKey(res.data.ice_auth_key).authorizeRequestId);
+							const authorizeRequest = await db.authorizeRequests.findIdAsync(AuthorizeRequest.splitKey(res.data.ice_auth_key, db, config).authorizeRequestId);
 							const iceAuthKey = res.data.ice_auth_key;
 
 							// target_user
@@ -206,12 +203,12 @@ describe('IceAuth API', () => {
 									return null;
 								},
 								body: {
-									verification_code: authorizeRequestDoc.document.verificationCode
+									verification_code: authorizeRequest.document.verificationCode
 								}
 							}, null, db, config);
 
 							assert.equal(res.message, 'success');
-							assert(await applicationAccessModel.verifyKeyAsync(res.data.access_key));
+							assert(await ApplicationAccess.verifyKeyAsync(res.data.access_key, db, config));
 
 							done();
 						}

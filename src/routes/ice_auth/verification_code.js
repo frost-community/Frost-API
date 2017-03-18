@@ -1,17 +1,16 @@
 'use strict';
 
 const ApiResult = require('../../helpers/apiResult');
-const AuthorizeRequestModel = require('../../models/authorizeRequest');
+const AuthorizeRequest = require('../../documentModels/authorizeRequest');
 
 exports.get = async (request, extensions, db, config) => {
 	const iceAuthKey = request.get('X-Ice-Auth-Key');
 
-	const authorizeRequestModel = new AuthorizeRequestModel(db, config);
-	if (!await authorizeRequestModel.verifyKeyAsync(iceAuthKey))
+	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, db, config))
 		return new ApiResult(400, 'X-Ice-Auth-Key header is invalid');
 
-	const authorizeRequestId = authorizeRequestModel.splitKey(iceAuthKey).authorizeRequestId;
-	const doc = await db.authorizeRequests.findAsync({_id: authorizeRequestId});
+	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, db, config).authorizeRequestId;
+	const authorizeRequest = await db.authorizeRequests.findAsync({_id: authorizeRequestId});
 
-	return new ApiResult(200, 'success', {'verification_code': doc.document.verificationCode});
+	return new ApiResult(200, 'success', {'verification_code': authorizeRequest.document.verificationCode});
 };

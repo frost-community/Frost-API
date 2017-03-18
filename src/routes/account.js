@@ -1,8 +1,7 @@
 'use strict';
 
-const crypto = require('crypto');
-
 const ApiResult = require('../helpers/apiResult');
+const crypto = require('crypto');
 const randomRange = require('../helpers/randomRange');
 
 exports.post = async (request, extensions, db, config) => {
@@ -47,10 +46,10 @@ exports.post = async (request, extensions, db, config) => {
 	if (!/^.{0,256}$/.test(description))
 		return new ApiResult(400, 'description is invalid format');
 
-	let userDocument;
+	let user;
 
 	try {
-		userDocument = await db.users.createAsync({
+		user = await db.users.createAsync({
 			screenName: screenName,
 			passwordHash: hash,
 			name: name,
@@ -62,12 +61,8 @@ exports.post = async (request, extensions, db, config) => {
 		return new ApiResult(500, 'faild to create account');
 	}
 
-	if (userDocument == null)
+	if (user == null)
 		return new ApiResult(500, 'faild to create account');
 
-	return new ApiResult(200, 'success', {user: userDocument.serialize()});
-};
-
-exports.get = async (request, extensions, config) => {
-	return new ApiResult(501, 'not implemented');
+	return new ApiResult(200, 'success', {user: user.serialize()});
 };
