@@ -26,5 +26,5 @@ exports.post = async (request, extensions, db, config) => {
 	});
 	const key = await applicationAccess.generateAccessKeyAsync();
 
-	return new ApiResult(200, null, {'access_key': key});
+	return new ApiResult(200, {'access_key': key});
 };

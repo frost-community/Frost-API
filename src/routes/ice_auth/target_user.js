@@ -17,5 +17,5 @@ exports.post = async (request, extensions, db, config) => {
 	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, db, config).authorizeRequestId;
 	await db.authorizeRequests.updateIdAsync(authorizeRequestId, {targetUserId: mongo.ObjectId(userId)});
 
-	return new ApiResult(200, null, {'target_user_id': userId});
+	return new ApiResult(200, {'target_user_id': userId});
 };

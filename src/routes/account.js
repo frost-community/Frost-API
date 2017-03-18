@@ -64,5 +64,5 @@ exports.post = async (request, extensions, db, config) => {
 	if (user == null)
 		return new ApiResult(500, 'faild to create account');
 
-	return new ApiResult(200, null, {user: user.serialize()});
+	return new ApiResult(200, {user: user.serialize()});
 };

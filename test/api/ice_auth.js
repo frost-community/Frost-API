@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('assert');
+const type = require('../../built/helpers/type');
 const config = require('../../built/helpers/loadConfig')();
 const Db = require('../../built/helpers/db');
 const AuthorizeRequest = require('../../built/documentModels/authorizeRequest');
@@ -89,7 +90,7 @@ describe('IceAuth API', () => {
 								application_key: applicationKey
 							}
 						}, null, db, config);
-						assert.equal(res.message, null);
+						assert.equal(type(res.data), 'Object');
 						assert(await AuthorizeRequest.verifyKeyAsync(res.data.ice_auth_key, db, config));
 
 						done();
@@ -111,7 +112,7 @@ describe('IceAuth API', () => {
 									application_key: await app.generateApplicationKeyAsync()
 								}
 							}, null, db, config);
-							assert.equal(res.message, null);
+							assert.equal(type(res.data), 'Object');
 
 							res = await routeVerificationCode.get({
 								get: (h) => {
@@ -119,7 +120,7 @@ describe('IceAuth API', () => {
 									return null;
 								}
 							}, null, db, config);
-							assert.equal(res.message, null);
+							assert.equal(type(res.data), 'Object');
 							assert(/^[A-Z0-9]+$/.test(res.data.verification_code));
 
 							done();
@@ -143,7 +144,7 @@ describe('IceAuth API', () => {
 									application_key: await app.generateApplicationKeyAsync()
 								}
 							}, null, db, config);
-							assert.equal(res.message, null);
+							assert.equal(type(res.data), 'Object');
 
 							// target_user
 							res = await routeTargetUser.post({
@@ -156,7 +157,7 @@ describe('IceAuth API', () => {
 									user_id: user.document._id.toString()
 								}
 							}, null, db, config);
-							assert.equal(res.message, null);
+							assert.equal(type(res.data), 'Object');
 
 							done();
 						}
@@ -179,7 +180,7 @@ describe('IceAuth API', () => {
 									application_key: await app.generateApplicationKeyAsync()
 								}
 							}, null, db, config);
-							assert.equal(res.message, null);
+							assert.equal(type(res.data), 'Object');
 
 							const authorizeRequest = await db.authorizeRequests.findIdAsync(AuthorizeRequest.splitKey(res.data.ice_auth_key, db, config).authorizeRequestId);
 							const iceAuthKey = res.data.ice_auth_key;
@@ -194,7 +195,7 @@ describe('IceAuth API', () => {
 									user_id: user.document._id.toString()
 								}
 							}, null, db, config);
-							assert.equal(res.message, null);
+							assert.equal(type(res.data), 'Object');
 
 							// access_key
 							res = await routeAccessKey.post({
@@ -207,7 +208,7 @@ describe('IceAuth API', () => {
 								}
 							}, null, db, config);
 
-							assert.equal(res.message, null);
+							assert.equal(type(res.data), 'Object');
 							assert(await ApplicationAccess.verifyKeyAsync(res.data.access_key, db, config));
 
 							done();

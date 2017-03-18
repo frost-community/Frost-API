@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('assert');
+const type = require('../../built/helpers/type');
 const config = require('../../built/helpers/loadConfig')();
 const route = require('../../built/routes/account');
 const Db = require('../../built/helpers/db');
@@ -79,7 +80,7 @@ describe('Account API', () => {
 								description: 'testhoge'
 							}
 						}, null, db, config);
-						assert.equal(res.message, 'screenName is invalid format');
+						assert.equal(res.data, 'screenName is invalid format');
 
 						res = await route.post({
 							body: {
@@ -89,7 +90,7 @@ describe('Account API', () => {
 								description: 'testhoge'
 							}
 						}, null, db, config);
-						assert.equal(res.message, 'screenName is invalid format');
+						assert.equal(res.data, 'screenName is invalid format');
 
 						done();
 					}
@@ -110,7 +111,7 @@ describe('Account API', () => {
 								description: 'testhoge'
 							}
 						}, null, db, config);
-						assert.equal(res.message, 'password is invalid format');
+						assert.equal(res.data, 'password is invalid format');
 
 						done();
 					}
@@ -131,7 +132,7 @@ describe('Account API', () => {
 								description: 'testhoge'
 							}
 						}, null, db, config);
-						assert.equal(res.message, 'name is invalid format');
+						assert.equal(res.data, 'name is invalid format');
 
 						done();
 					}
@@ -152,7 +153,7 @@ describe('Account API', () => {
 								description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget'
 							}
 						}, null, db, config);
-						assert.equal(res.message, 'description is invalid format');
+						assert.equal(res.data, 'description is invalid format');
 
 						done();
 					}
@@ -160,12 +161,6 @@ describe('Account API', () => {
 						done(e);
 					}
 				})();
-			});
-		});
-
-		describe('/timeline', () => {
-			describe('[GET]', () => {
-				it('正しくリクエストされた場合は成功する');
 			});
 		});
 	});

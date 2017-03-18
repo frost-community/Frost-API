@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('assert');
+const type = require('../../built/helpers/type');
 const config = require('../../built/helpers/loadConfig')();
 const routeAccount = require('../../built/routes/account');
 const routeApp = require('../../built/routes/applications');
@@ -59,7 +60,7 @@ describe('Applications API', () => {
 							permissions: []
 						}
 					}, null, db, config);
-					assert.equal(res.message, null);
+					assert.equal(type(res.data), 'Object');
 					appA = res.data.application;
 
 					res = await routeApp.post({
@@ -70,7 +71,7 @@ describe('Applications API', () => {
 							permissions: []
 						}
 					}, null, db, config);
-					assert.equal(res.message, null);
+					assert.equal(type(res.data), 'Object');
 					appB = res.data.application;
 
 					done();
@@ -109,7 +110,7 @@ describe('Applications API', () => {
 							}
 						}, null, db, config);
 
-						assert.equal(res.message, null);
+						assert.equal(type(res.data), 'Object');
 
 						delete res.data.application.id;
 						assert.deepEqual(res.data, {
@@ -139,7 +140,7 @@ describe('Applications API', () => {
 								permissions: ''
 							}
 						}, null, db, config);
-						assert.equal(res.message, 'name is invalid format');
+						assert.equal(res.data, 'name is invalid format');
 
 						res = await routeApp.post({
 							user: userA,
@@ -149,7 +150,7 @@ describe('Applications API', () => {
 								permissions: ''
 							}
 						}, null, db, config);
-						assert.equal(res.message, 'name is invalid format');
+						assert.equal(res.data, 'name is invalid format');
 
 						done();
 					}
@@ -170,7 +171,7 @@ describe('Applications API', () => {
 								permissions: ''
 							}
 						}, null, db, config);
-						assert.equal(res.message, 'description is invalid format');
+						assert.equal(res.data, 'description is invalid format');
 
 						done();
 					}
@@ -192,7 +193,7 @@ describe('Applications API', () => {
 								body: {}
 							}, null, db, config);
 
-							assert.equal(res.message, null);
+							assert.equal(type(res.data), 'Object');
 
 							assert.deepEqual(res.data, {
 								application: {
@@ -221,7 +222,7 @@ describe('Applications API', () => {
 								body: {}
 							}, null, db, config);
 
-							assert.equal(res.message, 'you do not own this application');
+							assert.equal(res.data, 'you do not own this application');
 
 							done();
 						}
@@ -240,7 +241,7 @@ describe('Applications API', () => {
 								body: {}
 							}, null, db, config);
 
-							assert.equal(res.message, 'application is not found');
+							assert.equal(res.data, 'application is not found');
 
 							done();
 						}
@@ -260,7 +261,7 @@ describe('Applications API', () => {
 									user: userA,
 									params: {id: appA.id},
 								}, null, db, config);
-								assert.equal(res.message, null);
+								assert.equal(type(res.data), 'Object');
 
 								done();
 							}
@@ -277,7 +278,7 @@ describe('Applications API', () => {
 									user: userB,
 									params: {id: appA.id},
 								}, null, db, config);
-								assert.equal(res.message, 'you do not own this application');
+								assert.equal(res.data, 'you do not own this application');
 
 								done();
 							}
@@ -296,13 +297,13 @@ describe('Applications API', () => {
 									user: userA,
 									params: {id: appA.id},
 								}, null, db, config);
-								assert.equal(res.message, null);
+								assert.equal(type(res.data), 'Object');
 
 								res = await routeAppIdApplicationKey.get({
 									user: userA,
 									params: {id: appA.id},
 								}, null, db, config);
-								assert.equal(res.message, null);
+								assert.equal(type(res.data), 'Object');
 
 								done();
 							}
@@ -319,13 +320,13 @@ describe('Applications API', () => {
 									user: userB,
 									params: {id: appB.id},
 								}, null, db, config);
-								assert.equal(res.message, null);
+								assert.equal(type(res.data), 'Object');
 
 								res = await routeAppIdApplicationKey.get({
 									user: userA,
 									params: {id: appB.id},
 								}, null, db, config);
-								assert.equal(res.message, 'you do not own this application');
+								assert.equal(res.data, 'you do not own this application');
 
 								done();
 							}

@@ -14,5 +14,5 @@ exports.post = async (request, extensions, db, config) => {
 	const iceAuthKey = await authorizeRequest.getRequestKeyAsync();
 	await authorizeRequest.getVerificationCodeAsync();
 
-	return new ApiResult(200, null, {'ice_auth_key': iceAuthKey});
+	return new ApiResult(200, {'ice_auth_key': iceAuthKey});
 };
