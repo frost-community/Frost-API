@@ -1,7 +1,7 @@
 'use strict';
 
-const ApplicationModel = require('../../models/Application');
-const ApplicationAccessModel = require('../../models/ApplicationAccess');
+const ApplicationModel = require('../../models/application');
+const ApplicationAccessModel = require('../../models/applicationAccess');
 
 module.exports = (directoryRouter, db, config) => {
 	const instance = {};

@@ -1,7 +1,7 @@
 'use strict';
 
 const apiResult = require('../../helpers/apiResult');
-const ApplicationModel = require('../../models/Application');
+const ApplicationModel = require('../../models/application');
 
 exports.post = async (request, extensions, db, config) => {
 	const userId = request.user._id;

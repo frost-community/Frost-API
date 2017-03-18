@@ -1,7 +1,7 @@
 'use strict';
 
 const apiResult = require('../../helpers/apiResult');
-const AuthorizeRequestModel = require('../../models/AuthorizeRequest');
+const AuthorizeRequestModel = require('../../models/authorizeRequest');
 
 exports.post = async (request, extensions, db, config) => {
 	const iceAuthKey = request.get('X-Ice-Auth-Key');

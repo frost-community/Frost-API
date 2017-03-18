@@ -1,6 +1,6 @@
 'use strict';
 
-const ApplicationAccessModel = require('../models/ApplicationAccess');
+const ApplicationAccessModel = require('../models/applicationAccess');
 const randomRange = require('../helpers/randomRange');
 
 class ApplicationAccess {

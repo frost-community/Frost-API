@@ -5,8 +5,8 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const loadConfig = require('./helpers/loadConfig');
 const sanitize = require('mongo-sanitize');
-const DB = require('./helpers/DB');
-const DirectoryRouter = require('./helpers/DirectoryRouter');
+const DB = require('./helpers/db');
+const DirectoryRouter = require('./helpers/directoryRouter');
 
 const questionResult = (ans) => (ans.toLowerCase()).indexOf('y') === 0;
 

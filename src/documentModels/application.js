@@ -1,6 +1,6 @@
 'use strict';
 
-const ApplicationModel = require('../models/Application');
+const ApplicationModel = require('../models/application');
 const randomRange = require('../helpers/randomRange');
 
 class Application {

@@ -1,6 +1,6 @@
 'use strict';
 
-// const UserFollowingModel = require('../models/UserFollowing');
+// const UserFollowingModel = require('../models/userFollowing');
 
 class UserFollowing {
 	constructor(document, db, config) {

@@ -4,7 +4,7 @@ const fs = require('fs');
 const requestAsync = require('async-request');
 const i = require('./helpers/readline');
 const loadConfig = require('./helpers/loadConfig');
-const DB = require('./helpers/DB');
+const DB = require('./helpers/db');
 
 const urlConfigFile = 'https://raw.githubusercontent.com/Frost-Dev/Frost-API/develop/config.json';
 const questionResult = (ans) => (ans.toLowerCase()).indexOf('y') === 0;

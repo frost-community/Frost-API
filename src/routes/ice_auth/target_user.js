@@ -1,7 +1,7 @@
 'use strict';
 
 const apiResult = require('../../helpers/apiResult');
-const AuthorizeRequestModel = require('../../models/AuthorizeRequest');
+const AuthorizeRequestModel = require('../../models/authorizeRequest');
 const mongo = require('mongodb');
 
 exports.post = async (request, extensions, db, config) => {

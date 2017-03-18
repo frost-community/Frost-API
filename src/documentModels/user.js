@@ -1,6 +1,6 @@
 'use strict';
 
-// const UserModel = require('../models/User');
+// const UserModel = require('../models/user');
 
 class User {
 	constructor(document, db, config) {

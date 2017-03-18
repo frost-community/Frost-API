@@ -1,6 +1,6 @@
 'use strict';
 
-const AuthorizeRequestModel = require('../models/AuthorizeRequest');
+const AuthorizeRequestModel = require('../models/authorizeRequest');
 const randomRange = require('../helpers/randomRange');
 
 class AuthorizeRequest {
