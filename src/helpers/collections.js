@@ -37,7 +37,7 @@ class CollectionBase {
 		let parsedId = id;
 		try {
 			if (type(id) == 'String')
-				parsedId = mongo.ObjectID(id);
+				parsedId = mongo.ObjectId(id);
 		}
 		catch(e) {
 			return null;
@@ -69,7 +69,7 @@ class CollectionBase {
 		let parsedId = id;
 		try {
 			if (type(id) == 'String')
-				parsedId = mongo.ObjectID(id);
+				parsedId = mongo.ObjectId(id);
 		}
 		catch(e) {
 			return null;
