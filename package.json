@@ -28,7 +28,7 @@
     "rimraf": "^2.6.1"
   },
   "devDependencies": {
-    "eslint": "^3.16.1",
+    "eslint": "^3.18.0",
     "eslint-config-standard": "^7.0.0",
     "eslint-plugin-node": "^4.1.0",
     "eslint-plugin-promise": "^3.5.0",
