@@ -3,7 +3,7 @@
 const assert = require('assert');
 const config = require('../../built/helpers/loadConfig')();
 const route = require('../../built/routes/account');
-const DB = require('../../built/helpers/DB');
+const DB = require('../../built/helpers/db');
 
 describe('Account API', () => {
 	let db;

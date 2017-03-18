@@ -6,7 +6,7 @@ const routeAccount = require('../../built/routes/account');
 const routeApp = require('../../built/routes/applications');
 const routeAppId = require('../../built/routes/applications/id');
 const routeAppIdApplicationKey = require('../../built/routes/applications/id/application_key');
-const DB = require('../../built/helpers/DB');
+const DB = require('../../built/helpers/db');
 
 describe('Applications API', () => {
 	describe('/applications', () => {

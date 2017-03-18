@@ -2,13 +2,13 @@
 
 const assert = require('assert');
 const config = require('../../built/helpers/loadConfig')();
-const AuthorizeRequestModel = require('../../built/models/AuthorizeRequest');
-const ApplicationAccessModel = require('../../built/models/ApplicationAccess');
+const AuthorizeRequestModel = require('../../built/models/authorizeRequest');
+const ApplicationAccessModel = require('../../built/models/applicationAccess');
 const route = require('../../built/routes/ice_auth');
 const routeVerificationCode = require('../../built/routes/ice_auth/verification_code');
 const routeTargetUser = require('../../built/routes/ice_auth/target_user');
 const routeAccessKey = require('../../built/routes/ice_auth/access_key');
-const DB = require('../../built/helpers/DB');
+const DB = require('../../built/helpers/db');
 
 describe('IceAuth API', () => {
 	describe('/ice_auth', () => {
