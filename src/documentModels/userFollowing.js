@@ -1,6 +1,6 @@
 'use strict';
 
-// const UserFollowingModel = require('../models/userFollowing').UserFollowingModel;
+// const UserFollowingModel = require('../models/UserFollowing');
 
 class UserFollowing {
 	constructor(document, db, config) {
@@ -30,4 +30,4 @@ class UserFollowing {
 		this.document = (await this.db.userFollowings.findIdAsync(this.document._id)).document;
 	}
 }
-exports.UserFollowing = UserFollowing;
+module.exports = UserFollowing;

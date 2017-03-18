@@ -1,6 +1,6 @@
 'use strict';
 
-const ApplicationModel = require('../models/application').ApplicationModel;
+const ApplicationModel = require('../models/Application');
 const randomRange = require('../helpers/randomRange');
 
 class Application {
@@ -10,7 +10,7 @@ class Application {
 
 		this.document = document;
 		this.db = db;
-		this.applicationModel = ApplicationModel(db, config);
+		this.applicationModel = new ApplicationModel(db, config);
 	}
 
 	hasPermission(permissionName) {
@@ -21,6 +21,7 @@ class Application {
 		const keyCode = randomRange(1, 99999);
 		await this.db.applications.updateIdAsync(this.document._id.toString(), {keyCode: keyCode});
 		const app = await this.db.applications.findIdAsync(this.document._id.toString());
+		
 		return this.applicationModel.buildKey(app.document._id, app.document.creatorId, app.document.keyCode);
 	}
 
@@ -44,7 +45,7 @@ class Application {
 
 	// 最新の情報を取得して同期する
 	async fetchAsync() {
-		this.document = (await db.applications.findIdAsync(this.document._id)).document;
+		this.document = (await this.db.applications.findIdAsync(this.document._id)).document;
 	}
 }
-exports.Application = Application;
+module.exports = Application;

@@ -1,6 +1,6 @@
 'use strict';
 
-const ApplicationAccessModel = require('../models/applicationAccess').ApplicationAccessModel;
+const ApplicationAccessModel = require('../models/ApplicationAccess');
 const randomRange = require('../helpers/randomRange');
 
 class ApplicationAccess {
@@ -10,7 +10,7 @@ class ApplicationAccess {
 
 		this.document = document;
 		this.db = db;
-		this.applicationAccessModel = ApplicationAccessModel(db, config);
+		this.applicationAccessModel = new ApplicationAccessModel(db, config);
 	}
 
 	async generateAccessKeyAsync() {
@@ -52,4 +52,4 @@ class ApplicationAccess {
 		this.document = (await this.db.applicationAccesses.findIdAsync(this.document._id)).document;
 	}
 }
-exports.ApplicationAccess = ApplicationAccess;
+module.exports = ApplicationAccess;

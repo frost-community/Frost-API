@@ -5,8 +5,10 @@ const bodyParser = require('body-parser');
 const express = require('express');
 const loadConfig = require('./helpers/loadConfig');
 const sanitize = require('mongo-sanitize');
+const DB = require('./helpers/DB');
+const DirectoryRouter = require('./helpers/DirectoryRouter');
+
 const questionResult = (ans) => (ans.toLowerCase()).indexOf('y') === 0;
-const DB = require('./helpers/db').DB;
 
 module.exports = async () => {
 	try {
@@ -30,7 +32,7 @@ module.exports = async () => {
 			const db = new DB(config);
 			await db.connectAsync();
 
-			const directoryRouter = require('./helpers/directoryRouter')(app, db, config);
+			const directoryRouter = new DirectoryRouter(app, db, config);
 
 			app.use((req, res, next) => {
 				req.body = sanitize(req.body);
@@ -38,9 +40,9 @@ module.exports = async () => {
 				next();
 			});
 
-			const checkParams = (await require('./helpers/middlewares/checkParams')(directoryRouter, db, config)).execute;
-			const checkHeaders = (await require('./helpers/middlewares/checkHeaders')(directoryRouter, db, config)).execute;
-			const checkPermission = (await require('./helpers/middlewares/checkPermission')(directoryRouter, db, config)).execute;
+			const checkParams = require('./helpers/middlewares/checkParams')(directoryRouter, db, config).execute;
+			const checkHeaders = require('./helpers/middlewares/checkHeaders')(directoryRouter, db, config).execute;
+			const checkPermission = require('./helpers/middlewares/checkPermission')(directoryRouter, db, config).execute;
 
 			directoryRouter.addRoutes(require('./routes')(), [checkPermission, checkHeaders, checkParams]);
 
@@ -55,6 +57,7 @@ module.exports = async () => {
 		}
 	}
 	catch(e) {
-		console.log(`Server Error: ${e}`);
+		console.log(`Server Error: ${e.stack}`);
+		console.log();
 	}
 };

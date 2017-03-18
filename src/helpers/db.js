@@ -46,4 +46,4 @@ class DB {
 		return new UserFollowings(this, this._config);
 	}
 }
-exports.DB = DB;
+module.exports = DB;

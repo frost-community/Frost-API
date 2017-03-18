@@ -110,11 +110,11 @@ class DirectoryRouter {
 	 * @return {Object} ルート情報
 	 */
 	findRoute(method, path) {
-		for (const route of routes)
+		for (const route of this.routes)
 			if (method.toLowerCase() === route.method && path === route.path)
 				return route;
 
 		return null;
 	}
 }
-exports.DirectoryRouter = DirectoryRouter;
+module.exports = DirectoryRouter;

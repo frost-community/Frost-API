@@ -4,12 +4,12 @@ const type = require('./type');
 const mongo = require('mongodb');
 
 class CollectionBase {
-	constructor(collectionName, targetDocumentModel, db, config) {
-		if (collectionName == null || targetDocumentModel == null)
+	constructor(collectionName, documentModelName, db, config) {
+		if (collectionName == null || documentModelName == null || db == null || config == null)
 			throw new Error('missing arguments');
 
 		this.collectionName = collectionName;
-		this.targetDocumentModel = targetDocumentModel;
+		this.documentModelName = documentModelName;
 		this.db = db;
 		this._config = config;
 	}
@@ -17,7 +17,9 @@ class CollectionBase {
 	async createAsync(data) {
 		const result = await this.db.dbProvider.createAsync(this.collectionName, data);
 
-		return this.targetDocumentModel(result.ops[0], this.db, this._config);
+		const hoge = require(this.documentModelName);
+
+		return new hoge(result.ops[0], this.db, this._config);
 	}
 
 	async findAsync(query) {
@@ -26,7 +28,9 @@ class CollectionBase {
 		if (document == null)
 			return null;
 
-		return this.targetDocumentModel(document, this.db, this._config);
+		const hoge = require(this.documentModelName);
+
+		return new hoge(document, this.db, this._config);
 	}
 
 	async findIdAsync(id) {
@@ -49,8 +53,10 @@ class CollectionBase {
 			return null;
 
 		const res = [];
-		for (const document of documents)
-			res.push(this.targetDocumentModel(document, this.db, this._config));
+		for (const document of documents) {
+			const hoge = require(this.documentModelName);
+			res.push(new hoge(document, this.db, this._config));
+		}
 
 		return res;
 	}
@@ -80,42 +86,42 @@ exports.CollectionBase = CollectionBase;
 
 class Applications extends CollectionBase {
 	constructor(db, config) {
-		super('applications', require('../documentModels/application'), db, config);
+		super('applications', '../documentModels/Application', db, config);
 	}
 }
 exports.Applications = Applications;
 
 class ApplicationAccesses extends CollectionBase {
 	constructor(db, config) {
-		super('applicationAccesses', require('../documentModels/applicationAccess'), db, config);
+		super('applicationAccesses', '../documentModels/ApplicationAccess', db, config);
 	}
 }
 exports.ApplicationAccesses = ApplicationAccesses;
 
 class AuthorizeRequests extends CollectionBase {
 	constructor(db, config) {
-		super('authorizeRequests', require('../documentModels/authorizeRequest'), db, config);
+		super('authorizeRequests', '../documentModels/AuthorizeRequest', db, config);
 	}
 }
 exports.AuthorizeRequests = AuthorizeRequests;
 
 class Posts extends CollectionBase {
 	constructor(db, config) {
-		super('posts', require('../documentModels/post'), db, config);
+		super('posts', '../documentModels/Post', db, config);
 	}
 }
 exports.Posts = Posts;
 
 class Users extends CollectionBase {
 	constructor(db, config) {
-		super('users', require('../documentModels/user'), db, config);
+		super('users', '../documentModels/User', db, config);
 	}
 }
 exports.Users = Users;
 
 class UserFollowings extends CollectionBase {
 	constructor(db, config) {
-		super('userFollowings', require('../documentModels/userFollowing'), db, config);
+		super('userFollowings', '../documentModels/UserFollowing', db, config);
 	}
 }
 exports.UserFollowings = UserFollowings;

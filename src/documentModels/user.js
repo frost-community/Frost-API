@@ -1,6 +1,6 @@
 'use strict';
 
-// const UserModel = require('../models/user').UserModel;
+// const UserModel = require('../models/User');
 
 class User {
 	constructor(document, db, config) {
@@ -33,4 +33,4 @@ class User {
 		this.document = (await this.db.users.findIdAsync(this.document._id)).document;
 	}
 }
-exports.User = User;
+module.exports = User;

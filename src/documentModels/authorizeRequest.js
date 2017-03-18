@@ -1,6 +1,6 @@
 'use strict';
 
-const AuthorizeRequestModel = require('../models/authorizeRequest').AuthorizeRequestModel;
+const AuthorizeRequestModel = require('../models/AuthorizeRequest');
 const randomRange = require('../helpers/randomRange');
 
 class AuthorizeRequest {
@@ -10,10 +10,10 @@ class AuthorizeRequest {
 
 		this.document = document;
 		this.db = db;
-		this.authorizeRequestModel = AuthorizeRequestModel(db, config);
+		this.authorizeRequestModel = new AuthorizeRequestModel(db, config);
 	}
 
-	getVerificationCodeAsync = async () => {
+	async getVerificationCodeAsync() {
 		let verificationCode = '';
 		for (let i = 0; i < 6; i++)
 			verificationCode += String(randomRange(0, 9));
@@ -23,7 +23,7 @@ class AuthorizeRequest {
 		return verificationCode;
 	}
 
-	getRequestKeyAsync = async () => {
+	async getRequestKeyAsync() {
 		if (this.document.keyCode == null) {
 			// 生成が必要な場合
 			const keyCode = randomRange(1, 99999);
@@ -34,7 +34,7 @@ class AuthorizeRequest {
 		return this.authorizeRequestModel.buildKey(this.document._id, this.document.applicationId, this.document.keyCode);
 	}
 
-	serialize = () => {
+	serialize() {
 		const res = {};
 		Object.assign(res, this.document);
 
@@ -46,8 +46,8 @@ class AuthorizeRequest {
 	}
 
 	// 最新の情報を取得して同期する
-	fetchAsync = async () => {
+	async fetchAsync() {
 		this.document = (await this.db.authorizeRequests.findIdAsync(this.document._id)).document;
 	}
 }
-exports.AuthorizeRequest = AuthorizeRequest;
+module.exports = AuthorizeRequest;

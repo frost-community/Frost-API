@@ -1,6 +1,6 @@
 'use strict';
 
-// const PostModel = require('../models/post').PostModel;
+// const PostModel = require('../models/Post');
 
 class Post {
 	constructor(document, db, config) {
@@ -30,4 +30,4 @@ class Post {
 		this.document = (await this.db.posts.findIdAsync(this.document._id)).document;
 	}
 }
-exports.Post = Post;
+module.exports = Post;
