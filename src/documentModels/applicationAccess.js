@@ -1,7 +1,8 @@
 'use strict';
 
-const ApplicationAccessModel = require('../models/applicationAccess');
 const randomRange = require('../helpers/randomRange');
+const crypto = require('crypto');
+const mongo = require('mongodb');
 
 class ApplicationAccess {
 	constructor(document, db, config) {
@@ -10,7 +11,7 @@ class ApplicationAccess {
 
 		this.document = document;
 		this.db = db;
-		this.applicationAccessModel = new ApplicationAccessModel(db, config);
+		this.config = config;
 	}
 
 	async generateAccessKeyAsync() {
@@ -29,11 +30,11 @@ class ApplicationAccess {
 
 		await this.db.applicationAccesses.updateAsync({_id: this.document._id}, {keyCode: keyCode});
 
-		return this.applicationAccessModel.buildKey(access.document.applicationId, access.document.userId, keyCode);
+		return ApplicationAccess.buildKey(access.document.applicationId, access.document.userId, keyCode, this.db, this.config);
 	}
 
 	getAccessKey() {
-		return this.applicationAccessModel.buildKey(this.document.applicationId, this.document.userId, this.document.keyCode);
+		return ApplicationAccess.buildKey(this.document.applicationId, this.document.userId, this.document.keyCode, this.db, this.config);
 	}
 
 	serialize() {
@@ -50,6 +51,61 @@ class ApplicationAccess {
 	// 最新の情報を取得して同期する
 	async fetchAsync() {
 		this.document = (await this.db.applicationAccesses.findIdAsync(this.document._id)).document;
+	}
+
+	// -- static methods
+
+	static buildKeyHash(applicationId, userId, keyCode, db, config) {
+		if (applicationId == null || userId == null || keyCode == null)
+			throw new Error('missing arguments');
+
+		const sha256 = crypto.createHash('sha256');
+		sha256.update(`${config.api.secretToken.applicationAccess}/${applicationId}/${userId}/${keyCode}`);
+
+		return sha256.digest('hex');
+	}
+
+	static buildKey(applicationId, userId, keyCode, db, config) {
+		if (applicationId == null || userId == null || keyCode == null)
+			throw new Error('missing arguments');
+
+		return `${userId}-${ApplicationAccess.buildKeyHash(applicationId, userId, keyCode, db, config)}.${keyCode}`;
+	}
+
+	static splitKey(key, db, config) {
+		if (key == null)
+			throw new Error('missing arguments');
+
+		const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
+
+		if (reg == null)
+			throw new Error('falid to split key');
+
+		return {userId: mongo.ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
+	}
+
+	static async verifyKeyAsync(key, db, config) {
+		if (key == null)
+			throw new Error('missing arguments');
+
+		let elements;
+
+		try {
+			elements = ApplicationAccess.splitKey(key, db, config);
+		}
+		catch (err) {
+			return false;
+		}
+
+		const applicationAccess = await db.applicationAccesses.findAsync({userId: elements.userId, keyCode: elements.keyCode});
+
+		if (applicationAccess == null)
+			return false;
+
+		const correctKeyHash = ApplicationAccess.buildKeyHash(applicationAccess.document.applicationId, elements.userId, elements.keyCode, db, config);
+		const isPassed = elements.hash === correctKeyHash && elements.keyCode === applicationAccess.document.keyCode;
+
+		return isPassed;
 	}
 }
 module.exports = ApplicationAccess;

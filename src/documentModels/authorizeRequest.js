@@ -1,7 +1,8 @@
 'use strict';
 
-const AuthorizeRequestModel = require('../models/authorizeRequest');
 const randomRange = require('../helpers/randomRange');
+const crypto = require('crypto');
+const mongo = require('mongodb');
 
 class AuthorizeRequest {
 	constructor(document, db, config) {
@@ -10,7 +11,7 @@ class AuthorizeRequest {
 
 		this.document = document;
 		this.db = db;
-		this.authorizeRequestModel = new AuthorizeRequestModel(db, config);
+		this.config = config;
 	}
 
 	async getVerificationCodeAsync() {
@@ -31,7 +32,7 @@ class AuthorizeRequest {
 			await this.fetchAsync();
 		}
 
-		return this.authorizeRequestModel.buildKey(this.document._id, this.document.applicationId, this.document.keyCode);
+		return AuthorizeRequest.buildKey(this.document._id, this.document.applicationId, this.document.keyCode, this.db, this.config);
 	}
 
 	serialize() {
@@ -48,6 +49,63 @@ class AuthorizeRequest {
 	// 最新の情報を取得して同期する
 	async fetchAsync() {
 		this.document = (await this.db.authorizeRequests.findIdAsync(this.document._id)).document;
+	}
+
+	// static methods
+
+	static buildKeyHash(authorizeRequestId, applicationId, keyCode, db, config) {
+		if (authorizeRequestId == null || applicationId == null || keyCode == null)
+			throw new Error('missing arguments');
+
+		const sha256 = crypto.createHash('sha256');
+		sha256.update(`${config.api.secretToken.authorizeRequest}/${applicationId}/${authorizeRequestId}/${keyCode}`);
+
+		return sha256.digest('hex');
+	}
+
+	static buildKey(authorizeRequestId, applicationId, keyCode, db, config) {
+		if (authorizeRequestId == null || applicationId == null || keyCode == null)
+			throw new Error('missing arguments');
+
+		return `${authorizeRequestId}-${AuthorizeRequest.buildKeyHash(authorizeRequestId, applicationId, keyCode, db, config)}.${keyCode}`;
+	}
+
+	static splitKey(key, db, config) {
+		if (key == null)
+			throw new Error('missing arguments');
+
+		const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
+
+		if (reg == null)
+			throw new Error('falid to split key');
+
+		return {authorizeRequestId: mongo.ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
+	}
+
+	static async verifyKeyAsync(key, db, config) {
+		if (key == null)
+			throw new Error('missing arguments');
+
+		let elements;
+
+		try {
+			elements = AuthorizeRequest.splitKey(key, db, config);
+		}
+		catch (err) {
+			return false;
+		}
+
+		const authorizeRequest = await db.authorizeRequests.findIdAsync(elements.authorizeRequestId);
+
+		if (authorizeRequest == null)
+			return false;
+
+		const correctKeyHash = AuthorizeRequest.buildKeyHash(elements.authorizeRequestId, authorizeRequest.document.applicationId, elements.keyCode, db, config);
+		// const createdAt = authorizeRequest._id.getUnixtime();
+		const isAvailabilityPeriod = true; // Math.abs(Date.now() - createdAt) < config.api.request_key_expire_sec;
+		const isPassed = isAvailabilityPeriod && elements.hash === correctKeyHash && elements.keyCode === authorizeRequest.document.keyCode;
+
+		return isPassed;
 	}
 }
 module.exports = AuthorizeRequest;

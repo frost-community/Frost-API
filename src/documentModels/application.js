@@ -1,7 +1,8 @@
 'use strict';
 
-const ApplicationModel = require('../models/application');
 const randomRange = require('../helpers/randomRange');
+const crypto = require('crypto');
+const mongo = require('mongodb');
 
 class Application {
 	constructor(document, db, config) {
@@ -10,7 +11,7 @@ class Application {
 
 		this.document = document;
 		this.db = db;
-		this.applicationModel = new ApplicationModel(db, config);
+		this.config = config;
 	}
 
 	hasPermission(permissionName) {
@@ -22,11 +23,11 @@ class Application {
 		await this.db.applications.updateIdAsync(this.document._id.toString(), {keyCode: keyCode});
 		const app = await this.db.applications.findIdAsync(this.document._id.toString());
 		
-		return this.applicationModel.buildKey(app.document._id, app.document.creatorId, app.document.keyCode);
+		return Application.buildKey(app.document._id, app.document.creatorId, app.document.keyCode, this.db, this.config);
 	}
 
 	getApplicationKey() {
-		return this.applicationModel.buildKey(this.document._id, this.document.creatorId, this.document.keyCode);
+		return Application.buildKey(this.document._id, this.document.creatorId, this.document.keyCode, this.db, this.config);
 	}
 
 	serialize() {
@@ -46,6 +47,67 @@ class Application {
 	// 最新の情報を取得して同期する
 	async fetchAsync() {
 		this.document = (await this.db.applications.findIdAsync(this.document._id)).document;
+	}
+
+	// -- static methods
+
+	static analyzePermissions(db, config) {
+		// TODO
+
+		return true;
+	}
+
+	static buildKeyHash(applicationId, creatorId, keyCode, db, config) {
+		if (applicationId == null || creatorId == null || keyCode == null)
+			throw new Error('missing arguments');
+
+		const sha256 = crypto.createHash('sha256');
+		sha256.update(`${config.api.secretToken.application}/${creatorId}/${applicationId}/${keyCode}`);
+
+		return sha256.digest('hex');
+	}
+
+	static buildKey(applicationId, creatorId, keyCode, db, config) {
+		if (applicationId == null || creatorId == null || keyCode == null)
+			throw new Error('missing arguments');
+
+		return `${applicationId}-${Application.buildKeyHash(applicationId, creatorId, keyCode, db, config)}.${keyCode}`;
+	}
+
+	static splitKey(key, db, config) {
+		if (key == null)
+			throw new Error('missing arguments');
+
+		const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
+
+		if (reg == null)
+			throw new Error('falid to split key');
+
+		return {applicationId: mongo.ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
+	}
+
+	static async verifyKeyAsync(key, db, config) {
+		if (key == null)
+			throw new Error('missing arguments');
+
+		let elements;
+
+		try {
+			elements = Application.splitKey(key, db, config);
+		}
+		catch (err) {
+			return false;
+		}
+
+		const application = await db.applications.findAsync({_id: elements.applicationId, keyCode: elements.keyCode});
+
+		if (application == null)
+			return false;
+
+		const correctKeyHash = Application.buildKeyHash(elements.applicationId, application.document.creatorId, elements.keyCode, db, config);
+		const isPassed = elements.hash === correctKeyHash && elements.keyCode === application.document.keyCode;
+
+		return isPassed;
 	}
 }
 module.exports = Application;
