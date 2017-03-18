@@ -3,7 +3,7 @@
 const applicationModelAsync = require('../../models/application');
 const applicationAccessModelAsync = require('../../models/applicationAccess');
 
-module.exports = async (router, db, config) => {
+module.exports = async (directoryRouter, db, config) => {
 	const instance = {};
 
 	const applicationModel = await applicationModelAsync(db, config);
@@ -12,7 +12,7 @@ module.exports = async (router, db, config) => {
 	instance.execute = (request, response, next) => {
 		(async () => {
 			try {
-				const route = router.findRoute(request.method, request.route.path);
+				const route = directoryRouter.findRoute(request.method, request.route.path);
 				const extensions = route.extensions;
 
 				if ('permissions' in extensions && extensions.permissions.length !== 0) {

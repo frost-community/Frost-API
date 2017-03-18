@@ -30,7 +30,7 @@ module.exports = async () => {
 			const db = new DB(config);
 			await db.connectAsync();
 
-			const router = require('./helpers/router')(app, db, config);
+			const directoryRouter = require('./helpers/directoryRouter')(app, db, config);
 
 			app.use((req, res, next) => {
 				req.body = sanitize(req.body);
@@ -38,11 +38,11 @@ module.exports = async () => {
 				next();
 			});
 
-			const checkParams = (await require('./helpers/middlewares/checkParams')(router, db, config)).execute;
-			const checkHeaders = (await require('./helpers/middlewares/checkHeaders')(router, db, config)).execute;
-			const checkPermission = (await require('./helpers/middlewares/checkPermission')(router, db, config)).execute;
+			const checkParams = (await require('./helpers/middlewares/checkParams')(directoryRouter, db, config)).execute;
+			const checkHeaders = (await require('./helpers/middlewares/checkHeaders')(directoryRouter, db, config)).execute;
+			const checkPermission = (await require('./helpers/middlewares/checkPermission')(directoryRouter, db, config)).execute;
 
-			router.addRoutes(require('./routes')(), [checkPermission, checkHeaders, checkParams]);
+			directoryRouter.addRoutes(require('./routes')(), [checkPermission, checkHeaders, checkParams]);
 
 			app.use((req, res) => {
 				require('./helpers/responseHelper')(res);

@@ -2,12 +2,12 @@
 
 const type = require('../type');
 
-module.exports = async (router, db, config) => {
+module.exports = async (directoryRouter, db, config) => {
 	const instance = {};
 
 	instance.execute = (request, response, next) => {
 		try {
-			const extensions = router.findRoute(request.method.toLowerCase(), request.route.path).extensions;
+			const extensions = directoryRouter.findRoute(request.method.toLowerCase(), request.route.path).extensions;
 
 			if ('params' in extensions && extensions.params.length !== 0) {
 				for(const param of extensions.params) {

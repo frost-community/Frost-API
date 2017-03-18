@@ -1,13 +1,11 @@
 'use strict';
 
-const type = require('../type');
-
-module.exports = async (router, db, config) => {
+module.exports = async (directoryRouter, db, config) => {
 	const instance = {};
 
 	instance.execute = (request, response, next) => {
 		try {
-			const extensions = router.findRoute(request.method.toLowerCase(), request.route.path).extensions;
+			const extensions = directoryRouter.findRoute(request.method.toLowerCase(), request.route.path).extensions;
 
 			if ('headers' in extensions && extensions.headers.length !== 0) {
 				for(const header of extensions.headers) {
