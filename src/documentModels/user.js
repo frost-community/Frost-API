@@ -1,21 +1,22 @@
 'use strict';
 
-// const userModelAsync = require('../models/user');
+// const UserModel = require('../models/user').UserModel;
 
-module.exports = async (document, db, config) => {
-	const instance = {};
+class User {
+	constructor(document, db, config) {
+		if (document == null || db == null || config == null)
+			throw new Error('missing arguments');
 
-	if (document == null || db == null || config == null)
-		throw new Error('missing arguments');
-
-	instance.document = document;
-	//const userModel = await userModelAsync(db, config);
+		this.document = document;
+		this.db = db;
+		// this.userModel = UserModel(db, config);
+	}
 
 	// TODO: 各種操作用メソッドの追加
 
-	instance.serialize = () => {
+	serialize() {
 		const res = {};
-		Object.assign(res, instance.document);
+		Object.assign(res, this.document);
 
 		// id
 		res.id = res._id.toString();
@@ -25,12 +26,11 @@ module.exports = async (document, db, config) => {
 		delete res.passwordHash;
 
 		return res;
-	};
+	}
 
 	// 最新の情報を取得して同期する
-	instance.sync = async () => {
-		instance.document = (await db.users.findIdAsync(instance.document._id)).document;
-	};
-
-	return instance;
-};
+	async fetchAsync() {
+		this.document = (await this.db.users.findIdAsync(this.document._id)).document;
+	}
+}
+exports.User = User;

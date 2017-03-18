@@ -1,40 +1,36 @@
 'use strict';
 
+const ApplicationModel = require('../models/application').ApplicationModel;
 const randomRange = require('../helpers/randomRange');
-const applicationModelAsync = require('../models/application');
 
-module.exports = async (document, db, config) => {
-	const instance = {};
+class Application {
+	constructor(document, db, config) {
+		if (document == null || db == null || config == null)
+			throw new Error('missing arguments');
 
-	if (document == null || db == null || config == null)
-		throw new Error('missing arguments');
+		this.document = document;
+		this.db = db;
+		this.applicationModel = ApplicationModel(db, config);
+	}
 
-	instance.document = document;
-	const applicationModel = await applicationModelAsync(db, config);
+	hasPermission(permissionName) {
+		return this.document.permissions.indexOf(permissionName) != -1;
+	}
 
-	instance.hasPermission = (permissionName) => {
-		return instance.document.permissions.indexOf(permissionName) != -1;
-	};
-
-	instance.generateApplicationKeyAsync = async () => {
+	async generateApplicationKeyAsync() {
 		const keyCode = randomRange(1, 99999);
-		await db.applications.updateIdAsync(instance.document._id.toString(), {keyCode: keyCode});
-		const app = await db.applications.findIdAsync(instance.document._id.toString());
-		return applicationModel.buildKey(app.document._id, app.document.creatorId, app.document.keyCode);
-	};
+		await this.db.applications.updateIdAsync(this.document._id.toString(), {keyCode: keyCode});
+		const app = await this.db.applications.findIdAsync(this.document._id.toString());
+		return this.applicationModel.buildKey(app.document._id, app.document.creatorId, app.document.keyCode);
+	}
 
-	instance.getApplicationKeyAsync = async () => {
-		const app = await db.applications.findIdAsync(instance.document._id.toString());
+	getApplicationKey() {
+		return this.applicationModel.buildKey(this.document._id, this.document.creatorId, this.document.keyCode);
+	}
 
-		if (app == null)
-			throw new Error('application not found');
-
-		return applicationModel.buildKey(app.document._id, app.document.creatorId, app.document.keyCode);
-	};
-
-	instance.serialize = () => {
+	serialize() {
 		const res = {};
-		Object.assign(res, instance.document);
+		Object.assign(res, this.document);
 
 		// id
 		res.id = res._id.toString();
@@ -44,12 +40,11 @@ module.exports = async (document, db, config) => {
 		res.creatorId = res.creatorId.toString();
 
 		return res;
-	};
+	}
 
 	// 最新の情報を取得して同期する
-	instance.sync = async () => {
-		instance.document = (await db.applications.findIdAsync(instance.document._id)).document;
-	};
-
-	return instance;
-};
+	async fetchAsync() {
+		this.document = (await db.applications.findIdAsync(this.document._id)).document;
+	}
+}
+exports.Application = Application;

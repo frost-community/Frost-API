@@ -1,53 +1,53 @@
 'use strict';
 
+const AuthorizeRequestModel = require('../models/authorizeRequest').AuthorizeRequestModel;
 const randomRange = require('../helpers/randomRange');
-const authorizeRequestModelAsync = require('../models/authorizeRequest');
 
-module.exports = async (document, db, config) => {
-	const instance = {};
+class AuthorizeRequest {
+	constructor(document, db, config) {
+		if (document == null || db == null || config == null)
+			throw new Error('missing arguments');
 
-	if (document == null || db == null || config == null)
-		throw new Error('missing arguments');
+		this.document = document;
+		this.db = db;
+		this.authorizeRequestModel = AuthorizeRequestModel(db, config);
+	}
 
-	instance.document = document;
-	const authorizeRequestModel = await authorizeRequestModelAsync(db, config);
-
-	instance.getVerificationCodeAsync = async () => {
+	getVerificationCodeAsync = async () => {
 		let verificationCode = '';
 		for (let i = 0; i < 6; i++)
 			verificationCode += String(randomRange(0, 9));
 
-		await db.authorizeRequests.updateAsync({_id: instance.document._id}, {verificationCode: verificationCode});
+		await this.db.authorizeRequests.updateAsync({_id: this.document._id}, {verificationCode: verificationCode});
 
 		return verificationCode;
-	};
+	}
 
-	instance.getRequestKeyAsync = async () => {
-		if (instance.document.keyCode == null) {
+	getRequestKeyAsync = async () => {
+		if (this.document.keyCode == null) {
 			// 生成が必要な場合
 			const keyCode = randomRange(1, 99999);
-			const cmdResult = await db.authorizeRequests.updateIdAsync(instance.document._id, {keyCode: keyCode});
-			await instance.sync();
+			const cmdResult = await this.db.authorizeRequests.updateIdAsync(this.document._id, {keyCode: keyCode});
+			await this.fetchAsync();
 		}
 
-		return authorizeRequestModel.buildKey(instance.document._id, instance.document.applicationId, instance.document.keyCode);
-	};
+		return this.authorizeRequestModel.buildKey(this.document._id, this.document.applicationId, this.document.keyCode);
+	}
 
-	instance.serialize = () => {
+	serialize = () => {
 		const res = {};
-		Object.assign(res, instance.document);
+		Object.assign(res, this.document);
 
 		// id
 		res.id = res._id.toString();
 		delete res._id;
 
 		return res;
-	};
+	}
 
 	// 最新の情報を取得して同期する
-	instance.sync = async () => {
-		instance.document = (await db.authorizeRequests.findIdAsync(instance.document._id)).document;
-	};
-
-	return instance;
-};
+	fetchAsync = async () => {
+		this.document = (await this.db.authorizeRequests.findIdAsync(this.document._id)).document;
+	}
+}
+exports.AuthorizeRequest = AuthorizeRequest;

@@ -1,33 +1,33 @@
 'use strict';
 
-// const userFollowingModelAsync = require('../models/userFollowing');
+// const UserFollowingModel = require('../models/userFollowing').UserFollowingModel;
 
-module.exports = async (document, db, config) => {
-	const instance = {};
+class UserFollowing {
+	constructor(document, db, config) {
+		if (document == null || db == null || config == null)
+			throw new Error('missing arguments');
 
-	if (document == null || db == null || config == null)
-		throw new Error('missing arguments');
-
-	instance.document = document;
-	//const userFollowingModel = await userFollowingModelAsync(db, config);
+		this.document = document;
+		this.db = db;
+		// this.userFollowingModel = UserFollowingModel(db, config);
+	}
 
 	// TODO: 各種操作用メソッドの追加
 
-	instance.serialize = () => {
+	serialize() {
 		const res = {};
-		Object.assign(res, instance.document);
+		Object.assign(res, this.document);
 
 		// id
 		res.id = res._id.toString();
 		delete res._id;
 
 		return res;
-	};
+	}
 
 	// 最新の情報を取得して同期する
-	instance.sync = async () => {
-		instance.document = (await db.userFollowings.findIdAsync(instance.document._id)).document;
-	};
-
-	return instance;
-};
+	async fetchAsync() {
+		this.document = (await this.db.userFollowings.findIdAsync(this.document._id)).document;
+	}
+}
+exports.UserFollowing = UserFollowing;
