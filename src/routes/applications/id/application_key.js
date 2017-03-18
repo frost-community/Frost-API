@@ -17,7 +17,7 @@ exports.get = async (request, extensions, db, config) => {
 
 	const key = application.getApplicationKey();
 
-	return new ApiResult(200, 'success', {'application_key': key});
+	return new ApiResult(200, null, {'application_key': key});
 };
 
 exports.post = async (request, extensions, db, config) => {
@@ -32,5 +32,5 @@ exports.post = async (request, extensions, db, config) => {
 
 	const key = await application.generateApplicationKeyAsync();
 
-	return new ApiResult(200, 'success', {'application_key': key});
+	return new ApiResult(200, null, {'application_key': key});
 };

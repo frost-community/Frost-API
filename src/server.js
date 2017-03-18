@@ -7,9 +7,9 @@ const loadConfig = require('./helpers/loadConfig');
 const sanitize = require('mongo-sanitize');
 const Db = require('./helpers/db');
 const DirectoryRouter = require('./helpers/directoryRouter');
-const CheckParams = require('./helpers/middlewares/checkParams');
-const CheckHeaders = require('./helpers/middlewares/checkHeaders');
-const CheckPermission = require('./helpers/middlewares/checkPermission');
+const checkParams = require('./helpers/middlewares/checkParams');
+const checkHeaders = require('./helpers/middlewares/checkHeaders');
+const checkPermission = require('./helpers/middlewares/checkPermission');
 
 const questionResult = (ans) => (ans.toLowerCase()).indexOf('y') === 0;
 
@@ -38,14 +38,17 @@ module.exports = async () => {
 			const directoryRouter = new DirectoryRouter(app, db, config);
 
 			app.use((req, res, next) => {
+				req.directoryRouter = directoryRouter;
+				req.db = db;
+				req.config = config;
+				next();
+			});
+
+			app.use((req, res, next) => {
 				req.body = sanitize(req.body);
 				req.params = sanitize(req.params);
 				next();
 			});
-
-			const checkParams = new CheckParams(directoryRouter, db, config).execute;
-			const checkHeaders = new CheckHeaders(directoryRouter, db, config).execute;
-			const checkPermission = new CheckPermission(directoryRouter, db, config).execute;
 
 			directoryRouter.addRoutes(require('./routes')(), [checkPermission, checkHeaders, checkParams]);
 

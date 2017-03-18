@@ -12,5 +12,5 @@ exports.get = async (request, extensions, db, config) => {
 	if (application.document.creatorId.toString() !== request.user._id.toString())
 		return new ApiResult(400, 'you do not own this application');
 
-	return new ApiResult(200, 'success', {application: application.serialize()});
+	return new ApiResult(200, null, {application: application.serialize()});
 };

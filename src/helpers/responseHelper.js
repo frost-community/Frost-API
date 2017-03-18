@@ -17,7 +17,7 @@ module.exports = response => {
 		if (apiResult.statusCode == null)
 			apiResult.statusCode = 200;
 
-		if (apiResult.message == null)
+		if (apiResult.message == null && apiResult.data == null)
 			apiResult.message = 'success';
 
 		const sendData = {};
@@ -40,7 +40,7 @@ module.exports = response => {
 		if (apiResult.statusCode == null)
 			apiResult.statusCode = 400;
 
-		if (apiResult.message == null)
+		if (apiResult.message == null && apiResult.data == null)
 			apiResult.message = 'failure';
 
 		const sendData = {};

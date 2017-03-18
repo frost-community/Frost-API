@@ -49,7 +49,7 @@ describe('Account API', () => {
 							}
 						}, null, db, config);
 
-						assert.equal(res.message, 'success');
+						assert.equal(res.message, null);
 
 						delete res.data.user.id;
 						assert.deepEqual(res.data, {

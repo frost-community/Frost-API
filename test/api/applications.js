@@ -59,7 +59,7 @@ describe('Applications API', () => {
 							permissions: []
 						}
 					}, null, db, config);
-					assert.equal(res.message, 'success');
+					assert.equal(res.message, null);
 					appA = res.data.application;
 
 					res = await routeApp.post({
@@ -70,7 +70,7 @@ describe('Applications API', () => {
 							permissions: []
 						}
 					}, null, db, config);
-					assert.equal(res.message, 'success');
+					assert.equal(res.message, null);
 					appB = res.data.application;
 
 					done();
@@ -109,7 +109,7 @@ describe('Applications API', () => {
 							}
 						}, null, db, config);
 
-						assert.equal(res.message, 'success');
+						assert.equal(res.message, null);
 
 						delete res.data.application.id;
 						assert.deepEqual(res.data, {
@@ -192,7 +192,7 @@ describe('Applications API', () => {
 								body: {}
 							}, null, db, config);
 
-							assert.equal(res.message, 'success');
+							assert.equal(res.message, null);
 
 							assert.deepEqual(res.data, {
 								application: {
@@ -260,7 +260,7 @@ describe('Applications API', () => {
 									user: userA,
 									params: {id: appA.id},
 								}, null, db, config);
-								assert.equal(res.message, 'success');
+								assert.equal(res.message, null);
 
 								done();
 							}
@@ -296,13 +296,13 @@ describe('Applications API', () => {
 									user: userA,
 									params: {id: appA.id},
 								}, null, db, config);
-								assert.equal(res.message, 'success');
+								assert.equal(res.message, null);
 
 								res = await routeAppIdApplicationKey.get({
 									user: userA,
 									params: {id: appA.id},
 								}, null, db, config);
-								assert.equal(res.message, 'success');
+								assert.equal(res.message, null);
 
 								done();
 							}
@@ -319,7 +319,7 @@ describe('Applications API', () => {
 									user: userB,
 									params: {id: appB.id},
 								}, null, db, config);
-								assert.equal(res.message, 'success');
+								assert.equal(res.message, null);
 
 								res = await routeAppIdApplicationKey.get({
 									user: userA,
