@@ -2,10 +2,10 @@
 
 const ApiResult = require('../../../helpers/apiResult');
 
-exports.get = async (request, extensions, db, config) => {
+exports.post = async (request, extensions, db, config) => {
 	return new ApiResult(501, 'not implemented');
 };
 
-exports.post = async (request, extensions, db, config) => {
+exports.del = async (request, extensions, db, config) => {
 	return new ApiResult(501, 'not implemented');
 };
