@@ -1,25 +1,19 @@
 'use strict';
 
-const DbProvider = require('./dbProvider');
-const collections = require('./collections');
-const Applications = collections.Applications;
-const ApplicationAccesses = collections.ApplicationAccesses;
-const AuthorizeRequests = collections.AuthorizeRequests;
-const Posts = collections.Posts;
-const Users = collections.Users;
-const UserFollowings = collections.UserFollowings;
+const Applications = require('../collections/applications');
+const ApplicationAccesses = require('../collections/applicationAccesses');
+const AuthorizeRequests = require('../collections/authorizeRequests');
+const Posts = require('../collections/posts');
+const Users = require('../collections/users');
+const UserFollowings = require('../collections/userFollowings');
 
 class Db {
-	constructor(config) {
-		if (config == null)
+	constructor(config, dbProvider) {
+		if (config == null || dbProvider == null)
 			throw new Error('missing arguments');
 
 		this._config = config;
-		this.dbProvider = null;
-	}
-
-	async connectAsync() {
-		this.dbProvider = await DbProvider.connectApidbAsync(this._config);
+		this.dbProvider = dbProvider;
 	}
 
 	get applications() {
