@@ -36,22 +36,16 @@ module.exports = (request, response, next) => {
 				const applicationId = Application.splitKey(applicationKey, request.db, request.config).applicationId;
 				const userId = ApplicationAccess.splitKey(accessKey, request.db, request.config).userId;
 
-				const application = (await request.db.applications.findIdAsync(applicationId));
-				request.application = application.document;
-				request.user = (await request.db.users.findIdAsync(userId)).document;
+				request.application = (await request.db.applications.findIdAsync(applicationId));
+				request.user = (await request.db.users.findIdAsync(userId));
 
-				for (const permission of extensions.permissions) {
-					if (!application.hasPermission(permission)) {
-						response.status(403).send({error: {message: 'you do not have any permissions'}});
-						return;
-					}
+				const hasPermissions = extensions.permissions.every(p => request.application.hasPermission(p));
+				if (!hasPermissions) {
+					response.status(403).send({error: {message: 'you do not have any permissions'}});
+					return;
 				}
-
-				next();
 			}
-			else {
-				next();
-			}
+			next();
 		}
 		catch(err) {
 			console.log(`checkPermission failed (${err})`);
