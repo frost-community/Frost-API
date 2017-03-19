@@ -49,9 +49,9 @@ class CollectionBase {
 			return null;
 
 		const res = [];
-		for (const document of documents) {
+		documents.forEach(document => {
 			res.push(new (require(this.documentModelName))(document, this.db, this._config));
-		}
+		});
 
 		return res;
 	}
@@ -77,46 +77,4 @@ class CollectionBase {
 		await this.db.dbProvider.removeAsync(this.collectionName, query);
 	}
 }
-exports.CollectionBase = CollectionBase;
-
-class Applications extends CollectionBase {
-	constructor(db, config) {
-		super('applications', '../documentModels/application', db, config);
-	}
-}
-exports.Applications = Applications;
-
-class ApplicationAccesses extends CollectionBase {
-	constructor(db, config) {
-		super('applicationAccesses', '../documentModels/applicationAccess', db, config);
-	}
-}
-exports.ApplicationAccesses = ApplicationAccesses;
-
-class AuthorizeRequests extends CollectionBase {
-	constructor(db, config) {
-		super('authorizeRequests', '../documentModels/authorizeRequest', db, config);
-	}
-}
-exports.AuthorizeRequests = AuthorizeRequests;
-
-class Posts extends CollectionBase {
-	constructor(db, config) {
-		super('posts', '../documentModels/post', db, config);
-	}
-}
-exports.Posts = Posts;
-
-class Users extends CollectionBase {
-	constructor(db, config) {
-		super('users', '../documentModels/user', db, config);
-	}
-}
-exports.Users = Users;
-
-class UserFollowings extends CollectionBase {
-	constructor(db, config) {
-		super('userFollowings', '../documentModels/userFollowing', db, config);
-	}
-}
-exports.UserFollowings = UserFollowings;
+module.exports = CollectionBase;
