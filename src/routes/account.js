@@ -4,7 +4,7 @@ const ApiResult = require('../helpers/apiResult');
 const crypto = require('crypto');
 const randomRange = require('../helpers/randomRange');
 
-exports.post = async (request, extensions, db, config) => {
+exports.post = async (request) => {
 	const screenName = request.body.screenName;
 	const password = request.body.password;
 	let name = request.body.name;
@@ -26,12 +26,12 @@ exports.post = async (request, extensions, db, config) => {
 	if (!/^[a-z0-9_]{4,15}$/.test(screenName) || /^(.)\1{3,}$/.test(screenName))
 		return new ApiResult(400, 'screenName is invalid format');
 
-	for (const invalidScreenName of config.api.invalidScreenNames) {
+	for (const invalidScreenName of request.config.api.invalidScreenNames) {
 		if (screenName === invalidScreenName)
 			return new ApiResult(400, 'screenName is invalid');
 	}
 
-	if (await db.users.findAsync({screenName: screenName}) != null)
+	if (await request.db.users.findAsync({screenName: screenName}) != null)
 		return new ApiResult(400, 'this screenName is already exists');
 
 	// password
@@ -49,7 +49,7 @@ exports.post = async (request, extensions, db, config) => {
 	let user;
 
 	try {
-		user = await db.users.createAsync({
+		user = await request.db.users.createAsync({
 			screenName: screenName,
 			passwordHash: hash,
 			name: name,

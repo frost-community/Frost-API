@@ -2,14 +2,14 @@
 
 const ApiResult = require('../../../helpers/apiResult');
 
-exports.get = async (request, extensions, db, config) => {
-	const application = await db.applications.findIdAsync(request.params.id);
+exports.get = async (request) => {
+	const application = await request.db.applications.findIdAsync(request.params.id);
 
 	if (application == null)
 		return new ApiResult(400, 'application is not found');
 
 	// 対象アプリケーションの所有者かどうか
-	if (application.document.creatorId.toString() !== request.user._id.toString())
+	if (application.document.creatorId.toString() !== request.user.document._id.toString())
 		return new ApiResult(400, 'you do not own this application');
 
 	if (application.document.keyCode == null)
@@ -20,14 +20,14 @@ exports.get = async (request, extensions, db, config) => {
 	return new ApiResult(200, {'application_key': key});
 };
 
-exports.post = async (request, extensions, db, config) => {
-	const application = await db.applications.findIdAsync(request.params.id);
+exports.post = async (request) => {
+	const application = await request.db.applications.findIdAsync(request.params.id);
 
 	if (application == null)
 		return new ApiResult(400, 'application is not found');
 
 	// 対象アプリケーションの所有者かどうか
-	if (application.document.creatorId.toString() !== request.user._id.toString())
+	if (application.document.creatorId.toString() !== request.user.document._id.toString())
 		return new ApiResult(400, 'you do not own this application');
 
 	const key = await application.generateApplicationKeyAsync();

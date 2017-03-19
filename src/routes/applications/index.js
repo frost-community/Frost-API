@@ -3,8 +3,8 @@
 const ApiResult = require('../../helpers/apiResult');
 const Application = require('../../documentModels/application');
 
-exports.post = async (request, extensions, db, config) => {
-	const userId = request.user._id;
+exports.post = async (request) => {
+	const userId = request.user.document._id;
 	const name = request.body.name;
 	let description = request.body.description;
 	const permissions = request.body.permissions;
@@ -13,7 +13,7 @@ exports.post = async (request, extensions, db, config) => {
 	if (!/^.{1,32}$/.test(name))
 		return new ApiResult(400, 'name is invalid format');
 
-	if (await db.applications.findAsync({name: name}) != null)
+	if (await request.db.applications.findAsync({name: name}) != null)
 		return new ApiResult(400, 'already exists name');
 
 	// description
@@ -23,13 +23,13 @@ exports.post = async (request, extensions, db, config) => {
 		return new ApiResult(400, 'description is invalid format');
 
 	// permissions
-	if (!Application.analyzePermissions(permissions, db, config))
+	if (!Application.analyzePermissions(permissions, request.db, request.config))
 		return new ApiResult(400, 'permissions is invalid format');
 
 	let application;
 
 	try {
-		application = await db.applications.createAsync({
+		application = await request.db.applications.createAsync({
 			name: name,
 			creatorId: userId,
 			description: description,

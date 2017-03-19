@@ -3,15 +3,15 @@
 const ApiResult = require('../../helpers/apiResult');
 const AuthorizeRequest = require('../../documentModels/authorizeRequest');
 
-exports.post = async (request, extensions, db, config) => {
+exports.post = async (request) => {
 	const iceAuthKey = request.get('X-Ice-Auth-Key');
 	const verificationCode = request.body.verification_code;
 
-	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, db, config))
+	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, request.db, request.config))
 		return new ApiResult(400, 'X-Ice-Auth-Key header is invalid');
 
-	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, db, config).authorizeRequestId;
-	const authorizeRequest = await db.authorizeRequests.findAsync({_id: authorizeRequestId});
+	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, request.db, request.config).authorizeRequestId;
+	const authorizeRequest = await request.db.authorizeRequests.findAsync({_id: authorizeRequestId});
 
 	if (authorizeRequest.document.targetUserId == null)
 		return new ApiResult(400, 'authorization has not been done yet');
@@ -19,7 +19,7 @@ exports.post = async (request, extensions, db, config) => {
 	if (verificationCode !== authorizeRequest.document.verificationCode)
 		return new ApiResult(400, 'verification_code is invalid');
 
-	const applicationAccess = await db.applicationAccesses.createAsync({
+	const applicationAccess = await request.db.applicationAccesses.createAsync({
 		applicationId: authorizeRequest.document.applicationId,
 		userId: authorizeRequest.document.targetUserId,
 		keyCode: null
