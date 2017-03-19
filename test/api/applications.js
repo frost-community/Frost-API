@@ -316,7 +316,7 @@ describe('Applications API', () => {
 						})();
 					});
 
-					it('所有していないアプリケーションを指定された場合は失敗する', done => {
+					it('持っていないアプリケーションを指定された場合は失敗する', done => {
 						(async () => {
 							try {
 								let res = await routeAppIdApplicationKey.post({
