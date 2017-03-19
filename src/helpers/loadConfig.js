@@ -11,9 +11,9 @@ const fs = require('fs');
  */
 module.exports = () => {
 	if (fs.existsSync(`${process.cwd()}/config.json`))
-		return JSON.parse(fs.readFileSync(`${process.cwd()}/config.json`, 'utf8'));
+		return require(`${process.cwd()}/config.json`);
 	else if (fs.existsSync(`${process.cwd()}/../config.json`))
-		return JSON.parse(fs.readFileSync(`${process.cwd()}/../config.json`, 'utf8'));
+		return require(`${process.cwd()}/../config.json`);
 	else
 		return null;
 };
