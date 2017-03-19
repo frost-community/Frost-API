@@ -3,11 +3,12 @@
 const assert = require('assert');
 const type = require('../../built/helpers/type');
 const config = require('../../built/helpers/loadConfig')();
-const routeAccount = require('../../built/routes/account');
+const DbProvider = require('../../built/helpers/dbProvider');
+const Db = require('../../built/helpers/db');
 const routeApp = require('../../built/routes/applications');
 const routeAppId = require('../../built/routes/applications/id');
 const routeAppIdApplicationKey = require('../../built/routes/applications/id/application_key');
-const Db = require('../../built/helpers/db');
+
 
 describe('Applications API', () => {
 	describe('/applications', () => {
@@ -17,8 +18,9 @@ describe('Applications API', () => {
 			(async () => {
 				try {
 					config.api.database = config.api.testDatabase;
-					db = new Db(config);
-					await db.connectAsync();
+
+					const dbProvider = await DbProvider.connectApidbAsync(config);
+					db = new Db(config, dbProvider);
 
 					await db.users.removeAsync();
 					await db.applications.removeAsync();
@@ -36,43 +38,33 @@ describe('Applications API', () => {
 		beforeEach(done => {
 			(async () => {
 				try {
-					let res = await db.users.createAsync({
+					userA = await db.users.createAsync({
 						screenName: 'generaluser_a',
 						passwordHash: 'abcdefg',
 						name: 'froster',
 						description: 'this is generaluser.'
 					});
-					userA = res.document;
 
-					res = await db.users.createAsync({
+					userB = await db.users.createAsync({
 						screenName: 'generaluser_b',
 						passwordHash: 'abcdefg',
 						name: 'froster',
 						description: 'this is generaluser.'
 					});
-					userB = res.document;
 
-					res = await routeApp.post({
-						user: userA,
-						body: {
-							name: 'generalapp_a',
-							description: 'this is generalapp.',
-							permissions: []
-						}
-					}, null, db, config);
-					assert.equal(type(res.data), 'Object');
-					appA = res.data.application;
+					appA = await db.applications.createAsync({
+						name: 'generalapp_a',
+						creatorId: userA.document._id,
+						description: 'this is generalapp.',
+						permissions: []
+					});
 
-					res = await routeApp.post({
-						user: userB,
-						body: {
-							name: 'generalapp_b',
-							description: 'this is generalapp.',
-							permissions: []
-						}
-					}, null, db, config);
-					assert.equal(type(res.data), 'Object');
-					appB = res.data.application;
+					appB = await db.applications.createAsync({
+						name: 'generalapp_b',
+						creatorId: userB.document._id,
+						description: 'this is generalapp.',
+						permissions: []
+					});
 
 					done();
 				}
@@ -107,8 +99,9 @@ describe('Applications API', () => {
 								name: 'temp',
 								description: 'hogehoge',
 								permissions: []
-							}
-						}, null, db, config);
+							},
+							db: db, config: config
+						});
 
 						assert.equal(type(res.data), 'Object');
 
@@ -116,7 +109,7 @@ describe('Applications API', () => {
 						assert.deepEqual(res.data, {
 							application: {
 								name: 'temp',
-								creatorId: userA._id.toString(),
+								creatorId: userA.document._id.toString(),
 								description: 'hogehoge',
 								permissions: []
 							}
@@ -138,8 +131,9 @@ describe('Applications API', () => {
 								name: '',
 								description: 'hogehoge',
 								permissions: ''
-							}
-						}, null, db, config);
+							},
+							db: db, config: config
+						});
 						assert.equal(res.data, 'name is invalid format');
 
 						res = await routeApp.post({
@@ -148,8 +142,9 @@ describe('Applications API', () => {
 								name: 'superFrostersuperFrostersuperFros',
 								description: 'hogehoge',
 								permissions: ''
-							}
-						}, null, db, config);
+							},
+							db: db, config: config
+						});
 						assert.equal(res.data, 'name is invalid format');
 
 						done();
@@ -169,8 +164,9 @@ describe('Applications API', () => {
 								name: 'temp',
 								description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget',
 								permissions: ''
-							}
-						}, null, db, config);
+							},
+							db: db, config: config
+						});
 						assert.equal(res.data, 'description is invalid format');
 
 						done();
@@ -189,19 +185,20 @@ describe('Applications API', () => {
 						try {
 							let res = await routeAppId.get({
 								user: userA,
-								params: {id: appA.id},
-								body: {}
-							}, null, db, config);
+								params: {id: appA.document._id.toString()},
+								body: {},
+								db: db, config: config
+							});
 
 							assert.equal(type(res.data), 'Object');
 
 							assert.deepEqual(res.data, {
 								application: {
-									id: appA.id,
-									creatorId: userA._id.toString(),
-									name: appA.name,
-									description: appA.description,
-									permissions: appA.permissions
+									id: appA.document._id.toString(),
+									creatorId: userA.document._id.toString(),
+									name: appA.document.name,
+									description: appA.document.description,
+									permissions: appA.document.permissions
 								}
 							});
 
@@ -218,9 +215,10 @@ describe('Applications API', () => {
 						try {
 							let res = await routeAppId.get({
 								user: userA,
-								params: {id: appB.id},
-								body: {}
-							}, null, db, config);
+								params: {id: appB.document._id.toString()},
+								body: {},
+								db: db, config: config
+							});
 
 							assert.equal(res.data, 'you do not own this application');
 
@@ -238,8 +236,9 @@ describe('Applications API', () => {
 							let res = await routeAppId.get({
 								user: userA,
 								params: {id: 'abcdefg1234'},
-								body: {}
-							}, null, db, config);
+								body: {},
+								db: db, config: config
+							});
 
 							assert.equal(res.data, 'application is not found');
 
@@ -259,8 +258,9 @@ describe('Applications API', () => {
 							try {
 								let res = await routeAppIdApplicationKey.post({
 									user: userA,
-									params: {id: appA.id},
-								}, null, db, config);
+									params: {id: appA.document._id.toString()},
+									db: db, config: config
+								});
 								assert.equal(type(res.data), 'Object');
 
 								done();
@@ -276,8 +276,9 @@ describe('Applications API', () => {
 							try {
 								let res = await routeAppIdApplicationKey.post({
 									user: userB,
-									params: {id: appA.id},
-								}, null, db, config);
+									params: {id: appA.document._id.toString()},
+									db: db, config: config
+								});
 								assert.equal(res.data, 'you do not own this application');
 
 								done();
@@ -295,14 +296,16 @@ describe('Applications API', () => {
 							try {
 								let res = await routeAppIdApplicationKey.post({
 									user: userA,
-									params: {id: appA.id},
-								}, null, db, config);
+									params: {id: appA.document._id.toString()},
+									db: db, config: config
+								});
 								assert.equal(type(res.data), 'Object');
 
 								res = await routeAppIdApplicationKey.get({
 									user: userA,
-									params: {id: appA.id},
-								}, null, db, config);
+									params: {id: appA.document._id.toString()},
+									db: db, config: config
+								});
 								assert.equal(type(res.data), 'Object');
 
 								done();
@@ -318,14 +321,16 @@ describe('Applications API', () => {
 							try {
 								let res = await routeAppIdApplicationKey.post({
 									user: userB,
-									params: {id: appB.id},
-								}, null, db, config);
+									params: {id: appB.document._id.toString()},
+									db: db, config: config
+								});
 								assert.equal(type(res.data), 'Object');
 
 								res = await routeAppIdApplicationKey.get({
 									user: userA,
-									params: {id: appB.id},
-								}, null, db, config);
+									params: {id: appB.document._id.toString()},
+									db: db, config: config
+								});
 								assert.equal(res.data, 'you do not own this application');
 
 								done();

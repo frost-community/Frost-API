@@ -3,8 +3,10 @@
 const assert = require('assert');
 const type = require('../../built/helpers/type');
 const config = require('../../built/helpers/loadConfig')();
-const route = require('../../built/routes/account');
+const DbProvider = require('../../built/helpers/dbProvider');
 const Db = require('../../built/helpers/db');
+const route = require('../../built/routes/account');
+
 
 describe('Account API', () => {
 	let db;
@@ -12,8 +14,9 @@ describe('Account API', () => {
 		(async () => {
 			try {
 				config.api.database = config.api.testDatabase;
-				db = new Db(config);
-				await db.connectAsync();
+
+				const dbProvider = await DbProvider.connectApidbAsync(config);
+				db = new Db(config, dbProvider);
 
 				done();
 			}
@@ -47,8 +50,9 @@ describe('Account API', () => {
 								password: 'a1b2c3d4e5f6g',
 								name: 'froster',
 								description: 'testhoge'
-							}
-						}, null, db, config);
+							},
+							db: db, config: config
+						});
 
 						assert.equal(res.message, null);
 
@@ -78,8 +82,9 @@ describe('Account API', () => {
 								password: 'a1b2c3d4e5f6g',
 								name: 'froster',
 								description: 'testhoge'
-							}
-						}, null, db, config);
+							},
+							db: db, config: config
+						});
 						assert.equal(res.data, 'screenName is invalid format');
 
 						res = await route.post({
@@ -88,8 +93,9 @@ describe('Account API', () => {
 								password: 'a1b2c3d4e5f6g',
 								name: 'froster',
 								description: 'testhoge'
-							}
-						}, null, db, config);
+							},
+							db: db, config: config
+						});
 						assert.equal(res.data, 'screenName is invalid format');
 
 						done();
@@ -109,8 +115,9 @@ describe('Account API', () => {
 								password: 'a1b2c',
 								name: 'froster',
 								description: 'testhoge'
-							}
-						}, null, db, config);
+							},
+							db: db, config: config
+						});
 						assert.equal(res.data, 'password is invalid format');
 
 						done();
@@ -130,8 +137,9 @@ describe('Account API', () => {
 								password: 'a1b2c3d4e5f6g',
 								name: 'superFrostersuperFrostersuperFros',
 								description: 'testhoge'
-							}
-						}, null, db, config);
+							},
+							db: db, config: config
+						});
 						assert.equal(res.data, 'name is invalid format');
 
 						done();
@@ -151,8 +159,9 @@ describe('Account API', () => {
 								password: 'a1b2c3d4e5f6g',
 								name: '',
 								description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget'
-							}
-						}, null, db, config);
+							},
+							db: db, config: config
+						});
 						assert.equal(res.data, 'description is invalid format');
 
 						done();

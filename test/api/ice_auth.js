@@ -3,6 +3,7 @@
 const assert = require('assert');
 const type = require('../../built/helpers/type');
 const config = require('../../built/helpers/loadConfig')();
+const DbProvider = require('../../built/helpers/dbProvider');
 const Db = require('../../built/helpers/db');
 const AuthorizeRequest = require('../../built/documentModels/authorizeRequest');
 const ApplicationAccess = require('../../built/documentModels/applicationAccess');
@@ -19,8 +20,8 @@ describe('IceAuth API', () => {
 			(async () => {
 				try {
 					config.api.database = config.api.testDatabase;
-					db = new Db(config);
-					await db.connectAsync();
+					const dbProvider = await DbProvider.connectApidbAsync(config);
+					db = new Db(config, dbProvider);
 
 					await db.users.removeAsync();
 					await db.applications.removeAsync();
@@ -87,9 +88,10 @@ describe('IceAuth API', () => {
 
 						let res = await route.post({
 							body: {
-								application_key: applicationKey
-							}
-						}, null, db, config);
+								'application_key': applicationKey
+							},
+							db: db, config: config
+						});
 						assert.equal(type(res.data), 'Object');
 						assert(await AuthorizeRequest.verifyKeyAsync(res.data.ice_auth_key, db, config));
 
@@ -109,17 +111,20 @@ describe('IceAuth API', () => {
 						try {
 							let res = await route.post({
 								body: {
-									application_key: await app.generateApplicationKeyAsync()
-								}
-							}, null, db, config);
+									'application_key': await app.generateApplicationKeyAsync()
+								},
+								db: db, config: config
+							});
 							assert.equal(type(res.data), 'Object');
 
 							res = await routeVerificationCode.get({
 								get: (h) => {
 									if (h == 'X-Ice-Auth-Key') return res.data.ice_auth_key;
 									return null;
-								}
-							}, null, db, config);
+								},
+								db: db, config: config
+							});
+
 							assert.equal(type(res.data), 'Object');
 							assert(/^[A-Z0-9]+$/.test(res.data.verification_code));
 
@@ -141,9 +146,10 @@ describe('IceAuth API', () => {
 							// ice_auth_key
 							let res = await route.post({
 								body: {
-									application_key: await app.generateApplicationKeyAsync()
-								}
-							}, null, db, config);
+									'application_key': await app.generateApplicationKeyAsync()
+								},
+								db: db, config: config
+							});
 							assert.equal(type(res.data), 'Object');
 
 							// target_user
@@ -153,10 +159,11 @@ describe('IceAuth API', () => {
 									return null;
 								},
 								body: {
-									ice_auth_key: res.data.ice_auth_key,
-									user_id: user.document._id.toString()
-								}
-							}, null, db, config);
+									'ice_auth_key': res.data.ice_auth_key,
+									'user_id': user.document._id.toString()
+								},
+								db: db, config: config
+							});
 							assert.equal(type(res.data), 'Object');
 
 							done();
@@ -177,9 +184,10 @@ describe('IceAuth API', () => {
 							// ice_auth_key
 							let res = await route.post({
 								body: {
-									application_key: await app.generateApplicationKeyAsync()
-								}
-							}, null, db, config);
+									'application_key': await app.generateApplicationKeyAsync()
+								},
+								db: db, config: config
+							});
 							assert.equal(type(res.data), 'Object');
 
 							const authorizeRequest = await db.authorizeRequests.findIdAsync(AuthorizeRequest.splitKey(res.data.ice_auth_key, db, config).authorizeRequestId);
@@ -192,9 +200,10 @@ describe('IceAuth API', () => {
 									return null;
 								},
 								body: {
-									user_id: user.document._id.toString()
-								}
-							}, null, db, config);
+									'user_id': user.document._id.toString()
+								},
+								db: db, config: config
+							});
 							assert.equal(type(res.data), 'Object');
 
 							// access_key
@@ -204,9 +213,10 @@ describe('IceAuth API', () => {
 									return null;
 								},
 								body: {
-									verification_code: authorizeRequest.document.verificationCode
-								}
-							}, null, db, config);
+									'verification_code': authorizeRequest.document.verificationCode
+								},
+								db: db, config: config
+							});
 
 							assert.equal(type(res.data), 'Object');
 							assert(await ApplicationAccess.verifyKeyAsync(res.data.access_key, db, config));
