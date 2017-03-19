@@ -1,24 +1,21 @@
 'use strict';
 
 const ApiResult = require('./apiResult');
-const resHelper = require('./responseHelper');
 const type = require('./type');
 
 class DirectoryRouter {
 	/**
 	 * このモジュールを初期化します
 	 *
-	 * @param  {Object} app 対象のサーバアプリケーション
+	 * @param  {e} app 対象のサーバアプリケーション
 	 * @param  {Object} db 対象のDB
 	 * @param  {[]} config 対象のconfig
 	 */
-	constructor(app, db, config) {
-		if (app == null || db == null || config == null)
+	constructor(app) {
+		if (app == null)
 			throw new Error('missing arguments');
 
 		this.app = app;
-		this.db = db;
-		this.config = config;
 		this.routes = [];
 	}
 
@@ -29,12 +26,9 @@ class DirectoryRouter {
 	 * @param  {Function[]} middles
 	 * @return {void}
 	 */
-	addRoute(route, middles) {
+	addRoute(route) {
 		if (!Array.isArray(route) || route == null)
 			throw new Error('route is invalid type');
-
-		if (middles == null)
-			middles = [];
 
 		let method = route[0].toLowerCase();
 		const path = route[1];
@@ -44,13 +38,9 @@ class DirectoryRouter {
 
 		for (const m of require('methods')) {
 			if (method === m) {
-				for (const middle of middles) {
-					this.app[m](path, middle);
-				}
-
 				this.app[m](path, (request, response) => {
 					console.log(`access: ${method.toUpperCase()} ${path}`);
-					resHelper(response);
+					request.extensions = extensions;
 					let dirPath = `${__dirname}/../routes`;
 
 					for (const seg of path.substring(1).split(/\//)) {
@@ -68,18 +58,15 @@ class DirectoryRouter {
 							if (routeFuncAsync == null)
 								throw new Error(`endpoint not found\ntarget: ${method} ${path}`);
 
-							const result = await routeFuncAsync(request, extensions, this.db, this.config);
-							if (result.statusCode == 200 || result.statusCode == null)
-								response.success(result);
-							else
-								response.error(result);
+							const result = await routeFuncAsync(request);
+							response.apiSend(result);
 						}
 						catch (err) {
 							if (type(err) !== 'Error')
-								response.error(err);
+								response.apiSend(err);
 							else {
 								console.log(`Internal Error (Async): ${err.stack}`);
-								response.error(new ApiResult(500, {message: 'internal error', details: err.stack}));
+								response.apiSend(new ApiResult(500, {message: 'internal error', details: err.stack}));
 							}
 						}
 					})();
