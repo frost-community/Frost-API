@@ -16,8 +16,9 @@ class AuthorizeRequest {
 
 	async getVerificationCodeAsync() {
 		let verificationCode = '';
-		for (let i = 0; i < 6; i++)
+		[...Array(6)].forEach(() => {
 			verificationCode += String(randomRange(0, 9));
+		});
 
 		await this.db.authorizeRequests.updateAsync({_id: this.document._id}, {verificationCode: verificationCode});
 
@@ -28,7 +29,7 @@ class AuthorizeRequest {
 		if (this.document.keyCode == null) {
 			// 生成が必要な場合
 			const keyCode = randomRange(1, 99999);
-			const cmdResult = await this.db.authorizeRequests.updateIdAsync(this.document._id, {keyCode: keyCode});
+			await this.db.authorizeRequests.updateIdAsync(this.document._id, {keyCode: keyCode});
 			await this.fetchAsync();
 		}
 

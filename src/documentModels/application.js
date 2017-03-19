@@ -22,7 +22,7 @@ class Application {
 		const keyCode = randomRange(1, 99999);
 		await this.db.applications.updateIdAsync(this.document._id.toString(), {keyCode: keyCode});
 		const app = await this.db.applications.findIdAsync(this.document._id.toString());
-		
+
 		return Application.buildKey(app.document._id, app.document.creatorId, app.document.keyCode, this.db, this.config);
 	}
 
