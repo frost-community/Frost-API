@@ -189,10 +189,10 @@ describe('Applications API', () => {
 								db: db, config: config
 							});
 
+							delete res.data.id;
+							delete res.data.createdAt;
 							assert.deepEqual(res.data, {
 								application: {
-									id: appA.document._id.toString(),
-									createdAt: appA.document._id.getTimestamp().toString(),
 									creatorId: userA.document._id.toString(),
 									name: appA.document.name,
 									description: appA.document.description,
