@@ -1,12 +1,10 @@
 'use strict';
 
 const assert = require('assert');
-const type = require('../../built/helpers/type');
 const config = require('../../built/helpers/loadConfig')();
 const DbProvider = require('../../built/helpers/dbProvider');
 const Db = require('../../built/helpers/db');
 const route = require('../../built/routes/account');
-
 
 describe('Account API', () => {
 	let db;

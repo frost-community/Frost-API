@@ -119,8 +119,6 @@ describe('IceAuth API', () => {
 								db: db, config: config
 							});
 
-
-
 							assert(/^[A-Z0-9]+$/.test(res.data.verificationCode));
 
 							done();

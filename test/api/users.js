@@ -1,7 +1,6 @@
 'use strict';
 
 const assert = require('assert');
-const type = require('../../built/helpers/type');
 const config = require('../../built/helpers/loadConfig')();
 const DbProvider = require('../../built/helpers/dbProvider');
 const Db = require('../../built/helpers/db');
@@ -87,7 +86,15 @@ describe('Users API', () => {
 								db: db, config: config
 							});
 
-							assert.equal(type(res.data), 'Object');
+							delete res.data.user.id;
+							delete res.data.user.createdAt;
+							assert.deepEqual(res.data, {
+								user: {
+									screenName: user.document.screenName,
+									name: user.document.name,
+									description: user.document.description
+								}
+							});
 
 							done();
 						}

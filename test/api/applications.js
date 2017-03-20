@@ -1,14 +1,12 @@
 'use strict';
 
 const assert = require('assert');
-const type = require('../../built/helpers/type');
 const config = require('../../built/helpers/loadConfig')();
 const DbProvider = require('../../built/helpers/dbProvider');
 const Db = require('../../built/helpers/db');
 const routeApp = require('../../built/routes/applications');
 const routeAppId = require('../../built/routes/applications/id');
 const routeAppIdApplicationKey = require('../../built/routes/applications/id/application_key');
-
 
 describe('Applications API', () => {
 	describe('/applications', () => {
@@ -318,14 +316,9 @@ describe('Applications API', () => {
 					it('持っていないアプリケーションを指定された場合は失敗する', done => {
 						(async () => {
 							try {
-								let res = await routeAppIdApplicationKey.post({
-									user: userB,
-									params: {id: appB.document._id.toString()},
-									db: db, config: config
-								});
-								assert.equal(type(res.data), 'Object');
+								await appB.generateApplicationKeyAsync();
 
-								res = await routeAppIdApplicationKey.get({
+								const res = await routeAppIdApplicationKey.get({
 									user: userA,
 									params: {id: appB.document._id.toString()},
 									db: db, config: config
