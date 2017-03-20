@@ -36,6 +36,7 @@ class CollectionBase {
 				parsedId = mongo.ObjectId(id);
 		}
 		catch(e) {
+			console.log(e);
 			return null;
 		}
 

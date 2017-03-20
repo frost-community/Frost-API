@@ -24,6 +24,7 @@ exports.post = async (request) => {
 		userId: authorizeRequest.document.targetUserId,
 		keyCode: null
 	});
+
 	const key = await applicationAccess.generateAccessKeyAsync();
 
 	return new ApiResult(200, {accessKey: key});

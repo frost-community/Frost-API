@@ -2,9 +2,18 @@
 
 const ApiResult = require('../../../helpers/apiResult');
 const Application = require('../../../documentModels/application');
+const mongo = require('mongodb');
 
 exports.get = async (request) => {
-	const application = await Application.findByIdAsync(request.params.id, request.db, request.config);
+	let applicationId;
+	try {
+		applicationId = mongo.ObjectId(request.params.id);
+	}
+	catch(e) {
+		return new ApiResult(400, 'application is not found');
+	}
+
+	const application = await Application.findByIdAsync(applicationId, request.db, request.config);
 
 	if (application == null)
 		return new ApiResult(400, 'application is not found');

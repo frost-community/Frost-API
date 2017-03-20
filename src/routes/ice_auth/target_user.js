@@ -14,8 +14,7 @@ exports.post = async (request) => {
 		return new ApiResult(400, 'userId is invalid');
 
 	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, request.db, request.config).authorizeRequestId;
-
-	const authorizeRequest = AuthorizeRequest.findByIdAsync(authorizeRequestId, request.db, request.config);
+	const authorizeRequest = await AuthorizeRequest.findByIdAsync(authorizeRequestId, request.db, request.config);
 	await authorizeRequest.setTargetUserIdAsync(userId);
 
 	return new ApiResult(200, {'targetUserId': authorizeRequest.document.targetUserId});

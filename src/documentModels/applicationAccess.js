@@ -29,7 +29,7 @@ class ApplicationAccess {
 		if (isExist && tryCount >= 4)
 			throw new Error('the number of trials for keyCode generation has reached its upper limit');
 
-		await ApplicationAccess.updateKeyCodeAsync(this.document._id, keyCode, this.db, this.config);
+		await this.db.applicationAccesses.updateByIdAsync(this.document._id, {keyCode: keyCode});
 		await this.fetchAsync();
 
 		return this.getAccessKey();
@@ -70,14 +70,7 @@ class ApplicationAccess {
 		if (id == null || db == null || config == null)
 			throw new Error('missing arguments');
 
-		return db.applications.findByIdAsync(id);
-	}
-
-	static async updateKeyCodeAsync(id, keyCode, db, config) {// TODO: non static
-		if (id == null || keyCode == null || db == null || config == null)
-			throw new Error('missing arguments');
-
-		return db.applications.updateAsync({_id: id}, {keyCode: keyCode});
+		return db.applicationAccesses.findByIdAsync(id);
 	}
 
 	static buildKeyHash(applicationId, userId, keyCode, db, config) {

@@ -25,6 +25,7 @@ class DbProvider {
 			return (await this.connection.collection(collectionName).insert(data)).ops[0];
 		}
 		catch(e) {
+			console.log(e.trace);
 			throw new Error(e);
 		}
 	}
@@ -45,6 +46,7 @@ class DbProvider {
 			return await this.connection.collection(collectionName).findOne(query, option);
 		}
 		catch(e) {
+			console.log(e.trace);
 			throw new Error(e);
 		}
 	}
@@ -65,6 +67,7 @@ class DbProvider {
 			return await this.connection.collection(collectionName).find(query, option).toArray();
 		}
 		catch(e) {
+			console.log(e.trace);
 			throw new Error(e);
 		}
 	}
@@ -85,6 +88,7 @@ class DbProvider {
 			return await this.connection.collection(collectionName).update(query, {$set: data});
 		}
 		catch(e) {
+			console.log(e.trace);
 			throw new Error(e);
 		}
 	}
@@ -97,15 +101,14 @@ class DbProvider {
 	 * @return {Promise<any>}
 	 */
 	async removeAsync(collectionName, query) {
-		if (collectionName == null || query == null) {
-			console.log('collectionName:', collectionName, ',query:', query);
+		if (collectionName == null || query == null)
 			throw new Error('missing arguments');
-		}
 
 		try {
 			return await this.connection.collection(collectionName).remove(query);
 		}
 		catch(e) {
+			console.log(e.trace);
 			throw new Error(e);
 		}
 	}
@@ -136,6 +139,7 @@ class DbProvider {
 			}));
 		}
 		catch(e) {
+			console.log(e.trace);
 			throw new Error(e);
 		}
 	}
