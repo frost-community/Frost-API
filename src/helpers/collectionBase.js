@@ -17,7 +17,7 @@ class CollectionBase {
 	async createAsync(data) {
 		const result = await this.db.dbProvider.createAsync(this.collectionName, data);
 
-		return new (require(this.documentModelName))(result.ops[0], this.db, this._config);
+		return new (require(this.documentModelName))(result, this.db, this._config);
 	}
 
 	async findAsync(query) {

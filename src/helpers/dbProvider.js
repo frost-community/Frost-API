@@ -17,8 +17,16 @@ class DbProvider {
 	 * @param  {object} data
 	 * @return {Promise<any>}
 	 */
-	createAsync(collectionName, data) {
-		return this.connection.collection(collectionName).insert(data);
+	async createAsync(collectionName, data) {
+		if (collectionName == null || data == null)
+			throw new Error('missing arguments');
+
+		try {
+			return (await this.connection.collection(collectionName).insert(data)).ops[0];
+		}
+		catch(e) {
+			throw new Error(e);
+		}
 	}
 
 	/**
@@ -29,8 +37,16 @@ class DbProvider {
 	 * @param  {object} option
 	 * @return {Promise<any>}
 	 */
-	findAsync(collectionName, query, option) {
-		return this.connection.collection(collectionName).findOne(query, option);
+	async findAsync(collectionName, query, option) {
+		if (collectionName == null || query == null)
+			throw new Error('missing arguments');
+
+		try {
+			return await this.connection.collection(collectionName).findOne(query, option);
+		}
+		catch(e) {
+			throw new Error(e);
+		}
 	}
 
 	/**
@@ -42,7 +58,15 @@ class DbProvider {
 	 * @return {Promise<any>}
 	 */
 	async findArrayAsync(collectionName, query, option) {
-		return await this.connection.collection(collectionName).find(query, option).toArray();
+		if (collectionName == null || query == null)
+			throw new Error('missing arguments');
+
+		try {
+			return await this.connection.collection(collectionName).find(query, option).toArray();
+		}
+		catch(e) {
+			throw new Error(e);
+		}
 	}
 
 	/**
@@ -53,8 +77,16 @@ class DbProvider {
 	 * @param  {object} data
 	 * @return {Promise<any>}
 	 */
-	updateAsync(collectionName, query, data) {
-		return this.connection.collection(collectionName).update(query, {$set: data});
+	async updateAsync(collectionName, query, data) {
+		if (collectionName == null || query == null || data == null)
+			throw new Error('missing arguments');
+
+		try {
+			return await this.connection.collection(collectionName).update(query, {$set: data});
+		}
+		catch(e) {
+			throw new Error(e);
+		}
 	}
 
 	/**
@@ -64,9 +96,21 @@ class DbProvider {
 	 * @param  {object} query
 	 * @return {Promise<any>}
 	 */
-	removeAsync(collectionName, query) {
-		return this.connection.collection(collectionName).remove(query);
+	async removeAsync(collectionName, query) {
+		if (collectionName == null || query == null) {
+			console.log('collectionName:', collectionName, ',query:', query);
+			throw new Error('missing arguments');
+		}
+
+		try {
+			return await this.connection.collection(collectionName).remove(query);
+		}
+		catch(e) {
+			throw new Error(e);
+		}
 	}
+
+	// static methods
 
 	/**
 	 * データベースに接続します
@@ -74,18 +118,26 @@ class DbProvider {
 	 * host, dbname, [authenticate]
 	 * @return {Promise}
 	 */
-	static connectAsync(host, dbname, authenticate) {
-		return new Promise((resolve, reject) => {
-			if (host == null || dbname == null)
-				reject('missing arguments');
+	static async connectAsync(host, dbname, authenticate) {
+		if (host == null || dbname == null || authenticate == null)
+			throw new Error('missing arguments');
 
-			mongo.MongoClient.connect(`mongodb://${authenticate}@${host}/${dbname}`, (err, connection) => {
-				if (err || connection == null)
-					return reject('faild to connect database');
+		try {
+			return await (new Promise((resolve, reject) => {
+				if (host == null || dbname == null)
+					reject('missing arguments');
 
-				return resolve(new DbProvider(connection));
-			});
-		});
+				mongo.MongoClient.connect(`mongodb://${authenticate}@${host}/${dbname}`, (err, connection) => {
+					if (err || connection == null)
+						return reject('faild to connect database');
+
+					return resolve(new DbProvider(connection));
+				});
+			}));
+		}
+		catch(e) {
+			throw new Error(e);
+		}
 	}
 
 	/**

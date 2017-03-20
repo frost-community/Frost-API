@@ -16,8 +16,8 @@ describe('Posts API', () => {
 					const dbProvider = await DbProvider.connectApidbAsync(config);
 					db = new Db(config, dbProvider);
 
-					await db.users.removeAsync();
-					await db.applications.removeAsync();
+					await db.users.removeAsync({});
+					await db.applications.removeAsync({});
 
 					done();
 				}
