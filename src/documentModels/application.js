@@ -1,8 +1,10 @@
 'use strict';
 
 const randomRange = require('../helpers/randomRange');
+const objectSorter = require('../helpers/objectSorter');
 const crypto = require('crypto');
 const mongo = require('mongodb');
+const moment = require('moment');
 
 class Application {
 	constructor(document, db, config) {
@@ -15,24 +17,33 @@ class Application {
 	}
 
 	hasPermission(permissionName) {
+		if (permissionName == null)
+			throw new Error('missing arguments');
+
 		return this.document.permissions.indexOf(permissionName) != -1;
 	}
 
 	async generateApplicationKeyAsync() {
 		const keyCode = randomRange(1, 99999);
-		await this.db.applications.updateIdAsync(this.document._id.toString(), {keyCode: keyCode});
-		const app = await this.db.applications.findIdAsync(this.document._id.toString());
+		await this.db.applications.updateByIdAsync(this.document._id.toString(), {keyCode: keyCode});
+		await this.fetchAsync();
 
-		return Application.buildKey(app.document._id, app.document.creatorId, app.document.keyCode, this.db, this.config);
+		return this.getApplicationKey();
 	}
 
 	getApplicationKey() {
+		if (this.document.keyCode == null)
+			throw new Error('keyCode is empty');
+
 		return Application.buildKey(this.document._id, this.document.creatorId, this.document.keyCode, this.db, this.config);
 	}
 
 	serialize() {
 		const res = {};
 		Object.assign(res, this.document);
+
+		// createdAt
+		res.createdAt = parseInt(moment(res._id.getTimestamp()).format('X'));
 
 		// id
 		res.id = res._id.toString();
@@ -41,24 +52,44 @@ class Application {
 		// creatorId
 		res.creatorId = res.creatorId.toString();
 
-		return res;
+		// keyCode
+		delete res.keyCode;
+
+		return objectSorter(res);
 	}
 
 	// 最新の情報を取得して同期する
 	async fetchAsync() {
-		this.document = (await this.db.applications.findIdAsync(this.document._id)).document;
+		this.document = (await Application.findByIdAsync(this.document._id)).document;
 	}
 
 	// -- static methods
 
+	static async findByIdAsync(id, db, config) {
+		if (id == null || db == null || config == null)
+			throw new Error('missing arguments');
+
+		return db.applications.findByIdAsync(id);
+	}
+
+	static async findByNameAsync(name, db, config) {
+		if (name == null || db == null || config == null)
+			throw new Error('missing arguments');
+
+		return db.applications.findAsync({name: name});
+	}
+
 	static analyzePermissions(db, config) {
+		if (db == null || config == null)
+			throw new Error('missing arguments');
+
 		// TODO
 
 		return true;
 	}
 
 	static buildKeyHash(applicationId, creatorId, keyCode, db, config) {
-		if (applicationId == null || creatorId == null || keyCode == null)
+		if (applicationId == null || creatorId == null || keyCode == null || db == null || config == null)
 			throw new Error('missing arguments');
 
 		const sha256 = crypto.createHash('sha256');
@@ -68,14 +99,14 @@ class Application {
 	}
 
 	static buildKey(applicationId, creatorId, keyCode, db, config) {
-		if (applicationId == null || creatorId == null || keyCode == null)
+		if (applicationId == null || creatorId == null || keyCode == null || db == null || config == null)
 			throw new Error('missing arguments');
 
 		return `${applicationId}-${Application.buildKeyHash(applicationId, creatorId, keyCode, db, config)}.${keyCode}`;
 	}
 
 	static splitKey(key, db, config) {
-		if (key == null)
+		if (key == null || db == null || config == null)
 			throw new Error('missing arguments');
 
 		const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
@@ -87,7 +118,7 @@ class Application {
 	}
 
 	static async verifyKeyAsync(key, db, config) {
-		if (key == null)
+		if (key == null || db == null || config == null)
 			throw new Error('missing arguments');
 
 		let elements;

@@ -1,6 +1,7 @@
 'use strict';
 
-// const UserModel = require('../models/user');
+const objectSorter = require('../helpers/objectSorter');
+const moment = require('moment');
 
 class User {
 	constructor(document, db, config) {
@@ -9,7 +10,6 @@ class User {
 
 		this.document = document;
 		this.db = db;
-		// this.userModel = UserModel(db, config);
 	}
 
 	// TODO: 各種操作用メソッドの追加
@@ -18,6 +18,9 @@ class User {
 		const res = {};
 		Object.assign(res, this.document);
 
+		// createdAt
+		res.createdAt = parseInt(moment(res._id.getTimestamp()).format('X'));
+
 		// id
 		res.id = res._id.toString();
 		delete res._id;
@@ -25,12 +28,38 @@ class User {
 		// passwordHash
 		delete res.passwordHash;
 
-		return res;
+		return objectSorter(res);
 	}
 
 	// 最新の情報を取得して同期する
 	async fetchAsync() {
-		this.document = (await this.db.users.findIdAsync(this.document._id)).document;
+		this.document = (await this.db.users.findByIdAsync(this.document._id)).document;
+	}
+
+	// static methods
+
+	/**
+	 * idからドキュメントモデルのインスタンスを取得します
+	 * 
+	 * @return {User}
+	 */
+	static async findByIdAsync(id, db, config) {
+		if (id == null || db == null || config == null)
+			throw new Error('missing arguments');
+
+		return db.users.findByIdAsync(id);
+	}
+
+	/**
+	 * screenNameからドキュメントモデルのインスタンスを取得します
+	 * 
+	 * @return {User}
+	 */
+	static async findByScreenNameAsync(screenName, db, config) {
+		if (screenName == null || db == null || config == null)
+			throw new Error('missing arguments');
+
+		return db.users.findAsync({screenName: screenName});
 	}
 }
 module.exports = User;

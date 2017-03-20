@@ -1,8 +1,10 @@
 'use strict';
 
 const randomRange = require('../helpers/randomRange');
+const objectSorter = require('../helpers/objectSorter');
 const crypto = require('crypto');
 const mongo = require('mongodb');
+const moment = require('moment');
 
 class ApplicationAccess {
 	constructor(document, db, config) {
@@ -15,25 +17,28 @@ class ApplicationAccess {
 	}
 
 	async generateAccessKeyAsync() {
-		const access = await this.db.applicationAccesses.findIdAsync(this.document._id);
 		let keyCode, isExist, tryCount = 0;
 
 		do {
 			tryCount++;
 			keyCode = randomRange(1, 99999);
-			isExist = await this.db.applicationAccesses.findAsync({userId: access.document.userId, keyCode: keyCode}) != null;
+			isExist = await this.db.applicationAccesses.findAsync({userId: this.document.userId, keyCode: keyCode}) != null;
 		}
 		while(isExist && tryCount < 4);
 
 		if (isExist && tryCount >= 4)
 			throw new Error('the number of trials for keyCode generation has reached its upper limit');
 
-		await this.db.applicationAccesses.updateAsync({_id: this.document._id}, {keyCode: keyCode});
+		await ApplicationAccess.updateKeyCodeAsync(this.document._id, keyCode, this.db, this.config);
+		await this.fetchAsync();
 
-		return ApplicationAccess.buildKey(access.document.applicationId, access.document.userId, keyCode, this.db, this.config);
+		return this.getAccessKey();
 	}
 
 	getAccessKey() {
+		if (this.document.keyCode == null)
+			throw new Error('keyCode is empty');
+
 		return ApplicationAccess.buildKey(this.document.applicationId, this.document.userId, this.document.keyCode, this.db, this.config);
 	}
 
@@ -41,22 +46,42 @@ class ApplicationAccess {
 		const res = {};
 		Object.assign(res, this.document);
 
+		// createdAt
+		res.createdAt = parseInt(moment(res._id.getTimestamp()).format('X'));
+
 		// id
 		res.id = res._id.toString();
 		delete res._id;
 
-		return res;
+		// keyCode
+		delete res.keyCode;
+
+		return objectSorter(res);
 	}
 
 	// 最新の情報を取得して同期する
 	async fetchAsync() {
-		this.document = (await this.db.applicationAccesses.findIdAsync(this.document._id)).document;
+		this.document = (await ApplicationAccess.findByIdAsync(this.document._id, this.db, this.config)).document;
 	}
 
 	// -- static methods
 
+	static async findByIdAsync(id, db, config) {
+		if (id == null || db == null || config == null)
+			throw new Error('missing arguments');
+
+		return db.applications.findByIdAsync(id);
+	}
+
+	static async updateKeyCodeAsync(id, keyCode, db, config) {// TODO: non static
+		if (id == null || keyCode == null || db == null || config == null)
+			throw new Error('missing arguments');
+
+		return db.applications.updateAsync({_id: id}, {keyCode: keyCode});
+	}
+
 	static buildKeyHash(applicationId, userId, keyCode, db, config) {
-		if (applicationId == null || userId == null || keyCode == null)
+		if (applicationId == null || userId == null || keyCode == null || db == null || config == null)
 			throw new Error('missing arguments');
 
 		const sha256 = crypto.createHash('sha256');
@@ -66,14 +91,14 @@ class ApplicationAccess {
 	}
 
 	static buildKey(applicationId, userId, keyCode, db, config) {
-		if (applicationId == null || userId == null || keyCode == null)
+		if (applicationId == null || userId == null || keyCode == null || db == null || config == null)
 			throw new Error('missing arguments');
 
 		return `${userId}-${ApplicationAccess.buildKeyHash(applicationId, userId, keyCode, db, config)}.${keyCode}`;
 	}
 
 	static splitKey(key, db, config) {
-		if (key == null)
+		if (key == null || db == null || config == null)
 			throw new Error('missing arguments');
 
 		const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
@@ -85,7 +110,7 @@ class ApplicationAccess {
 	}
 
 	static async verifyKeyAsync(key, db, config) {
-		if (key == null)
+		if (key == null || db == null || config == null)
 			throw new Error('missing arguments');
 
 		let elements;

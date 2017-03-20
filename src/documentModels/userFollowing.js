@@ -1,6 +1,7 @@
 'use strict';
 
-// const UserFollowingModel = require('../models/userFollowing');
+const objectSorter = require('../helpers/objectSorter');
+const moment = require('moment');
 
 class UserFollowing {
 	constructor(document, db, config) {
@@ -9,7 +10,6 @@ class UserFollowing {
 
 		this.document = document;
 		this.db = db;
-		// this.userFollowingModel = UserFollowingModel(db, config);
 	}
 
 	// TODO: 各種操作用メソッドの追加
@@ -18,16 +18,21 @@ class UserFollowing {
 		const res = {};
 		Object.assign(res, this.document);
 
+		// createdAt
+		res.createdAt = parseInt(moment(res._id.getTimestamp()).format('X'));
+
 		// id
 		res.id = res._id.toString();
 		delete res._id;
 
-		return res;
+		Object.keys(res).sort();
+
+		return objectSorter(res);
 	}
 
 	// 最新の情報を取得して同期する
 	async fetchAsync() {
-		this.document = (await this.db.userFollowings.findIdAsync(this.document._id)).document;
+		this.document = (await this.db.userFollowings.findByIdAsync(this.document._id)).document;
 	}
 }
 module.exports = UserFollowing;

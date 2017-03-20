@@ -1,8 +1,10 @@
 'use strict';
 
 const randomRange = require('../helpers/randomRange');
+const objectSorter = require('../helpers/objectSorter');
 const crypto = require('crypto');
 const mongo = require('mongodb');
+const moment = require('moment');
 
 class AuthorizeRequest {
 	constructor(document, db, config) {
@@ -14,48 +16,80 @@ class AuthorizeRequest {
 		this.config = config;
 	}
 
-	async getVerificationCodeAsync() {
+	async generateVerificationCodeAsync() {
 		let verificationCode = '';
 		[...Array(6)].forEach(() => {
 			verificationCode += String(randomRange(0, 9));
 		});
-
 		await this.db.authorizeRequests.updateAsync({_id: this.document._id}, {verificationCode: verificationCode});
+		await this.fetchAsync();
 
-		return verificationCode;
+		return this.getVerificationCode();
 	}
 
-	async getRequestKeyAsync() {
-		if (this.document.keyCode == null) {
-			// 生成が必要な場合
-			const keyCode = randomRange(1, 99999);
-			await this.db.authorizeRequests.updateIdAsync(this.document._id, {keyCode: keyCode});
-			await this.fetchAsync();
-		}
+	getVerificationCode() {
+		if (this.document.verificationCode == null)
+			throw new Error('verificationCode is empty');
+
+		return this.document.verificationCode;
+	}
+
+	async generateRequestKeyAsync() {
+		const keyCode = randomRange(1, 99999);
+		await this.db.authorizeRequests.updateByIdAsync(this.document._id, {keyCode: keyCode});
+		await this.fetchAsync();
+
+		return this.getRequestKey();
+	}
+
+	getRequestKey() {
+		if (this.document.keyCode == null)
+			throw new Error('keyCode is empty');
 
 		return AuthorizeRequest.buildKey(this.document._id, this.document.applicationId, this.document.keyCode, this.db, this.config);
+	}
+
+	async setTargetUserIdAsync(userId) {
+		if (userId == null)
+			throw new Error('missing arguments');
+
+		await this.db.authorizeRequests.updateByIdAsync(this.document._id, {targetUserId: mongo.ObjectId(userId)});
+		await this.fetchAsync();
 	}
 
 	serialize() {
 		const res = {};
 		Object.assign(res, this.document);
 
+		// createdAt
+		res.createdAt = parseInt(moment(res._id.getTimestamp()).format('X'));
+
 		// id
 		res.id = res._id.toString();
 		delete res._id;
 
-		return res;
+		// keyCode
+		delete res.keyCode;
+
+		return objectSorter(res);
 	}
 
 	// 最新の情報を取得して同期する
 	async fetchAsync() {
-		this.document = (await this.db.authorizeRequests.findIdAsync(this.document._id)).document;
+		this.document = (await this.db.authorizeRequests.findByIdAsync(this.document._id)).document;
 	}
 
 	// static methods
 
+	static async findByIdAsync(id, db, config) {
+		if (id == null || db == null || config == null)
+			throw new Error('missing arguments');
+
+		return db.authorizeRequests.findByIdAsync(id);
+	}
+
 	static buildKeyHash(authorizeRequestId, applicationId, keyCode, db, config) {
-		if (authorizeRequestId == null || applicationId == null || keyCode == null)
+		if (authorizeRequestId == null || applicationId == null || keyCode == null || db == null || config == null)
 			throw new Error('missing arguments');
 
 		const sha256 = crypto.createHash('sha256');
@@ -65,14 +99,14 @@ class AuthorizeRequest {
 	}
 
 	static buildKey(authorizeRequestId, applicationId, keyCode, db, config) {
-		if (authorizeRequestId == null || applicationId == null || keyCode == null)
+		if (authorizeRequestId == null || applicationId == null || keyCode == null || db == null || config == null)
 			throw new Error('missing arguments');
 
 		return `${authorizeRequestId}-${AuthorizeRequest.buildKeyHash(authorizeRequestId, applicationId, keyCode, db, config)}.${keyCode}`;
 	}
 
 	static splitKey(key, db, config) {
-		if (key == null)
+		if (key == null || db == null || config == null)
 			throw new Error('missing arguments');
 
 		const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
@@ -84,7 +118,7 @@ class AuthorizeRequest {
 	}
 
 	static async verifyKeyAsync(key, db, config) {
-		if (key == null)
+		if (key == null || db == null || config == null)
 			throw new Error('missing arguments');
 
 		let elements;
@@ -96,14 +130,14 @@ class AuthorizeRequest {
 			return false;
 		}
 
-		const authorizeRequest = await db.authorizeRequests.findIdAsync(elements.authorizeRequestId);
+		const authorizeRequest = await db.authorizeRequests.findByIdAsync(elements.authorizeRequestId);
 
 		if (authorizeRequest == null)
 			return false;
 
 		const correctKeyHash = AuthorizeRequest.buildKeyHash(elements.authorizeRequestId, authorizeRequest.document.applicationId, elements.keyCode, db, config);
-		// const createdAt = authorizeRequest._id.getUnixtime();
-		const isAvailabilityPeriod = true; // Math.abs(Date.now() - createdAt) < config.api.request_key_expire_sec;
+		// const createdAt = moment(authorizeRequest._id.getTimestamp());
+		const isAvailabilityPeriod = true; // Math.abs(Date.now() - createdAt) < config.api.requestKeyExpireSec;
 		const isPassed = isAvailabilityPeriod && elements.hash === correctKeyHash && elements.keyCode === authorizeRequest.document.keyCode;
 
 		return isPassed;
