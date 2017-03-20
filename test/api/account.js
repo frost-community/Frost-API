@@ -54,9 +54,8 @@ describe('Account API', () => {
 							db: db, config: config
 						});
 
-						assert.equal(res.message, null);
-
 						delete res.data.user.id;
+						delete res.data.user.createdAt;
 						assert.deepEqual(res.data, {
 							user: {
 								screenName: 'hogehoge',

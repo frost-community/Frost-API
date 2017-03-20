@@ -103,9 +103,8 @@ describe('Applications API', () => {
 							db: db, config: config
 						});
 
-						assert.equal(type(res.data), 'Object');
-
 						delete res.data.application.id;
+						delete res.data.application.createdAt;
 						assert.deepEqual(res.data, {
 							application: {
 								name: 'temp',
@@ -190,11 +189,10 @@ describe('Applications API', () => {
 								db: db, config: config
 							});
 
-							assert.equal(type(res.data), 'Object');
-
 							assert.deepEqual(res.data, {
 								application: {
 									id: appA.document._id.toString(),
+									createdAt: appA.document._id.getTimestamp().toString(),
 									creatorId: userA.document._id.toString(),
 									name: appA.document.name,
 									description: appA.document.description,
@@ -261,7 +259,10 @@ describe('Applications API', () => {
 									params: {id: appA.document._id.toString()},
 									db: db, config: config
 								});
-								assert.equal(type(res.data), 'Object');
+
+								assert.deepEqual(res.data, {
+									applicationKey: appA.getApplicationKey()
+								});
 
 								done();
 							}
@@ -294,19 +295,17 @@ describe('Applications API', () => {
 					it('正しくリクエストされた場合は成功する', done => {
 						(async () => {
 							try {
-								let res = await routeAppIdApplicationKey.post({
-									user: userA,
-									params: {id: appA.document._id.toString()},
-									db: db, config: config
-								});
-								assert.equal(type(res.data), 'Object');
+								const key = await appA.generateApplicationKeyAsync();
 
-								res = await routeAppIdApplicationKey.get({
+								const res = await routeAppIdApplicationKey.get({
 									user: userA,
 									params: {id: appA.document._id.toString()},
 									db: db, config: config
 								});
-								assert.equal(type(res.data), 'Object');
+
+								assert.deepEqual(res.data, {
+									applicationKey: key
+								});
 
 								done();
 							}

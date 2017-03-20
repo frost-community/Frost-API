@@ -34,26 +34,28 @@ describe('IceAuth API', () => {
 			})();
 		});
 
-		// add general user, general application
-		let user, app;
+		// add general user, general application, general authorizeRequest
+		let user, app, authorizeRequest;
 		beforeEach(done => {
 			(async () => {
 				try {
-					let res = await db.users.createAsync({
+					user = await db.users.createAsync({
 						screenName: 'generaluser',
 						passwordHash: 'abcdefg',
 						name: 'froster',
 						description: 'this is generaluser.'
 					});
-					user = res;
 
-					res = await db.applications.createAsync({
+					app = await db.applications.createAsync({
 						creatorId: user.document._id,
 						name: 'generalapp',
 						description: 'this is generalapp.',
 						permissions: []
 					});
-					app = res;
+
+					authorizeRequest = await db.authorizeRequests.createAsync({
+						applicationId: app.document._id
+					});
 
 					done();
 				}
@@ -86,14 +88,14 @@ describe('IceAuth API', () => {
 					try {
 						const applicationKey = await app.generateApplicationKeyAsync();
 
-						let res = await route.post({
+						const res = await route.post({
 							body: {
-								'application_key': applicationKey
+								applicationKey: applicationKey
 							},
 							db: db, config: config
 						});
-						assert.equal(type(res.data), 'Object');
-						assert(await AuthorizeRequest.verifyKeyAsync(res.data.ice_auth_key, db, config));
+
+						assert(await AuthorizeRequest.verifyKeyAsync(res.data.iceAuthKey, db, config));
 
 						done();
 					}
@@ -109,24 +111,17 @@ describe('IceAuth API', () => {
 				it('正しくリクエストされた場合は成功する', done => {
 					(async () => {
 						try {
-							let res = await route.post({
-								body: {
-									'application_key': await app.generateApplicationKeyAsync()
-								},
-								db: db, config: config
-							});
-							assert.equal(type(res.data), 'Object');
-
-							res = await routeVerificationCode.get({
-								get: (h) => {
-									if (h == 'X-Ice-Auth-Key') return res.data.ice_auth_key;
+							const res = await routeVerificationCode.get({
+								get: (h) => { /* headers */
+									if (h == 'X-Ice-Auth-Key') return authorizeRequest.document.iceAuthKey;
 									return null;
 								},
 								db: db, config: config
 							});
 
-							assert.equal(type(res.data), 'Object');
-							assert(/^[A-Z0-9]+$/.test(res.data.verification_code));
+
+
+							assert(/^[A-Z0-9]+$/.test(res.data.verificationCode));
 
 							done();
 						}
@@ -143,24 +138,24 @@ describe('IceAuth API', () => {
 				it('正しくリクエストされた場合は成功する', done => {
 					(async () => {
 						try {
-							// ice_auth_key
+							// iceAuthKey
 							let res = await route.post({
 								body: {
-									'application_key': await app.generateApplicationKeyAsync()
+									applicationKey: await app.generateApplicationKeyAsync()
 								},
 								db: db, config: config
 							});
 							assert.equal(type(res.data), 'Object');
 
-							// target_user
+							// targetUser
 							res = await routeTargetUser.post({
 								get: (h) => {
-									if (h == 'X-Ice-Auth-Key') return res.data.ice_auth_key;
+									if (h == 'X-Ice-Auth-Key') return res.data.iceAuthKey;
 									return null;
 								},
 								body: {
-									'ice_auth_key': res.data.ice_auth_key,
-									'user_id': user.document._id.toString()
+									iceAuthKey: res.data.iceAuthKey,
+									userId: user.document._id.toString()
 								},
 								db: db, config: config
 							});
@@ -181,45 +176,45 @@ describe('IceAuth API', () => {
 				it('正しくリクエストされた場合は成功する', done => {
 					(async () => {
 						try {
-							// ice_auth_key
+							// iceAuthKey
 							let res = await route.post({
 								body: {
-									'application_key': await app.generateApplicationKeyAsync()
+									applicationKey: await app.generateApplicationKeyAsync()
 								},
 								db: db, config: config
 							});
 							assert.equal(type(res.data), 'Object');
 
-							const authorizeRequest = await db.authorizeRequests.findIdAsync(AuthorizeRequest.splitKey(res.data.ice_auth_key, db, config).authorizeRequestId);
-							const iceAuthKey = res.data.ice_auth_key;
+							const authorizeRequest = await db.authorizeRequests.findByIdAsync(AuthorizeRequest.splitKey(res.data.iceAuthKey, db, config).authorizeRequestId);
+							const iceAuthKey = res.data.iceAuthKey;
 
-							// target_user
+							// targetUser
 							res = await routeTargetUser.post({
 								get: (h) => {
 									if (h == 'X-Ice-Auth-Key') return iceAuthKey;
 									return null;
 								},
 								body: {
-									'user_id': user.document._id.toString()
+									userId: user.document._id.toString()
 								},
 								db: db, config: config
 							});
 							assert.equal(type(res.data), 'Object');
 
-							// access_key
+							// accessKey
 							res = await routeAccessKey.post({
 								get: (h) => {
 									if (h == 'X-Ice-Auth-Key') return iceAuthKey;
 									return null;
 								},
 								body: {
-									'verification_code': authorizeRequest.document.verificationCode
+									verificationCode: authorizeRequest.document.verificationCode
 								},
 								db: db, config: config
 							});
 
 							assert.equal(type(res.data), 'Object');
-							assert(await ApplicationAccess.verifyKeyAsync(res.data.access_key, db, config));
+							assert(await ApplicationAccess.verifyKeyAsync(res.data.accessKey, db, config));
 
 							done();
 						}
