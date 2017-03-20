@@ -13,7 +13,8 @@ exports.post = async (request) => {
 	if (!/^.{1,32}$/.test(name))
 		return new ApiResult(400, 'name is invalid format');
 
-	if (await request.db.applications.findAsync({name: name}) != null)
+	// check name duplication
+	if (await Application.findByNameAsync(name, request.db, request.config) != null)
 		return new ApiResult(400, 'already exists name');
 
 	// description
@@ -29,7 +30,7 @@ exports.post = async (request) => {
 	let application;
 
 	try {
-		application = await request.db.applications.createAsync({
+		application = await request.db.applications.createAsync({ //TODO: move to document models
 			name: name,
 			creatorId: userId,
 			description: description,

@@ -55,22 +55,22 @@ module.exports = async () => {
 					creatorId: user.document._id,
 					description: user.document.description,
 					permissions: [
-						'ice_auth_host',
+						'iceAuthHost',
 						'application',
-						'application_special',
-						'account_read',
-						'account_write',
-						'account_special',
-						'user_read',
-						'user_write',
-						'post_read',
-						'post_write'
+						'applicationSpecial',
+						'accountRead',
+						'accountWrite',
+						'accountSpecial',
+						'userRead',
+						'userWrite',
+						'postRead',
+						'postWrite'
 					]
 				});
 				console.log(`application created. ${application.document}`);
 
 				const applicationKey = await application.generateApplicationKeyAsync();
-				console.log(`application_key generated. (key: ${applicationKey})`);
+				console.log(`applicationKey generated. (key: ${applicationKey})`);
 
 				const applicationAccess = await db.applicationAccesses.createAsync({
 					applicationId: application.document._id,
@@ -80,7 +80,7 @@ module.exports = async () => {
 				console.log(`applicationAccess created. ${applicationAccess.document}`);
 
 				const accessKey = await applicationAccess.generateAccessKeyAsync();
-				console.log(`access_key generated. (key: ${accessKey})`);
+				console.log(`accessKey generated. (key: ${accessKey})`);
 			}
 		}
 	}

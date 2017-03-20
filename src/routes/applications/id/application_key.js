@@ -1,9 +1,10 @@
 'use strict';
 
 const ApiResult = require('../../../helpers/apiResult');
+const Application = require('../../../documentModels/application');
 
 exports.get = async (request) => {
-	const application = await request.db.applications.findIdAsync(request.params.id);
+	const application = await Application.findByIdAsync(request.params.id, request.db, request.config);
 
 	if (application == null)
 		return new ApiResult(400, 'application is not found');
@@ -13,15 +14,15 @@ exports.get = async (request) => {
 		return new ApiResult(400, 'you do not own this application');
 
 	if (application.document.keyCode == null)
-		return new ApiResult(400, 'application_key has not been generated yet');
+		return new ApiResult(400, 'applicationKey has not been generated yet');
 
 	const key = application.getApplicationKey();
 
-	return new ApiResult(200, {'application_key': key});
+	return new ApiResult(200, {applicationKey: key});
 };
 
 exports.post = async (request) => {
-	const application = await request.db.applications.findIdAsync(request.params.id);
+	const application = await Application.findByIdAsync(request.params.id, request.db, request.config);
 
 	if (application == null)
 		return new ApiResult(400, 'application is not found');
@@ -32,5 +33,5 @@ exports.post = async (request) => {
 
 	const key = await application.generateApplicationKeyAsync();
 
-	return new ApiResult(200, {'application_key': key});
+	return new ApiResult(200, {applicationKey: key});
 };

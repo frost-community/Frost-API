@@ -12,5 +12,5 @@ exports.get = async (request) => {
 	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, request.db, request.config).authorizeRequestId;
 	const authorizeRequest = await request.db.authorizeRequests.findAsync({_id: authorizeRequestId});
 
-	return new ApiResult(200, {'verification_code': authorizeRequest.document.verificationCode});
+	return new ApiResult(200, {verificationCode: authorizeRequest.document.verificationCode});
 };
