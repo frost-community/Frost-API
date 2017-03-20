@@ -29,7 +29,7 @@ class CollectionBase {
 		return new (require(this.documentModelName))(document, this.db, this._config);
 	}
 
-	async findIdAsync(id) {
+	async findByIdAsync(id) {
 		let parsedId = id;
 		try {
 			if (type(id) == 'String')
@@ -60,7 +60,7 @@ class CollectionBase {
 		await this.db.dbProvider.updateAsync(this.collectionName, query, data);
 	}
 
-	async updateIdAsync(id, data) {
+	async updateByIdAsync(id, data) {
 		let parsedId = id;
 		try {
 			if (type(id) == 'String')
