@@ -2,6 +2,8 @@
 
 const ApiResult = require('./apiResult');
 const type = require('./type');
+const path = require('path');
+const fs = require('fs');
 
 class DirectoryRouter {
 	/**
@@ -26,37 +28,64 @@ class DirectoryRouter {
 	 * @param  {Function[]} middles
 	 * @return {void}
 	 */
-	addRoute(route) {
+	addRoute(route, middlewares) {
 		if (!Array.isArray(route) || route == null)
 			throw new Error('route is invalid type');
 
 		let method = route[0].toLowerCase();
-		const path = route[1];
+		const routePath = route[1];
 		const extensions = route[2];
 
 		method = method.replace(/^del$/, 'delete');
 
 		for (const m of require('methods')) {
 			if (method === m) {
-				this.app[m](path, (request, response) => {
-					console.log(`access: ${method.toUpperCase()} ${path}`);
-					request.extensions = extensions;
-					let dirPath = `${__dirname}/../routes`;
+				middlewares.forEach(middleware => this.app[m](routePath, middleware));
 
-					for (const seg of path.substring(1).split(/\//)) {
-						dirPath += '/' + seg.replace(/:/, '');
-					}
+				this.app[m](routePath, (request, response) => {
+					console.log(`access: ${method.toUpperCase()} ${routePath}`);
+
+					request.extensions = extensions;
+
+					let dirPath = path.join(__dirname, '../routes', routePath.replace(/:/, ''));
+
+					console.log(`dirPath: ${dirPath}`);
 
 					if (dirPath.match(/\/$/))
 						dirPath += 'index';
 
-					dirPath = dirPath.replace(/\//g, require('path').sep);
+					// == middleware for the directory
+					let dirMiddlewarePath;
+					if (path.basename(dirPath) == 'index') // indexは
+						dirMiddlewarePath = path.join(path.dirname(dirPath), '../_every');
+					else
+						dirMiddlewarePath = path.join(path.dirname(dirPath), '_every');
+
+					dirMiddlewarePath = dirMiddlewarePath.replace(/\//g, path.sep);
+
+					console.log(`dirMiddlewarePath: ${dirMiddlewarePath}`);
+
+					try {
+						let isReturn = true;
+
+						const dirMiddleware = require(dirMiddlewarePath);
+						dirMiddleware(request, response, () => isReturn = false);
+
+						if (isReturn)
+							return;
+					}
+					catch(e) {
+						// noop
+						console.log('dirMiddleware wasnt executed');
+					}
+
+					dirPath = dirPath.replace(/\//g, path.sep);
 					const routeFuncAsync = require(dirPath)[method];
 
 					(async () => {
 						try {
 							if (routeFuncAsync == null)
-								throw new Error(`endpoint not found\ntarget: ${method} ${path}`);
+								throw new Error(`endpoint not found\ntarget: ${method} ${routePath}`);
 
 							const result = await routeFuncAsync(request);
 							response.apiSend(result);
@@ -72,7 +101,7 @@ class DirectoryRouter {
 					})();
 				});
 
-				this.routes.push({method: m, path: path, extensions: extensions});
+				this.routes.push({method: m, path: routePath, extensions: extensions});
 			}
 		}
 	}
@@ -84,12 +113,12 @@ class DirectoryRouter {
 	 * @param  {Function[]} middles
 	 * @return {void}
 	 */
-	addRoutes(routes, middles) {
+	addRoutes(routes, middlewares) {
 		if (!Array.isArray(routes) || routes == null)
 			throw new Error('routes is invalid type');
 
 		for (const route of routes)
-			this.addRoute(route, middles);
+			this.addRoute(route, middlewares);
 	}
 
 	/**
