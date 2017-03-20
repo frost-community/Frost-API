@@ -12,34 +12,34 @@ module.exports = () => {
 				{name: 'password', type: 'string'},
 				{name: 'description', type: 'string', require: false},
 				{name: 'name', type: 'string', require: false}
-			], permissions:['account_special']
+			], permissions:['accountSpecial']
 		}],
 
 		// == IceAuth ==
 
-		// 認証リクエスト(ice_auth_key取得)
+		// 認証リクエスト(iceAuthKey取得)
 		['post', '/ice_auth', {
 			params: [
-				{name: 'application_key', type: 'string'}
+				{name: 'applicationKey', type: 'string'}
 			]
 		}],
 
-		// verification_code(PINコード)を取得 (認証ホスト専用)
+		// verificationCode(PINコード)を取得 (認証ホスト専用)
 		['get',  '/ice_auth/verification_code', {
-			headers: ['X-Ice-Auth-Key'], permissions:['ice_auth_host']
+			headers: ['X-Ice-Auth-Key'], permissions:['iceAuthHost']
 		}],
 
 		// 認証の対象ユーザーを設定(認証ホスト専用)
 		['post', '/ice_auth/target_user', {
 			params: [
-				{name: 'user_id', type: 'string'}
-			], headers: ['X-Ice-Auth-Key'], permissions:['ice_auth_host']
+				{name: 'userId', type: 'string'}
+			], headers: ['X-Ice-Auth-Key'], permissions:['iceAuthHost']
 		}],
 
-		// verification_codeを検証して、access_keyを作成
+		// verificationCodeを検証して、accessKeyを作成
 		['post', '/ice_auth/access_key', {
 			params: [
-				{name: 'verification_code', type: 'string'}
+				{name: 'verificationCode', type: 'string'}
 			], headers: ['X-Ice-Auth-Key']
 		}],
 
@@ -51,7 +51,7 @@ module.exports = () => {
 				{name: 'name', type: 'string'},
 				{name: 'description', type: 'string', require: false},
 				{name: 'permissions', type: 'array'}
-			], permissions:['application_special']
+			], permissions:['applicationSpecial']
 		}],
 
 		// idを指定してアプリケーション情報を取得する
@@ -61,12 +61,17 @@ module.exports = () => {
 
 		// アプリケーションキーを生成する
 		['post', '/applications/:id/application_key', {
-			permissions:['application_special']
+			permissions:['applicationSpecial']
 		}],
 
 		// idを指定してアプリケーションキーを取得する
 		['get',  '/applications/:id/application_key', {
-			permissions:['application_special']
+			permissions:['applicationSpecial']
+		}],
+
+		// idを指定してアプリケーションキーを取得する
+		['get',  '/applications/:id/access_key', {
+			permissions:['applicationSpecial']
 		}],
 
 		// == Users ==
@@ -75,42 +80,42 @@ module.exports = () => {
 		['get',  '/users/:id', {
 			params: [
 
-			], permissions:['user_read']
+			], permissions:['userRead']
 		}],
 
 		// 指定したユーザーのタイムラインを取得
 		['get',  '/users/:id/timeline', {
 			params: [
 
-			], permissions:['user_read']
+			], permissions:['userRead']
 		}],
 
 		// フォローの一覧を取得
 		['get',  '/users/:id/followings', {
 			params: [
 
-			], permissions:['user_read']
+			], permissions:['userRead']
 		}],
 
 		// フォロワーの一覧を取得
 		['get',  '/users/:id/followers', {
 			params: [
 
-			], permissions:['user_read']
+			], permissions:['userRead']
 		}],
 
 		// 指定したユーザーをフォローする
 		['post', '/users/:id/follow', {
 			params: [
 
-			], permissions:['user_write']
+			], permissions:['userWrite']
 		}],
 
 		// 指定したユーザーへのフォローを解除する
 		['del',  '/users/:id/follow', {
 			params: [
 
-			], permissions:['user_write']
+			], permissions:['userWrite']
 		}],
 
 		// == Posts ==
@@ -119,28 +124,28 @@ module.exports = () => {
 		['post', '/posts/post_status', {
 			params: [
 
-			], permissions:['post_write']
+			], permissions:['postWrite']
 		}],
 
 		// 記事を作成する
 		['post', '/posts/post_article', {
 			params: [
 
-			], permissions:['post_write']
+			], permissions:['postWrite']
 		}],
 
 		// 投稿リンクを作成する
 		['post', '/posts/post_link', {
 			params: [
 
-			], permissions:['post_write']
+			], permissions:['postWrite']
 		}],
 
 		// idを指定してポストを取得
 		['get',  '/posts/:id', {
 			params: [
 
-			], permissions:['post_read']
+			], permissions:['postRead']
 		}],
 	];
 

@@ -52,13 +52,10 @@ module.exports = async () => {
 			});
 
 			app.use(bodyParser.json());
-			app.use(checkPermission);
-			app.use(checkHeaders);
-			app.use(checkParams);
 			app.use(apiSend);
 
 			// routing
-			directoryRouter.addRoutes(require('./routes')());
+			directoryRouter.addRoutes(require('./routeList')(), [checkPermission, checkHeaders, checkParams]);
 
 			// not found
 			app.use((req, res) => {
@@ -72,6 +69,5 @@ module.exports = async () => {
 	}
 	catch(e) {
 		console.log(`Server Error: ${e.stack}`);
-		console.log();
 	}
 };
