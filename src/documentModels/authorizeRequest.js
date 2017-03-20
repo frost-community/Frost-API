@@ -76,7 +76,7 @@ class AuthorizeRequest {
 
 	// 最新の情報を取得して同期する
 	async fetchAsync() {
-		this.document = (await this.db.authorizeRequests.findByIdAsync(this.document._id)).document;
+		this.document = (await AuthorizeRequest.findByIdAsync(this.document._id, this.db, this.config)).document;
 	}
 
 	// static methods

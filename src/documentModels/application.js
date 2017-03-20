@@ -60,7 +60,7 @@ class Application {
 
 	// 最新の情報を取得して同期する
 	async fetchAsync() {
-		this.document = (await Application.findByIdAsync(this.document._id)).document;
+		this.document = (await Application.findByIdAsync(this.document._id, this.db, this.config)).document;
 	}
 
 	// -- static methods
