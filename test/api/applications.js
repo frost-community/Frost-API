@@ -187,8 +187,8 @@ describe('Applications API', () => {
 								db: db, config: config
 							});
 
-							delete res.data.id;
-							delete res.data.createdAt;
+							delete res.data.application.id;
+							delete res.data.application.createdAt;
 							assert.deepEqual(res.data, {
 								application: {
 									creatorId: userA.document._id.toString(),
@@ -258,6 +258,7 @@ describe('Applications API', () => {
 									db: db, config: config
 								});
 
+								await appA.fetchAsync();
 								assert.deepEqual(res.data, {
 									applicationKey: appA.getApplicationKey()
 								});

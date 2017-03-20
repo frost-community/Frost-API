@@ -57,7 +57,7 @@ class CollectionBase {
 	}
 
 	async updateAsync(query, data) {
-		await this.db.dbProvider.updateAsync(this.collectionName, query, data);
+		return (await this.db.dbProvider.updateAsync(this.collectionName, query, data)).result;
 	}
 
 	async updateByIdAsync(id, data) {
@@ -67,6 +67,7 @@ class CollectionBase {
 				parsedId = mongo.ObjectId(id);
 		}
 		catch(e) {
+			console.log(e);
 			return null;
 		}
 
@@ -74,7 +75,7 @@ class CollectionBase {
 	}
 
 	async removeAsync(query) {
-		await this.db.dbProvider.removeAsync(this.collectionName, query);
+		return await this.db.dbProvider.removeAsync(this.collectionName, query);
 	}
 }
 module.exports = CollectionBase;

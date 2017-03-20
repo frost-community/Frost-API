@@ -34,15 +34,15 @@ class AuthorizeRequest {
 		return this.document.verificationCode;
 	}
 
-	async generateRequestKeyAsync() {
+	async generateIceAuthKeyAsync() {
 		const keyCode = randomRange(1, 99999);
 		await this.db.authorizeRequests.updateByIdAsync(this.document._id, {keyCode: keyCode});
 		await this.fetchAsync();
 
-		return this.getRequestKey();
+		return this.getIceAuthKey();
 	}
 
-	getRequestKey() {
+	getIceAuthKey() {
 		if (this.document.keyCode == null)
 			throw new Error('keyCode is empty');
 
@@ -137,7 +137,7 @@ class AuthorizeRequest {
 
 		const correctKeyHash = AuthorizeRequest.buildKeyHash(elements.authorizeRequestId, authorizeRequest.document.applicationId, elements.keyCode, db, config);
 		// const createdAt = moment(authorizeRequest._id.getTimestamp());
-		const isAvailabilityPeriod = true; // Math.abs(Date.now() - createdAt) < config.api.requestKeyExpireSec;
+		const isAvailabilityPeriod = true; // Math.abs(Date.now() - createdAt) < config.api.iceAuthKeyExpireSec;
 		const isPassed = isAvailabilityPeriod && elements.hash === correctKeyHash && elements.keyCode === authorizeRequest.document.keyCode;
 
 		return isPassed;

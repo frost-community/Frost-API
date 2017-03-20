@@ -111,15 +111,20 @@ describe('IceAuth API', () => {
 				it('正しくリクエストされた場合は成功する', done => {
 					(async () => {
 						try {
+							const iceAuthKey = await authorizeRequest.generateIceAuthKeyAsync();
+							const verificationCode = await authorizeRequest.generateVerificationCodeAsync();
+
 							const res = await routeVerificationCode.get({
 								get: (h) => { /* headers */
-									if (h == 'X-Ice-Auth-Key') return authorizeRequest.document.iceAuthKey;
+									if (h == 'X-Ice-Auth-Key') return iceAuthKey;
 									return null;
 								},
 								db: db, config: config
 							});
 
-							assert(/^[A-Z0-9]+$/.test(res.data.verificationCode));
+							assert.deepEqual(res.data, {
+								verificationCode: verificationCode
+							});
 
 							done();
 						}

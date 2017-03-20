@@ -11,8 +11,8 @@ exports.post = async (request) => {
 
 	const applicationId = Application.splitKey(applicationKey, request.db, request.config).applicationId;
 	const authorizeRequest = await request.db.authorizeRequests.createAsync({applicationId: applicationId}); //TODO: move to document models
-	const iceAuthKey = await authorizeRequest.generateRequestKeyAsync();
-	await authorizeRequest.getVerificationCodeAsync();
+	const iceAuthKey = await authorizeRequest.generateIceAuthKeyAsync();
+	await authorizeRequest.generateVerificationCodeAsync();
 
 	return new ApiResult(200, {iceAuthKey: iceAuthKey});
 };

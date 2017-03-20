@@ -14,31 +14,32 @@ class DbProvider {
 	 * ドキュメントを作成します
 	 *
 	 * @param  {string} collectionName コレクション名
-	 * @param  {string} data
+	 * @param  {object} data
+	 * @return {Promise<any>}
 	 */
-	async createAsync(collectionName, data) {
-		return await this.connection.collection(collectionName).insert(data);
+	createAsync(collectionName, data) {
+		return this.connection.collection(collectionName).insert(data);
 	}
 
 	/**
 	 * ドキュメントを検索して項目を取得します
 	 *
 	 * @param  {string} collectionName
-	 * @param  {Object} query
-	 * @param  {Object} option
-	 * @param  {Object|null} document
+	 * @param  {object} query
+	 * @param  {object} option
+	 * @return {Promise<any>}
 	 */
-	async findAsync(collectionName, query, option) {
-		return await this.connection.collection(collectionName).findOne(query, option);
+	findAsync(collectionName, query, option) {
+		return this.connection.collection(collectionName).findOne(query, option);
 	}
 
 	/**
 	 * ドキュメントを検索して複数の項目を取得します
 	 *
 	 * @param  {string} collectionName
-	 * @param  {Object} query
-	 * @param  {Object} option
-	 * @param  {Object[]|null} documents
+	 * @param  {object} query
+	 * @param  {object} option
+	 * @return {Promise<any>}
 	 */
 	async findArrayAsync(collectionName, query, option) {
 		return await this.connection.collection(collectionName).find(query, option).toArray();
@@ -48,21 +49,23 @@ class DbProvider {
 	 * ドキュメントを更新します
 	 *
 	 * @param  {string} collectionName
-	 * @param  {Object} data
-	 * @param  {Boolean} isMany
+	 * @param  {object} query
+	 * @param  {object} data
+	 * @return {Promise<any>}
 	 */
-	async updateAsync(collectionName, query, data) {
-		return await this.connection.collection(collectionName).update(query, {$set: data});
+	updateAsync(collectionName, query, data) {
+		return this.connection.collection(collectionName).update(query, {$set: data});
 	}
 
 	/**
 	 * ドキュメントを削除します
 	 *
 	 * @param  {string} collectionName
-	 * @param  {Object} query
+	 * @param  {object} query
+	 * @return {Promise<any>}
 	 */
-	async removeAsync(collectionName, query) {
-		return await this.connection.collection(collectionName).remove(query);
+	removeAsync(collectionName, query) {
+		return this.connection.collection(collectionName).remove(query);
 	}
 
 	/**
