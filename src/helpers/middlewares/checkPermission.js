@@ -36,8 +36,8 @@ module.exports = (request, response, next) => {
 				const applicationId = Application.splitKey(applicationKey, request.db, request.config).applicationId;
 				const userId = ApplicationAccess.splitKey(accessKey, request.db, request.config).userId;
 
-				request.application = (await request.db.applications.findIdAsync(applicationId));
-				request.user = (await request.db.users.findIdAsync(userId));
+				request.application = (await request.db.applications.findByIdAsync(applicationId));
+				request.user = (await request.db.users.findByIdAsync(userId));
 
 				const hasPermissions = extensions.permissions.every(p => request.application.hasPermission(p));
 				if (!hasPermissions) {
