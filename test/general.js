@@ -5,10 +5,10 @@ const config = require('../built/helpers/loadConfig')();
 
 describe('General -', () => {
 	describe('routes', () => {
-		const routes = require('../built/routes')();
+		const routeList = require('../built/routeList')();
 
 		it('存在するHTTPメソッドを利用している', () => {
-			for(const route of routes) {
+			for(const route of routeList) {
 				let method = route[0];
 				method = method.replace(/^del$/, 'delete');
 				assert(require('methods').indexOf(method) > -1);
@@ -16,7 +16,7 @@ describe('General -', () => {
 		});
 
 		it('権限リストにある権限名のみを利用している', () => {
-			for(const route of routes) {
+			for(const route of routeList) {
 				if ('permissions' in route[2]) {
 					for(const permission of route[2].permissions) {
 						assert(require('../built/helpers/permission').permissionTypes.indexOf(permission) != -1);
