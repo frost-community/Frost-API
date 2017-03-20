@@ -3,7 +3,6 @@
 const ApiResult = require('./apiResult');
 const type = require('./type');
 const path = require('path');
-const fs = require('fs');
 
 class DirectoryRouter {
 	/**
