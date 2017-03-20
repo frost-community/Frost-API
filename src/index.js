@@ -3,7 +3,7 @@
 var commander = require('commander');
 
 commander
-	.option('-s, --setup', 'Display setup prompt')
+	.option('-s, --setup', 'Display setup mode')
 	.parse(process.argv);
 
 (async () => {

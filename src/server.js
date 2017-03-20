@@ -59,7 +59,7 @@ module.exports = async () => {
 
 			// not found
 			app.use((req, res) => {
-				res.apiSend(new require('./helpers/apiResult')(404, 'not found'));
+				res.apiSend(new (require('./helpers/apiResult'))(404, 'not found'));
 			});
 
 			app.listen(config.api.port, () => {
