@@ -70,7 +70,7 @@ module.exports = () => {
 		}],
 
 		// idを指定してアクセスキーを作成する
-		['get',  '/applications/:id/access_key', {
+		['post',  '/applications/:id/access_key', {
 			permissions:['applicationSpecial']
 		}],
 
