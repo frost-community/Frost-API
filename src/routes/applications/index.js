@@ -24,13 +24,15 @@ exports.post = async (request) => {
 		return new ApiResult(400, 'description is invalid format');
 
 	// permissions
-	if (!Application.analyzePermissions(permissions, request.db, request.config))
-		return new ApiResult(400, 'permissions is invalid format');
+	if (!Application.checkFormatPermissions(permissions, request.db, request.config))
+		return new ApiResult(400, 'permissions is invalid format. must be an array of string type.');
+
+	if (permissions.some(permission => request.config.api.additionDisabledPermissions.indexOf(permission) != -1)) // 利用を禁止された権限を含む
+		return new ApiResult(400, 'some permissions use are disabled.');
 
 	let application;
-
 	try {
-		application = await request.db.applications.createAsync({ //TODO: move to document models
+		application = await request.db.applications.createAsync({ // TODO: move to document models
 			name: name,
 			creatorId: userId,
 			description: description,

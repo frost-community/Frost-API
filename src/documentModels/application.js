@@ -2,6 +2,8 @@
 
 const randomRange = require('../helpers/randomRange');
 const objectSorter = require('../helpers/objectSorter');
+const type = require('../helpers/type');
+const permissionTypes = require('../helpers/permission').permissionTypes;
 const crypto = require('crypto');
 const mongo = require('mongodb');
 const moment = require('moment');
@@ -79,13 +81,17 @@ class Application {
 		return db.applications.findAsync({name: name});
 	}
 
-	static analyzePermissions(db, config) {
-		if (db == null || config == null)
+	static checkFormatPermissions(permissions, db, config) {
+		if (permissions == null || db == null || config == null)
 			throw new Error('missing arguments');
 
-		// TODO
+		if (!Array.isArray(permissions))
+			return false;
 
-		return true;
+		return permissions.every(permission =>
+			type(permission) == 'String' && // それは文字列？
+			permissionTypes.indexOf(permission) != -1 // それは存在する権限名？
+		);
 	}
 
 	static buildKeyHash(applicationId, creatorId, keyCode, db, config) {

@@ -20,6 +20,11 @@
       "applicationAccess": "application-access-secret-token",
       "authorizeRequest": "authorize-request-secret-token"
     },
+    "additionDisabledPermissions": [
+      "iceAuthHost",
+      "ApplicationSpecial",
+      "accountSpecial"
+    ],
     "invalidScreenNames": [
       "frost",
       "help",
