@@ -335,6 +335,16 @@ describe('Applications API', () => {
 					});
 				});
 			});
+
+			describe('/access_key', () => {
+				describe('[POST]', () => {
+					it('正しくリクエストされた場合は成功する');
+				});
+
+				describe('[GET]', () => {
+					it('正しくリクエストされた場合は成功する');
+				});
+			});
 		});
 	});
 });

@@ -31,14 +31,14 @@ describe('General -', () => {
 			routeList.forEach(route => {
 				let module;
 				try {
-					module = require(DirectoryRouter.getRouteMoludePath(route[1]));
+					module = require(DirectoryRouter.getRouteMoludePath(route[1]))[route[0]];
 				}
 				catch(e) {
 					module = null;
 				}
 
 				if (module == null) {
-					console.log(`route module not found: ${route[1]}`);
+					console.log(`route module not found: ${route[0]} ${route[1]}`);
 					errorCount++;
 				}
 			});

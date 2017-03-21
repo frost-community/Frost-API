@@ -10,7 +10,7 @@ const ApplicationAccess = require('../../built/documentModels/applicationAccess'
 const route = require('../../built/routes/ice_auth');
 const routeVerificationCode = require('../../built/routes/ice_auth/verification_code');
 const routeTargetUser = require('../../built/routes/ice_auth/target_user');
-const routeAccessKey = require('../../built/routes/ice_auth/access_key');
+const routeAuthorize = require('../../built/routes/ice_auth/authorize');
 
 describe('IceAuth API', () => {
 	describe('/ice_auth', () => {
@@ -174,7 +174,7 @@ describe('IceAuth API', () => {
 			});
 		});
 
-		describe('/access_key', () => {
+		describe('/authorize', () => {
 			describe('[POST]', () => {
 				it('正しくリクエストされた場合は成功する', done => {
 					(async () => {
@@ -204,8 +204,8 @@ describe('IceAuth API', () => {
 							});
 							assert.equal(type(res.data), 'Object');
 
-							// accessKey
-							res = await routeAccessKey.post({
+							// authorize
+							res = await routeAuthorize.post({
 								get: (h) => {
 									if (h == 'X-Ice-Auth-Key') return iceAuthKey;
 									return null;
