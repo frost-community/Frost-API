@@ -33,14 +33,26 @@ module.exports = async () => {
 		let config = loadConfig();
 
 		if (config != null) {
+			const dbProvider = await DbProvider.connectApidbAsync(config);
+			const db = new Db(config, dbProvider);
+
+			if (questionResult(await i('remove all db collections? (y/n) > '))) {
+				if (questionResult(await i('(!) Do you really do remove all document on db collections? (y/n) > '))) {
+					await db.applicationAccesses.removeAsync({});
+					console.log('cleaned applicationAccesses collection.');
+					await db.authorizeRequests.removeAsync({});
+					console.log('cleaned authorizeRequests collection.');
+					await db.applications.removeAsync({});
+					console.log('cleaned applications collection.');
+					await db.users.removeAsync({});
+					console.log('cleaned users collection.');
+				}
+			}
 			if (questionResult(await i('generate an application and its key for authentication host (Frost-Web etc.)? (y/n) > '))) {
 				let appName = await i('application name[Frost Web]: > ');
 
 				if (appName == '')
 					appName = 'Frost Web';
-
-				const dbProvider = await DbProvider.connectApidbAsync(config);
-				const db = new Db(config, dbProvider);
 
 				const user = await db.users.createAsync({
 					screenName: 'frost',
