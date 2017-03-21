@@ -10,7 +10,18 @@ exports.post = async (request) => {
 		return new ApiResult(400, 'applicationKey is invalid');
 
 	const applicationId = Application.splitKey(applicationKey, request.db, request.config).applicationId;
-	const authorizeRequest = await request.db.authorizeRequests.createAsync({applicationId: applicationId}); //TODO: move to document models
+
+	let authorizeRequest;
+	try {
+		authorizeRequest = await request.db.authorizeRequests.createAsync({ // TODO: move to document models
+			applicationId: applicationId
+		});
+	}
+	catch(err) {
+		console.log(err.stack);
+		return new ApiResult(500, 'faild to create authorizeRequest');
+	}
+
 	const iceAuthKey = await authorizeRequest.generateIceAuthKeyAsync();
 	await authorizeRequest.generateVerificationCodeAsync();
 

@@ -19,11 +19,18 @@ exports.post = async (request) => {
 	if (verificationCode !== authorizeRequest.document.verificationCode)
 		return new ApiResult(400, 'verificationCode is invalid');
 
-	const applicationAccess = await request.db.applicationAccesses.createAsync({ //TODO: move to document models
-		applicationId: authorizeRequest.document.applicationId,
-		userId: authorizeRequest.document.targetUserId,
-		keyCode: null
-	});
+	let applicationAccess;
+	try {
+		applicationAccess = await request.db.applicationAccesses.createAsync({ // TODO: move to document models
+			applicationId: authorizeRequest.document.applicationId,
+			userId: authorizeRequest.document.targetUserId,
+			keyCode: null
+		});
+	}
+	catch(err) {
+		console.log(err.stack);
+		return new ApiResult(500, 'faild to create applicationAccess');
+	}
 
 	const key = await applicationAccess.generateAccessKeyAsync();
 

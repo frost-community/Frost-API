@@ -48,9 +48,8 @@ exports.post = async (request) => {
 		return new ApiResult(400, 'description is invalid format');
 
 	let user;
-
 	try {
-		user = await request.db.users.createAsync({ //TODO: move to document models
+		user = await request.db.users.createAsync({ // TODO: move to document models
 			screenName: screenName,
 			passwordHash: hash,
 			name: name,
