@@ -28,10 +28,8 @@ exports.post = async (request) => {
 		return new ApiResult(400, 'screenName is invalid format');
 
 	// check validation
-	for (const invalidScreenName of request.config.api.invalidScreenNames) {
-		if (screenName === invalidScreenName)
-			return new ApiResult(400, 'screenName is invalid');
-	}
+	if (request.config.api.invalidScreenNames.some(invalidScreenName => screenName == invalidScreenName))
+		return new ApiResult(400, 'screenName is invalid');
 
 	// check duplication
 	if (await User.findByScreenNameAsync(screenName, request.db, request.config) != null)
