@@ -37,7 +37,7 @@ module.exports = () => {
 		}],
 
 		// verificationCodeを検証して、accessKeyを作成
-		['post', '/ice_auth/access_key', {
+		['post', '/ice_auth/authorize', {
 			params: [
 				{name: 'verificationCode', type: 'string'}
 			], headers: ['X-Ice-Auth-Key']
@@ -69,7 +69,12 @@ module.exports = () => {
 			permissions:['applicationSpecial']
 		}],
 
-		// idを指定してアプリケーションキーを取得する
+		// idを指定してアクセスキーを作成する
+		['get',  '/applications/:id/access_key', {
+			permissions:['applicationSpecial']
+		}],
+
+		// idを指定してアクセスキーを取得する
 		['get',  '/applications/:id/access_key', {
 			permissions:['applicationSpecial']
 		}],

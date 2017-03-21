@@ -20,6 +20,15 @@ class DirectoryRouter {
 		this.routes = [];
 	}
 
+	static getRouteMoludePath(endpoint) {
+		let dirPath = path.join(__dirname, '../routes', endpoint.replace(/:/, ''));
+
+		if (dirPath.match(/\/$/))
+			dirPath += 'index';
+
+		return dirPath;
+	}
+
 	/**
 	 * ルートを追加します
 	 *
@@ -46,12 +55,9 @@ class DirectoryRouter {
 
 					request.extensions = extensions;
 
-					let dirPath = path.join(__dirname, '../routes', routePath.replace(/:/, ''));
+					let dirPath = DirectoryRouter.getRouteMoludePath();
 
 					console.log(`dirPath: ${dirPath}`);
-
-					if (dirPath.match(/\/$/))
-						dirPath += 'index';
 
 					// == middleware for the directory
 					let dirMiddlewarePath;
@@ -74,17 +80,22 @@ class DirectoryRouter {
 							return;
 					}
 					catch(e) {
-						// noop
-						console.log('dirMiddleware wasnt executed');
+						console.log('dirMiddleware wasn\'t executed');
 					}
 
-					dirPath = dirPath.replace(/\//g, path.sep);
-					const routeFuncAsync = require(dirPath)[method];
+					let routeFuncAsync;
+					try {
+						dirPath = dirPath.replace(/\//g, path.sep);
+						routeFuncAsync = require(dirPath)[method];
+					}
+					catch(e) {
+						// noop
+					}
 
 					(async () => {
 						try {
 							if (routeFuncAsync == null)
-								throw new Error(`endpoint not found\ntarget: ${method} ${routePath}`);
+								throw new Error(`route function is not found\ntarget: ${method} ${routePath}`);
 
 							const result = await routeFuncAsync(request);
 							response.apiSend(result);

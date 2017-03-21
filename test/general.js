@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const config = require('../built/helpers/loadConfig')();
+const DirectoryRouter = require('../built/helpers/directoryRouter');
 
 describe('General -', () => {
 	describe('routes', () => {
@@ -23,6 +24,25 @@ describe('General -', () => {
 					}
 				}
 			}
+		});
+
+		it('すべての対象ルートのモジュールが存在している', () => {
+			let errorCount = 0;
+			routeList.forEach(route => {
+				let module;
+				try {
+					module = require(DirectoryRouter.getRouteMoludePath(route[1]));
+				}
+				catch(e) {
+					module = null;
+				}
+
+				if (module == null) {
+					console.log(`route module not found: ${route[1]}`);
+					errorCount++;
+				}
+			});
+			assert.equal(errorCount, 0);
 		});
 	});
 
