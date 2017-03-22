@@ -21,6 +21,9 @@ class DirectoryRouter {
 	}
 
 	static getRouteMoludePath(endpoint) {
+		if (endpoint == null)
+			throw new Error('missing arguments');
+
 		let dirPath = path.join(__dirname, '../routes', endpoint.replace(/:/, ''));
 
 		if (dirPath.match(/\/$/))
@@ -55,45 +58,23 @@ class DirectoryRouter {
 
 					request.extensions = extensions;
 
-					let dirPath = DirectoryRouter.getRouteMoludePath();
+					let dirPath = DirectoryRouter.getRouteMoludePath(routePath);
 
 					console.log(`dirPath: ${dirPath}`);
 
-					// == middleware for the directory
-					let dirMiddlewarePath;
-					if (path.basename(dirPath) == 'index') // indexは
-						dirMiddlewarePath = path.join(path.dirname(dirPath), '../_every');
-					else
-						dirMiddlewarePath = path.join(path.dirname(dirPath), '_every');
-
-					dirMiddlewarePath = dirMiddlewarePath.replace(/\//g, path.sep);
-
-					console.log(`dirMiddlewarePath: ${dirMiddlewarePath}`);
-
-					try {
-						let isReturn = true;
-
-						const dirMiddleware = require(dirMiddlewarePath);
-						dirMiddleware(request, response, () => isReturn = false);
-
-						if (isReturn)
-							return;
-					}
-					catch(e) {
-						console.log('dirMiddleware wasn\'t executed');
-					}
-
-					let routeFuncAsync;
-					try {
-						dirPath = dirPath.replace(/\//g, path.sep);
-						routeFuncAsync = require(dirPath)[method];
-					}
-					catch(e) {
-						// noop
-					}
-
 					(async () => {
 						try {
+							// routing
+
+							let routeFuncAsync;
+							try {
+								dirPath = dirPath.replace(/\//g, path.sep);
+								routeFuncAsync = require(dirPath)[method];
+							}
+							catch(e) {
+								// noop
+							}
+
 							if (routeFuncAsync == null)
 								throw new Error(`route function is not found\ntarget: ${method} ${routePath}`);
 
