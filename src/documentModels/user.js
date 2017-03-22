@@ -1,6 +1,7 @@
 'use strict';
 
 const objectSorter = require('../helpers/objectSorter');
+const crypto = require('crypto');
 const moment = require('moment');
 
 class User {
@@ -18,7 +19,7 @@ class User {
 		if (password == null)
 			throw new Error('missing arguments');
 
-		const passwordHashElements = document.passwordHash.split('.');
+		const passwordHashElements = this.document.passwordHash.split('.');
 		const hash = passwordHashElements[0];
 		const salt = passwordHashElements[1];
 

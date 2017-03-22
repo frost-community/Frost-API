@@ -22,7 +22,7 @@ exports.post = async (request) => {
 		return new ApiResult(400, 'password is invalid format');
 
 	const user = await User.findByScreenNameAsync(screenName, request.db, request.config);
-	if (!user == null)
+	if (user == null)
 		return new ApiResult(400, 'screenName is invalid');
 
 	if (!user.verifyPassword(password))
