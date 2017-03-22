@@ -24,7 +24,7 @@ exports.post = async (request) => {
 	let applicationAccess = await request.db.applicationAccesses.findAsync({
 		applicationId: authorizeRequest.document.applicationId,
 		userId: authorizeRequest.document.targetUserId
-	}) != null;
+	});
 
 	let accessKey;
 	if (applicationAccess == null) {
