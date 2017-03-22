@@ -24,7 +24,7 @@ exports.post = async (request) => {
 	const hash = `${sha256.digest('hex')}.${salt}`;
 
 	// screenName
-	if (!/^[a-z0-9_]{4,15}$/.test(screenName) || /^(.)\1{3,}$/.test(screenName))
+	if (!User.checkFormatScreenName(screenName))
 		return new ApiResult(400, 'screenName is invalid format');
 
 	// check validation
@@ -36,7 +36,7 @@ exports.post = async (request) => {
 		return new ApiResult(400, 'this screenName is already exists');
 
 	// password
-	if (!/^[a-z0-9_-]{6,}$/.test(password))
+	if (!User.checkFormatPassword(password))
 		return new ApiResult(400, 'password is invalid format');
 
 	// name

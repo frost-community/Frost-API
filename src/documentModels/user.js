@@ -14,6 +14,20 @@ class User {
 
 	// TODO: 各種操作用メソッドの追加
 
+	verifyPassword(password) {
+		if (password == null)
+			throw new Error('missing arguments');
+
+		const passwordHashElements = document.passwordHash.split('.');
+		const hash = passwordHashElements[0];
+		const salt = passwordHashElements[1];
+
+		const sha256 = crypto.createHash('sha256');
+		sha256.update(`${password}.${salt}`);
+
+		return hash == sha256.digest('hex');
+	}
+
 	serialize() {
 		const res = {};
 		Object.assign(res, this.document);
@@ -40,7 +54,7 @@ class User {
 
 	/**
 	 * idからドキュメントモデルのインスタンスを取得します
-	 * 
+	 *
 	 * @return {User}
 	 */
 	static async findByIdAsync(id, db, config) {
@@ -52,7 +66,7 @@ class User {
 
 	/**
 	 * screenNameからドキュメントモデルのインスタンスを取得します
-	 * 
+	 *
 	 * @return {User}
 	 */
 	static async findByScreenNameAsync(screenName, db, config) {
@@ -60,6 +74,20 @@ class User {
 			throw new Error('missing arguments');
 
 		return db.users.findAsync({screenName: screenName});
+	}
+
+	static checkFormatScreenName(screenName) {
+		if (screenName == null)
+			throw new Error('missing arguments');
+
+		return /^[a-zA-Z0-9_-]{4,15}$/.test(screenName) || /^(.)\1{3,}$/.test(screenName);
+	}
+
+	static checkFormatPassword(password) {
+		if (password == null)
+			throw new Error('missing arguments');
+
+		return /^[!-~]{6,}$/.test(password);
 	}
 }
 module.exports = User;

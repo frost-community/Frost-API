@@ -2,10 +2,12 @@
 
 const ApiResult = require('../../helpers/apiResult');
 const AuthorizeRequest = require('../../documentModels/authorizeRequest');
+const User = require('../../documentModels/user');
 
 exports.post = async (request) => {
 	const iceAuthKey = request.get('X-Ice-Auth-Key');
-	const verificationCode = request.body.verificationCode;
+	const screenName = request.body.screenName;
+	const password = request.body.password;
 
 	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, request.db, request.config))
 		return new ApiResult(400, 'X-Ice-Auth-Key header is invalid');
@@ -13,25 +15,32 @@ exports.post = async (request) => {
 	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, request.db, request.config).authorizeRequestId;
 	const authorizeRequest = await AuthorizeRequest.findByIdAsync(authorizeRequestId, request.db, request.config);
 
-	if (authorizeRequest.document.targetUserId == null)
-		return new ApiResult(400, 'authorization has not been done yet');
+	if (!User.checkFormatScreenName(screenName))
+		return new ApiResult(400, 'screenName is invalid format');
 
-	if (verificationCode !== authorizeRequest.document.verificationCode)
-		return new ApiResult(400, 'verificationCode is invalid');
+	if (!User.checkFormatPassword(password))
+		return new ApiResult(400, 'password is invalid format');
+
+	const user = await User.findByScreenNameAsync(screenName, request.db, request.config);
+	if (!user == null)
+		return new ApiResult(400, 'screenName is invalid');
+
+	if (!user.verifyPassword(password))
+		return new ApiResult(400, 'password is invalid');
 
 	// TODO: refactoring(duplication)
 
 	let applicationAccess = await request.db.applicationAccesses.findAsync({
 		applicationId: authorizeRequest.document.applicationId,
-		userId: authorizeRequest.document.targetUserId
-	}) != null;
+		userId: user.document._id
+	});
 
 	let accessKey;
 	if (applicationAccess == null) {
 		try {
 			applicationAccess = await request.db.applicationAccesses.createAsync({ // TODO: move to document models
 				applicationId: authorizeRequest.document.applicationId,
-				userId: authorizeRequest.document.targetUserId,
+				userId: user.document._id,
 				keyCode: null
 			});
 		}

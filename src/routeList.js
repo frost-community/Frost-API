@@ -9,6 +9,7 @@ module.exports = () => {
 		// アカウントを作成する
 		['post', '/account', {
 			params: [
+				{name: 'screenName', type: 'string'},
 				{name: 'password', type: 'string'},
 				{name: 'description', type: 'string', require: false},
 				{name: 'name', type: 'string', require: false}
@@ -17,7 +18,7 @@ module.exports = () => {
 
 		// == IceAuth ==
 
-		// 認証リクエスト(iceAuthKey取得)
+		// 認証リクエスト
 		['post', '/ice_auth', {
 			params: [
 				{name: 'applicationKey', type: 'string'}
@@ -33,6 +34,14 @@ module.exports = () => {
 		['post', '/ice_auth/target_user', {
 			params: [
 				{name: 'userId', type: 'string'}
+			], headers: ['X-Ice-Auth-Key'], permissions:['iceAuthHost']
+		}],
+
+		// 直接screenNameとpasswordを検証して、accessKeyを作成(認証ホスト専用)
+		['post', '/ice_auth/authorize_basic', {
+			params: [
+				{name: 'screenName', type: 'string'},
+				{name: 'password', type: 'string'}
 			], headers: ['X-Ice-Auth-Key'], permissions:['iceAuthHost']
 		}],
 
@@ -66,16 +75,6 @@ module.exports = () => {
 
 		// idを指定してアプリケーションキーを取得する
 		['get',  '/applications/:id/application_key', {
-			permissions:['applicationSpecial']
-		}],
-
-		// idを指定してアクセスキーを作成する
-		['post',  '/applications/:id/access_key', {
-			permissions:['applicationSpecial']
-		}],
-
-		// idを指定してアクセスキーを取得する
-		['get',  '/applications/:id/access_key', {
 			permissions:['applicationSpecial']
 		}],
 
