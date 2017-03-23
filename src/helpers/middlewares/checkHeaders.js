@@ -19,7 +19,7 @@ module.exports = (request, response, next) => {
 		}
 	}
 	catch(err) {
-		console.log('checkHeaders failed');
+		console.log(`checkHeaders failed: ${err.trace}`);
 		throw err;
 	}
 

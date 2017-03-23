@@ -5,15 +5,14 @@ const Application = require('../../../documentModels/application');
 const mongo = require('mongodb');
 
 exports.get = async (request) => {
-	let applicationId;
+	let application;
 	try {
-		applicationId = mongo.ObjectId(request.params.id);
+		const applicationId = mongo.ObjectId(request.params.id);
+		application = await Application.findByIdAsync(applicationId, request.db, request.config);
 	}
-	catch(e) {
-		return new ApiResult(400, 'application is not found');
+	catch(err) {
+		console.log(err.trace);
 	}
-
-	const application = await Application.findByIdAsync(applicationId, request.db, request.config);
 
 	if (application == null)
 		return new ApiResult(400, 'application is not found');

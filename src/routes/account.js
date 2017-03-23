@@ -57,8 +57,7 @@ exports.post = async (request) => {
 		});
 	}
 	catch(err) {
-		console.log(err.stack);
-		return new ApiResult(500, 'faild to create account');
+		console.log(err.trace);
 	}
 
 	if (user == null)

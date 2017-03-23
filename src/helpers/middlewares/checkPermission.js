@@ -48,7 +48,7 @@ module.exports = (request, response, next) => {
 			next();
 		}
 		catch(err) {
-			console.log(`checkPermission failed (${err})`);
+			console.log(`checkPermission failed: ${err.trace}`);
 			throw err;
 		}
 	})();

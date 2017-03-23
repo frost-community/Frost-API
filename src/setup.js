@@ -48,6 +48,7 @@ module.exports = async () => {
 					console.log('cleaned users collection.');
 				}
 			}
+
 			if (questionResult(await i('generate an application and its key for authentication host (Frost-Web etc.)? (y/n) > '))) {
 				let appName = await i('application name[Frost Web]: > ');
 
@@ -96,8 +97,8 @@ module.exports = async () => {
 			}
 		}
 	}
-	catch(e) {
-		console.log(`Setup Error: ${e}`);
+	catch(err) {
+		console.log(`Unprocessed Setup Error: ${err}`);
 	}
 
 	console.log('----------------');

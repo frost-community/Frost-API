@@ -32,7 +32,7 @@ module.exports = (request, response, next) => {
 		}
 	}
 	catch(err) {
-		console.log('checkParams failed');
+		console.log(`checkParams failed: ${err.trace}`);
 		throw err;
 	}
 

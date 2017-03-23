@@ -67,7 +67,7 @@ module.exports = async () => {
 			});
 		}
 	}
-	catch(e) {
-		console.log(`Server Error: ${e.stack}`);
+	catch(err) {
+		console.log(`Unprocessed Server Error: ${err.stack}`);
 	}
 };

@@ -46,13 +46,31 @@ exports.post = async (request) => {
 		}
 		catch(err) {
 			console.log(err.stack);
-			return new ApiResult(500, 'faild to create applicationAccess');
 		}
 
-		accessKey = await applicationAccess.generateAccessKeyAsync();
+		if (applicationAccess == null)
+			return new ApiResult(500, 'faild to create applicationAccess');
+
+		try {
+			accessKey = await applicationAccess.generateAccessKeyAsync();
+		}
+		catch(err) {
+			console.log(err.stack);
+		}
+
+		if (accessKey == null)
+			return new ApiResult(500, 'faild to generate accessKey');
 	}
 	else {
-		accessKey = applicationAccess.getAccessKey();
+		try {
+			accessKey = applicationAccess.getAccessKey();
+		}
+		catch(err) {
+			console.log(err.stack);
+		}
+
+		if (accessKey == null)
+			return new ApiResult(500, 'faild to build accessKey');
 	}
 
 	return new ApiResult(200, {accessKey: accessKey});

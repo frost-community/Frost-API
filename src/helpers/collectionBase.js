@@ -15,12 +15,18 @@ class CollectionBase {
 	}
 
 	async createAsync(data) {
+		if (data == null)
+			throw new Error('missing arguments');
+
 		const result = await this.db.dbProvider.createAsync(this.collectionName, data);
 
 		return new (require(this.documentModelName))(result, this.db, this._config);
 	}
 
 	async findAsync(query) {
+		if (query == null)
+			throw new Error('missing arguments');
+
 		const document = await this.db.dbProvider.findAsync(this.collectionName, query);
 
 		if (document == null)
@@ -30,20 +36,26 @@ class CollectionBase {
 	}
 
 	async findByIdAsync(id) {
+		if (id == null)
+			throw new Error('missing arguments');
+
 		let parsedId = id;
 		try {
 			if (type(id) == 'String')
 				parsedId = mongo.ObjectId(id);
 		}
 		catch(e) {
-			console.log(e);
-			return null;
+			console.log(e.trace);
+			throw new Error('mongodb.ObjectId parse error');
 		}
 
 		return await this.findAsync({_id: parsedId});
 	}
 
 	async findArrayAsync(query) {
+		if (query == null)
+			throw new Error('missing arguments');
+
 		const documents = await this.db.dbProvider.findArrayAsync(this.collectionName, query);
 
 		if (documents == null || documents.length === 0)
@@ -58,24 +70,33 @@ class CollectionBase {
 	}
 
 	async updateAsync(query, data) {
+		if (query == null || data == null)
+			throw new Error('missing arguments');
+
 		return (await this.db.dbProvider.updateAsync(this.collectionName, query, data)).result;
 	}
 
 	async updateByIdAsync(id, data) {
+		if (id == null || data == null)
+			throw new Error('missing arguments');
+
 		let parsedId = id;
 		try {
 			if (type(id) == 'String')
 				parsedId = mongo.ObjectId(id);
 		}
 		catch(e) {
-			console.log(e);
-			return null;
+			console.log(e.trace);
+			throw new Error('mongodb.ObjectId parse error');
 		}
 
 		return await this.updateAsync({_id: parsedId}, data);
 	}
 
 	async removeAsync(query) {
+		if (query == null)
+			throw new Error('missing arguments');
+
 		return await this.db.dbProvider.removeAsync(this.collectionName, query);
 	}
 }

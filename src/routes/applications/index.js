@@ -40,7 +40,7 @@ exports.post = async (request) => {
 		});
 	}
 	catch(err) {
-		return new ApiResult(500, 'faild to create application');
+		console.log(err.trace);
 	}
 
 	if (application == null)

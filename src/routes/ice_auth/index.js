@@ -19,8 +19,10 @@ exports.post = async (request) => {
 	}
 	catch(err) {
 		console.log(err.stack);
-		return new ApiResult(500, 'faild to create authorizeRequest');
 	}
+
+	if (authorizeRequest == null)
+		return new ApiResult(500, 'faild to create authorizeRequest');
 
 	const iceAuthKey = await authorizeRequest.generateIceAuthKeyAsync();
 	await authorizeRequest.generateVerificationCodeAsync();

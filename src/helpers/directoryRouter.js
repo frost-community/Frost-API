@@ -64,8 +64,6 @@ class DirectoryRouter {
 
 					(async () => {
 						try {
-							// routing
-
 							let routeFuncAsync;
 							try {
 								dirPath = dirPath.replace(/\//g, path.sep);
@@ -82,11 +80,12 @@ class DirectoryRouter {
 							response.apiSend(result);
 						}
 						catch (err) {
-							if (type(err) !== 'Error')
-								response.apiSend(err);
-							else {
-								console.log(`Internal Error (Async): ${err.stack}`);
+							if (type(err) == 'Error') {
+								console.log(`Internal Error: ${err.stack}`);
 								response.apiSend(new ApiResult(500, {message: 'internal error', details: err.stack}));
+							}
+							else {
+								response.apiSend(new ApiResult(500, {message: 'internal error(unknown type)', details: err}));
 							}
 						}
 					})();
