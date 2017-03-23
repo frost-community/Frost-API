@@ -5,12 +5,15 @@ const type = require('../../built/helpers/type');
 const config = require('../../built/helpers/loadConfig')();
 const DbProvider = require('../../built/helpers/dbProvider');
 const Db = require('../../built/helpers/db');
+const crypto = require('crypto');
+const randomRange = require('../../built/helpers/randomRange');
 const AuthorizeRequest = require('../../built/documentModels/authorizeRequest');
 const ApplicationAccess = require('../../built/documentModels/applicationAccess');
 const route = require('../../built/routes/ice_auth');
 const routeVerificationCode = require('../../built/routes/ice_auth/verification_code');
 const routeTargetUser = require('../../built/routes/ice_auth/target_user');
 const routeAuthorize = require('../../built/routes/ice_auth/authorize');
+const routeAuthorizeBasic = require('../../built/routes/ice_auth/authorize_basic');
 
 describe('IceAuth API', () => {
 	describe('/ice_auth', () => {
@@ -35,13 +38,20 @@ describe('IceAuth API', () => {
 		});
 
 		// add general user, general application, general authorizeRequest
-		let user, app, authorizeRequest;
+		let user, password, app, authorizeRequest;
 		beforeEach(done => {
 			(async () => {
 				try {
+					password = 'abcdefg';
+
+					const salt = randomRange(1, 99999);
+					const sha256 = crypto.createHash('sha256');
+					sha256.update(`${password}.${salt}`);
+					const hash = `${sha256.digest('hex')}.${salt}`;
+
 					user = await db.users.createAsync({
 						screenName: 'generaluser',
-						passwordHash: 'abcdefg',
+						passwordHash: hash,
 						name: 'froster',
 						description: 'this is generaluser.'
 					});
@@ -216,7 +226,46 @@ describe('IceAuth API', () => {
 								db: db, config: config
 							});
 
+							assert(await ApplicationAccess.verifyKeyAsync(res.data.accessKey, db, config));
+
+							done();
+						}
+						catch(e) {
+							done(e);
+						}
+					})();
+				});
+			});
+		});
+
+		describe('/authorize_basic', () => {
+			describe('[POST]', () => {
+				it('正しくリクエストされた場合は成功する', done => {
+					(async () => {
+						try {
+							// iceAuthKey
+							let res = await route.post({
+								body: {
+									applicationKey: await app.generateApplicationKeyAsync()
+								},
+								db: db, config: config
+							});
 							assert.equal(type(res.data), 'Object');
+
+							const iceAuthKey = res.data.iceAuthKey;
+
+							res = await routeAuthorizeBasic.post({
+								get: (h) => {
+									if (h == 'X-Ice-Auth-Key') return iceAuthKey;
+									return null;
+								},
+								body: {
+									screenName: user.document.screenName,
+									password: password
+								},
+								db: db, config: config
+							});
+
 							assert(await ApplicationAccess.verifyKeyAsync(res.data.accessKey, db, config));
 
 							done();
