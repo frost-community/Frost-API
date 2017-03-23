@@ -11,7 +11,7 @@ exports.get = async (request) => {
 		application = await Application.findByIdAsync(applicationId, request.db, request.config);
 	}
 	catch(err) {
-		console.log(err.trace);
+		// noop
 	}
 
 	if (application == null)
