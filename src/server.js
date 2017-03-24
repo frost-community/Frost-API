@@ -39,7 +39,7 @@ module.exports = async () => {
 			const directoryRouter = new DirectoryRouter(app, db, config);
 
 			app.use((req, res, next) => {
-				// dependency injection
+				// services
 				req.directoryRouter = directoryRouter;
 				req.db = db;
 				req.config = config;
@@ -47,6 +47,10 @@ module.exports = async () => {
 				// sanitize
 				req.body = sanitize(req.body);
 				req.params = sanitize(req.params);
+
+				// cors headers
+				res.header('Access-Control-Allow-Origin', '*');
+				res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
 
 				next();
 			});
