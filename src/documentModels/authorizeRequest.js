@@ -46,7 +46,9 @@ class AuthorizeRequest {
 		if (this.document.keyCode == null)
 			throw new Error('keyCode is empty');
 
-		return AuthorizeRequest.buildKey(this.document._id, this.document.applicationId, this.document.keyCode, this.db, this.config);
+		const hash = AuthorizeRequest.buildHash(this.document._id, this.document.applicationId, this.document.keyCode, this.db, this.config);
+
+		return `${this.document._id}-${hash}.${this.document.keyCode}`;
 	}
 
 	async setTargetUserIdAsync(userId) {
@@ -88,7 +90,7 @@ class AuthorizeRequest {
 		return db.authorizeRequests.findByIdAsync(id);
 	}
 
-	static buildKeyHash(authorizeRequestId, applicationId, keyCode, db, config) {
+	static buildHash(authorizeRequestId, applicationId, keyCode, db, config) {
 		if (authorizeRequestId == null || applicationId == null || keyCode == null || db == null || config == null)
 			throw new Error('missing arguments');
 
@@ -96,13 +98,6 @@ class AuthorizeRequest {
 		sha256.update(`${config.api.secretToken.authorizeRequest}/${applicationId}/${authorizeRequestId}/${keyCode}`);
 
 		return sha256.digest('hex');
-	}
-
-	static buildKey(authorizeRequestId, applicationId, keyCode, db, config) {
-		if (authorizeRequestId == null || applicationId == null || keyCode == null || db == null || config == null)
-			throw new Error('missing arguments');
-
-		return `${authorizeRequestId}-${AuthorizeRequest.buildKeyHash(authorizeRequestId, applicationId, keyCode, db, config)}.${keyCode}`;
 	}
 
 	static splitKey(key, db, config) {
@@ -135,10 +130,10 @@ class AuthorizeRequest {
 		if (authorizeRequest == null)
 			return false;
 
-		const correctKeyHash = AuthorizeRequest.buildKeyHash(elements.authorizeRequestId, authorizeRequest.document.applicationId, elements.keyCode, db, config);
+		const correctHash = AuthorizeRequest.buildHash(elements.authorizeRequestId, authorizeRequest.document.applicationId, elements.keyCode, db, config);
 		// const createdAt = moment(authorizeRequest._id.getTimestamp());
 		const isAvailabilityPeriod = true; // Math.abs(Date.now() - createdAt) < config.api.iceAuthKeyExpireSec;
-		const isPassed = isAvailabilityPeriod && elements.hash === correctKeyHash && elements.keyCode === authorizeRequest.document.keyCode;
+		const isPassed = isAvailabilityPeriod && elements.hash === correctHash && elements.keyCode === authorizeRequest.document.keyCode;
 
 		return isPassed;
 	}

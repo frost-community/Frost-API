@@ -37,7 +37,9 @@ class Application {
 		if (this.document.keyCode == null)
 			throw new Error('keyCode is empty');
 
-		return Application.buildKey(this.document._id, this.document.creatorId, this.document.keyCode, this.db, this.config);
+		const hash = Application.buildHash(this.document._id, this.document.creatorId, this.document.keyCode, this.db, this.config);
+
+		return `${this.document._id}-${hash}.${this.document.keyCode}`;
 	}
 
 	serialize() {
@@ -94,7 +96,7 @@ class Application {
 		);
 	}
 
-	static buildKeyHash(applicationId, creatorId, keyCode, db, config) {
+	static buildHash(applicationId, creatorId, keyCode, db, config) {
 		if (applicationId == null || creatorId == null || keyCode == null || db == null || config == null)
 			throw new Error('missing arguments');
 
@@ -102,13 +104,6 @@ class Application {
 		sha256.update(`${config.api.secretToken.application}/${creatorId}/${applicationId}/${keyCode}`);
 
 		return sha256.digest('hex');
-	}
-
-	static buildKey(applicationId, creatorId, keyCode, db, config) {
-		if (applicationId == null || creatorId == null || keyCode == null || db == null || config == null)
-			throw new Error('missing arguments');
-
-		return `${applicationId}-${Application.buildKeyHash(applicationId, creatorId, keyCode, db, config)}.${keyCode}`;
 	}
 
 	static splitKey(key, db, config) {
@@ -141,8 +136,8 @@ class Application {
 		if (application == null)
 			return false;
 
-		const correctKeyHash = Application.buildKeyHash(elements.applicationId, application.document.creatorId, elements.keyCode, db, config);
-		const isPassed = elements.hash === correctKeyHash && elements.keyCode === application.document.keyCode;
+		const correctHash = Application.buildHash(elements.applicationId, application.document.creatorId, elements.keyCode, db, config);
+		const isPassed = elements.hash === correctHash && elements.keyCode === application.document.keyCode;
 
 		return isPassed;
 	}

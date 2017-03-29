@@ -39,7 +39,9 @@ class ApplicationAccess {
 		if (this.document.keyCode == null)
 			throw new Error('keyCode is empty');
 
-		return ApplicationAccess.buildKey(this.document.applicationId, this.document.userId, this.document.keyCode, this.db, this.config);
+		const hash = ApplicationAccess.buildHash(this.document.applicationId, this.document.userId, this.document.keyCode, this.db, this.config);
+
+		return `${this.document.userId}-${hash}.${this.document.keyCode}`;
 	}
 
 	serialize() {
@@ -73,7 +75,7 @@ class ApplicationAccess {
 		return db.applicationAccesses.findByIdAsync(id);
 	}
 
-	static buildKeyHash(applicationId, userId, keyCode, db, config) {
+	static buildHash(applicationId, userId, keyCode, db, config) {
 		if (applicationId == null || userId == null || keyCode == null || db == null || config == null)
 			throw new Error('missing arguments');
 
@@ -81,13 +83,6 @@ class ApplicationAccess {
 		sha256.update(`${config.api.secretToken.applicationAccess}/${applicationId}/${userId}/${keyCode}`);
 
 		return sha256.digest('hex');
-	}
-
-	static buildKey(applicationId, userId, keyCode, db, config) {
-		if (applicationId == null || userId == null || keyCode == null || db == null || config == null)
-			throw new Error('missing arguments');
-
-		return `${userId}-${ApplicationAccess.buildKeyHash(applicationId, userId, keyCode, db, config)}.${keyCode}`;
 	}
 
 	static splitKey(key, db, config) {
@@ -120,8 +115,8 @@ class ApplicationAccess {
 		if (applicationAccess == null)
 			return false;
 
-		const correctKeyHash = ApplicationAccess.buildKeyHash(applicationAccess.document.applicationId, elements.userId, elements.keyCode, db, config);
-		const isPassed = elements.hash === correctKeyHash && elements.keyCode === applicationAccess.document.keyCode;
+		const correctHash = ApplicationAccess.buildHash(applicationAccess.document.applicationId, elements.userId, elements.keyCode, db, config);
+		const isPassed = elements.hash === correctHash && elements.keyCode === applicationAccess.document.keyCode;
 
 		return isPassed;
 	}
