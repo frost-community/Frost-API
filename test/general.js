@@ -2,7 +2,7 @@
 
 const assert = require('assert');
 const config = require('../built/helpers/loadConfig')();
-const DirectoryRouter = require('../built/helpers/directoryRouter');
+const Route = require('../built/helpers/route');
 
 describe('General -', () => {
 	describe('routes', () => {
@@ -16,22 +16,13 @@ describe('General -', () => {
 			}
 		});
 
-		it('権限リストにある権限名のみを利用している', () => {
-			for(const route of routeList) {
-				if ('permissions' in route[2]) {
-					for(const permission of route[2].permissions) {
-						assert(require('../built/helpers/permission').permissionTypes.indexOf(permission) != -1);
-					}
-				}
-			}
-		});
-
 		it('すべての対象ルートのモジュールが存在している', () => {
 			let errorCount = 0;
 			routeList.forEach(route => {
+				const routeInstance = new Route(route[0], route[1]);
 				let module;
 				try {
-					module = require(DirectoryRouter.getRouteMoludePath(route[1]))[route[0]];
+					module = require(routeInstance.getMoludePath())[routeInstance.method];
 				}
 				catch(e) {
 					module = null;

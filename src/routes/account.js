@@ -6,6 +6,18 @@ const randomRange = require('../helpers/randomRange');
 const User = require('../documentModels/user');
 
 exports.post = async (request) => {
+	const result = await request.checkRequestAsync({
+		params: [
+			{name: 'screenName', type: 'string'},
+			{name: 'password', type: 'string'},
+			{name: 'description', type: 'string', require: false},
+			{name: 'name', type: 'string', require: false}
+		], permissions:['accountSpecial']
+	});
+
+	if (result != null)
+		return result;
+
 	const screenName = request.body.screenName;
 	const password = request.body.password;
 	let name = request.body.name;

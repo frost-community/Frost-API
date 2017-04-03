@@ -4,6 +4,15 @@ const ApiResult = require('../../helpers/apiResult');
 const Application = require('../../documentModels/application');
 
 exports.post = async (request) => {
+	const result = await request.checkRequestAsync({
+		params: [
+			{name: 'applicationKey', type: 'string'}
+		]
+	});
+
+	if (result != null)
+		return result;
+
 	const applicationKey = request.body.applicationKey;
 
 	if (!await Application.verifyKeyAsync(applicationKey, request.db, request.config))

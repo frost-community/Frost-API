@@ -5,6 +5,13 @@ const Application = require('../../../documentModels/application');
 const mongo = require('mongodb');
 
 exports.get = async (request) => {
+	const result = await request.checkRequestAsync({
+		permissions: ['application']
+	});
+
+	if (result != null)
+		return result;
+
 	let application;
 	try {
 		const applicationId = mongo.ObjectId(request.params.id);
@@ -15,7 +22,7 @@ exports.get = async (request) => {
 	}
 
 	if (application == null)
-		return new ApiResult(400, 'application is not found');
+		return new ApiResult(404, 'application is not found');
 
 	// 対象アプリケーションの所有者かどうか
 	if (application.document.creatorId.toString() !== request.user.document._id.toString())

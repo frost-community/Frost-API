@@ -4,6 +4,18 @@ const ApiResult = require('../../helpers/apiResult');
 const Application = require('../../documentModels/application');
 
 exports.post = async (request) => {
+	const result = await request.checkRequestAsync({
+		params: [
+			{name: 'name', type: 'string'},
+			{name: 'description', type: 'string', require: false},
+			{name: 'permissions', type: 'array'}
+		],
+		permissions: ['applicationSpecial']
+	});
+
+	if (result != null)
+		return result;
+
 	const userId = request.user.document._id;
 	const name = request.body.name;
 	let description = request.body.description;

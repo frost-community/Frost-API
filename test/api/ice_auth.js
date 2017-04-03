@@ -101,7 +101,7 @@ describe('IceAuth API', () => {
 							body: {
 								applicationKey: applicationKey
 							},
-							db: db, config: config
+							db: db, config: config, checkRequestAsync: () => null
 						});
 
 						assert(await AuthorizeRequest.verifyKeyAsync(res.data.iceAuthKey, db, config));
@@ -128,7 +128,7 @@ describe('IceAuth API', () => {
 									if (h == 'X-Ice-Auth-Key') return iceAuthKey;
 									return null;
 								},
-								db: db, config: config
+								db: db, config: config, checkRequestAsync: () => null
 							});
 
 							assert.deepEqual(res.data, {
@@ -155,7 +155,7 @@ describe('IceAuth API', () => {
 								body: {
 									applicationKey: await app.generateApplicationKeyAsync()
 								},
-								db: db, config: config
+								db: db, config: config, checkRequestAsync: () => null
 							});
 							assert.equal(typeof res.data, 'object');
 
@@ -169,7 +169,7 @@ describe('IceAuth API', () => {
 									iceAuthKey: res.data.iceAuthKey,
 									userId: user.document._id.toString()
 								},
-								db: db, config: config
+								db: db, config: config, checkRequestAsync: () => null
 							});
 							assert.equal(typeof res.data, 'object');
 
@@ -193,7 +193,7 @@ describe('IceAuth API', () => {
 								body: {
 									applicationKey: await app.generateApplicationKeyAsync()
 								},
-								db: db, config: config
+								db: db, config: config, checkRequestAsync: () => null
 							});
 							assert.equal(typeof res.data, 'object');
 
@@ -209,7 +209,7 @@ describe('IceAuth API', () => {
 								body: {
 									userId: user.document._id.toString()
 								},
-								db: db, config: config
+								db: db, config: config, checkRequestAsync: () => null
 							});
 							assert.equal(typeof res.data, 'object');
 
@@ -222,7 +222,7 @@ describe('IceAuth API', () => {
 								body: {
 									verificationCode: authorizeRequest.document.verificationCode
 								},
-								db: db, config: config
+								db: db, config: config, checkRequestAsync: () => null
 							});
 
 							assert(await ApplicationAccess.verifyKeyAsync(res.data.accessKey, db, config));
@@ -247,7 +247,7 @@ describe('IceAuth API', () => {
 								body: {
 									applicationKey: await app.generateApplicationKeyAsync()
 								},
-								db: db, config: config
+								db: db, config: config, checkRequestAsync: () => null
 							});
 							assert.equal(typeof res.data, 'object');
 
@@ -262,7 +262,7 @@ describe('IceAuth API', () => {
 									screenName: user.document.screenName,
 									password: password
 								},
-								db: db, config: config
+								db: db, config: config, checkRequestAsync: () => null
 							});
 
 							assert(await ApplicationAccess.verifyKeyAsync(res.data.accessKey, db, config));

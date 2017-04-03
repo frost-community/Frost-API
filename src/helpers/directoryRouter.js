@@ -1,8 +1,6 @@
 'use strict';
 
 const ApiResult = require('./apiResult');
-const type = require('./type');
-const path = require('path');
 
 class DirectoryRouter {
 	/**
@@ -20,95 +18,49 @@ class DirectoryRouter {
 		this.routes = [];
 	}
 
-	static getRouteMoludePath(endpoint) {
-		if (endpoint == null)
-			throw new Error('missing arguments');
-
-		let dirPath = path.join(__dirname, '../routes', endpoint.replace(/:/, ''));
-
-		if (dirPath.match(/\/$/))
-			dirPath += 'index';
-
-		return dirPath;
-	}
-
 	/**
 	 * ルートを追加します
 	 *
-	 * @param  {string[]} route
-	 * @param  {Function[]} middles
+	 * @param  {Route} route
 	 * @return {void}
 	 */
-	addRoute(route, middlewares) {
-		if (!Array.isArray(route) || route == null)
-			throw new Error('route is invalid type');
+	addRoute(route) {
+		if (route == null)
+			throw new Error('missing arguments');
 
-		let method = route[0].toLowerCase();
-		const routePath = route[1];
-		const extensions = route[2];
+		this.app[route.method](route.path, (request, response) => {
+			(async () => {
+				console.log(`access: ${route.method.toUpperCase()} ${route.path}`);
+				request.version = request.params.ver;
 
-		method = method.replace(/^del$/, 'delete');
+				try {
+					let routeFuncAsync;
+					try {
+						routeFuncAsync = require(route.getMoludePath())[route.method];
+					}
+					catch(e) {
+						// noop
+					}
 
-		for (const m of require('methods')) {
-			if (method === m) {
-				middlewares.forEach(middleware => this.app[m](routePath, middleware));
+					if (routeFuncAsync == null)
+						throw new Error(`route function is not found\ntarget: ${route.method} ${route.path}`);
 
-				this.app[m](routePath, (request, response) => {
-					console.log(`access: ${method.toUpperCase()} ${routePath}`);
+					const result = await routeFuncAsync(request);
+					response.apiSend(result);
+				}
+				catch (err) {
+					if (err instanceof Error) {
+						console.log(`Internal Error: ${err.stack}`);
+						response.apiSend(new ApiResult(500, {message: 'internal error', details: err.stack}));
+					}
+					else {
+						response.apiSend(new ApiResult(500, {message: 'internal error(unknown type)', details: err}));
+					}
+				}
+			})();
+		});
 
-					request.extensions = extensions;
-
-					let dirPath = DirectoryRouter.getRouteMoludePath(routePath);
-
-					console.log(`dirPath: ${dirPath}`);
-
-					(async () => {
-						try {
-							let routeFuncAsync;
-							try {
-								dirPath = dirPath.replace(/\//g, path.sep);
-								routeFuncAsync = require(dirPath)[method];
-							}
-							catch(e) {
-								// noop
-							}
-
-							if (routeFuncAsync == null)
-								throw new Error(`route function is not found\ntarget: ${method} ${routePath}`);
-
-							const result = await routeFuncAsync(request);
-							response.apiSend(result);
-						}
-						catch (err) {
-							if (type(err) == 'Error') {
-								console.log(`Internal Error: ${err.stack}`);
-								response.apiSend(new ApiResult(500, {message: 'internal error', details: err.stack}));
-							}
-							else {
-								response.apiSend(new ApiResult(500, {message: 'internal error(unknown type)', details: err}));
-							}
-						}
-					})();
-				});
-
-				this.routes.push({method: m, path: routePath, extensions: extensions});
-			}
-		}
-	}
-
-	/**
-	 * 複数のルートを追加します
-	 *
-	 * @param  {string[][]} routes
-	 * @param  {Function[]} middles
-	 * @return {void}
-	 */
-	addRoutes(routes, middlewares) {
-		if (!Array.isArray(routes) || routes == null)
-			throw new Error('routes is invalid type');
-
-		for (const route of routes)
-			this.addRoute(route, middlewares);
+		this.routes.push({method: route.method, path: route.path});
 	}
 
 	/**
@@ -119,11 +71,13 @@ class DirectoryRouter {
 	 * @return {Object} ルート情報
 	 */
 	findRoute(method, path) {
-		for (const route of this.routes)
-			if (method.toLowerCase() === route.method && path === route.path)
-				return route;
+		if (method == null || path == null)
+			throw new Error('missing arguments');
 
-		return null;
+		if (typeof method != 'string' || typeof path != 'string')
+			throw new Error('invalid type');
+
+		return this.routes.find(route => route.method === method.toLowerCase() && route.path === path);
 	}
 }
 module.exports = DirectoryRouter;

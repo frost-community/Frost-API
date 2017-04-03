@@ -49,7 +49,7 @@ describe('Account API', () => {
 								name: 'froster',
 								description: 'testhoge'
 							},
-							db: db, config: config
+							db: db, config: config, checkRequestAsync: () => null
 						});
 
 						delete res.data.user.id;
@@ -80,7 +80,7 @@ describe('Account API', () => {
 								name: 'froster',
 								description: 'testhoge'
 							},
-							db: db, config: config
+							db: db, config: config, checkRequestAsync: () => null
 						});
 						assert.equal(res.data, 'screenName is invalid format');
 
@@ -91,7 +91,7 @@ describe('Account API', () => {
 								name: 'froster',
 								description: 'testhoge'
 							},
-							db: db, config: config
+							db: db, config: config, checkRequestAsync: () => null
 						});
 						assert.equal(res.data, 'screenName is invalid format');
 
@@ -113,7 +113,7 @@ describe('Account API', () => {
 								name: 'froster',
 								description: 'testhoge'
 							},
-							db: db, config: config
+							db: db, config: config, checkRequestAsync: () => null
 						});
 						assert.equal(res.data, 'password is invalid format');
 
@@ -135,7 +135,7 @@ describe('Account API', () => {
 								name: 'superFrostersuperFrostersuperFros',
 								description: 'testhoge'
 							},
-							db: db, config: config
+							db: db, config: config, checkRequestAsync: () => null
 						});
 						assert.equal(res.data, 'name is invalid format');
 
@@ -157,7 +157,7 @@ describe('Account API', () => {
 								name: '',
 								description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget'
 							},
-							db: db, config: config
+							db: db, config: config, checkRequestAsync: () => null
 						});
 						assert.equal(res.data, 'description is invalid format');
 

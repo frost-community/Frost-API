@@ -5,6 +5,18 @@ const AuthorizeRequest = require('../../documentModels/authorizeRequest');
 const User = require('../../documentModels/user');
 
 exports.post = async (request) => {
+	const result = await request.checkRequestAsync({
+		params: [
+			{name: 'screenName', type: 'string'},
+			{name: 'password', type: 'string'}
+		],
+		headers: ['X-Ice-Auth-Key'],
+		permissions:['iceAuthHost']
+	});
+
+	if (result != null)
+		return result;
+
 	const iceAuthKey = request.get('X-Ice-Auth-Key');
 	const screenName = request.body.screenName;
 	const password = request.body.password;

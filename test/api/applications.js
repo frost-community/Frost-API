@@ -98,7 +98,7 @@ describe('Applications API', () => {
 								description: 'hogehoge',
 								permissions: []
 							},
-							db: db, config: config
+							db: db, config: config, checkRequestAsync: () => null
 						});
 
 						delete res.data.application.id;
@@ -129,7 +129,7 @@ describe('Applications API', () => {
 								description: 'hogehoge',
 								permissions: ''
 							},
-							db: db, config: config
+							db: db, config: config, checkRequestAsync: () => null
 						});
 						assert.equal(res.data, 'name is invalid format');
 
@@ -140,7 +140,7 @@ describe('Applications API', () => {
 								description: 'hogehoge',
 								permissions: ''
 							},
-							db: db, config: config
+							db: db, config: config, checkRequestAsync: () => null
 						});
 						assert.equal(res.data, 'name is invalid format');
 
@@ -162,7 +162,7 @@ describe('Applications API', () => {
 								description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget',
 								permissions: ''
 							},
-							db: db, config: config
+							db: db, config: config, checkRequestAsync: () => null
 						});
 						assert.equal(res.data, 'description is invalid format');
 
@@ -184,7 +184,7 @@ describe('Applications API', () => {
 								user: userA,
 								params: {id: appA.document._id.toString()},
 								body: {},
-								db: db, config: config
+								db: db, config: config, checkRequestAsync: () => null
 							});
 
 							delete res.data.application.id;
@@ -213,7 +213,7 @@ describe('Applications API', () => {
 								user: userA,
 								params: {id: appB.document._id.toString()},
 								body: {},
-								db: db, config: config
+								db: db, config: config, checkRequestAsync: () => null
 							});
 
 							assert.equal(res.data, 'you do not own this application');
@@ -233,7 +233,7 @@ describe('Applications API', () => {
 								user: userA,
 								params: {id: 'abcdefg1234'},
 								body: {},
-								db: db, config: config
+								db: db, config: config, checkRequestAsync: () => null
 							});
 
 							assert.equal(res.data, 'application is not found');
@@ -255,7 +255,7 @@ describe('Applications API', () => {
 								let res = await routeAppIdApplicationKey.post({
 									user: userA,
 									params: {id: appA.document._id.toString()},
-									db: db, config: config
+									db: db, config: config, checkRequestAsync: () => null
 								});
 
 								await appA.fetchAsync();
@@ -277,7 +277,7 @@ describe('Applications API', () => {
 								let res = await routeAppIdApplicationKey.post({
 									user: userB,
 									params: {id: appA.document._id.toString()},
-									db: db, config: config
+									db: db, config: config, checkRequestAsync: () => null
 								});
 								assert.equal(res.data, 'you do not own this application');
 
@@ -299,7 +299,7 @@ describe('Applications API', () => {
 								const res = await routeAppIdApplicationKey.get({
 									user: userA,
 									params: {id: appA.document._id.toString()},
-									db: db, config: config
+									db: db, config: config, checkRequestAsync: () => null
 								});
 
 								assert.deepEqual(res.data, {
@@ -322,7 +322,7 @@ describe('Applications API', () => {
 								const res = await routeAppIdApplicationKey.get({
 									user: userA,
 									params: {id: appB.document._id.toString()},
-									db: db, config: config
+									db: db, config: config, checkRequestAsync: () => null
 								});
 								assert.equal(res.data, 'you do not own this application');
 

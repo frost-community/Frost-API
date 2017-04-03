@@ -4,6 +4,16 @@ const ApiResult = require('../../helpers/apiResult');
 const AuthorizeRequest = require('../../documentModels/authorizeRequest');
 
 exports.post = async (request) => {
+	const result = await request.checkRequestAsync({
+		params: [
+			{name: 'verificationCode', type: 'string'}
+		],
+		headers: ['X-Ice-Auth-Key']
+	});
+
+	if (result != null)
+		return result;
+
 	const iceAuthKey = request.get('X-Ice-Auth-Key');
 	const verificationCode = request.body.verificationCode;
 

@@ -4,6 +4,14 @@ const ApiResult = require('../../helpers/apiResult');
 const AuthorizeRequest = require('../../documentModels/authorizeRequest');
 
 exports.get = async (request) => {
+	const result = await request.checkRequestAsync({
+		headers: ['X-Ice-Auth-Key'],
+		permissions:['iceAuthHost']
+	});
+
+	if (result != null)
+		return result;
+
 	const iceAuthKey = request.get('X-Ice-Auth-Key');
 
 	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, request.db, request.config))

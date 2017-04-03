@@ -7,11 +7,10 @@ const loadConfig = require('./helpers/loadConfig');
 const sanitize = require('mongo-sanitize');
 const DbProvider = require('./helpers/dbProvider');
 const Db = require('./helpers/db');
+const Route = require('./helpers/route');
 const DirectoryRouter = require('./helpers/directoryRouter');
-const checkParams = require('./helpers/middlewares/checkParams');
-const checkHeaders = require('./helpers/middlewares/checkHeaders');
-const checkPermission = require('./helpers/middlewares/checkPermission');
 const apiSend = require('./helpers/middlewares/apiSend');
+const checkRequest = require('./helpers/middlewares/checkRequest');
 
 const questionResult = (ans) => (ans.toLowerCase()).indexOf('y') === 0;
 
@@ -32,15 +31,13 @@ module.exports = async () => {
 		if (config != null) {
 			const app = express();
 			app.disable('x-powered-by');
-
 			const dbProvider = await DbProvider.connectApidbAsync(config);
 			const db = new Db(config, dbProvider);
-
-			const directoryRouter = new DirectoryRouter(app, db, config);
+			const directoryRouter = new DirectoryRouter(app);
 
 			app.use((req, res, next) => {
 				// services
-				req.directoryRouter = directoryRouter;
+				// req.directoryRouter = directoryRouter;
 				req.db = db;
 				req.config = config;
 
@@ -57,9 +54,18 @@ module.exports = async () => {
 
 			app.use(bodyParser.json());
 			app.use(apiSend);
+			app.use(checkRequest);
 
-			// routing
-			directoryRouter.addRoutes(require('./routeList')(), [checkPermission, checkHeaders, checkParams]);
+			// add routes
+			for(const route of require('./routeList')()) {
+				let method = route[0];
+				const path = route[1];
+
+				if (method == 'del')
+					method = 'delete';
+
+				directoryRouter.addRoute(new Route(method, path));
+			}
 
 			// not found
 			app.use((req, res) => {

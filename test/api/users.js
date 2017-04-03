@@ -83,7 +83,7 @@ describe('Users API', () => {
 								user: user,
 								params: {id: user.document._id},
 								body: {},
-								db: db, config: config
+								db: db, config: config, checkRequestAsync: () => null
 							});
 
 							delete res.data.user.id;
