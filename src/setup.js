@@ -1,13 +1,13 @@
 'use strict';
 
 const fs = require('fs');
-const requestAsync = require('async-request');
+const requestAsync = require('./helpers/requestAsync');
 const i = require('./helpers/readline');
 const loadConfig = require('./helpers/loadConfig');
 const DbProvider = require('./helpers/dbProvider');
 const Db = require('./helpers/db');
 
-const urlConfigFile = 'https://raw.githubusercontent.com/Frost-Dev/Frost-API/develop/config.json';
+const urlConfigFile = 'https://raw.githubusercontent.com/Frost-Dev/Frost/master/config.json';
 const questionResult = (ans) => (ans.toLowerCase()).indexOf('y') === 0;
 
 module.exports = async () => {

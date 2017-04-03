@@ -18,7 +18,6 @@
   "author": "team FrostDevelop",
   "license": "MIT",
   "dependencies": {
-    "async-request": "^1.2.0",
     "body-parser": "^1.16.1",
     "commander": "^2.9.0",
     "cpx": "^1.5.0",
