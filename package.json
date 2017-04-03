@@ -5,6 +5,7 @@
   "private": true,
   "main": "./built/index.js",
   "scripts": {
+    "install": "npm run build",
     "start": "node ./",
     "setup": "node ./ --setup",
     "clean": "rimraf ./built",
@@ -27,6 +28,7 @@
     "mongo-sanitize": "^1.0.0",
     "mongodb": "^2.2.24",
     "redis": "^2.7.0",
+    "request": "^2.81.0",
     "rimraf": "^2.6.1"
   },
   "devDependencies": {
