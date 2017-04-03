@@ -2,7 +2,6 @@
 
 const randomRange = require('../helpers/randomRange');
 const objectSorter = require('../helpers/objectSorter');
-const type = require('../helpers/type');
 const permissionTypes = require('../helpers/permission').permissionTypes;
 const crypto = require('crypto');
 const mongo = require('mongodb');
@@ -91,7 +90,7 @@ class Application {
 			return false;
 
 		return permissions.every(permission =>
-			type(permission) == 'String' && // それは文字列？
+			typeof permission == 'string' && // それは文字列？
 			permissionTypes.indexOf(permission) != -1 // それは存在する権限名？
 		);
 	}

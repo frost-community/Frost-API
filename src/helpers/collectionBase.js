@@ -1,6 +1,5 @@
 'use strict';
 
-const type = require('./type');
 const mongo = require('mongodb');
 
 class CollectionBase {
@@ -41,7 +40,7 @@ class CollectionBase {
 
 		let parsedId = id;
 		try {
-			if (type(id) == 'String')
+			if (typeof id == 'string')
 				parsedId = mongo.ObjectId(id);
 		}
 		catch(e) {
@@ -82,7 +81,7 @@ class CollectionBase {
 
 		let parsedId = id;
 		try {
-			if (type(id) == 'String')
+			if (typeof id == 'string')
 				parsedId = mongo.ObjectId(id);
 		}
 		catch(e) {

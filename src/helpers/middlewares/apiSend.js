@@ -1,7 +1,5 @@
 'use strict';
 
-const type = require('../type');
-
 module.exports = (request, response, next) => {
 	/**
 	 * APIリクエストのレスポンスとして返します
@@ -14,7 +12,7 @@ module.exports = (request, response, next) => {
 		if (apiResult.statusCode == null)
 			apiResult.statusCode = 200;
 
-		if (type(apiResult.data) == 'String')
+		if (typeof apiResult.data == 'string')
 			sendData.message = apiResult.data;
 		else if (apiResult.data != null)
 			sendData = apiResult.data;

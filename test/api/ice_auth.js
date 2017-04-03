@@ -1,7 +1,6 @@
 'use strict';
 
 const assert = require('assert');
-const type = require('../../built/helpers/type');
 const config = require('../../built/helpers/loadConfig')();
 const DbProvider = require('../../built/helpers/dbProvider');
 const Db = require('../../built/helpers/db');
@@ -158,7 +157,7 @@ describe('IceAuth API', () => {
 								},
 								db: db, config: config
 							});
-							assert.equal(type(res.data), 'Object');
+							assert.equal(typeof res.data, 'object');
 
 							// targetUser
 							res = await routeTargetUser.post({
@@ -172,7 +171,7 @@ describe('IceAuth API', () => {
 								},
 								db: db, config: config
 							});
-							assert.equal(type(res.data), 'Object');
+							assert.equal(typeof res.data, 'object');
 
 							done();
 						}
@@ -196,7 +195,7 @@ describe('IceAuth API', () => {
 								},
 								db: db, config: config
 							});
-							assert.equal(type(res.data), 'Object');
+							assert.equal(typeof res.data, 'object');
 
 							const authorizeRequest = await db.authorizeRequests.findByIdAsync(AuthorizeRequest.splitKey(res.data.iceAuthKey, db, config).authorizeRequestId);
 							const iceAuthKey = res.data.iceAuthKey;
@@ -212,7 +211,7 @@ describe('IceAuth API', () => {
 								},
 								db: db, config: config
 							});
-							assert.equal(type(res.data), 'Object');
+							assert.equal(typeof res.data, 'object');
 
 							// authorize
 							res = await routeAuthorize.post({
@@ -250,7 +249,7 @@ describe('IceAuth API', () => {
 								},
 								db: db, config: config
 							});
-							assert.equal(type(res.data), 'Object');
+							assert.equal(typeof res.data, 'object');
 
 							const iceAuthKey = res.data.iceAuthKey;
 
