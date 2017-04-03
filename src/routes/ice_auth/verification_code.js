@@ -6,7 +6,7 @@ const AuthorizeRequest = require('../../documentModels/authorizeRequest');
 exports.get = async (request) => {
 	const result = await request.checkRequestAsync({
 		headers: ['X-Ice-Auth-Key'],
-		permissions:['iceAuthHost']
+		permissions: ['iceAuthHost']
 	});
 
 	if (result != null)

@@ -12,7 +12,7 @@ exports.post = async (request) => {
 			{name: 'password', type: 'string'},
 			{name: 'description', type: 'string', require: false},
 			{name: 'name', type: 'string', require: false}
-		], permissions:['accountSpecial']
+		], permissions: ['accountSpecial']
 	});
 
 	if (result != null)

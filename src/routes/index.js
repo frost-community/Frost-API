@@ -3,5 +3,10 @@
 const ApiResult = require('../helpers/apiResult');
 
 exports.get = async (request) => {
+	const result = await request.checkRequestAsync({});
+
+	if (result != null)
+		return result;
+
 	return new ApiResult(200, 'Frost API Server');
 };

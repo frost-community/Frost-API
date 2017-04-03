@@ -11,7 +11,7 @@ exports.post = async (request) => {
 			{name: 'password', type: 'string'}
 		],
 		headers: ['X-Ice-Auth-Key'],
-		permissions:['iceAuthHost']
+		permissions: ['iceAuthHost']
 	});
 
 	if (result != null)
