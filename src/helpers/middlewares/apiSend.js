@@ -17,6 +17,8 @@ module.exports = (request, response, next) => {
 		else if (apiResult.data != null)
 			sendData = apiResult.data;
 
+		sendData.statusCode = apiResult.statusCode;
+
 		response.status(apiResult.statusCode).send(sendData);
 	};
 
