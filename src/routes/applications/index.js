@@ -60,3 +60,25 @@ exports.post = async (request) => {
 
 	return new ApiResult(200, {application: application.serialize()});
 };
+
+exports.get = async (request) => {
+	const result = await request.checkRequestAsync({
+		permissions: ['application']
+	});
+
+	if (result != null)
+		return result;
+
+	let applications;
+	try {
+		applications = await Application.findArrayByCreatorIdAsync(request.user.document._id, request.db, request.config);
+	}
+	catch(err) {
+		// noop
+	}
+
+	if (applications == null || applications.length == 0)
+		return new ApiResult(404, 'applications are empty');
+
+	return new ApiResult(200, {applications: applications.map(i => i.serialize())});
+};

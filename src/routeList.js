@@ -31,6 +31,9 @@ module.exports = () => {
 		// アプリケーションを作成する
 		['post', '/applications'],
 
+		// ユーザーが作成したアプリケーション情報を一覧で取得する
+		['get', '/applications'],
+
 		// idを指定してアプリケーション情報を取得する
 		['get',  '/applications/:id'],
 
