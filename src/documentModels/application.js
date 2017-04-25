@@ -82,6 +82,13 @@ class Application {
 		return db.applications.findAsync({name: name});
 	}
 
+	static async findArrayByCreatorIdAsync(creatorId, db, config) {
+		if (creatorId == null || db == null || config == null)
+			throw new Error('missing arguments');
+
+		return db.applications.findArrayAsync({creatorId: creatorId});
+	}
+
 	static checkFormatPermissions(permissions, db, config) {
 		if (permissions == null || db == null || config == null)
 			throw new Error('missing arguments');
