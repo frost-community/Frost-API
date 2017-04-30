@@ -175,6 +175,37 @@ describe('Applications API', () => {
 			});
 		});
 
+		describe('[GET]', () => {
+			it('正しくリクエストされた場合は成功する', done => {
+				(async () => {
+					try {
+						let res = await routeApp.get({
+							user: userA,
+							params: {},
+							body: {},
+							db: db, config: config, checkRequestAsync: () => null
+						});
+
+						delete res.data.applications[0].id;
+						delete res.data.applications[0].createdAt;
+						assert.deepEqual(res.data, {
+							applications: [{
+								creatorId: userA.document._id.toString(),
+								name: appA.document.name,
+								description: appA.document.description,
+								permissions: appA.document.permissions
+							}]
+						});
+
+						done();
+					}
+					catch(e) {
+						done(e);
+					}
+				})();
+			});
+		});
+
 		describe('/id', () => {
 			describe('[GET]', () => {
 				it('正しくリクエストされた場合は成功する', done => {
