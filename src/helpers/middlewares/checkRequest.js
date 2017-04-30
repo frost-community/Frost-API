@@ -35,6 +35,30 @@ module.exports = (request, response, next) => {
 				}
 			}
 
+			// query strings
+			if (routeConfig.queries == null)
+				routeConfig.queries = [];
+
+			for(const query of routeConfig.queries) {
+				if (query.type == null || query.name == null) {
+					throw new Error('extentions.queries elements are missing');
+				}
+
+				const queryType = query.type;
+				const queryName = query.name;
+				const isRequire = query.require != null ? query.require === true : true; // requireにtrueが設定されている場合は必須項目になる。デフォルトでtrue
+
+				if (isRequire) {
+					if (request.body[queryName] == null) {
+						throw new apiResult(400, `parameter '${queryName}' is require`);
+					}
+
+					if (type(request.body[queryName]).toLowerCase() !== queryType.toLowerCase()) {
+						throw new apiResult(400, `type of parameter '${queryName}' is invalid`);
+					}
+				}
+			}
+
 			// permissions
 			if (routeConfig.permissions == null)
 				routeConfig.permissions = [];
