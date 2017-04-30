@@ -11,7 +11,7 @@ module.exports = (request, response, next) => {
 			if (routeConfig == null)
 				routeConfig = {};
 
-			// paramerters
+			// parameters
 			if (routeConfig.params == null)
 				routeConfig.params = [];
 
@@ -49,12 +49,12 @@ module.exports = (request, response, next) => {
 				const isRequire = query.require != null ? query.require === true : true; // requireにtrueが設定されている場合は必須項目になる。デフォルトでtrue
 
 				if (isRequire) {
-					if (request.body[queryName] == null) {
-						throw new apiResult(400, `parameter '${queryName}' is require`);
+					if (request.query[queryName] == null) {
+						throw new apiResult(400, `query '${queryName}' is require`);
 					}
 
-					if (type(request.body[queryName]).toLowerCase() !== queryType.toLowerCase()) {
-						throw new apiResult(400, `type of parameter '${queryName}' is invalid`);
+					if (type(request.query[queryName]).toLowerCase() !== queryType.toLowerCase()) {
+						throw new apiResult(400, `type of query '${queryName}' is invalid`);
 					}
 				}
 			}
