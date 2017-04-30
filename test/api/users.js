@@ -76,29 +76,32 @@ describe('Users API', () => {
 		});
 
 		describe('[GET]', () => {
-			it('正しくリクエストされた場合は成功する', async done => {
-				try {
-					let res = await route.get({
-						user: user,
-						params: {id: user.document._id},
-						query: {'screen_names': user.document.screenName},
-						body: {},
-						db: db, config: config, checkRequestAsync: () => null
-					});
+			it('正しくリクエストされた場合は成功する', done => {
+				(async () => {
+					try {
+						let res = await route.get({
+							user: user,
+							params: {id: user.document._id},
+							query: {'screen_names': user.document.screenName},
+							body: {},
+							db: db, config: config, checkRequestAsync: () => null
+						});
 
-					delete res.data.user.id;
-					delete res.data.user.createdAt;
-					assert.deepEqual(res.data, {
-						users: [{
-							screenName: user.document.screenName,
-							name: user.document.name,
-							description: user.document.description
-						}]
-					});
-				}
-				catch(e) {
-					done(e);
-				}
+						delete res.data.users[0].id;
+						delete res.data.users[0].createdAt;
+						assert.deepEqual(res.data, {
+							users: [{
+								screenName: user.document.screenName,
+								name: user.document.name,
+								description: user.document.description
+							}]
+						});
+						done();
+					}
+					catch(e) {
+						done(e);
+					}
+				})();
 			});
 		});
 
