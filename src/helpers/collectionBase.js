@@ -52,17 +52,11 @@ class CollectionBase {
 	}
 
 	async findArrayAsync(query, limit) {
-		if (arguments.length < 1 || arguments.length > 2)
-			throw new Error('invalid arguments count');
-
-		if (arguments.length == 1 && query == null)
-			throw new Error('missing arguments');
-
-		if (arguments.length == 2 && (query == null || limit == null))
+		if (query == null)
 			throw new Error('missing arguments');
 
 		let documents;
-		if (arguments.length == 1) {
+		if (limit == null) {
 			documents = await this.db.dbProvider.findArrayAsync(this.collectionName, query);
 		}
 		else {
