@@ -66,6 +66,18 @@ class User {
 	}
 
 	/**
+	 * 複数のscreenNameからドキュメントモデルのインスタンスを取得します
+	 *
+	 * @return {User}
+	 */
+	static async findArrayByScreenNamesAsync(screenNames, limit, db, config) {
+		if (screenNames == null || db == null || config == null)
+			throw new Error('missing arguments');
+
+		return db.users.findArrayAsync({screenName: {$in: screenNames}}, limit);
+	}
+
+	/**
 	 * screenNameからドキュメントモデルのインスタンスを取得します
 	 *
 	 * @return {User}
