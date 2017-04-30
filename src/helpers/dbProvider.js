@@ -151,10 +151,9 @@ class DbProvider {
 		if (config == null)
 			throw new Error('missing arguments');
 
-		const host = config.api.database.port != null ? `${config.api.database.host}:${config.api.database.port}` : config.api.database.host;
 		const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
 		return await DbProvider.connectAsync(
-			host,
+			config.api.database.host,
 			config.api.database.database,
 			authenticate);
 	}

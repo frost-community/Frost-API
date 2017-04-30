@@ -55,9 +55,8 @@ describe('General -', () => {
 		it('DBに接続してそのインスタンスが取得できる', (done) => {
 			(async () => {
 				try {
-					const host = config.api.testDatabase.port != null ? `${config.api.testDatabase.host}:${config.api.testDatabase.port}` : config.api.testDatabase.host;
 					const authenticate = config.api.testDatabase.password != null ? `${config.api.testDatabase.username}:${config.api.testDatabase.password}` : config.api.testDatabase.username;
-					testDb = await DbProvider.connectAsync(host, config.api.testDatabase.database, authenticate);
+					testDb = await DbProvider.connectAsync(config.api.testDatabase.host, config.api.testDatabase.database, authenticate);
 					assert(testDb != null);
 					done();
 				}
