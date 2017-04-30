@@ -81,6 +81,11 @@ class AuthorizeRequest {
 		this.document = (await AuthorizeRequest.findByIdAsync(this.document._id, this.db, this.config)).document;
 	}
 
+	async removeAsync() {
+		await this.db.authorizeRequests.removeAsync({_id: this.document._id});
+		this.document = null;
+	}
+
 	// static methods
 
 	static async findByIdAsync(id, db, config) {

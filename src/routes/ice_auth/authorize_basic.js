@@ -26,6 +26,8 @@ exports.post = async (request) => {
 
 	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, request.db, request.config).authorizeRequestId;
 	const authorizeRequest = await AuthorizeRequest.findByIdAsync(authorizeRequestId, request.db, request.config);
+	const applicationId = authorizeRequest.document.applicationId;
+	await authorizeRequest.removeAsync();
 
 	if (!User.checkFormatScreenName(screenName))
 		return new ApiResult(400, 'screenName is invalid format');
@@ -43,7 +45,7 @@ exports.post = async (request) => {
 	// TODO: refactoring(duplication)
 
 	let applicationAccess = await request.db.applicationAccesses.findAsync({
-		applicationId: authorizeRequest.document.applicationId,
+		applicationId: applicationId,
 		userId: user.document._id
 	});
 
@@ -51,7 +53,7 @@ exports.post = async (request) => {
 	if (applicationAccess == null) {
 		try {
 			applicationAccess = await request.db.applicationAccesses.createAsync({ // TODO: move to document models
-				applicationId: authorizeRequest.document.applicationId,
+				applicationId: applicationId,
 				userId: user.document._id,
 				keyCode: null
 			});
