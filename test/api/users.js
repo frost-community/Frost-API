@@ -4,6 +4,7 @@ const assert = require('assert');
 const config = require('../../built/helpers/loadConfig')();
 const DbProvider = require('../../built/helpers/dbProvider');
 const Db = require('../../built/helpers/db');
+const route = require('../../built/routes/users');
 const routeId = require('../../built/routes/users/id');
 
 describe('Users API', () => {
@@ -72,6 +73,33 @@ describe('Users API', () => {
 					done(e);
 				}
 			})();
+		});
+
+		describe('[GET]', () => {
+			it('正しくリクエストされた場合は成功する', async done => {
+				try {
+					let res = await route.get({
+						user: user,
+						params: {id: user.document._id},
+						query: {'screen_names': user.document.screenName},
+						body: {},
+						db: db, config: config, checkRequestAsync: () => null
+					});
+
+					delete res.data.user.id;
+					delete res.data.user.createdAt;
+					assert.deepEqual(res.data, {
+						users: [{
+							screenName: user.document.screenName,
+							name: user.document.name,
+							description: user.document.description
+						}]
+					});
+				}
+				catch(e) {
+					done(e);
+				}
+			});
 		});
 
 		describe('/id', () => {
