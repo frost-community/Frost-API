@@ -22,29 +22,28 @@ exports.post = async (request) => {
 
 	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, request.db, request.config).authorizeRequestId;
 	const authorizeRequest = await AuthorizeRequest.findByIdAsync(authorizeRequestId, request.db, request.config);
-	const applicationId = authorizeRequest.document.applicationId;
-	const targetUserId = authorizeRequest.document.targetUserId;
+	const document = authorizeRequest.document;
 	await authorizeRequest.removeAsync();
 
-	if (targetUserId == null)
+	if (document.targetUserId == null)
 		return new ApiResult(400, 'authorization has not been done yet');
 
-	if (verificationCode !== authorizeRequest.document.verificationCode)
+	if (verificationCode !== document.verificationCode)
 		return new ApiResult(400, 'verificationCode is invalid');
 
 	// TODO: refactoring(duplication)
 
 	let applicationAccess = await request.db.applicationAccesses.findAsync({
-		applicationId: applicationId,
-		userId: targetUserId
+		applicationId: document.applicationId,
+		userId: document.targetUserId
 	});
 
 	let accessKey;
 	if (applicationAccess == null) {
 		try {
 			applicationAccess = await request.db.applicationAccesses.createAsync({ // TODO: move to document models
-				applicationId: applicationId,
-				userId: targetUserId,
+				applicationId: document.applicationId,
+				userId: document.targetUserId,
 				keyCode: null
 			});
 		}
