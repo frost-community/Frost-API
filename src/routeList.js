@@ -45,6 +45,9 @@ module.exports = () => {
 
 		// == Users ==
 
+		// 一つ以上のscreenNameを指定してユーザー情報を取得する
+		['get',  '/users'],
+
 		// idを指定してユーザー情報を取得する
 		['get',  '/users/:id'],
 
