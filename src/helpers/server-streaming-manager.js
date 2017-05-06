@@ -32,10 +32,10 @@ class ServerStreamingManager {
 	}
 
 	/**
-	 * ストリームにデータ送信用イベントを発行します(Jsonにシリアライズ)
+	 * ストリームにデータ送信用イベントを発行します
 	 */
 	data(streamType, data) {
-		this.dataPrimitive(streamType, data);
+		this.stream(this.dataEventName, streamType, data);
 	}
 
 	/**
