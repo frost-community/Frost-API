@@ -28,7 +28,8 @@
     "mongodb": "^2.2.24",
     "redis": "^2.7.0",
     "request": "^2.81.0",
-    "rimraf": "^2.6.1"
+    "rimraf": "^2.6.1",
+    "socket.io": "^1.7.3"
   },
   "devDependencies": {
     "eslint": "^3.18.0",
