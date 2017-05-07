@@ -1,6 +1,7 @@
 'use strict';
 
 const ApiResult = require('../../helpers/apiResult');
+const User = require('../../documentModels/user');
 const Post = require('../../documentModels/post');
 
 exports.get = async (request) => {
@@ -25,5 +26,11 @@ exports.get = async (request) => {
 
 	posts.reverse();
 
-	return new ApiResult(200, {posts: posts.map(i => i.serialize())});
+	posts = posts.map(i => i.serialize());
+	for (let post of posts) {
+		const user = await User.findByIdAsync(post.userId, request.db, request.config);
+		post.user = user.serialize();
+	}
+
+	return new ApiResult(200, {posts: posts});
 };
