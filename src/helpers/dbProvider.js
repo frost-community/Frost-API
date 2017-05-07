@@ -60,15 +60,20 @@ class DbProvider {
 	 * @param  {number} limit
 	 * @return {Promise<any>}
 	 */
-	async findArrayAsync(collectionName, query, option, limit) {
+	async findArrayAsync(collectionName, query, sortOption, limit) {
 		if (collectionName == null || query == null)
 			throw new Error('missing arguments');
 
 		try {
+			let cursor = this.connection.collection(collectionName).find(query);
+
 			if (limit != null)
-				return await this.connection.collection(collectionName).find(query, option).limit(limit).toArray();
-			else
-				return await this.connection.collection(collectionName).find(query, option).toArray();
+				cursor = cursor.limit(limit);
+
+			if (sortOption != null)
+				cursor = cursor.sort(sortOption);
+
+			return await cursor.toArray();
 		}
 		catch(e) {
 			console.log(e.trace);
