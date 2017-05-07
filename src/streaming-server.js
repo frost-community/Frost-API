@@ -78,7 +78,7 @@ module.exports = (http, subscribers, db, config) => {
 					const req = {
 						method: data.request.method,
 						endpoint: data.request.endpoint,
-						queries: data.request.queries,
+						query: data.request.query,
 						headers: data.request.headers,
 						body: data.request.body,
 						db: db,
