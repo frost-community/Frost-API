@@ -22,7 +22,7 @@ exports.post = async (request) => {
 
 exports.del = async (request) => {
 	const result = await request.checkRequestAsync({
-		params: [],
+		query: [],
 		permissions: ['userWrite']
 	});
 

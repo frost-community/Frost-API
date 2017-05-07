@@ -5,7 +5,7 @@ const Post = require('../../documentModels/post');
 
 exports.get = async (request) => {
 	const result = await request.checkRequestAsync({
-		params: [],
+		query: [],
 		permissions: ['postRead']
 	});
 
