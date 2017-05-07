@@ -5,7 +5,7 @@ const stringSize = require('../../helpers/stringSize');
 
 exports.post = async (request) => {
 	const result = await request.checkRequestAsync({
-		params: [
+		body: [
 			{name: 'title', type: 'string'},
 			{name: 'text', type: 'string'}
 		],

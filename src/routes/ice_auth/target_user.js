@@ -5,7 +5,7 @@ const AuthorizeRequest = require('../../documentModels/authorizeRequest');
 
 exports.post = async (request) => {
 	const result = await request.checkRequestAsync({
-		params: [
+		body: [
 			{name: 'userId', type: 'string'}
 		],
 		headers: ['X-Ice-Auth-Key'],

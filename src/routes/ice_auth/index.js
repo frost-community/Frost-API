@@ -5,7 +5,7 @@ const Application = require('../../documentModels/application');
 
 exports.post = async (request) => {
 	const result = await request.checkRequestAsync({
-		params: [
+		body: [
 			{name: 'applicationKey', type: 'string'}
 		]
 	});

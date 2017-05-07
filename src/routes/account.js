@@ -7,7 +7,7 @@ const User = require('../documentModels/user');
 
 exports.post = async (request) => {
 	const result = await request.checkRequestAsync({
-		params: [
+		body: [
 			{name: 'screenName', type: 'string'},
 			{name: 'password', type: 'string'},
 			{name: 'description', type: 'string', require: false},

@@ -31,6 +31,7 @@ exports.get = async (request) => {
 exports.post = async (request) => {
 	try {
 		await request.checkRequestAsync({
+			body: [],
 			permissions: ['applicationSpecial']
 		});
 	}
