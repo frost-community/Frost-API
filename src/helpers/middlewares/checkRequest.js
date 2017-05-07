@@ -38,12 +38,12 @@ module.exports = (request, response, next) => {
 			}
 
 			// query strings
-			if (routeConfig.queries == null)
-				routeConfig.queries = [];
+			if (routeConfig.query == null)
+				routeConfig.query = [];
 
-			for(const query of routeConfig.queries) {
+			for(const query of routeConfig.query) {
 				if (query.type == null || query.name == null) {
-					throw new Error('extentions.queries elements are missing');
+					throw new Error('extentions.query elements are missing');
 				}
 
 				const queryType = query.type;
