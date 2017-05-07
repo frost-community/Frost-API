@@ -22,6 +22,7 @@ exports.post = async (request) => {
 	let postStatus;
 	try {
 		postStatus = await request.db.posts.createAsync({ // TODO: move to document models
+			type: 'status',
 			userId: userId,
 			text: text
 		});
