@@ -16,8 +16,8 @@ exports.post = async (request) => {
 	const userId = request.user.document._id;
 	const text = request.body.text;
 
-	if (!/^\S{1,256}$/.test(text))
-		return new ApiResult(400, 'text is invalid format. max length is 256');
+	if (/^\s*$/.test(text) || /.{1,256}/.test(text) == false)
+		return new ApiResult(400, 'text is invalid format.');
 
 	let postStatus;
 	try {
