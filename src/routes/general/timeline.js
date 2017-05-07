@@ -14,7 +14,7 @@ exports.get = async (request) => {
 
 	let posts;
 	try {
-		posts = await Post.findArrayByTypeAsync({$in: ['status']}, true, 30, request.db, request.config);
+		posts = await Post.findArrayByTypeAsync({$in: ['status']}, false, 30, request.db, request.config);
 	}
 	catch(err) {
 		// noop
@@ -22,6 +22,8 @@ exports.get = async (request) => {
 
 	if (posts == null || posts.length == 0)
 		return new ApiResult(404, 'posts are empty');
+
+	posts.reverse();
 
 	return new ApiResult(200, {posts: posts.map(i => i.serialize())});
 };
