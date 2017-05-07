@@ -13,30 +13,6 @@ module.exports = (request, response, next) => {
 			if (routeConfig == null)
 				routeConfig = {};
 
-			// parameters
-			if (routeConfig.params == null)
-				routeConfig.params = [];
-
-			for(const param of routeConfig.params) {
-				if (param.type == null || param.name == null) {
-					throw new Error('extentions.params elements are missing');
-				}
-
-				const paramType = param.type;
-				const paramName = param.name;
-				const isRequire = param.require != null ? param.require === true : true; // requireにtrueが設定されている場合は必須項目になる。デフォルトでtrue
-
-				if (isRequire) {
-					if (request.params[paramName] == null) {
-						throw new apiResult(400, `parameter '${paramName}' is require`);
-					}
-
-					if (type(request.params[paramName]).toLowerCase() !== paramType.toLowerCase()) {
-						throw new apiResult(400, `type of parameter '${paramName}' is invalid`);
-					}
-				}
-			}
-
 			// body
 			if (routeConfig.body == null)
 				routeConfig.body = [];
@@ -163,7 +139,6 @@ module.exports = (request, response, next) => {
 						throw new apiResult(400, `${header} header is empty`);
 					}
 				}
-
 			}
 
 			return null;
