@@ -74,7 +74,7 @@ class User {
 		if (screenNames == null || db == null || config == null)
 			throw new Error('missing arguments');
 
-		return db.users.findArrayAsync({screenName: {$in: screenNames}}, limit);
+		return db.users.findArrayAsync({screenName: {$in: screenNames}}, null, limit);
 	}
 
 	/**

@@ -51,17 +51,11 @@ class CollectionBase {
 		return await this.findAsync({_id: parsedId});
 	}
 
-	async findArrayAsync(query, limit) {
+	async findArrayAsync(query, sortOption, limit) {
 		if (query == null)
 			throw new Error('missing arguments');
 
-		let documents;
-		if (limit == null) {
-			documents = await this.db.dbProvider.findArrayAsync(this.collectionName, query);
-		}
-		else {
-			documents = await this.db.dbProvider.findArrayAsync(this.collectionName, query, null, limit);
-		}
+		const documents = await this.db.dbProvider.findArrayAsync(this.collectionName, query, sortOption, limit);
 
 		if (documents == null || documents.length === 0)
 			return null;

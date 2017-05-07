@@ -1,11 +1,11 @@
 'use strict';
 
-const ApiResult = require('../../helpers/apiResult');
+const ApiResult = require('../../../../helpers/apiResult');
 
 exports.get = async (request) => {
 	const result = await request.checkRequestAsync({
 		query: [],
-		permissions: ['postRead']
+		permissions: ['postRead', 'userRead']
 	});
 
 	if (result != null)

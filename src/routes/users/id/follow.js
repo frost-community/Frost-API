@@ -5,7 +5,7 @@ const User = require('../../../documentModels/user');
 
 exports.post = async (request) => {
 	const result = await request.checkRequestAsync({
-		params: [],
+		body: [],
 		permissions: ['userWrite']
 	});
 
@@ -22,7 +22,7 @@ exports.post = async (request) => {
 
 exports.del = async (request) => {
 	const result = await request.checkRequestAsync({
-		params: [],
+		query: [],
 		permissions: ['userWrite']
 	});
 

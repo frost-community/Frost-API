@@ -4,7 +4,7 @@ const ApiResult = require('../../helpers/apiResult');
 
 exports.post = async (request) => {
 	const result = await request.checkRequestAsync({
-		params: [],
+		body: [],
 		permissions: ['postWrite']
 	});
 

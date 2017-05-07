@@ -4,6 +4,11 @@ module.exports = () => {
 	const routes = [
 		['get', '/'],
 
+		// == general
+
+		// 全てのユーザーを対象とする、一般公開されたポストを時系列で複数取得
+		['get',  '/general/timeline'],
+
 		// == Account ==
 
 		// アカウントを作成する
@@ -51,8 +56,11 @@ module.exports = () => {
 		// idを指定してユーザー情報を取得する
 		['get',  '/users/:id'],
 
-		// 指定したユーザーのタイムラインを取得
-		['get',  '/users/:id/timeline'],
+		// 対象のユーザーが投稿したポストを時系列で複数取得
+		['get',  '/users/:id/timelines/user'],
+
+		// 対象のユーザーと、そのユーザーがフォローしてるユーザーが投稿したポストを時系列で複数取得
+		['get',  '/users/:id/timelines/home'],
 
 		// フォローの一覧を取得
 		['get',  '/users/:id/followings'],
@@ -68,14 +76,14 @@ module.exports = () => {
 
 		// == Posts ==
 
-		// ステータスポストを作成する
+		// 短文のポストを作成する
 		['post', '/posts/post_status'],
 
-		// 記事を作成する
+		// 記事のポストを作成する
 		['post', '/posts/post_article'],
 
-		// 投稿リンクを作成する
-		['post', '/posts/post_link'],
+		// 他のポストを参照するポストを作成する
+		['post', '/posts/post_reference'],
 
 		// idを指定してポストを取得
 		['get',  '/posts/:id']

@@ -14,6 +14,20 @@ class Post {
 
 	// TODO: 各種操作用メソッドの追加
 
+	static async findByIdAsync(id, db, config) {
+		if (id == null || db == null || config == null)
+			throw new Error('missing arguments');
+
+		return db.posts.findByIdAsync(id);
+	}
+
+	static async findArrayByTypeAsync(type, ascending, limit, db, config) {
+		if (type == null || db == null || config == null)
+			throw new Error('missing arguments');
+
+		return db.posts.findArrayAsync({type: type}, {$natural: (ascending ? 1 : -1)}, limit);
+	}
+
 	serialize() {
 		const res = {};
 		Object.assign(res, this.document);

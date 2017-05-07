@@ -5,7 +5,7 @@ const User = require('../../../documentModels/user');
 
 exports.get = async (request) => {
 	const result = await request.checkRequestAsync({
-		params: [],
+		query: [],
 		permissions: ['userRead']
 	});
 
