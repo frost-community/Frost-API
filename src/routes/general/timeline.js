@@ -26,11 +26,9 @@ exports.get = async (request) => {
 
 	posts.reverse();
 
-	posts = posts.map(i => i.serialize());
-	for (let post of posts) {
-		const user = await User.findByIdAsync(post.userId, request.db, request.config);
-		post.user = user.serialize();
-	}
+	const serializedPosts = [];
+	for (const post of posts)
+		serializedPosts.push(await post.serializeAsync(true));
 
-	return new ApiResult(200, {posts: posts});
+	return new ApiResult(200, {posts: serializedPosts});
 };

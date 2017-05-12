@@ -28,7 +28,7 @@ class Post {
 		return db.posts.findArrayAsync({type: type}, {$natural: (ascending ? 1 : -1)}, limit);
 	}
 
-	serialize() {
+	async serializeAsync(includeEntity) {
 		const res = {};
 		Object.assign(res, this.document);
 
@@ -38,6 +38,11 @@ class Post {
 		// id
 		res.id = res._id.toString();
 		delete res._id;
+
+		if (includeEntity === true) {
+			// user
+			res.user = (await this.db.users.findByIdAsync(res.userId)).serialize();
+		}
 
 		return objectSorter(res);
 	}
