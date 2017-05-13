@@ -42,8 +42,8 @@ exports.post = async (request) => {
 
 	const json = JSON.stringify(postStatus.serialize());
 
-	publisher.publish(`status:${request.user.document._id.toString()}`, json);
-	publisher.publish('status:public', json);
+	publisher.publish(`${request.user.document._id.toString()}:status`, json);
+	publisher.publish('public:status', json);
 
 	return new ApiResult(200, {postStatus: await postStatus.serializeAsync(true)});
 };

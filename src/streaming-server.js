@@ -131,10 +131,10 @@ module.exports = (http, subscribers, db, config) => {
 						return clientManager.error({message: 'public timeline is already subscribed'});
 
 					publicSubscriber = redis.createClient(6379, 'localhost');
-					publicSubscriber.subscribe('status:public'); // パブリックを購読
+					publicSubscriber.subscribe('public:status'); // パブリックを購読
 					publicSubscriber.on('message', (ch, jsonData) => {
 						const chInfo = ch.split(':');
-						const dataType = chInfo[0];
+						const dataType = chInfo[1];
 
 						clientManager.data(`public:${dataType}`, JSON.parse(jsonData));
 					});
@@ -150,11 +150,12 @@ module.exports = (http, subscribers, db, config) => {
 						return clientManager.error({message: 'home timeline is already subscribed'});
 
 					homeSubscriber = redis.createClient(6379, 'localhost');
-					homeSubscriber.subscribe(`status:${userId.toString()}`); // 自身を購読
+					subscribers.set(userId.toString(), homeSubscriber);
+					homeSubscriber.subscribe(`${userId.toString()}:status`); // 自身を購読
 					// subscriber.subscribe(`status:${}`); // TODO: フォローしている全ユーザーを購読
 					homeSubscriber.on('message', (ch, jsonData) => {
 						const chInfo = ch.split(':');
-						const dataType = chInfo[0];
+						const dataType = chInfo[1];
 
 						clientManager.data(`home:${dataType}`, JSON.parse(jsonData));
 					});
