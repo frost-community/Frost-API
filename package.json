@@ -1,19 +1,20 @@
 {
   "name": "frost-api",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Frost API Server",
   "private": true,
   "main": "./built/index.js",
   "scripts": {
-    "install": "npm run build",
+    "install": "npm run rebuild",
     "start": "node ./",
     "setup": "node ./ --setup",
+    "build:copy": "cpx \"src/**/*.js\" built",
+    "build": "npm run build:copy",
     "clean": "rimraf ./built",
-    "build-copy": "cpx \"src/**/*.js\" built",
-    "build": "npm run clean && npm run build-copy",
-    "test-lint": "eslint ./built/**/*.js",
-    "test-mocha": "mocha",
-    "test": "npm run test-lint && npm run test-mocha"
+    "rebuild": "npm run clean && npm run build",
+    "test:lint": "eslint ./built/**/*.js",
+    "test:mocha": "mocha",
+    "test": "npm run test:lint && npm run test:mocha"
   },
   "author": "team FrostDevelop",
   "license": "MIT",
