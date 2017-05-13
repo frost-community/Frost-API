@@ -64,7 +64,7 @@ module.exports = async () => {
 			app.use(checkRequest);
 
 			app.use((req, res, next) => {
-				// req.subscribers = subscribers;
+				req.subscribers = subscribers;
 
 				next();
 			});

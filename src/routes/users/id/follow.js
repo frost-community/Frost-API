@@ -17,6 +17,14 @@ exports.post = async (request) => {
 	if (user == null)
 		return new ApiResult(404, 'user is not found');
 
+	const userId = user.document._id.toString();
+
+	// 購読
+	const subscriber = request.subscribers.get(userId);
+	if (subscriber != null) {
+		subscriber.subscribe(`${userId}:status`);
+	}
+
 	return new ApiResult(501, 'not implemented');
 };
 
@@ -33,6 +41,14 @@ exports.del = async (request) => {
 
 	if (user == null)
 		return new ApiResult(404, 'user is not found');
+
+	const userId = user.document._id.toString();
+
+	// 購読解除
+	const subscriber = request.subscribers.get(userId);
+	if (subscriber != null) {
+		subscriber.unsubscribe(`${userId}:status`);
+	}
 
 	return new ApiResult(501, 'not implemented');
 };
