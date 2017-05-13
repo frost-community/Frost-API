@@ -6,7 +6,7 @@ const redis = require('redis');
 const methods = require('methods');
 
 module.exports = (http, subscribers, db, config) => {
-	const ioServerWeb = ioServer(http);
+	const ioServerToClient = ioServer(http);
 
 	const checkConnection = async (clientManager, applicationKey, accessKey) => {
 		if (applicationKey == null) {
@@ -37,12 +37,12 @@ module.exports = (http, subscribers, db, config) => {
 
 	const timelineTypes = ['public', 'home'];
 
-	ioServerWeb.sockets.on('connection', ioServerWebSocket => {
+	ioServerToClient.sockets.on('connection', ioServerToClientSocket => {
 		(async () => {
-			const clientManager = new (require('./helpers/server-streaming-manager'))(ioServerWeb, ioServerWebSocket, {});
+			const clientManager = new (require('./helpers/server-streaming-manager'))(ioServerToClient, ioServerToClientSocket, {});
 
-			const applicationKey = ioServerWebSocket.handshake.query.applicationKey;
-			const accessKey = ioServerWebSocket.handshake.query.accessKey;
+			const applicationKey = ioServerToClientSocket.handshake.query.applicationKey;
+			const accessKey = ioServerToClientSocket.handshake.query.accessKey;
 			const checkResult = await checkConnection(clientManager, applicationKey, accessKey);
 			if (checkResult == null) {
 				return clientManager.disconnect();
@@ -50,8 +50,8 @@ module.exports = (http, subscribers, db, config) => {
 			const userId = checkResult.userId;
 			const applicationId = checkResult.applicationId;
 
-			ioServerWebSocket.application = (await db.applications.findByIdAsync(applicationId));
-			ioServerWebSocket.user = (await db.users.findByIdAsync(userId));
+			ioServerToClientSocket.application = (await db.applications.findByIdAsync(applicationId));
+			ioServerToClientSocket.user = (await db.users.findByIdAsync(userId));
 
 			// クライアント側からRESTリクエストを受信したとき
 			clientManager.on('rest', data => {
@@ -87,8 +87,8 @@ module.exports = (http, subscribers, db, config) => {
 						body: data.request.body,
 						db: db,
 						config: config,
-						user: ioServerWebSocket.user,
-						application: ioServerWebSocket.application
+						user: ioServerToClientSocket.user,
+						application: ioServerToClientSocket.application
 					};
 
 					require('./helpers/middlewares/checkRequest')(req);
