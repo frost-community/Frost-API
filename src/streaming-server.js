@@ -138,6 +138,9 @@ module.exports = (http, subscribers, db, config) => {
 
 						clientManager.data(`public:${dataType}`, JSON.parse(jsonData));
 					});
+					publicSubscriber.on('error', function(err) {
+						console.log('redis_err(publicSubscriber): ' + String(err));
+					});
 
 					clientManager.stream('success', {message: 'connected public timeline'});
 				}
@@ -154,6 +157,9 @@ module.exports = (http, subscribers, db, config) => {
 						const dataType = chInfo[0];
 
 						clientManager.data(`home:${dataType}`, JSON.parse(jsonData));
+					});
+					homeSubscriber.on('error', function(err) {
+						console.log('redis_err(homeSubscriber): ' + String(err));
 					});
 
 					clientManager.stream('success', {message: 'connected home timeline'});
@@ -190,14 +196,14 @@ module.exports = (http, subscribers, db, config) => {
 				}
 			});
 
-			clientManager.onDisconnect(() => {
+			clientManager.onDisconnect((err, res) => {
 				if (homeSubscriber != null) {
-					homeSubscriber.quit([], () => {
+					homeSubscriber.quit(() => {
 						homeSubscriber = null;
 					});
 				}
 				if (publicSubscriber != null) {
-					publicSubscriber.quit([], () => {
+					publicSubscriber.quit((err, res) => {
 						publicSubscriber = null;
 					});
 				}
