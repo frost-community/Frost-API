@@ -2,6 +2,9 @@
 
 const ApiResult = require('../../helpers/apiResult');
 
+const redis = require('redis');
+const publisher = redis.createClient(6379, 'localhost');
+
 exports.post = async (request) => {
 	const result = await request.checkRequestAsync({
 		body: [
@@ -33,6 +36,9 @@ exports.post = async (request) => {
 
 	if (postStatus == null)
 		return new ApiResult(500, 'faild to create postStatus');
+
+	publisher.publish(`status:${request.user.document._id.toString()}`, postStatus);
+	publisher.publish('status:public', postStatus);
 
 	return new ApiResult(200, {postStatus: postStatus.serialize()});
 };

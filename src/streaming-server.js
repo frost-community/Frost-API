@@ -3,66 +3,70 @@ const ApplicationAccess = require('./documentModels/applicationAccess');
 const Route = require('./helpers/route');
 const ioServer = require('socket.io');
 const redis = require('redis');
+const methods = require('methods');
 
 module.exports = (http, subscribers, db, config) => {
 	const ioServerWeb = ioServer(http);
 
+	const checkConnection = async (clientManager, applicationKey, accessKey) => {
+		if (applicationKey == null) {
+			clientManager.error({message: 'applicationKey parameter is empty'});
+			return null;
+		}
+
+		if (accessKey == null) {
+			clientManager.error({message: 'accessKey parameter is empty'});
+			return null;
+		}
+
+		if (!await Application.verifyKeyAsync(applicationKey, db, config)) {
+			clientManager.error({message: 'applicationKey parameter is invalid'});
+			return null;
+		}
+
+		if (!await ApplicationAccess.verifyKeyAsync(accessKey, db, config)) {
+			clientManager.error({message: 'accessKey parameter is invalid'});
+			return null;
+		}
+
+		return {
+			applicationId: Application.splitKey(applicationKey, db, config).applicationId,
+			userId: ApplicationAccess.splitKey(accessKey, db, config).userId
+		};
+	};
+
+	const timelineTypes = ['public', 'home'];
+
 	ioServerWeb.sockets.on('connection', ioServerWebSocket => {
 		(async () => {
 			const clientManager = new (require('./helpers/server-streaming-manager'))(ioServerWeb, ioServerWebSocket, {});
-			const subscriber = redis.createClient(6379, 'localhost');
 
 			const applicationKey = ioServerWebSocket.handshake.query.applicationKey;
 			const accessKey = ioServerWebSocket.handshake.query.accessKey;
-
-			if (applicationKey == null) {
-				clientManager.error({message: 'applicationKey parameter is empty'});
-				return ioServerWebSocket.disconnect();
+			const checkResult = await checkConnection(clientManager, applicationKey, accessKey);
+			if (checkResult == null) {
+				return clientManager.disconnect();
 			}
-
-			if (accessKey == null) {
-				clientManager.error({message: 'accessKey parameter is empty'});
-				return ioServerWebSocket.disconnect();
-			}
-
-			if (!await Application.verifyKeyAsync(applicationKey, db, config)) {
-				clientManager.error({message: 'applicationKey parameter is invalid'});
-				return ioServerWebSocket.disconnect();
-			}
-
-			if (!await ApplicationAccess.verifyKeyAsync(accessKey, db, config)) {
-				clientManager.error({message: 'accessKey parameter is invalid'});
-				return ioServerWebSocket.disconnect();
-			}
-
-			const applicationId = Application.splitKey(applicationKey, db, config).applicationId;
-			const userId = ApplicationAccess.splitKey(accessKey, db, config).userId;
+			const userId = checkResult.userId;
+			const applicationId = checkResult.applicationId;
 
 			ioServerWebSocket.application = (await db.applications.findByIdAsync(applicationId));
 			ioServerWebSocket.user = (await db.users.findByIdAsync(userId));
-
-			// subscribersに登録
-			subscribers.set(userId.toString(), subscriber);
-
-			// redis: 購読状態の初期化
-			subscriber.subscribe(userId.toString()); // 自身を購読
-
-			// TODO: フォローしている全ユーザーを購読
 
 			// クライアント側からRESTリクエストを受信したとき
 			clientManager.on('rest', data => {
 				(async () => {
 					if (data.request.method == null || data.request.endpoint == null) {
-						return clientManager.error({message: 'invalid request format'});
+						return clientManager.error({message: 'request format is invalid'});
 					}
 
 					if (data.request.endpoint.indexOf('..') != -1)
-						return clientManager.error({message: 'invalid endpoint'});
+						return clientManager.error({message: '\'endpoint\' parameter is invalid'});
 
-					const method = require('methods').find(i => i.toLowerCase() === data.request.method.toLowerCase()).toLowerCase();
+					const method = methods.find(i => i.toLowerCase() === data.request.method.toLowerCase()).toLowerCase();
 
 					if (method == null)
-						return clientManager.error({message: 'invalid method name'});
+						return clientManager.error({message: '\'method\' parameter is invalid'});
 
 					let routeFuncAsync;
 					try {
@@ -73,7 +77,7 @@ module.exports = (http, subscribers, db, config) => {
 					}
 
 					if (routeFuncAsync == null)
-						return clientManager.error({message: 'invalid endpoint'});
+						return clientManager.error({message: '\'endpoint\' parameter is invalid'});
 
 					const req = {
 						method: data.request.method,
@@ -108,7 +112,96 @@ module.exports = (http, subscribers, db, config) => {
 				})();
 			});
 
-			clientManager.onDisconnect(() => {});
+			let publicSubscriber = null;
+			let homeSubscriber = null;
+
+			// クライアント側からタイムラインの購読リクエストを受信したとき
+			clientManager.on('timeline-connect', data => {
+				const timelineType = data.type;
+
+				if (timelineType == null)
+					return clientManager.error({message: '\'type\' parameter is require'});
+
+				if (!timelineTypes.some(i => i == timelineType))
+					return clientManager.error({message: '\'type\' parameter is invalid'});
+
+				// Redis: 購読状態の初期化
+				if (timelineType == timelineTypes[0]) { // public
+					if (publicSubscriber != null)
+						return clientManager.error({message: 'public timeline is already subscribed'});
+
+					publicSubscriber = redis.createClient(6379, 'localhost');
+					publicSubscriber.subscribe('status:public'); // パブリックを購読
+					publicSubscriber.on('message', (ch, jsonData) => {
+						const chInfo = ch.split(':');
+						const dataType = chInfo[0];
+
+						clientManager.data(`public:${dataType}`, JSON.parse(jsonData));
+					});
+
+					clientManager.stream('success', {message: 'connected public timeline'});
+				}
+
+				if (timelineType == timelineTypes[1]) { // home
+					if (homeSubscriber != null)
+						return clientManager.error({message: 'home timeline is already subscribed'});
+
+					homeSubscriber = redis.createClient(6379, 'localhost');
+					homeSubscriber.subscribe(`status:${userId.toString()}`); // 自身を購読
+					// subscriber.subscribe(`status:${}`); // TODO: フォローしている全ユーザーを購読
+					homeSubscriber.on('message', (ch, jsonData) => {
+						const chInfo = ch.split(':');
+						const dataType = chInfo[0];
+
+						clientManager.data(`home:${dataType}`, JSON.parse(jsonData));
+					});
+
+					clientManager.stream('success', {message: 'connected home timeline'});
+				}
+			});
+
+			clientManager.on('timeline-disconnect', data => {
+				const timelineType = data.type;
+
+				if (timelineType == null)
+					return clientManager.error({message: '\'type\' parameter is require'});
+
+				if (!timelineTypes.some(i => i == timelineType))
+					return clientManager.error({message: '\'type\' parameter is invalid'});
+
+				if (timelineType == timelineTypes[0]) {
+					if (homeSubscriber != null)
+						return clientManager.error({message: 'public timeline is not subscribed'});
+
+					publicSubscriber.quit([], () => {
+						publicSubscriber = null;
+						clientManager.stream('success', {message: 'disconnected public timeline'});
+					});
+				}
+
+				if (timelineType == timelineTypes[1]) {
+					if (homeSubscriber != null)
+						return clientManager.error({message: 'home timeline is not subscribed'});
+
+					homeSubscriber.quit([], () => {
+						homeSubscriber = null;
+						clientManager.stream('success', {message: 'disconnected home timeline'});
+					});
+				}
+			});
+
+			clientManager.onDisconnect(() => {
+				if (homeSubscriber != null) {
+					homeSubscriber.quit([], () => {
+						homeSubscriber = null;
+					});
+				}
+				if (publicSubscriber != null) {
+					publicSubscriber.quit([], () => {
+						publicSubscriber = null;
+					});
+				}
+			});
 		})();
 	});
 };

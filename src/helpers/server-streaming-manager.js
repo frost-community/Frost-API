@@ -76,6 +76,13 @@ class ServerStreamingManager {
 	}
 
 	/**
+	 * ストリームを切断します
+	 */
+	disconnect() {
+		this.ioServerSocket.disconnect();
+	}
+
+	/**
 	 * ストリーム切断時のイベントハンドラを登録します
 	 */
 	onDisconnect(callback) {
