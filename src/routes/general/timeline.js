@@ -1,6 +1,7 @@
 'use strict';
 
 const ApiResult = require('../../helpers/apiResult');
+const User = require('../../documentModels/user');
 const Post = require('../../documentModels/post');
 
 exports.get = async (request) => {
@@ -14,7 +15,7 @@ exports.get = async (request) => {
 
 	let posts;
 	try {
-		posts = await Post.findArrayByTypeAsync({$in: ['status']}, true, 30, request.db, request.config);
+		posts = await Post.findArrayByTypeAsync({$in: ['status']}, false, 30, request.db, request.config);
 	}
 	catch(err) {
 		// noop
@@ -23,5 +24,11 @@ exports.get = async (request) => {
 	if (posts == null || posts.length == 0)
 		return new ApiResult(404, 'posts are empty');
 
-	return new ApiResult(200, {posts: posts.map(i => i.serialize())});
+	posts.reverse();
+
+	const serializedPosts = [];
+	for (const post of posts)
+		serializedPosts.push(await post.serializeAsync(true));
+
+	return new ApiResult(200, {posts: serializedPosts});
 };

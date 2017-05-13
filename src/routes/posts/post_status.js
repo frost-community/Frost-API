@@ -45,5 +45,5 @@ exports.post = async (request) => {
 	publisher.publish(`status:${request.user.document._id.toString()}`, json);
 	publisher.publish('status:public', json);
 
-	return new ApiResult(200, {postStatus: postStatus.serialize()});
+	return new ApiResult(200, {postStatus: await postStatus.serializeAsync(true)});
 };
