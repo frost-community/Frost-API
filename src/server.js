@@ -3,6 +3,8 @@
 const i = require('./helpers/readline');
 const bodyParser = require('body-parser');
 const express = require('express');
+const httpClass = require('http');
+
 const loadConfig = require('./helpers/loadConfig');
 const sanitize = require('mongo-sanitize');
 const DbProvider = require('./helpers/dbProvider');
@@ -13,6 +15,9 @@ const apiSend = require('./helpers/middlewares/apiSend');
 const checkRequest = require('./helpers/middlewares/checkRequest');
 
 const questionResult = (ans) => (ans.toLowerCase()).indexOf('y') === 0;
+Error.stackTraceLimit = 20;
+
+process.on('unhandledRejection', console.dir);
 
 module.exports = async () => {
 	try {
@@ -30,10 +35,12 @@ module.exports = async () => {
 
 		if (config != null) {
 			const app = express();
+			const http = httpClass.Server(app);
 			app.disable('x-powered-by');
 			const dbProvider = await DbProvider.connectApidbAsync(config);
 			const db = new Db(config, dbProvider);
 			const directoryRouter = new DirectoryRouter(app);
+			const subscribers = new Map();
 
 			app.use((req, res, next) => {
 				// services
@@ -56,6 +63,12 @@ module.exports = async () => {
 			app.use(apiSend);
 			app.use(checkRequest);
 
+			app.use((req, res, next) => {
+				req.subscribers = subscribers;
+
+				next();
+			});
+
 			// add routes
 			for(const route of require('./routeList')()) {
 				let method = route[0];
@@ -72,9 +85,11 @@ module.exports = async () => {
 				res.apiSend(new (require('./helpers/apiResult'))(404, 'not found'));
 			});
 
-			app.listen(config.api.port, () => {
+			http.listen(config.api.port, () => {
 				console.log(`listen on port: ${config.api.port}`);
 			});
+
+			require('./streaming-server')(http, subscribers, db, config);
 		}
 	}
 	catch(err) {
