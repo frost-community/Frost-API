@@ -1,6 +1,6 @@
 {
   "name": "frost-api",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Frost API Server",
   "private": true,
   "main": "./built/index.js",
