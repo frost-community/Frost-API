@@ -70,6 +70,7 @@ module.exports = (http, subscribers, db, config) => {
 
 					let routeFuncAsync;
 					try {
+						// TODO: #66
 						routeFuncAsync = (require(new Route(data.request.method, data.request.endpoint).getMoludePath()))[method];
 					}
 					catch(e) {
