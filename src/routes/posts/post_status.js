@@ -40,10 +40,12 @@ exports.post = async (request) => {
 	if (postStatus == null)
 		return new ApiResult(500, 'faild to create postStatus');
 
-	const json = JSON.stringify(postStatus.serialize());
+	const serializedPostStatus = await postStatus.serializeAsync(true);
+
+	const json = JSON.stringify(serializedPostStatus);
 
 	publisher.publish(`${request.user.document._id.toString()}:status`, json);
 	publisher.publish('public:status', json);
 
-	return new ApiResult(200, {postStatus: await postStatus.serializeAsync(true)});
+	return new ApiResult(200, {postStatus: serializedPostStatus});
 };
