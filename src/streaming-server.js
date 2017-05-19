@@ -1,3 +1,5 @@
+'use strict';
+
 const Application = require('./documentModels/application');
 const ApplicationAccess = require('./documentModels/applicationAccess');
 const Route = require('./helpers/route');
