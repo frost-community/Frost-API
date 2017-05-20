@@ -5,7 +5,6 @@
   "private": true,
   "main": "./built/index.js",
   "scripts": {
-    "install": "npm run rebuild",
     "start": "node ./",
     "setup": "node ./ --setup",
     "build:copy": "cpx \"src/**/*.js\" built",
@@ -14,7 +13,8 @@
     "rebuild": "npm run clean && npm run build",
     "test:lint": "eslint ./built/**/*.js",
     "test:mocha": "mocha",
-    "test": "npm run test:lint && npm run test:mocha"
+    "test": "npm run test:lint && npm run test:mocha",
+    "install": "npm run rebuild",
   },
   "author": "team FrostDevelop",
   "license": "MIT",
