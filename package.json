@@ -14,7 +14,7 @@
     "test:lint": "eslint ./built/**/*.js",
     "test:mocha": "mocha",
     "test": "npm run test:lint && npm run test:mocha",
-    "install": "npm run rebuild",
+    "install": "npm run rebuild"
   },
   "author": "team FrostDevelop",
   "license": "MIT",
