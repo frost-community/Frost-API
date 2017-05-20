@@ -14,30 +14,14 @@ class Db {
 
 		this._config = config;
 		this.dbProvider = dbProvider;
-	}
 
-	get applications() {
-		return new Applications(this, this._config);
-	}
-
-	get applicationAccesses() {
-		return new ApplicationAccesses(this, this._config);
-	}
-
-	get authorizeRequests() {
-		return new AuthorizeRequests(this, this._config);
-	}
-
-	get posts() {
-		return new Posts(this, this._config);
-	}
-
-	get users() {
-		return new Users(this, this._config);
-	}
-
-	get userFollowings() {
-		return new UserFollowings(this, this._config);
+		// collections
+		this.applications = new Applications(this, this._config);
+		this.applicationAccesses = new ApplicationAccesses(this, this._config);
+		this.authorizeRequests = new AuthorizeRequests(this, this._config);
+		this.posts = new Posts(this, this._config);
+		this.users = new Users(this, this._config);
+		this.userFollowings = new UserFollowings(this, this._config);
 	}
 }
 module.exports = Db;
