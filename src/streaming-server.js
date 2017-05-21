@@ -7,7 +7,7 @@ const ioServer = require('socket.io');
 const redis = require('redis');
 const methods = require('methods');
 
-module.exports = (http, subscribers, db, config) => {
+module.exports = (http, directoryRouter, subscribers, db, config) => {
 	const ioServerToClient = ioServer(http);
 
 	const checkConnection = async (clientManager, applicationKey, accessKey) => {
@@ -72,11 +72,12 @@ module.exports = (http, subscribers, db, config) => {
 
 					let routeFuncAsync;
 					try {
-						// TODO: #66
-						routeFuncAsync = (require(new Route(data.request.method, data.request.endpoint).getMoludePath()))[method];
+						const route = directoryRouter.findRoute(data.request.method, data.request.endpoint);
+						routeFuncAsync = (require(route.getMoludePath()))[method];
 					}
 					catch(e) {
-						// noop
+						console.log('error: faild to parse route info');
+						console.log('reason: ' + e);
 					}
 
 					if (routeFuncAsync == null)

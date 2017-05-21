@@ -1,6 +1,7 @@
 'use strict';
 
 const ApiResult = require('./apiResult');
+const pathToRegexp = require('path-to-regexp');
 
 class DirectoryRouter {
 	/**
@@ -60,24 +61,26 @@ class DirectoryRouter {
 			})();
 		});
 
-		this.routes.push({method: route.method, path: route.path});
+		this.routes.push(route);
 	}
 
 	/**
 	 * 該当するルートを取得します
 	 *
 	 * @param  {string} method
-	 * @param  {string} path
+	 * @param  {string} endpoint
 	 * @return {Object} ルート情報
 	 */
-	findRoute(method, path) {
-		if (method == null || path == null)
+	findRoute(method, endpoint) {
+		if (method == null || endpoint == null)
 			throw new Error('missing arguments');
 
-		if (typeof method != 'string' || typeof path != 'string')
+		if (typeof method != 'string' || typeof endpoint != 'string')
 			throw new Error('invalid type');
 
-		return this.routes.find(route => route.method === method.toLowerCase() && route.path === path);
+		return this.routes.find(route => {
+			return route.method === method.toLowerCase() && pathToRegexp(route.path).exec(endpoint);
+		});
 	}
 }
 module.exports = DirectoryRouter;

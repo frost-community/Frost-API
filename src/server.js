@@ -1,10 +1,10 @@
 'use strict';
 
 const i = require('./helpers/readline');
-const bodyParser = require('body-parser');
 const express = require('express');
 const httpClass = require('http');
-
+const bodyParser = require('body-parser');
+const compression = require('compression');
 const loadConfig = require('./helpers/loadConfig');
 const sanitize = require('mongo-sanitize');
 const DbProvider = require('./helpers/dbProvider');
@@ -37,10 +37,19 @@ module.exports = async () => {
 			const app = express();
 			const http = httpClass.Server(app);
 			app.disable('x-powered-by');
+
+			app.set('etag', 'weak');
+
 			const dbProvider = await DbProvider.connectApidbAsync(config);
 			const db = new Db(config, dbProvider);
 			const directoryRouter = new DirectoryRouter(app);
 			const subscribers = new Map();
+
+			app.use(compression({
+				threshold: 0,
+				level: 9,
+				memLevel: 9
+			}));
 
 			app.use((req, res, next) => {
 				// services
@@ -89,7 +98,7 @@ module.exports = async () => {
 				console.log(`listen on port: ${config.api.port}`);
 			});
 
-			require('./streaming-server')(http, subscribers, db, config);
+			require('./streaming-server')(http, directoryRouter, subscribers, db, config);
 		}
 	}
 	catch(err) {
