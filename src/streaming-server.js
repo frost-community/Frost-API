@@ -68,6 +68,8 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 						return clientManager.stream('rest', {success: false, message: 'request format is invalid'});
 					}
 
+					console.log('[>client] rest:', method, endpoint);
+
 					if (endpoint.indexOf('..') != -1)
 						return clientManager.stream('rest', {success: false, message: '\'endpoint\' parameter is invalid'});
 
@@ -117,7 +119,7 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 					else
 						sendData = {};
 
-					console.log('rest event:', method, endpoint, 'res code:', apiResult.statusCode);
+					console.log('[client<] rest:', method, endpoint, 'res code:', apiResult.statusCode);
 					return clientManager.stream('rest', {success: true, request: data.request, response: sendData, statusCode: apiResult.statusCode});
 				})();
 			});
