@@ -2,7 +2,6 @@
 
 const Application = require('./documentModels/application');
 const ApplicationAccess = require('./documentModels/applicationAccess');
-const Route = require('./helpers/route');
 const ioServer = require('socket.io');
 const redis = require('redis');
 const methods = require('methods');

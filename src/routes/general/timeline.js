@@ -4,6 +4,8 @@ const ApiResult = require('../../helpers/apiResult');
 const User = require('../../documentModels/user');
 const Post = require('../../documentModels/post');
 
+// TODO: 不完全な実装
+
 exports.get = async (request) => {
 	const result = await request.checkRequestAsync({
 		query: [],
