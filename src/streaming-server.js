@@ -58,23 +58,28 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 			// クライアント側からRESTリクエストを受信したとき
 			clientManager.on('rest', data => {
 				(async () => {
-					if (data.request.method == null || data.request.endpoint == null) {
+					const method = data.request.method.toLowerCase();
+					const endpoint = data.request.endpoint;
+					const query = data.request.query;
+					const headers = data.request.headers;
+					const body = data.request.body;
+
+					if (method == null || endpoint == null) {
 						return clientManager.stream('rest', {success: false, message: 'request format is invalid'});
 					}
 
-					if (data.request.endpoint.indexOf('..') != -1)
+					if (endpoint.indexOf('..') != -1)
 						return clientManager.stream('rest', {success: false, message: '\'endpoint\' parameter is invalid'});
 
-					const method = methods.find(i => i.toLowerCase() === data.request.method.toLowerCase()).toLowerCase();
-
-					if (method == null)
+					if (methods.find(i => i.toLowerCase() === method) == null)
 						return clientManager.stream('rest', {success: false, message: '\'method\' parameter is invalid'});
 
-					let params = [];
 					let routeFuncAsync;
+					let params = [];
 					try {
-						const route = directoryRouter.findRoute(data.request.method, data.request.endpoint, params);
+						const route = directoryRouter.findRoute(method, endpoint);
 						routeFuncAsync = (require(route.getMoludePath()))[method];
+						params = route.getParams(endpoint);
 					}
 					catch(e) {
 						console.log('error: faild to parse route info');
@@ -85,12 +90,12 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 						return clientManager.stream('rest', {success: false, message: '\'endpoint\' parameter is invalid'});
 
 					const req = {
-						method: data.request.method,
-						endpoint: data.request.endpoint,
-						query: data.request.query,
+						method: method,
+						endpoint: endpoint,
+						query: query,
 						params: params,
-						headers: data.request.headers,
-						body: data.request.body,
+						headers: headers,
+						body: body,
 						db: db,
 						config: config,
 						user: ioServerToClientSocket.user,
@@ -112,6 +117,7 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 					else
 						sendData = {};
 
+					console.log('rest event:', method, endpoint, 'res code:', apiResult.statusCode);
 					return clientManager.stream('rest', {success: true, request: data.request, response: sendData, statusCode: apiResult.statusCode});
 				})();
 			});
