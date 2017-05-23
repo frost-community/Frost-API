@@ -71,7 +71,7 @@ class DirectoryRouter {
 	 * @param  {string} endpoint
 	 * @return {Object} ルート情報
 	 */
-	findRoute(method, endpoint) {
+	findRoute(method, endpoint, outParamsArray) {
 		if (method == null || endpoint == null)
 			throw new Error('missing arguments');
 
@@ -79,7 +79,7 @@ class DirectoryRouter {
 			throw new Error('invalid type');
 
 		return this.routes.find(route => {
-			return route.method === method.toLowerCase() && pathToRegexp(route.path).exec(endpoint);
+			return route.method === method.toLowerCase() && pathToRegexp(route.path, outParamsArray).exec(endpoint);
 		});
 	}
 }

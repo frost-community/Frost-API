@@ -8,8 +8,6 @@ class ServerStreamingManager {
 		this.ioServer = ioServer;
 		this.ioServerSocket = ioServerSocket;
 		this.dataEventName = options.dataEventName != null ? options.dataEventName : 'data';
-		this.restEventName = options.restEventName != null ? options.restEventName : 'rest';
-		this.errorEventName = options.errorEventName != null ? options.errorEventName : 'error';
 	}
 
 	/**
@@ -38,20 +36,6 @@ class ServerStreamingManager {
 	 */
 	data(streamType, data) {
 		this.stream(this.dataEventName, streamType, data);
-	}
-
-	/**
-	 * ストリームにREST APIの成功イベントを発行します
-	 */
-	rest(requestInfo, success, data) {
-		this.stream(this.restEventName, Object.assign({request: requestInfo, success: success}, data));
-	}
-
-	/**
-	 * ストリームにエラーイベントを発行します
-	 */
-	error(data) {
-		this.stream(this.errorEventName, data);
 	}
 
 	/**

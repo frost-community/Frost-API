@@ -10,27 +10,28 @@ const methods = require('methods');
 module.exports = (http, directoryRouter, subscribers, db, config) => {
 	const ioServerToClient = ioServer(http);
 
-	const checkConnection = async (clientManager, applicationKey, accessKey) => {
+	const checkAuthorization = async (clientManager, applicationKey, accessKey) => {
 		if (applicationKey == null) {
-			clientManager.stream('error:connection', {message: 'applicationKey parameter is empty'});
+			clientManager.stream('authorization', {success: false, message: 'applicationKey parameter is empty'});
 			return null;
 		}
 
 		if (accessKey == null) {
-			clientManager.stream('error:connection', {message: 'accessKey parameter is empty'});
+			clientManager.stream('authorization', {success: false, message: 'accessKey parameter is empty'});
 			return null;
 		}
 
 		if (!await Application.verifyKeyAsync(applicationKey, db, config)) {
-			clientManager.stream('error:connection', {message: 'applicationKey parameter is invalid'});
+			clientManager.stream('authorization', {success: false, message: 'applicationKey parameter is invalid'});
 			return null;
 		}
 
 		if (!await ApplicationAccess.verifyKeyAsync(accessKey, db, config)) {
-			clientManager.stream('error:connection', {message: 'accessKey parameter is invalid'});
+			clientManager.stream('authorization', {success: false, message: 'accessKey parameter is invalid'});
 			return null;
 		}
 
+		clientManager.stream('authorization', {success: true, message: 'successful authorization'});
 		return {
 			applicationId: Application.splitKey(applicationKey, db, config).applicationId,
 			userId: ApplicationAccess.splitKey(accessKey, db, config).userId
@@ -45,7 +46,7 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 
 			const applicationKey = ioServerToClientSocket.handshake.query.applicationKey;
 			const accessKey = ioServerToClientSocket.handshake.query.accessKey;
-			const checkResult = await checkConnection(clientManager, applicationKey, accessKey);
+			const checkResult = await checkAuthorization(clientManager, applicationKey, accessKey);
 			if (checkResult == null) {
 				return clientManager.disconnect();
 			}
@@ -59,20 +60,21 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 			clientManager.on('rest', data => {
 				(async () => {
 					if (data.request.method == null || data.request.endpoint == null) {
-						return clientManager.stream('error:rest', {message: 'request format is invalid'});
+						return clientManager.stream('rest', {success: false, message: 'request format is invalid'});
 					}
 
 					if (data.request.endpoint.indexOf('..') != -1)
-						return clientManager.stream('error:rest', {message: '\'endpoint\' parameter is invalid'});
+						return clientManager.stream('rest', {success: false, message: '\'endpoint\' parameter is invalid'});
 
 					const method = methods.find(i => i.toLowerCase() === data.request.method.toLowerCase()).toLowerCase();
 
 					if (method == null)
-						return clientManager.stream('error:rest', {message: '\'method\' parameter is invalid'});
+						return clientManager.stream('rest', {success: false, message: '\'method\' parameter is invalid'});
 
+					let params = [];
 					let routeFuncAsync;
 					try {
-						const route = directoryRouter.findRoute(data.request.method, data.request.endpoint);
+						const route = directoryRouter.findRoute(data.request.method, data.request.endpoint, params);
 						routeFuncAsync = (require(route.getMoludePath()))[method];
 					}
 					catch(e) {
@@ -81,12 +83,13 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 					}
 
 					if (routeFuncAsync == null)
-						return clientManager.stream('error:rest', {message: '\'endpoint\' parameter is invalid'});
+						return clientManager.stream('rest', {success: false, message: '\'endpoint\' parameter is invalid'});
 
 					const req = {
 						method: data.request.method,
 						endpoint: data.request.endpoint,
 						query: data.request.query,
+						params: params,
 						headers: data.request.headers,
 						body: data.request.body,
 						db: db,
@@ -99,20 +102,18 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 
 					const apiResult = await routeFuncAsync(req);
 
-					let sendData = {};
-
 					if (apiResult.statusCode == null)
 						apiResult.statusCode = 200;
 
+					let sendData;
 					if (typeof apiResult.data == 'string')
-						sendData.message = apiResult.data;
+						sendData = {message: apiResult.data};
 					else if (apiResult.data != null)
 						sendData = apiResult.data;
+					else
+						sendData = {};
 
-					if (apiResult.statusCode >= 400)
-						return clientManager.rest(data.request, false, sendData);
-
-					return clientManager.rest(data.request, true, sendData);
+					return clientManager.stream('rest', {success: true, request: data.request, response: sendData, statusCode: apiResult.statusCode});
 				})();
 			});
 
@@ -124,15 +125,15 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 				const timelineType = data.type;
 
 				if (timelineType == null)
-					return clientManager.stream('error:timeline-connect', {message: '\'type\' parameter is require'});
+					return clientManager.stream('timeline-connect', {success: false, message: '\'type\' parameter is require'});
 
 				if (!timelineTypes.some(i => i == timelineType))
-					return clientManager.stream('error:timeline-connect', {message: '\'type\' parameter is invalid'});
+					return clientManager.stream('timeline-connect', {success: false, message: '\'type\' parameter is invalid'});
 
 				// Redis: 購読状態の初期化
 				if (timelineType == timelineTypes[0]) { // public
 					if (publicSubscriber != null)
-						return clientManager.stream('error:timeline-connect', {message: 'public timeline is already subscribed'});
+						return clientManager.stream('timeline-connect', {success: false, message: 'public timeline is already subscribed'});
 
 					publicSubscriber = redis.createClient(6379, 'localhost');
 					publicSubscriber.subscribe('public:status'); // パブリックを購読
@@ -146,12 +147,12 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 						console.log('redis_err(publicSubscriber): ' + String(err));
 					});
 
-					clientManager.stream('success:timeline-connect', {message: 'connected public timeline'});
+					clientManager.stream('timeline-connect', {success: true, message: 'connected public timeline'});
 				}
 
 				if (timelineType == timelineTypes[1]) { // home
 					if (homeSubscriber != null)
-						return clientManager.stream('error:timeline-connect', {message: 'home timeline is already subscribed'});
+						return clientManager.stream('timeline-connect', {success: false, message: 'home timeline is already subscribed'});
 
 					homeSubscriber = redis.createClient(6379, 'localhost');
 					subscribers.set(userId.toString(), homeSubscriber);
@@ -167,7 +168,7 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 						console.log('redis_err(homeSubscriber): ' + String(err));
 					});
 
-					clientManager.stream('success:timeline-connect', {message: 'connected home timeline'});
+					clientManager.stream('timeline-connect', {success: true, message: 'connected home timeline'});
 				}
 			});
 
