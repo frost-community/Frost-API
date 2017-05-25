@@ -22,7 +22,7 @@ exports.post = async (request) => {
 	const userId = request.user.document._id;
 	const text = request.body.text;
 
-	if (/^\s*$/.test(text) || /^.{1,256}$/.test(text) == false)
+	if (/^\s*$/.test(text) || /^[\s\S]{1,256}$/.test(text) == false)
 		return new ApiResult(400, 'text is invalid format.');
 
 	let postStatus;
