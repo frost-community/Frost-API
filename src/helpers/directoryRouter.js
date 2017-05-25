@@ -31,7 +31,6 @@ class DirectoryRouter {
 
 		this.app[route.method](route.path, (request, response) => {
 			(async () => {
-				console.log(`access: ${route.method.toUpperCase()} ${route.path}`);
 				request.version = request.params.ver;
 
 				try {
@@ -47,6 +46,7 @@ class DirectoryRouter {
 						throw new Error(`route function is not found\ntarget: ${route.method} ${route.path}`);
 
 					const result = await routeFuncAsync(request);
+					console.log(`rest: ${route.method.toUpperCase()} ${route.path}, status=${result.statusCode}`);
 					response.apiSend(result);
 				}
 				catch (err) {
