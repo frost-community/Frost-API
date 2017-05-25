@@ -53,7 +53,6 @@ module.exports = async () => {
 
 			app.use((req, res, next) => {
 				// services
-				// req.directoryRouter = directoryRouter;
 				req.db = db;
 				req.config = config;
 
