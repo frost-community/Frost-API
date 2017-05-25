@@ -68,13 +68,13 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 						return clientManager.stream('rest', {success: false, message: 'request format is invalid'});
 					}
 
-					console.log('[>client] rest:', method, endpoint);
-
-					if (endpoint.indexOf('..') != -1)
+					if (endpoint.indexOf('..') != -1) {
 						return clientManager.stream('rest', {success: false, message: '\'endpoint\' parameter is invalid'});
+					}
 
-					if (methods.find(i => i.toLowerCase() === method) == null)
+					if (methods.find(i => i.toLowerCase() === method) == null) {
 						return clientManager.stream('rest', {success: false, message: '\'method\' parameter is invalid'});
+					}
 
 					let routeFuncAsync;
 					let params = [];
@@ -88,8 +88,9 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 						console.log('reason: ' + e);
 					}
 
-					if (routeFuncAsync == null)
+					if (routeFuncAsync == null) {
 						return clientManager.stream('rest', {success: false, message: '\'endpoint\' parameter is invalid'});
+					}
 
 					const req = {
 						method: method,
@@ -108,18 +109,22 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 
 					const apiResult = await routeFuncAsync(req);
 
-					if (apiResult.statusCode == null)
+					if (apiResult.statusCode == null) {
 						apiResult.statusCode = 200;
+					}
 
 					let sendData;
-					if (typeof apiResult.data == 'string')
+					if (typeof apiResult.data == 'string') {
 						sendData = {message: apiResult.data};
-					else if (apiResult.data != null)
+					}
+					else if (apiResult.data != null) {
 						sendData = apiResult.data;
-					else
+					}
+					else {
 						sendData = {};
+					}
 
-					console.log('[client<] rest:', method, endpoint, 'res code:', apiResult.statusCode);
+					console.log(`streaming/rest: ${method} ${endpoint}, status=${apiResult.statusCode}`);
 					return clientManager.stream('rest', {success: true, request: data.request, response: sendData, statusCode: apiResult.statusCode});
 				})();
 			});
@@ -131,16 +136,19 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 			clientManager.on('timeline-connect', data => {
 				const timelineType = data.type;
 
-				if (timelineType == null)
+				if (timelineType == null) {
 					return clientManager.stream('timeline-connect', {success: false, message: '\'type\' parameter is require'});
+				}
 
-				if (!timelineTypes.some(i => i == timelineType))
+				if (!timelineTypes.some(i => i == timelineType)) {
 					return clientManager.stream('timeline-connect', {success: false, message: '\'type\' parameter is invalid'});
+				}
 
 				// Redis: 購読状態の初期化
 				if (timelineType == timelineTypes[0]) { // public
-					if (publicSubscriber != null)
+					if (publicSubscriber != null) {
 						return clientManager.stream('timeline-connect', {success: false, message: 'public timeline is already subscribed'});
+					}
 
 					publicSubscriber = redis.createClient(6379, 'localhost');
 					publicSubscriber.subscribe('public:status'); // パブリックを購読
@@ -154,17 +162,19 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 						console.log('redis_err(publicSubscriber): ' + String(err));
 					});
 
+					console.log('streaming/timeline-connect: public');
 					clientManager.stream('timeline-connect', {success: true, message: 'connected public timeline'});
 				}
 
 				if (timelineType == timelineTypes[1]) { // home
-					if (homeSubscriber != null)
+					if (homeSubscriber != null) {
 						return clientManager.stream('timeline-connect', {success: false, message: 'home timeline is already subscribed'});
+					}
 
 					homeSubscriber = redis.createClient(6379, 'localhost');
 					subscribers.set(userId.toString(), homeSubscriber);
 					homeSubscriber.subscribe(`${userId.toString()}:status`); // 自身を購読
-					// subscriber.subscribe(`status:${}`); // TODO: フォローしている全ユーザーを購読
+					// subscriber.subscribe(`${}:status`); // TODO: フォローしている全ユーザーを購読
 					homeSubscriber.on('message', (ch, jsonData) => {
 						const chInfo = ch.split(':');
 						const dataType = chInfo[1];
@@ -175,6 +185,7 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 						console.log('redis_err(homeSubscriber): ' + String(err));
 					});
 
+					console.log('streaming/timeline-connect: home');
 					clientManager.stream('timeline-connect', {success: true, message: 'connected home timeline'});
 				}
 			});
@@ -182,29 +193,33 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 			clientManager.on('timeline-disconnect', data => {
 				const timelineType = data.type;
 
-				if (timelineType == null)
-					return clientManager.stream('error:timeline-disconnect', {message: '\'type\' parameter is require'});
+				if (timelineType == null) {
+					return clientManager.stream('timeline-disconnect', {success: false, message: '\'type\' parameter is require'});
+				}
 
-				if (!timelineTypes.some(i => i == timelineType))
-					return clientManager.stream('error:timeline-disconnect', {message: '\'type\' parameter is invalid'});
+				if (!timelineTypes.some(i => i == timelineType)) {
+					return clientManager.stream('timeline-disconnect', {success: false, message: '\'type\' parameter is invalid'});
+				}
 
 				if (timelineType == timelineTypes[0]) {
 					if (homeSubscriber != null)
-						return clientManager.stream('error:timeline-disconnect', {message: 'public timeline is not subscribed'});
+						return clientManager.stream('timeline-disconnect', {success: false, message: 'public timeline is not subscribed'});
 
 					publicSubscriber.quit([], () => {
 						publicSubscriber = null;
-						clientManager.stream('success:timeline-disconnect', {message: 'disconnected public timeline'});
+						console.log('streaming/timeline-disconnect: public');
+						clientManager.stream('timeline-disconnect', {success: true, message: 'disconnected public timeline'});
 					});
 				}
 
 				if (timelineType == timelineTypes[1]) {
 					if (homeSubscriber != null)
-						return clientManager.stream('error:timeline-disconnect', {message: 'home timeline is not subscribed'});
+						return clientManager.stream('timeline-disconnect', {success: false, message: 'home timeline is not subscribed'});
 
 					homeSubscriber.quit([], () => {
 						homeSubscriber = null;
-						clientManager.stream('success:timeline-disconnect', {message: 'disconnected home timeline'});
+						console.log('streaming/timeline-disconnect: home');
+						clientManager.stream('timeline-disconnect', {success: true, message: 'disconnected home timeline'});
 					});
 				}
 			});
