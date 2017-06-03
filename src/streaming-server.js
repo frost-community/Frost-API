@@ -58,11 +58,13 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 			// クライアント側からRESTリクエストを受信したとき
 			clientManager.on('rest', data => {
 				(async () => {
-					const method = data.request.method.toLowerCase();
-					const endpoint = data.request.endpoint;
-					const query = data.request.query;
-					const headers = data.request.headers;
-					const body = data.request.body;
+					const {
+						method,
+						endpoint,
+						query,
+						headers,
+						body
+					} = data.request;
 
 					if (method == null || endpoint == null) {
 						return clientManager.stream('rest', {success: false, message: 'request format is invalid'});
@@ -72,7 +74,7 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 						return clientManager.stream('rest', {success: false, message: '\'endpoint\' parameter is invalid'});
 					}
 
-					if (methods.find(i => i.toLowerCase() === method) == null) {
+					if (methods.find(i => i.toLowerCase() === method.toLowerCase()) == null) {
 						return clientManager.stream('rest', {success: false, message: '\'method\' parameter is invalid'});
 					}
 
