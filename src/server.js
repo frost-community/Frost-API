@@ -15,9 +15,6 @@ const apiSend = require('./helpers/middlewares/apiSend');
 const checkRequest = require('./helpers/middlewares/checkRequest');
 
 const questionResult = (ans) => (ans.toLowerCase()).indexOf('y') === 0;
-Error.stackTraceLimit = 20;
-
-process.on('unhandledRejection', console.dir);
 
 module.exports = async () => {
 	try {

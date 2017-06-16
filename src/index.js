@@ -1,16 +1,17 @@
 'use strict';
 
-var commander = require('commander');
+const commander = require('commander');
+const setup = require('./setup');
+const server = require('./server');
 
-commander
-	.option('-s, --setup', 'Display setup mode')
-	.parse(process.argv);
+commander.option('-s, --setup', 'Display setup mode').parse(process.argv);
 
-(async () => {
-	if (commander.setup) {
-		await require('./setup')();
-	}
-	else {
-		await require('./server')();
-	}
-})();
+process.on('unhandledRejection', console.dir);
+Error.stackTraceLimit = 20;
+
+if (commander.setup) {
+	setup();
+}
+else {
+	server();
+}
