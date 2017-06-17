@@ -247,7 +247,7 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 				});
 
 				connection.on('close', (reasonCode, description) => {
-					console.log('streaming close:', reasonCode, description);
+					// console.log('streaming close:', reasonCode, description);
 
 					if (homeSubscriber != null) {
 						homeSubscriber.quit(() => {
