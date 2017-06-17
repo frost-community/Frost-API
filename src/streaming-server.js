@@ -67,13 +67,10 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 					applicationId
 				} = await checkAuthorization(connection, applicationKey, accessKey);
 
-				const [user, application] = await Promise.all([
+				[connection.user, connection.application] = await Promise.all([
 					db.users.findByIdAsync(userId),
 					db.applications.findByIdAsync(applicationId)
 				]);
-
-				connection.user = user;
-				connection.application = application;
 
 				// クライアント側からRESTリクエストを受信したとき
 				connection.on('rest', data => {
