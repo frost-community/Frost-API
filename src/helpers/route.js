@@ -9,11 +9,13 @@ class Route {
 	 * @param {string} path
 	 */
 	constructor(method, path) {
-		if (method == null || path == null)
+		if (method == null || path == null) {
 			throw new Error('missing arguments');
+		}
 
-		if (typeof method != 'string' || typeof path != 'string')
+		if (typeof method != 'string' || typeof path != 'string') {
 			throw new Error('invalid type');
+		}
 
 		this.method = method;
 		this.path = path;
@@ -22,8 +24,9 @@ class Route {
 	getMoludePath() {
 		let modulePath = path.join(__dirname, '../routes', this.path.replace(/:/, ''));
 
-		if (/(\/$|^$)/.test(modulePath))
+		if (/(\/$|^$)/.test(modulePath)) {
 			modulePath += 'index';
+		}
 
 		modulePath = modulePath.replace(/\//g, path.sep);
 

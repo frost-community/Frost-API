@@ -9,13 +9,16 @@ module.exports = (request, response, next) => {
 	response.apiSend = (apiResult) => {
 		let sendData = {};
 
-		if (apiResult.statusCode == null)
+		if (apiResult.statusCode == null) {
 			apiResult.statusCode = 200;
+		}
 
-		if (typeof apiResult.data == 'string')
+		if (typeof apiResult.data == 'string') {
 			sendData.message = apiResult.data;
-		else if (apiResult.data != null)
+		}
+		else if (apiResult.data != null) {
 			sendData = apiResult.data;
+		}
 
 		sendData.statusCode = apiResult.statusCode;
 

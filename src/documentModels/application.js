@@ -9,8 +9,9 @@ const moment = require('moment');
 
 class Application {
 	constructor(document, db, config) {
-		if (document == null || db == null || config == null)
+		if (document == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		this.document = document;
 		this.db = db;
@@ -18,8 +19,9 @@ class Application {
 	}
 
 	hasPermission(permissionName) {
-		if (permissionName == null)
+		if (permissionName == null) {
 			throw new Error('missing arguments');
+		}
 
 		return this.document.permissions.indexOf(permissionName) != -1;
 	}
@@ -33,8 +35,9 @@ class Application {
 	}
 
 	getApplicationKey() {
-		if (this.document.keyCode == null)
+		if (this.document.keyCode == null) {
 			throw new Error('keyCode is empty');
+		}
 
 		const hash = Application.buildHash(this.document._id, this.document.creatorId, this.document.keyCode, this.db, this.config);
 
@@ -69,32 +72,37 @@ class Application {
 	// -- static methods
 
 	static async findByIdAsync(id, db, config) {
-		if (id == null || db == null || config == null)
+		if (id == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		return db.applications.findByIdAsync(id);
 	}
 
 	static async findByNameAsync(name, db, config) {
-		if (name == null || db == null || config == null)
+		if (name == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		return db.applications.findAsync({name: name});
 	}
 
 	static async findArrayByCreatorIdAsync(creatorId, db, config) {
-		if (creatorId == null || db == null || config == null)
+		if (creatorId == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		return db.applications.findArrayAsync({creatorId: creatorId});
 	}
 
 	static checkFormatPermissions(permissions, db, config) {
-		if (permissions == null || db == null || config == null)
+		if (permissions == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
-		if (!Array.isArray(permissions))
+		if (!Array.isArray(permissions)) {
 			return false;
+		}
 
 		return permissions.every(permission =>
 			typeof permission == 'string' && // それは文字列？
@@ -103,8 +111,9 @@ class Application {
 	}
 
 	static buildHash(applicationId, creatorId, keyCode, db, config) {
-		if (applicationId == null || creatorId == null || keyCode == null || db == null || config == null)
+		if (applicationId == null || creatorId == null || keyCode == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		const sha256 = crypto.createHash('sha256');
 		sha256.update(`${config.api.secretToken.application}/${creatorId}/${applicationId}/${keyCode}`);
@@ -113,20 +122,23 @@ class Application {
 	}
 
 	static splitKey(key, db, config) {
-		if (key == null || db == null || config == null)
+		if (key == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
 
-		if (reg == null)
+		if (reg == null) {
 			throw new Error('falid to split key');
+		}
 
 		return {applicationId: mongo.ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
 	}
 
 	static async verifyKeyAsync(key, db, config) {
-		if (key == null || db == null || config == null)
+		if (key == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		let elements;
 
@@ -139,8 +151,9 @@ class Application {
 
 		const application = await db.applications.findAsync({_id: elements.applicationId, keyCode: elements.keyCode});
 
-		if (application == null)
+		if (application == null) {
 			return false;
+		}
 
 		const correctHash = Application.buildHash(elements.applicationId, application.document.creatorId, elements.keyCode, db, config);
 		const isPassed = elements.hash === correctHash && elements.keyCode === application.document.keyCode;

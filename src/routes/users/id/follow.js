@@ -9,13 +9,15 @@ exports.post = async (request) => {
 		permissions: ['userWrite']
 	});
 
-	if (result != null)
+	if (result != null) {
 		return result;
+	}
 
 	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
 
-	if (user == null)
+	if (user == null) {
 		return new ApiResult(404, 'user is not found');
+	}
 
 	const userId = user.document._id.toString();
 
@@ -34,13 +36,15 @@ exports.del = async (request) => {
 		permissions: ['userWrite']
 	});
 
-	if (result != null)
+	if (result != null) {
 		return result;
+	}
 
 	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
 
-	if (user == null)
+	if (user == null) {
 		return new ApiResult(404, 'user is not found');
+	}
 
 	const userId = user.document._id.toString();
 

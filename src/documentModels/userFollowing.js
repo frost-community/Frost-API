@@ -5,8 +5,9 @@ const moment = require('moment');
 
 class UserFollowing {
 	constructor(document, db, config) {
-		if (document == null || db == null || config == null)
+		if (document == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		this.document = document;
 		this.db = db;

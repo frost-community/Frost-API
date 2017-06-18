@@ -21,6 +21,7 @@ describe('General -', () => {
 			routeList.forEach(route => {
 				const routeInstance = new Route(route[0], route[1]);
 				let module;
+
 				try {
 					module = require(routeInstance.getMoludePath())[routeInstance.method];
 				}

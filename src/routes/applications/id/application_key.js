@@ -8,20 +8,24 @@ exports.get = async (request) => {
 		permissions: ['applicationSpecial']
 	});
 
-	if (result != null)
+	if (result != null) {
 		return result;
+	}
 
 	const application = await Application.findByIdAsync(request.params.id, request.db, request.config);
 
-	if (application == null)
+	if (application == null) {
 		return new ApiResult(404, 'application is not found');
+	}
 
 	// 対象アプリケーションの所有者かどうか
-	if (application.document.creatorId.toString() !== request.user.document._id.toString())
+	if (application.document.creatorId.toString() !== request.user.document._id.toString()) {
 		return new ApiResult(403, 'you do not own this application');
+	}
 
-	if (application.document.keyCode == null)
+	if (application.document.keyCode == null) {
 		return new ApiResult(400, 'applicationKey has not been generated yet');
+	}
 
 	const key = application.getApplicationKey();
 
@@ -36,20 +40,24 @@ exports.post = async (request) => {
 		});
 	}
 	catch(e) {
-		if (e instanceof Error)
+		if (e instanceof Error) {
 			throw e;
-		else
+		}
+		else {
 			return e;
+		}
 	}
 
 	const application = await Application.findByIdAsync(request.params.id, request.db, request.config);
 
-	if (application == null)
+	if (application == null) {
 		return new ApiResult(404, 'application is not found');
+	}
 
 	// 対象アプリケーションの所有者かどうか
-	if (application.document.creatorId.toString() !== request.user.document._id.toString())
+	if (application.document.creatorId.toString() !== request.user.document._id.toString()) {
 		return new ApiResult(400, 'you do not own this application');
+	}
 
 	const key = await application.generateApplicationKeyAsync();
 

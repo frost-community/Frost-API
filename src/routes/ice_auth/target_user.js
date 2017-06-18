@@ -12,17 +12,20 @@ exports.post = async (request) => {
 		permissions: ['iceAuthHost']
 	});
 
-	if (result != null)
+	if (result != null) {
 		return result;
+	}
 
 	const iceAuthKey = request.get('X-Ice-Auth-Key');
 	const userId = request.body.userId;
 
-	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, request.db, request.config))
+	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, request.db, request.config)) {
 		return new ApiResult(400, 'X-Ice-Auth-Key header is invalid');
+	}
 
-	if (request.db.users.findByIdAsync(userId) == null) //TODO: move to document models
+	if (request.db.users.findByIdAsync(userId) == null) { //TODO: move to document models
 		return new ApiResult(400, 'userId is invalid');
+	}
 
 	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, request.db, request.config).authorizeRequestId;
 	const authorizeRequest = await AuthorizeRequest.findByIdAsync(authorizeRequestId, request.db, request.config);

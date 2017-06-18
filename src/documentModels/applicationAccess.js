@@ -8,8 +8,9 @@ const moment = require('moment');
 
 class ApplicationAccess {
 	constructor(document, db, config) {
-		if (document == null || db == null || config == null)
+		if (document == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		this.document = document;
 		this.db = db;
@@ -26,8 +27,9 @@ class ApplicationAccess {
 		}
 		while(isExist && tryCount < 4);
 
-		if (isExist && tryCount >= 4)
+		if (isExist && tryCount >= 4) {
 			throw new Error('the number of trials for keyCode generation has reached its upper limit');
+		}
 
 		await this.db.applicationAccesses.updateByIdAsync(this.document._id, {keyCode: keyCode});
 		await this.fetchAsync();
@@ -36,8 +38,9 @@ class ApplicationAccess {
 	}
 
 	getAccessKey() {
-		if (this.document.keyCode == null)
+		if (this.document.keyCode == null) {
 			throw new Error('keyCode is empty');
+		}
 
 		const hash = ApplicationAccess.buildHash(this.document.applicationId, this.document.userId, this.document.keyCode, this.db, this.config);
 
@@ -69,15 +72,17 @@ class ApplicationAccess {
 	// -- static methods
 
 	static async findByIdAsync(id, db, config) {
-		if (id == null || db == null || config == null)
+		if (id == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		return db.applicationAccesses.findByIdAsync(id);
 	}
 
 	static buildHash(applicationId, userId, keyCode, db, config) {
-		if (applicationId == null || userId == null || keyCode == null || db == null || config == null)
+		if (applicationId == null || userId == null || keyCode == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		const sha256 = crypto.createHash('sha256');
 		sha256.update(`${config.api.secretToken.applicationAccess}/${applicationId}/${userId}/${keyCode}`);
@@ -86,20 +91,23 @@ class ApplicationAccess {
 	}
 
 	static splitKey(key, db, config) {
-		if (key == null || db == null || config == null)
+		if (key == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
 
-		if (reg == null)
+		if (reg == null) {
 			throw new Error('falid to split key');
+		}
 
 		return {userId: mongo.ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
 	}
 
 	static async verifyKeyAsync(key, db, config) {
-		if (key == null || db == null || config == null)
+		if (key == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		let elements;
 
@@ -112,8 +120,9 @@ class ApplicationAccess {
 
 		const applicationAccess = await db.applicationAccesses.findAsync({userId: elements.userId, keyCode: elements.keyCode});
 
-		if (applicationAccess == null)
+		if (applicationAccess == null) {
 			return false;
+		}
 
 		const correctHash = ApplicationAccess.buildHash(applicationAccess.document.applicationId, elements.userId, elements.keyCode, db, config);
 		const isPassed = elements.hash === correctHash && elements.keyCode === applicationAccess.document.keyCode;

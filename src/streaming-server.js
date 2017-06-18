@@ -97,6 +97,7 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 
 						let routeFuncAsync;
 						let params = [];
+
 						try {
 							const route = directoryRouter.findRoute(method, endpoint);
 							routeFuncAsync = (require(route.getMoludePath()))[method];
@@ -221,8 +222,9 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 					}
 
 					if (timelineType == timelineTypes[0]) {
-						if (homeSubscriber != null)
+						if (homeSubscriber != null) {
 							return connection.send('timeline-disconnect', {success: false, message: 'public timeline is not subscribed'});
+						}
 
 						publicSubscriber.quit([], () => {
 							publicSubscriber = null;
@@ -232,8 +234,9 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 					}
 
 					if (timelineType == timelineTypes[1]) {
-						if (homeSubscriber != null)
+						if (homeSubscriber != null) {
 							return connection.send('timeline-disconnect', {success: false, message: 'home timeline is not subscribed'});
+						}
 
 						homeSubscriber.quit([], () => {
 							homeSubscriber = null;

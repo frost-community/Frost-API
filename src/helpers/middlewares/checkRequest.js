@@ -10,12 +10,14 @@ module.exports = (request, response, next) => {
 
 	request.checkRequestAsync = async (routeConfig) => {
 		try {
-			if (routeConfig == null)
+			if (routeConfig == null) {
 				routeConfig = {};
+			}
 
 			// body
-			if (routeConfig.body == null)
+			if (routeConfig.body == null) {
 				routeConfig.body = [];
+			}
 
 			for(const param of routeConfig.body) {
 				if (param.type == null || param.name == null) {
@@ -38,8 +40,9 @@ module.exports = (request, response, next) => {
 			}
 
 			// query strings
-			if (routeConfig.query == null)
+			if (routeConfig.query == null) {
 				routeConfig.query = [];
+			}
 
 			for(const query of routeConfig.query) {
 				if (query.type == null || query.name == null) {
@@ -52,12 +55,14 @@ module.exports = (request, response, next) => {
 
 				if (isRequire) {
 					let requestQuery = null;
+
 					try {
 						requestQuery = request.query[queryName];
 					}
 					catch(e) {
 						/* noop */
 					}
+
 					if (requestQuery == null) {
 						throw new apiResult(400, `query '${queryName}' is require`);
 					}
@@ -69,8 +74,9 @@ module.exports = (request, response, next) => {
 			}
 
 			// permissions
-			if (routeConfig.permissions == null)
+			if (routeConfig.permissions == null) {
 				routeConfig.permissions = [];
+			}
 
 			if (routeConfig.permissions.length !== 0) {
 				if (isMiddleware) {
@@ -107,14 +113,17 @@ module.exports = (request, response, next) => {
 			}
 
 			// headers
-			if (routeConfig.headers == null)
+			if (routeConfig.headers == null) {
 				routeConfig.headers = [];
+			}
 
-			if (request.headers == null)
+			if (request.headers == null) {
 				request.headers = [];
+			}
 
-			if (routeConfig.headers.indexOf('X-Api-Version') == -1)
+			if (routeConfig.headers.indexOf('X-Api-Version') == -1) {
 				routeConfig.headers.push('X-Api-Version');
+			}
 
 			for(const header of routeConfig.headers) {
 				if (header == null) {
@@ -128,6 +137,7 @@ module.exports = (request, response, next) => {
 				}
 				else {
 					let requestHeader = null;
+
 					try {
 						requestHeader = request.headers[header.toLowerCase()];
 					}
@@ -154,6 +164,7 @@ module.exports = (request, response, next) => {
 		}
 	};
 
-	if (isMiddleware)
+	if (isMiddleware) {
 		next();
+	}
 };

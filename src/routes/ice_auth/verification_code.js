@@ -10,19 +10,22 @@ exports.get = async (request) => {
 		permissions: ['iceAuthHost']
 	});
 
-	if (result != null)
+	if (result != null) {
 		return result;
+	}
 
 	const iceAuthKey = request.get('X-Ice-Auth-Key');
 
-	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, request.db, request.config))
+	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, request.db, request.config)) {
 		return new ApiResult(400, 'X-Ice-Auth-Key header is invalid');
+	}
 
 	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, request.db, request.config).authorizeRequestId;
 	const authorizeRequest = await request.db.authorizeRequests.findByIdAsync(authorizeRequestId); //TODO: move to document models
 
-	if (authorizeRequest.document.verificationCode == null)
+	if (authorizeRequest.document.verificationCode == null) {
 		throw new Error('verificationCode is empty');
+	}
 
 	return new ApiResult(200, {verificationCode: authorizeRequest.document.verificationCode});
 };

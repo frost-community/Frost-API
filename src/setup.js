@@ -20,10 +20,12 @@ module.exports = async () => {
 			if (await q('config file is not found. generate now? (y/n) > ')) {
 				let configPath;
 
-				if (await q('generate config.json in the parent directory of repository? (y/n) > '))
+				if (await q('generate config.json in the parent directory of repository? (y/n) > ')) {
 					configPath = `${process.cwd()}/../config.json`;
-				else
+				}
+				else {
 					configPath = `${process.cwd()}/config.json`;
+				}
 
 				const configJson = (await requestAsync(urlConfigFile)).body;
 				fs.writeFileSync(configPath, configJson);
@@ -52,8 +54,9 @@ module.exports = async () => {
 			if (await q('generate an application and its key for authentication host (Frost-Web etc.)? (y/n) > ')) {
 				let appName = await readLine('application name[Frost Web]: > ');
 
-				if (appName == '')
+				if (appName == '') {
 					appName = 'Frost Web';
+				}
 
 				const user = await db.users.createAsync({
 					screenName: 'frost',

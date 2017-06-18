@@ -12,10 +12,12 @@ exports.get = async (request) => {
 		permissions: ['postRead']
 	});
 
-	if (result != null)
+	if (result != null) {
 		return result;
+	}
 
 	let posts;
+
 	try {
 		posts = await Post.findArrayByTypeAsync({$in: ['status']}, false, 30, request.db, request.config);
 	}
@@ -23,14 +25,17 @@ exports.get = async (request) => {
 		// noop
 	}
 
-	if (posts == null || posts.length == 0)
+	if (posts == null || posts.length == 0) {
 		return new ApiResult(404, 'posts are empty');
+	}
 
 	posts.reverse();
 
 	const serializedPosts = [];
-	for (const post of posts)
+
+	for (const post of posts) {
 		serializedPosts.push(await post.serializeAsync(true));
+	}
 
 	return new ApiResult(200, {posts: serializedPosts});
 };

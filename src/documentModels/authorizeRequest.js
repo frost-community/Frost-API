@@ -8,8 +8,9 @@ const moment = require('moment');
 
 class AuthorizeRequest {
 	constructor(document, db, config) {
-		if (document == null || db == null || config == null)
+		if (document == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		this.document = document;
 		this.db = db;
@@ -28,8 +29,9 @@ class AuthorizeRequest {
 	}
 
 	getVerificationCode() {
-		if (this.document.verificationCode == null)
+		if (this.document.verificationCode == null) {
 			throw new Error('verificationCode is empty');
+		}
 
 		return this.document.verificationCode;
 	}
@@ -43,8 +45,9 @@ class AuthorizeRequest {
 	}
 
 	getIceAuthKey() {
-		if (this.document.keyCode == null)
+		if (this.document.keyCode == null) {
 			throw new Error('keyCode is empty');
+		}
 
 		const hash = AuthorizeRequest.buildHash(this.document._id, this.document.applicationId, this.document.keyCode, this.db, this.config);
 
@@ -52,8 +55,9 @@ class AuthorizeRequest {
 	}
 
 	async setTargetUserIdAsync(userId) {
-		if (userId == null)
+		if (userId == null) {
 			throw new Error('missing arguments');
+		}
 
 		await this.db.authorizeRequests.updateByIdAsync(this.document._id, {targetUserId: mongo.ObjectId(userId)});
 		await this.fetchAsync();
@@ -89,15 +93,17 @@ class AuthorizeRequest {
 	// static methods
 
 	static async findByIdAsync(id, db, config) {
-		if (id == null || db == null || config == null)
+		if (id == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		return db.authorizeRequests.findByIdAsync(id);
 	}
 
 	static buildHash(authorizeRequestId, applicationId, keyCode, db, config) {
-		if (authorizeRequestId == null || applicationId == null || keyCode == null || db == null || config == null)
+		if (authorizeRequestId == null || applicationId == null || keyCode == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		const sha256 = crypto.createHash('sha256');
 		sha256.update(`${config.api.secretToken.authorizeRequest}/${applicationId}/${authorizeRequestId}/${keyCode}`);
@@ -106,20 +112,23 @@ class AuthorizeRequest {
 	}
 
 	static splitKey(key, db, config) {
-		if (key == null || db == null || config == null)
+		if (key == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
 
-		if (reg == null)
+		if (reg == null) {
 			throw new Error('falid to split key');
+		}
 
 		return {authorizeRequestId: mongo.ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
 	}
 
 	static async verifyKeyAsync(key, db, config) {
-		if (key == null || db == null || config == null)
+		if (key == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		let elements;
 
@@ -132,8 +141,9 @@ class AuthorizeRequest {
 
 		const authorizeRequest = await db.authorizeRequests.findByIdAsync(elements.authorizeRequestId);
 
-		if (authorizeRequest == null)
+		if (authorizeRequest == null) {
 			return false;
+		}
 
 		const correctHash = AuthorizeRequest.buildHash(elements.authorizeRequestId, authorizeRequest.document.applicationId, elements.keyCode, db, config);
 		// const createdAt = moment(authorizeRequest._id.getTimestamp());

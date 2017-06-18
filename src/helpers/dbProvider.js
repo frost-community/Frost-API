@@ -4,8 +4,9 @@ const mongo = require('mongodb');
 
 class DbProvider {
 	constructor(connection) {
-		if (connection == null)
+		if (connection == null) {
 			throw new Error('missing arguments');
+		}
 
 		this.connection = connection;
 	}
@@ -18,8 +19,9 @@ class DbProvider {
 	 * @return {Promise<any>}
 	 */
 	async createAsync(collectionName, data) {
-		if (collectionName == null || data == null)
+		if (collectionName == null || data == null) {
 			throw new Error('missing arguments');
+		}
 
 		try {
 			return (await this.connection.collection(collectionName).insert(data)).ops[0];
@@ -39,8 +41,9 @@ class DbProvider {
 	 * @return {Promise<any>}
 	 */
 	async findAsync(collectionName, query, option) {
-		if (collectionName == null || query == null)
+		if (collectionName == null || query == null) {
 			throw new Error('missing arguments');
+		}
 
 		try {
 			return await this.connection.collection(collectionName).findOne(query, option);
@@ -61,17 +64,20 @@ class DbProvider {
 	 * @return {Promise<any>}
 	 */
 	async findArrayAsync(collectionName, query, sortOption, limit) {
-		if (collectionName == null || query == null)
+		if (collectionName == null || query == null) {
 			throw new Error('missing arguments');
+		}
 
 		try {
 			let cursor = this.connection.collection(collectionName).find(query);
 
-			if (limit != null)
+			if (limit != null) {
 				cursor = cursor.limit(limit);
+			}
 
-			if (sortOption != null)
+			if (sortOption != null) {
 				cursor = cursor.sort(sortOption);
+			}
 
 			return await cursor.toArray();
 		}
@@ -90,8 +96,9 @@ class DbProvider {
 	 * @return {Promise<any>}
 	 */
 	async updateAsync(collectionName, query, data) {
-		if (collectionName == null || query == null || data == null)
+		if (collectionName == null || query == null || data == null) {
 			throw new Error('missing arguments');
+		}
 
 		try {
 			return await this.connection.collection(collectionName).update(query, {$set: data});
@@ -110,8 +117,9 @@ class DbProvider {
 	 * @return {Promise<any>}
 	 */
 	async removeAsync(collectionName, query) {
-		if (collectionName == null || query == null)
+		if (collectionName == null || query == null) {
 			throw new Error('missing arguments');
+		}
 
 		try {
 			return await this.connection.collection(collectionName).remove(query);
@@ -131,17 +139,20 @@ class DbProvider {
 	 * @return {Promise}
 	 */
 	static async connectAsync(host, dbname, authenticate) {
-		if (host == null || dbname == null || authenticate == null)
+		if (host == null || dbname == null || authenticate == null) {
 			throw new Error('missing arguments');
+		}
 
 		try {
 			return await (new Promise((resolve, reject) => {
-				if (host == null || dbname == null)
+				if (host == null || dbname == null) {
 					reject('missing arguments');
+				}
 
 				mongo.MongoClient.connect(`mongodb://${authenticate}@${host}/${dbname}`, (err, connection) => {
-					if (err || connection == null)
+					if (err || connection == null) {
 						return reject('faild to connect database');
+					}
 
 					return resolve(new DbProvider(connection));
 				});
@@ -157,8 +168,9 @@ class DbProvider {
 	 * APIデータベースに接続します
 	 */
 	static async connectApidbAsync(config) {
-		if (config == null)
+		if (config == null) {
 			throw new Error('missing arguments');
+		}
 
 		const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
 		return await DbProvider.connectAsync(

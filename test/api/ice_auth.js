@@ -125,7 +125,10 @@ describe('IceAuth API', () => {
 
 							const res = await routeVerificationCode.get({
 								get: (h) => { /* headers */
-									if (h == 'X-Ice-Auth-Key') return iceAuthKey;
+									if (h == 'X-Ice-Auth-Key') {
+										return iceAuthKey;
+									}
+
 									return null;
 								},
 								db: db, config: config, checkRequestAsync: () => null
@@ -162,7 +165,10 @@ describe('IceAuth API', () => {
 							// targetUser
 							res = await routeTargetUser.post({
 								get: (h) => {
-									if (h == 'X-Ice-Auth-Key') return res.data.iceAuthKey;
+									if (h == 'X-Ice-Auth-Key') {
+										return res.data.iceAuthKey;
+									}
+
 									return null;
 								},
 								body: {
@@ -203,7 +209,10 @@ describe('IceAuth API', () => {
 							// targetUser
 							res = await routeTargetUser.post({
 								get: (h) => {
-									if (h == 'X-Ice-Auth-Key') return iceAuthKey;
+									if (h == 'X-Ice-Auth-Key') {
+										return iceAuthKey;
+									}
+
 									return null;
 								},
 								body: {
@@ -216,7 +225,10 @@ describe('IceAuth API', () => {
 							// authorize
 							res = await routeAuthorize.post({
 								get: (h) => {
-									if (h == 'X-Ice-Auth-Key') return iceAuthKey;
+									if (h == 'X-Ice-Auth-Key') {
+										return iceAuthKey;
+									}
+
 									return null;
 								},
 								body: {
@@ -255,7 +267,10 @@ describe('IceAuth API', () => {
 
 							res = await routeAuthorizeBasic.post({
 								get: (h) => {
-									if (h == 'X-Ice-Auth-Key') return iceAuthKey;
+									if (h == 'X-Ice-Auth-Key') {
+										return iceAuthKey;
+									}
+
 									return null;
 								},
 								body: {

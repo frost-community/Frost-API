@@ -16,16 +16,19 @@ exports.post = async (request) => {
 		permissions: ['postWrite']
 	});
 
-	if (result != null)
+	if (result != null) {
 		return result;
+	}
 
 	const userId = request.user.document._id;
 	const text = request.body.text;
 
-	if (/^\s*$/.test(text) || /^[\s\S]{1,256}$/.test(text) == false)
+	if (/^\s*$/.test(text) || /^[\s\S]{1,256}$/.test(text) == false) {
 		return new ApiResult(400, 'text is invalid format.');
+	}
 
 	let postStatus;
+
 	try {
 		postStatus = await request.db.posts.createAsync({ // TODO: move to document models
 			type: 'status',
@@ -37,8 +40,9 @@ exports.post = async (request) => {
 		console.log(err.trace);
 	}
 
-	if (postStatus == null)
+	if (postStatus == null) {
 		return new ApiResult(500, 'faild to create postStatus');
+	}
 
 	const serializedPostStatus = await postStatus.serializeAsync(true);
 

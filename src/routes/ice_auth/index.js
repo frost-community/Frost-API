@@ -10,17 +10,20 @@ exports.post = async (request) => {
 		]
 	});
 
-	if (result != null)
+	if (result != null) {
 		return result;
+	}
 
 	const applicationKey = request.body.applicationKey;
 
-	if (!await Application.verifyKeyAsync(applicationKey, request.db, request.config))
+	if (!await Application.verifyKeyAsync(applicationKey, request.db, request.config)) {
 		return new ApiResult(400, 'applicationKey is invalid');
+	}
 
 	const applicationId = Application.splitKey(applicationKey, request.db, request.config).applicationId;
 
 	let authorizeRequest;
+
 	try {
 		authorizeRequest = await request.db.authorizeRequests.createAsync({ // TODO: move to document models
 			applicationId: applicationId
@@ -30,8 +33,9 @@ exports.post = async (request) => {
 		console.log(err.stack);
 	}
 
-	if (authorizeRequest == null)
+	if (authorizeRequest == null) {
 		return new ApiResult(500, 'faild to create authorizeRequest');
+	}
 
 	const iceAuthKey = await authorizeRequest.generateIceAuthKeyAsync();
 	await authorizeRequest.generateVerificationCodeAsync();

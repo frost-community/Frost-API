@@ -11,25 +11,29 @@ exports.post = async (request) => {
 		headers: ['X-Ice-Auth-Key']
 	});
 
-	if (result != null)
+	if (result != null) {
 		return result;
+	}
 
 	const iceAuthKey = request.get('X-Ice-Auth-Key');
 	const verificationCode = request.body.verificationCode;
 
-	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, request.db, request.config))
+	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, request.db, request.config)) {
 		return new ApiResult(400, 'X-Ice-Auth-Key header is invalid');
+	}
 
 	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, request.db, request.config).authorizeRequestId;
 	const authorizeRequest = await AuthorizeRequest.findByIdAsync(authorizeRequestId, request.db, request.config);
 	const document = authorizeRequest.document;
 	await authorizeRequest.removeAsync();
 
-	if (document.targetUserId == null)
+	if (document.targetUserId == null) {
 		return new ApiResult(400, 'authorization has not been done yet');
+	}
 
-	if (verificationCode !== document.verificationCode)
+	if (verificationCode !== document.verificationCode) {
 		return new ApiResult(400, 'verificationCode is invalid');
+	}
 
 	// TODO: refactoring(duplication)
 
@@ -39,6 +43,7 @@ exports.post = async (request) => {
 	});
 
 	let accessKey;
+
 	if (applicationAccess == null) {
 		try {
 			applicationAccess = await request.db.applicationAccesses.createAsync({ // TODO: move to document models
@@ -51,8 +56,9 @@ exports.post = async (request) => {
 			console.log(err.stack);
 		}
 
-		if (applicationAccess == null)
+		if (applicationAccess == null) {
 			return new ApiResult(500, 'faild to create applicationAccess');
+		}
 
 		try {
 			accessKey = await applicationAccess.generateAccessKeyAsync();
@@ -61,8 +67,9 @@ exports.post = async (request) => {
 			console.log(err.stack);
 		}
 
-		if (accessKey == null)
+		if (accessKey == null) {
 			return new ApiResult(500, 'faild to generate accessKey');
+		}
 	}
 	else {
 		try {
@@ -72,8 +79,9 @@ exports.post = async (request) => {
 			console.log(err.stack);
 		}
 
-		if (accessKey == null)
+		if (accessKey == null) {
 			return new ApiResult(500, 'faild to build accessKey');
+		}
 	}
 
 	return new ApiResult(200, {accessKey: accessKey});

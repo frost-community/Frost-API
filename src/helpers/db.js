@@ -9,8 +9,9 @@ const UserFollowings = require('../collections/userFollowings');
 
 class Db {
 	constructor(config, dbProvider) {
-		if (config == null || dbProvider == null)
+		if (config == null || dbProvider == null) {
 			throw new Error('missing arguments');
+		}
 
 		this._config = config;
 		this.dbProvider = dbProvider;

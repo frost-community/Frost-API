@@ -8,8 +8,9 @@ exports.post = async (request) => {
 		permissions: ['postWrite']
 	});
 
-	if (result != null)
+	if (result != null) {
 		return result;
+	}
 
 	return new ApiResult(501, 'not implemented');
 };

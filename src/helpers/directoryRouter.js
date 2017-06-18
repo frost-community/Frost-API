@@ -12,8 +12,9 @@ class DirectoryRouter {
 	 * @param  {[]} config 対象のconfig
 	 */
 	constructor(app) {
-		if (app == null)
+		if (app == null) {
 			throw new Error('missing arguments');
+		}
 
 		this.app = app;
 		this.routes = [];
@@ -26,8 +27,9 @@ class DirectoryRouter {
 	 * @return {void}
 	 */
 	addRoute(route) {
-		if (route == null)
+		if (route == null) {
 			throw new Error('missing arguments');
+		}
 
 		this.app[route.method](route.path, (request, response) => {
 			(async () => {
@@ -35,6 +37,7 @@ class DirectoryRouter {
 
 				try {
 					let routeFuncAsync;
+
 					try {
 						routeFuncAsync = require(route.getMoludePath())[route.method];
 					}
@@ -42,8 +45,9 @@ class DirectoryRouter {
 						// noop
 					}
 
-					if (routeFuncAsync == null)
+					if (routeFuncAsync == null) {
 						throw new Error(`route function is not found\ntarget: ${route.method} ${route.path}`);
+					}
 
 					const result = await routeFuncAsync(request);
 					console.log(`rest: ${route.method.toUpperCase()} ${route.path}, status=${result.statusCode}`);
@@ -72,11 +76,13 @@ class DirectoryRouter {
 	 * @return {Object} Route instance
 	 */
 	findRoute(method, endpoint) {
-		if (method == null || endpoint == null)
+		if (method == null || endpoint == null) {
 			throw new Error('missing arguments');
+		}
 
-		if (typeof method != 'string' || typeof endpoint != 'string')
+		if (typeof method != 'string' || typeof endpoint != 'string') {
 			throw new Error('invalid type');
+		}
 
 		return this.routes.find(i => i.method === method.toLowerCase() && pathToRegexp(i.path, []).test(endpoint) );
 	}

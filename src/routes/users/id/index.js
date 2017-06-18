@@ -9,13 +9,15 @@ exports.get = async (request) => {
 		permissions: ['userRead']
 	});
 
-	if (result != null)
+	if (result != null) {
 		return result;
+	}
 
 	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
 
-	if (user == null)
+	if (user == null) {
 		return new ApiResult(404, 'user is not found');
+	}
 
 	return new ApiResult(200, {user: user.serialize()});
 };

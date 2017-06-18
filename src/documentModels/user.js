@@ -6,8 +6,9 @@ const moment = require('moment');
 
 class User {
 	constructor(document, db, config) {
-		if (document == null || db == null || config == null)
+		if (document == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		this.document = document;
 		this.db = db;
@@ -16,8 +17,9 @@ class User {
 	// TODO: 各種操作用メソッドの追加
 
 	verifyPassword(password) {
-		if (password == null)
+		if (password == null) {
 			throw new Error('missing arguments');
+		}
 
 		const passwordHashElements = this.document.passwordHash.split('.');
 		const hash = passwordHashElements[0];
@@ -59,8 +61,9 @@ class User {
 	 * @return {User}
 	 */
 	static async findByIdAsync(id, db, config) {
-		if (id == null || db == null || config == null)
+		if (id == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		return db.users.findByIdAsync(id);
 	}
@@ -71,8 +74,9 @@ class User {
 	 * @return {User}
 	 */
 	static async findArrayByScreenNamesAsync(screenNames, limit, db, config) {
-		if (screenNames == null || db == null || config == null)
+		if (screenNames == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		return db.users.findArrayAsync({screenName: {$in: screenNames}}, null, limit);
 	}
@@ -83,22 +87,25 @@ class User {
 	 * @return {User}
 	 */
 	static async findByScreenNameAsync(screenName, db, config) {
-		if (screenName == null || db == null || config == null)
+		if (screenName == null || db == null || config == null) {
 			throw new Error('missing arguments');
+		}
 
 		return db.users.findAsync({screenName: screenName});
 	}
 
 	static checkFormatScreenName(screenName) {
-		if (screenName == null)
+		if (screenName == null) {
 			throw new Error('missing arguments');
+		}
 
 		return /^[a-zA-Z0-9_-]{4,15}$/.test(screenName) || /^(.)\1{3,}$/.test(screenName);
 	}
 
 	static checkFormatPassword(password) {
-		if (password == null)
+		if (password == null) {
 			throw new Error('missing arguments');
+		}
 
 		return /^[!-~]{6,}$/.test(password);
 	}

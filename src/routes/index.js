@@ -8,8 +8,9 @@ exports.get = async (request) => {
 		permissions: []
 	});
 
-	if (result != null)
+	if (result != null) {
 		return result;
+	}
 
 	return new ApiResult(200, 'Frost API Server');
 };
