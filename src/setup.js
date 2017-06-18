@@ -2,13 +2,13 @@
 
 const fs = require('fs');
 const requestAsync = require('./helpers/requestAsync');
-const i = require('./helpers/readline');
+const readLine = require('./helpers/readline');
 const loadConfig = require('./helpers/loadConfig');
 const DbProvider = require('./helpers/dbProvider');
 const Db = require('./helpers/db');
 
 const urlConfigFile = 'https://raw.githubusercontent.com/Frost-Dev/Frost/master/config.json';
-const questionResult = (ans) => (ans.toLowerCase()).indexOf('y') === 0;
+const q = async str => (await readLine(str)).toLowerCase().indexOf('y') === 0;
 
 module.exports = async () => {
 	console.log();
@@ -17,10 +17,10 @@ module.exports = async () => {
 
 	try {
 		if (loadConfig() == null) {
-			if (questionResult(await i('config file is not found. generate now? (y/n) > '))) {
+			if (await q('config file is not found. generate now? (y/n) > ')) {
 				let configPath;
 
-				if (questionResult(await i('generate config.json in the parent directory of repository? (y/n) > ')))
+				if (await q('generate config.json in the parent directory of repository? (y/n) > '))
 					configPath = `${process.cwd()}/../config.json`;
 				else
 					configPath = `${process.cwd()}/config.json`;
@@ -36,8 +36,8 @@ module.exports = async () => {
 			const dbProvider = await DbProvider.connectApidbAsync(config);
 			const db = new Db(config, dbProvider);
 
-			if (questionResult(await i('remove all db collections? (y/n) > '))) {
-				if (questionResult(await i('(!) Do you really do remove all document on db collections? (y/n) > '))) {
+			if (await q('remove all db collections? (y/n) > ')) {
+				if (await q('(!) Do you really do remove all document on db collections? (y/n) > ')) {
 					await db.applicationAccesses.removeAsync({});
 					console.log('cleaned applicationAccesses collection.');
 					await db.authorizeRequests.removeAsync({});
@@ -49,8 +49,8 @@ module.exports = async () => {
 				}
 			}
 
-			if (questionResult(await i('generate an application and its key for authentication host (Frost-Web etc.)? (y/n) > '))) {
-				let appName = await i('application name[Frost Web]: > ');
+			if (await q('generate an application and its key for authentication host (Frost-Web etc.)? (y/n) > ')) {
+				let appName = await readLine('application name[Frost Web]: > ');
 
 				if (appName == '')
 					appName = 'Frost Web';

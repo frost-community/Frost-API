@@ -1,6 +1,6 @@
 'use strict';
 
-const i = require('./helpers/readline');
+const readLine = require('./helpers/readline');
 const express = require('express');
 const httpClass = require('http');
 const bodyParser = require('body-parser');
@@ -14,7 +14,7 @@ const DirectoryRouter = require('./helpers/directoryRouter');
 const apiSend = require('./helpers/middlewares/apiSend');
 const checkRequest = require('./helpers/middlewares/checkRequest');
 
-const questionResult = (ans) => (ans.toLowerCase()).indexOf('y') === 0;
+const q = async str => (await readLine(str)).toLowerCase().indexOf('y') === 0;
 
 module.exports = async () => {
 	try {
@@ -24,7 +24,7 @@ module.exports = async () => {
 
 		let config = loadConfig();
 		if (config == null) {
-			if (questionResult(await i('config file is not found. display setting mode now? (y/n) '))) {
+			if (await q('config file is not found. display setting mode now? (y/n) ')) {
 				await require('./setup')();
 				config = loadConfig();
 			}
