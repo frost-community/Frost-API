@@ -100,12 +100,13 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 
 						try {
 							const route = directoryRouter.findRoute(method, endpoint);
-							routeFuncAsync = (require(route.getMoludePath()))[method];
-							params = route.getParams(endpoint);
+							if (route != null) {
+								routeFuncAsync = (require(route.getMoludePath()))[method];
+								params = route.getParams(endpoint);
+							}
 						}
 						catch(e) {
-							console.log('error: faild to parse route info');
-							console.log('reason: ' + e);
+							console.log('error: faild to parse route info.', 'reason:', e);
 						}
 
 						if (routeFuncAsync == null) {
