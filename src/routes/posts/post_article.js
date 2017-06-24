@@ -43,7 +43,7 @@ exports.post = async (request) => {
 	}
 
 	if (postArticle == null) {
-		return new ApiResult(500, 'faild to create postArticle');
+		return new ApiResult(500, 'failed to create postArticle');
 	}
 
 	return new ApiResult(200, {postArticle: postArticle.serialize()});

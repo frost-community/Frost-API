@@ -41,7 +41,7 @@ exports.post = async (request) => {
 	}
 
 	if (postStatus == null) {
-		return new ApiResult(500, 'faild to create postStatus');
+		return new ApiResult(500, 'failed to create postStatus');
 	}
 
 	const serializedPostStatus = await postStatus.serializeAsync(true);

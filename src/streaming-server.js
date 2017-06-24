@@ -106,7 +106,7 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 							}
 						}
 						catch(e) {
-							console.log('error: faild to parse route info.', 'reason:', e);
+							console.log('error: failed to parse route info.', 'reason:', e);
 						}
 
 						if (routeFuncAsync == null) {

@@ -151,7 +151,7 @@ class DbProvider {
 
 				mongo.MongoClient.connect(`mongodb://${authenticate}@${host}/${dbname}`, (err, connection) => {
 					if (err || connection == null) {
-						return reject('faild to connect database');
+						return reject('failed to connect database');
 					}
 
 					return resolve(new DbProvider(connection));

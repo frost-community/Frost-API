@@ -65,7 +65,7 @@ exports.post = async (request) => {
 	}
 
 	if (application == null) {
-		return new ApiResult(500, 'faild to create application');
+		return new ApiResult(500, 'failed to create application');
 	}
 
 	return new ApiResult(200, {application: application.serialize()});

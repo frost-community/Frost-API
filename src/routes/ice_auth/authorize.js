@@ -57,7 +57,7 @@ exports.post = async (request) => {
 		}
 
 		if (applicationAccess == null) {
-			return new ApiResult(500, 'faild to create applicationAccess');
+			return new ApiResult(500, 'failed to create applicationAccess');
 		}
 
 		try {
@@ -68,7 +68,7 @@ exports.post = async (request) => {
 		}
 
 		if (accessKey == null) {
-			return new ApiResult(500, 'faild to generate accessKey');
+			return new ApiResult(500, 'failed to generate accessKey');
 		}
 	}
 	else {
@@ -80,7 +80,7 @@ exports.post = async (request) => {
 		}
 
 		if (accessKey == null) {
-			return new ApiResult(500, 'faild to build accessKey');
+			return new ApiResult(500, 'failed to build accessKey');
 		}
 	}
 
