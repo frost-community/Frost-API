@@ -1,8 +1,8 @@
 'use strict';
 
 const ApiResult = require('../../helpers/apiResult');
-
 const redis = require('redis');
+
 const publisher = redis.createClient(6379, 'localhost');
 publisher.on('error', function(err) {
 	console.log('redis_err(publisher): ' + String(err));
