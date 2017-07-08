@@ -35,5 +35,20 @@ class UserFollowing {
 	async fetchAsync() {
 		this.document = (await this.db.userFollowings.findByIdAsync(this.document._id)).document;
 	}
+
+	async removeAsync() {
+		await this.db.userFollowings.removeAsync({_id: this.document._id});
+		this.document = null;
+	}
+
+	// static methods
+
+	static async findBySrcDestAsync(source, destination, db, config) {
+		if (source == null || destination == null || db == null || config == null) {
+			throw new Error('missing arguments');
+		}
+
+		return db.userFollowings.findAsync({source: source, destination: destination});
+	}
 }
 module.exports = UserFollowing;
