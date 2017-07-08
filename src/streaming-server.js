@@ -8,7 +8,7 @@ const redis = require('redis');
 const methods = require('methods');
 
 module.exports = (http, directoryRouter, subscribers, db, config) => {
-	const checkAuthorization = async (connection, applicationKey, accessKey) => {
+	const authorize = async (connection, applicationKey, accessKey) => {
 		if (applicationKey == null) {
 			const message = 'applicationKey parameter is empty';
 			connection.send('authorization', {success: false, message: message});
@@ -40,8 +40,6 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 		};
 	};
 
-	const timelineTypes = ['public', 'home'];
-
 	const server = new WebSocket.server({httpServer: http});
 	server.on('request', request => {
 		(async () => {
@@ -63,12 +61,12 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 
 			try {
 				const {
-					userId,
+					meId,
 					applicationId
-				} = await checkAuthorization(connection, applicationKey, accessKey);
+				} = await authorize(connection, applicationKey, accessKey);
 
 				[connection.user, connection.application] = await Promise.all([
-					db.users.findByIdAsync(userId),
+					db.users.findByIdAsync(meId),
 					db.applications.findByIdAsync(applicationId)
 				]);
 
@@ -105,8 +103,8 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 								params = route.getParams(endpoint);
 							}
 						}
-						catch(e) {
-							console.log('error: failed to parse route info.', 'reason:', e);
+						catch(err) {
+							console.log('error: failed to parse route info.', 'reason:', err);
 						}
 
 						if (routeFuncAsync == null) {
@@ -150,8 +148,8 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 					})();
 				});
 
-				let publicSubscriber = null;
-				let homeSubscriber = null;
+				const timelineTypes = ['public', 'home'];
+				const timelineSubscribers = new Map();
 
 				// クライアント側からタイムラインの購読リクエストを受信したとき
 				connection.on('timeline-connect', data => {
@@ -165,50 +163,47 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 						return connection.send('timeline-connect', {success: false, message: '\'type\' parameter is invalid'});
 					}
 
-					// Redis: 購読状態の初期化
-					if (timelineType == timelineTypes[0]) { // public
-						if (publicSubscriber != null) {
-							return connection.send('timeline-connect', {success: false, message: 'public timeline is already subscribed'});
-						}
+					// タイムラインの購読(Redis subscribe)
 
-						publicSubscriber = redis.createClient(6379, 'localhost');
-						publicSubscriber.subscribe('public:status'); // パブリックを購読
-						publicSubscriber.on('message', (ch, jsonData) => {
-							const chInfo = ch.split(':');
-							const dataType = chInfo[1];
-
-							connection.send(`data:public:${dataType}`, JSON.parse(jsonData));
-						});
-						publicSubscriber.on('error', function(err) {
-							console.log('redis_err(publicSubscriber): ' + String(err));
-						});
-
-						console.log('streaming/timeline-connect: public');
-						connection.send('timeline-connect', {success: true, message: 'connected public timeline'});
+					if (timelineSubscribers.get(timelineType) != null) {
+						return connection.send('timeline-connect', {success: false, message: `${timelineType} timeline is already subscribed`});
 					}
 
-					if (timelineType == timelineTypes[1]) { // home
-						if (homeSubscriber != null) {
-							return connection.send('timeline-connect', {success: false, message: 'home timeline is already subscribed'});
-						}
+					const timelineSubscriber = redis.createClient(6379, 'localhost');
 
-						homeSubscriber = redis.createClient(6379, 'localhost');
-						subscribers.set(userId.toString(), homeSubscriber);
-						homeSubscriber.subscribe(`${userId.toString()}:status`); // 自身を購読
-						// subscriber.subscribe(`${}:status`); // TODO: フォローしている全ユーザーを購読
-						homeSubscriber.on('message', (ch, jsonData) => {
-							const chInfo = ch.split(':');
-							const dataType = chInfo[1];
-
-							connection.send(`data:home:${dataType}`, JSON.parse(jsonData));
-						});
-						homeSubscriber.on('error', function(err) {
-							console.log('redis_err(homeSubscriber): ' + String(err));
-						});
-
-						console.log('streaming/timeline-connect: home');
-						connection.send('timeline-connect', {success: true, message: 'connected home timeline'});
+					let timelineId;
+					if (timelineType == timelineTypes[0]) {
+						timelineId = 'public';
 					}
+					else if (timelineType == timelineTypes[1]) {
+						timelineId = meId.toString();
+					}
+					else {
+						// TODO: 未定義のtimelineTypeに対するエラー
+					}
+
+					timelineSubscriber.subscribe(`${timelineId}:status`); // 対象のタイムラインを購読
+
+					// homeTL限定の処理
+					if (timelineType == timelineTypes[1]) {
+						// TODO: フォローしているユーザーのタイムラインを購読(全て or ユーザーの購読設定によっては選択的に)
+					}
+
+					timelineSubscriber.on('message', (ch, jsonData) => {
+						const chInfo = ch.split(':');
+						const dataType = chInfo[1];
+
+						connection.send(`data:${timelineType}:${dataType}`, JSON.parse(jsonData));
+					});
+
+					timelineSubscriber.on('error', function(err) {
+						console.log(`redis_err(timelineSubscriber ${timelineType}): ` + String(err));
+					});
+
+					timelineSubscribers.set(timelineId, timelineSubscriber);
+
+					console.log(`streaming/timeline-connect: ${timelineType}`);
+					connection.send('timeline-connect', {success: true, message: `connected ${timelineType} timeline`});
 				});
 
 				connection.on('timeline-disconnect', data => {
@@ -222,43 +217,29 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 						return connection.send('timeline-disconnect', {success: false, message: '\'type\' parameter is invalid'});
 					}
 
-					if (timelineType == timelineTypes[0]) {
-						if (homeSubscriber != null) {
-							return connection.send('timeline-disconnect', {success: false, message: 'public timeline is not subscribed'});
-						}
+					const timelineSubscriber = timelineSubscribers.get(timelineType);
 
-						publicSubscriber.quit([], () => {
-							publicSubscriber = null;
-							console.log('streaming/timeline-disconnect: public');
-							connection.send('timeline-disconnect', {success: true, message: 'disconnected public timeline'});
-						});
+					if (timelineSubscriber != null) {
+						return connection.send('timeline-disconnect', {success: false, message: `${timelineType} timeline is not subscribed`});
 					}
 
-					if (timelineType == timelineTypes[1]) {
-						if (homeSubscriber != null) {
-							return connection.send('timeline-disconnect', {success: false, message: 'home timeline is not subscribed'});
-						}
-
-						homeSubscriber.quit([], () => {
-							homeSubscriber = null;
-							console.log('streaming/timeline-disconnect: home');
-							connection.send('timeline-disconnect', {success: true, message: 'disconnected home timeline'});
-						});
-					}
+					timelineSubscriber.quit([], () => {
+						timelineSubscribers.delete(timelineType);
+						console.log(`streaming/timeline-disconnect: ${timelineType}`);
+						connection.send('timeline-disconnect', {success: true, message: `disconnected ${timelineType} timeline`});
+					});
 				});
 
 				connection.on('close', (reasonCode, description) => {
 					// console.log('streaming close:', reasonCode, description);
 
-					if (homeSubscriber != null) {
-						homeSubscriber.quit(() => {
-							homeSubscriber = null;
-						});
-					}
-					if (publicSubscriber != null) {
-						publicSubscriber.quit((err, res) => {
-							publicSubscriber = null;
-						});
+					for (let timelineType of timelineSubscribers.keys) {
+						const timelineSubscriber = timelineSubscribers.get(timelineType);
+						if (timelineSubscriber != null) {
+							timelineSubscriber.quit((err, res) => {
+								timelineSubscribers.delete(timelineType);
+							});
+						}
 					}
 				});
 			}
