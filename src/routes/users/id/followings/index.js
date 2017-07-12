@@ -1,6 +1,6 @@
 'use strict';
 
-const ApiResult = require('../../../helpers/apiResult');
+const ApiResult = require('../../../../helpers/apiResult');
 
 exports.get = async (request) => {
 	const result = await request.checkRequestAsync({

@@ -65,14 +65,17 @@ module.exports = () => {
 		// フォローの一覧を取得
 		['get',  '/users/:id/followings'],
 
-		// フォロワーの一覧を取得
-		['get',  '/users/:id/followers'],
+		// 指定したユーザーが対象のユーザーをフォローしているかどうかを取得
+		['get',  '/users/:id/followings/:target_id'],
 
 		// 指定したユーザーをフォローする
-		['post', '/users/:id/follow'],
+		['put', '/users/:id/followings/:target_id'],
 
 		// 指定したユーザーへのフォローを解除する
-		['del',  '/users/:id/follow'],
+		['del',  '/users/:id/followings/:target_id'],
+
+		// フォロワーの一覧を取得
+		['get',  '/users/:id/followers'],
 
 		// == Posts ==
 

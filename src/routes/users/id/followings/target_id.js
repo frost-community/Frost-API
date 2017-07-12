@@ -1,10 +1,23 @@
 'use strict';
 
-const ApiResult = require('../../../helpers/apiResult');
-const User = require('../../../documentModels/user');
-const UserFollowing = require('../../../documentModels/userFollowing');
+const ApiResult = require('../../../../helpers/apiResult');
+const User = require('../../../../documentModels/user');
+const UserFollowing = require('../../../../documentModels/userFollowing');
 
-exports.post = async (request) => {
+exports.get = async (request) => {
+	const result = await request.checkRequestAsync({
+		query: [],
+		permissions: ['userRead']
+	});
+
+	if (result != null) {
+		return result;
+	}
+
+	return new ApiResult(501, 'not implemented');
+};
+
+exports.put = async (request) => {
 	const result = await request.checkRequestAsync({
 		body: [],
 		permissions: ['userWrite']
@@ -14,11 +27,18 @@ exports.post = async (request) => {
 		return result;
 	}
 
-	// me
-	const meId = request.user.document._id;
+	// user
+	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
+	if (user == null) {
+		return new ApiResult(404, 'user is not found');
+	}
+	if (user.document._id != request.user.document._id) {
+		return new ApiResult(404, 'user is not authorized');
+	}
+	const userId = user.document._id;
 
 	// targetUser
-	const targetUser = await User.findByIdAsync(request.params.id, request.db, request.config);
+	const targetUser = await User.findByIdAsync(request.body.target_id, request.db, request.config);
 	if (targetUser == null) {
 		return new ApiResult(404, 'target user is not found');
 	}
@@ -34,8 +54,8 @@ exports.post = async (request) => {
 	let userFollowing;
 	try {
 		userFollowing = await request.db.userFollowings.createAsync({ // TODO: move to document models
-			source: meId,
-			destination: targetUserId,
+			source: userId,
+			target: targetUserId,
 			message: message
 		});
 	}
@@ -48,7 +68,7 @@ exports.post = async (request) => {
 	}
 
 	// 購読
-	const meSubscriber = request.subscribers.get(meId.toString());
+	const meSubscriber = request.subscribers.get(userId.toString());
 	if (meSubscriber != null) {
 		meSubscriber.subscribe(`${targetUserId.toString()}:status`);
 	}
@@ -66,8 +86,15 @@ exports.del = async (request) => {
 		return result;
 	}
 
-	// me
-	const meId = request.user.document._id;
+	// user
+	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
+	if (user == null) {
+		return new ApiResult(404, 'user is not found');
+	}
+	if (user.document._id != request.user.document._id) {
+		return new ApiResult(404, 'user is not authorized');
+	}
+	const userId = user.document._id;
 
 	// targetUser
 	const targetUser = await User.findByIdAsync(request.params.id, request.db, request.config);
@@ -76,7 +103,7 @@ exports.del = async (request) => {
 	}
 	const targetUserId = targetUser.document._id;
 
-	const userFollowing = await UserFollowing.findBySrcDestAsync(meId, targetUserId, request.db, request.config);
+	const userFollowing = await UserFollowing.findBySrcDestAsync(userId, targetUserId, request.db, request.config);
 
 	if (userFollowing == null) {
 		return new ApiResult(400, 'you are not following this user');
@@ -85,7 +112,7 @@ exports.del = async (request) => {
 	await userFollowing.removeAsync();
 
 	// 購読解除
-	const subscriber = request.subscribers.get(meId.toString());
+	const subscriber = request.subscribers.get(userId.toString());
 	if (subscriber != null) {
 		subscriber.unsubscribe(`${targetUserId.toString()}:status`);
 	}
