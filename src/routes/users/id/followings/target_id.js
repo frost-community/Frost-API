@@ -14,7 +14,24 @@ exports.get = async (request) => {
 		return result;
 	}
 
-	return new ApiResult(501, 'not implemented');
+	// source user
+	const sourceUser = await User.findByIdAsync(request.params.id, request.db, request.config);
+	if (sourceUser == null) {
+		return new ApiResult(404, 'source user is not found');
+	}
+
+	// target user
+	const targetUser = await User.findByIdAsync(request.params.target_id, request.db, request.config);
+	if (targetUser == null) {
+		return new ApiResult(404, 'target user is not found');
+	}
+
+	const userFollowing = await UserFollowing.findBySrcDestAsync(sourceUser.document._id, targetUser.document._id, request.db, request.config);
+	if (userFollowing == null) {
+		return new ApiResult(404);
+	}
+
+	return new ApiResult(200);
 };
 
 exports.put = async (request) => {
@@ -37,7 +54,7 @@ exports.put = async (request) => {
 	}
 	const userId = user.document._id;
 
-	// targetUser
+	// target user
 	const targetUser = await User.findByIdAsync(request.body.target_id, request.db, request.config);
 	if (targetUser == null) {
 		return new ApiResult(404, 'target user is not found');
@@ -73,7 +90,7 @@ exports.put = async (request) => {
 		meSubscriber.subscribe(`${targetUserId.toString()}:status`);
 	}
 
-	return new ApiResult(200, {userFollowing: userFollowing.serialize()});
+	return new ApiResult(201, {following: userFollowing.serialize()});
 };
 
 exports.del = async (request) => {
@@ -96,7 +113,7 @@ exports.del = async (request) => {
 	}
 	const userId = user.document._id;
 
-	// targetUser
+	// target user
 	const targetUser = await User.findByIdAsync(request.params.id, request.db, request.config);
 	if (targetUser == null) {
 		return new ApiResult(404, 'target user is not found');
@@ -104,7 +121,6 @@ exports.del = async (request) => {
 	const targetUserId = targetUser.document._id;
 
 	const userFollowing = await UserFollowing.findBySrcDestAsync(userId, targetUserId, request.db, request.config);
-
 	if (userFollowing == null) {
 		return new ApiResult(400, 'you are not following this user');
 	}
@@ -117,5 +133,5 @@ exports.del = async (request) => {
 		subscriber.unsubscribe(`${targetUserId.toString()}:status`);
 	}
 
-	return new ApiResult(200);
+	return new ApiResult(204);
 };
