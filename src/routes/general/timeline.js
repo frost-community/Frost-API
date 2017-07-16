@@ -19,7 +19,7 @@ exports.get = async (request) => {
 	if (limit != null) {
 		limit = parseInt(limit);
 		if (isNaN(limit) || limit <= 0 || limit > 100) {
-			return new ApiResult(401, 'limit is invalid');
+			return new ApiResult(400, 'limit is invalid');
 		}
 	}
 	else {
@@ -36,7 +36,7 @@ exports.get = async (request) => {
 	}
 
 	if (posts == null || posts.length == 0) {
-		return new ApiResult(404, 'posts are empty');
+		return new ApiResult(204, 'posts are empty');
 	}
 
 	posts.reverse();

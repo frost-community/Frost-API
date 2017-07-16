@@ -90,7 +90,7 @@ exports.get = async (request) => {
 	}
 
 	if (applications == null || applications.length == 0) {
-		return new ApiResult(404, 'applications are empty');
+		return new ApiResult(204, 'applications are empty');
 	}
 
 	return new ApiResult(200, {applications: applications.map(i => i.serialize())});
