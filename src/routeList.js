@@ -69,7 +69,7 @@ module.exports = () => {
 		['get',  '/users/:id/followings/:target_id'],
 
 		// 指定したユーザーをフォローする
-		['put', '/users/:id/followings/:target_id'],
+		['put',  '/users/:id/followings/:target_id'],
 
 		// 指定したユーザーへのフォローを解除する
 		['del',  '/users/:id/followings/:target_id'],

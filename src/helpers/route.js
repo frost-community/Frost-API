@@ -21,8 +21,8 @@ class Route {
 		this.path = path;
 	}
 
-	getMoludePath() {
-		let modulePath = path.join(__dirname, '../routes', this.path.replace(/:/, ''));
+	getModulePath() {
+		let modulePath = path.join(__dirname, '../routes', this.path.replace(/:/g, ''));
 
 		if (/(\/$|^$)/.test(modulePath)) {
 			modulePath += 'index';

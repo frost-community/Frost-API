@@ -23,7 +23,7 @@ describe('General -', () => {
 				let module;
 
 				try {
-					module = require(routeInstance.getMoludePath())[routeInstance.method];
+					module = require(routeInstance.getModulePath())[routeInstance.method];
 				}
 				catch(e) {
 					module = null;

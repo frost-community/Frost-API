@@ -39,7 +39,7 @@ class DirectoryRouter {
 					let routeFuncAsync;
 
 					try {
-						routeFuncAsync = require(route.getMoludePath())[route.method];
+						routeFuncAsync = require(route.getModulePath())[route.method];
 					}
 					catch(e) {
 						// noop
