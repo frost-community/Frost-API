@@ -3,13 +3,14 @@
 const assert = require('assert');
 const config = require('../built/helpers/loadConfig')();
 const Route = require('../built/helpers/route');
+const enumRange = require('../built/helpers/enumRange');
 
 describe('General -', () => {
 	describe('routes', () => {
 		const routeList = require('../built/routeList')();
 
 		it('存在するHTTPメソッドを利用している', () => {
-			for(const route of routeList) {
+			for (const route of routeList) {
 				let method = route[0];
 				method = method.replace(/^del$/, 'delete');
 				assert(require('methods').indexOf(method) > -1);
@@ -18,7 +19,7 @@ describe('General -', () => {
 
 		it('すべての対象ルートのモジュールが存在している', () => {
 			let errorCount = 0;
-			routeList.forEach(route => {
+			for (const route of routeList) {
 				const routeInstance = new Route(route[0], route[1]);
 				let module;
 
@@ -33,7 +34,7 @@ describe('General -', () => {
 					console.log(`route module not found: ${route[0]} ${route[1]}`);
 					errorCount++;
 				}
-			});
+			}
 			assert.equal(errorCount, 0);
 		});
 	});
@@ -42,7 +43,7 @@ describe('General -', () => {
 		const random = require('../built/helpers/randomRange');
 
 		it('範囲を指定して生成した乱数の値はその範囲内にある', () => {
-			for(let i = 0; i < 1000; i++) {
+			for (const i of enumRange(0, 1000)) {
 				const value = random(64, 1024);
 				assert(value >= 64 && value <= 1024);
 			}

@@ -76,7 +76,7 @@ module.exports = async () => {
 			});
 
 			// add routes
-			for(const route of require('./routeList')()) {
+			for (const route of require('./routeList')()) {
 				let method = route[0];
 				const path = route[1];
 

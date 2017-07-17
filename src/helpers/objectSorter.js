@@ -4,7 +4,10 @@ module.exports = (srcObject) => {
 	const array = Object.keys(srcObject);
 	array.sort();
 	const sorted = {};
-	array.forEach(i => sorted[i] = srcObject[i]);
+
+	for (const i of array) {
+		sorted[i] = srcObject[i];
+	}
 
 	return sorted;
 };

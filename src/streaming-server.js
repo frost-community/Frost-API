@@ -233,7 +233,7 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 				connection.on('close', (reasonCode, description) => {
 					// console.log('streaming close:', reasonCode, description);
 
-					for (let timelineType of timelineSubscribers.keys) {
+					for (const timelineType of timelineSubscribers.keys) {
 						const timelineSubscriber = timelineSubscribers.get(timelineType);
 						if (timelineSubscriber != null) {
 							timelineSubscriber.quit((err, res) => {

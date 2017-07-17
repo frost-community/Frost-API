@@ -19,7 +19,7 @@ module.exports = (request, response, next) => {
 				routeConfig.body = [];
 			}
 
-			for(const param of routeConfig.body) {
+			for (const param of routeConfig.body) {
 				if (param.type == null || param.name == null) {
 					throw new Error('extentions.body elements are missing');
 				}
@@ -44,7 +44,7 @@ module.exports = (request, response, next) => {
 				routeConfig.query = [];
 			}
 
-			for(const query of routeConfig.query) {
+			for (const query of routeConfig.query) {
 				if (query.type == null || query.name == null) {
 					throw new Error('extentions.query elements are missing');
 				}
@@ -125,7 +125,7 @@ module.exports = (request, response, next) => {
 				routeConfig.headers.push('X-Api-Version');
 			}
 
-			for(const header of routeConfig.headers) {
+			for (const header of routeConfig.headers) {
 				if (header == null) {
 					throw new Error('extentions.headers elements are missing');
 				}
