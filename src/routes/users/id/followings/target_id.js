@@ -111,26 +111,24 @@ exports.del = async (request) => {
 	if (user.document._id != request.user.document._id) {
 		return new ApiResult(403, 'you do not have permission to execute');
 	}
-	const userId = user.document._id;
 
 	// target user
 	const targetUser = await User.findByIdAsync(request.params.id, request.db, request.config);
 	if (targetUser == null) {
 		return new ApiResult(404, 'target user as premise not found');
 	}
-	const targetUserId = targetUser.document._id;
 
 	const userFollowing = await UserFollowing.findBySrcDestAsync(user.document._id, targetUser.document._id, request.db, request.config);
-	if (userFollowing == null) {
-		return new ApiResult(204);
-	}
 
-	await userFollowing.removeAsync();
+	// ドキュメントが存在すれば削除
+	if (userFollowing != null) {
+		await userFollowing.removeAsync();
 
-	// 購読解除
-	const subscriber = request.subscribers.get(userId.toString());
-	if (subscriber != null) {
-		subscriber.unsubscribe(`${targetUserId.toString()}:status`);
+		// 購読解除
+		const subscriber = request.subscribers.get(user.document._id.toString());
+		if (subscriber != null) {
+			subscriber.unsubscribe(`${targetUser.document._id.toString()}:status`);
+		}
 	}
 
 	return new ApiResult(204);
