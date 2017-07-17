@@ -67,27 +67,30 @@ exports.put = async (request) => {
 		return new ApiResult(400, 'message is invalid format.');
 	}
 
-	// ドキュメント作成
+	// ドキュメント作成・更新
 	let userFollowing;
 	try {
-		userFollowing = await request.db.userFollowings.createAsync({ // TODO: move to document models
+		userFollowing = await request.db.userFollowings.upsertAsync({ // TODO: move to document models
+			source: userId,
+			target: targetUserId
+		}, {
 			source: userId,
 			target: targetUserId,
 			message: message
-		});
+		}, {renewal: true});
 	}
 	catch(err) {
 		console.log(err.trace);
 	}
 
 	if (userFollowing == null) {
-		return new ApiResult(500, 'failed to create userFollowing');
+		return new ApiResult(500, 'failed to create or update userFollowing');
 	}
 
 	// 購読
 	const meSubscriber = request.subscribers.get(userId.toString());
 	if (meSubscriber != null) {
-		meSubscriber.subscribe(`${targetUserId.toString()}:status`);
+		meSubscriber.subscribe(`${targetUserId.toString()}:status`); // この操作は冪等
 	}
 
 	return new ApiResult(201, {following: userFollowing.serialize()});

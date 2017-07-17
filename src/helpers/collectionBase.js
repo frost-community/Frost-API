@@ -119,12 +119,12 @@ class CollectionBase {
 		return this.updateByIdAsync(id, data, options);
 	}
 
-	async removeAsync(query) {
+	removeAsync(query) {
 		if (query == null) {
 			throw new Error('missing arguments');
 		}
 
-		return await this.db.dbProvider.removeAsync(this.collectionName, query);
+		return this.db.dbProvider.removeAsync(this.collectionName, query);
 	}
 
 	removeByIdAsync(id) {
@@ -135,6 +135,9 @@ class CollectionBase {
 		let parsedId = id;
 
 		try {
+			if (!mongo.ObjectID.isValid(id) && typeof id != 'string')
+				throw new Error('invalid ObjectId');
+
 			if (typeof id == 'string') {
 				parsedId = mongo.ObjectId(id);
 			}
@@ -144,7 +147,7 @@ class CollectionBase {
 			throw new Error('object id parse error');
 		}
 
-		return this.removeAsync();
+		return this.removeAsync({_id: parsedId});
 	}
 }
 module.exports = CollectionBase;

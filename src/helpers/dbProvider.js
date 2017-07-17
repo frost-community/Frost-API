@@ -37,16 +37,16 @@ class DbProvider {
 	 *
 	 * @param  {string} collectionName
 	 * @param  {object} query
-	 * @param  {object} option
+	 * @param  {object} options
 	 * @return {Promise<any>}
 	 */
-	async findAsync(collectionName, query, option) {
+	async findAsync(collectionName, query, options) {
 		if (collectionName == null || query == null) {
 			throw new Error('missing arguments');
 		}
 
 		try {
-			return await this.connection.collection(collectionName).findOne(query, option);
+			return await this.connection.collection(collectionName).findOne(query, options);
 		}
 		catch(e) {
 			console.log(e.trace);
@@ -93,6 +93,7 @@ class DbProvider {
 	 * @param  {string} collectionName
 	 * @param  {object} query
 	 * @param  {object} data
+	 * @param  {object} options
 	 * @return {Promise<any>}
 	 */
 	async updateAsync(collectionName, query, data, options) {
@@ -101,7 +102,7 @@ class DbProvider {
 		}
 
 		try {
-			return await this.connection.collection(collectionName).update(query, {$set: data}, options);
+			return await this.connection.collection(collectionName).update(query, options.renewal ? data : {$set: data}, options);
 		}
 		catch(e) {
 			console.log(e.trace);
