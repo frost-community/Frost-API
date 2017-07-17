@@ -23,13 +23,7 @@ class DbProvider {
 			throw new Error('missing arguments');
 		}
 
-		try {
-			return (await this.connection.collection(collectionName).insert(data)).ops[0];
-		}
-		catch(e) {
-			console.log(e.trace);
-			throw new Error(e);
-		}
+		return (await this.connection.collection(collectionName).insert(data)).ops[0];
 	}
 
 	/**
@@ -45,13 +39,7 @@ class DbProvider {
 			throw new Error('missing arguments');
 		}
 
-		try {
-			return await this.connection.collection(collectionName).findOne(query, options);
-		}
-		catch(e) {
-			console.log(e.trace);
-			throw new Error(e);
-		}
+		return await this.connection.collection(collectionName).findOne(query, options);
 	}
 
 	/**
@@ -68,23 +56,17 @@ class DbProvider {
 			throw new Error('missing arguments');
 		}
 
-		try {
-			let cursor = this.connection.collection(collectionName).find(query);
+		let cursor = this.connection.collection(collectionName).find(query);
 
-			if (limit != null) {
-				cursor = cursor.limit(limit);
-			}
-
-			if (sortOption != null) {
-				cursor = cursor.sort(sortOption);
-			}
-
-			return await cursor.toArray();
+		if (limit != null) {
+			cursor = cursor.limit(limit);
 		}
-		catch(e) {
-			console.log(e.trace);
-			throw new Error(e);
+
+		if (sortOption != null) {
+			cursor = cursor.sort(sortOption);
 		}
+
+		return await cursor.toArray();
 	}
 
 	/**
@@ -103,13 +85,7 @@ class DbProvider {
 
 		options = options || {};
 
-		try {
-			return await this.connection.collection(collectionName).update(query, options.renewal ? data : {$set: data}, options);
-		}
-		catch(e) {
-			console.log(e.trace);
-			throw new Error(e);
-		}
+		return (await this.connection.collection(collectionName).update(query, options.renewal ? data : {$set: data}, options)).result;
 	}
 
 	/**
@@ -124,13 +100,7 @@ class DbProvider {
 			throw new Error('missing arguments');
 		}
 
-		try {
-			return await this.connection.collection(collectionName).remove(query);
-		}
-		catch(e) {
-			console.log(e.trace);
-			throw new Error(e);
-		}
+		return await this.connection.collection(collectionName).remove(query);
 	}
 
 	// static methods
@@ -146,25 +116,19 @@ class DbProvider {
 			throw new Error('missing arguments');
 		}
 
-		try {
-			return await (new Promise((resolve, reject) => {
-				if (host == null || dbname == null) {
-					reject('missing arguments');
+		return await (new Promise((resolve, reject) => {
+			if (host == null || dbname == null) {
+				reject('missing arguments');
+			}
+
+			mongo.MongoClient.connect(`mongodb://${authenticate}@${host}/${dbname}`, (err, connection) => {
+				if (err || connection == null) {
+					return reject('failed to connect database');
 				}
 
-				mongo.MongoClient.connect(`mongodb://${authenticate}@${host}/${dbname}`, (err, connection) => {
-					if (err || connection == null) {
-						return reject('failed to connect database');
-					}
-
-					return resolve(new DbProvider(connection));
-				});
-			}));
-		}
-		catch(e) {
-			console.log(e.trace);
-			throw new Error(e);
-		}
+				return resolve(new DbProvider(connection));
+			});
+		}));
 	}
 
 	/**

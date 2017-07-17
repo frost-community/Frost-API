@@ -82,7 +82,7 @@ class CollectionBase {
 			throw new Error('missing arguments');
 		}
 
-		return (await this.db.dbProvider.updateAsync(this.collectionName, query, data, options)).result;
+		return await this.db.dbProvider.updateAsync(this.collectionName, query, data, options);
 	}
 
 	upsertAsync(query, data, options) {
