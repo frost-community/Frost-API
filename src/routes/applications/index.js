@@ -47,7 +47,7 @@ exports.post = async (request) => {
 	}
 
 	if (permissions.some(permission => request.config.api.additionDisabledPermissions.indexOf(permission) != -1)) { // 利用を禁止された権限を含む
-		return new ApiResult(400, 'some permissions use are disabled.');
+		return new ApiResult(400, 'some permissions use are disabled');
 	}
 
 	let application;

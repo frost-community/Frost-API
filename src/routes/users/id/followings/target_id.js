@@ -17,13 +17,13 @@ exports.get = async (request) => {
 	// source user
 	const sourceUser = await User.findByIdAsync(request.params.id, request.db, request.config);
 	if (sourceUser == null) {
-		return new ApiResult(404, 'source user is not found');
+		return new ApiResult(404, 'source user as premise not found');
 	}
 
 	// target user
 	const targetUser = await User.findByIdAsync(request.params.target_id, request.db, request.config);
 	if (targetUser == null) {
-		return new ApiResult(404, 'target user is not found');
+		return new ApiResult(404, 'target user as premise not found');
 	}
 
 	const userFollowing = await UserFollowing.findBySrcDestAsync(sourceUser.document._id, targetUser.document._id, request.db, request.config);
@@ -47,17 +47,17 @@ exports.put = async (request) => {
 	// user
 	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
 	if (user == null) {
-		return new ApiResult(404, 'user is not found');
+		return new ApiResult(404, 'user as premise not found');
 	}
 	if (user.document._id != request.user.document._id) {
-		return new ApiResult(401, 'user is unauthorized');
+		return new ApiResult(403, 'you do not have permission to execute');
 	}
 	const userId = user.document._id;
 
 	// target user
 	const targetUser = await User.findByIdAsync(request.body.target_id, request.db, request.config);
 	if (targetUser == null) {
-		return new ApiResult(404, 'target user is not found');
+		return new ApiResult(404, 'target user as premise not found');
 	}
 	const targetUserId = targetUser.document._id;
 
@@ -106,23 +106,23 @@ exports.del = async (request) => {
 	// user
 	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
 	if (user == null) {
-		return new ApiResult(404, 'user is not found');
+		return new ApiResult(404, 'user as premise not found');
 	}
 	if (user.document._id != request.user.document._id) {
-		return new ApiResult(401, 'user is unauthorized');
+		return new ApiResult(403, 'you do not have permission to execute');
 	}
 	const userId = user.document._id;
 
 	// target user
 	const targetUser = await User.findByIdAsync(request.params.id, request.db, request.config);
 	if (targetUser == null) {
-		return new ApiResult(404, 'target user is not found');
+		return new ApiResult(404, 'target user as premise not found');
 	}
 	const targetUserId = targetUser.document._id;
 
-	const userFollowing = await UserFollowing.findBySrcDestAsync(userId, targetUserId, request.db, request.config);
+	const userFollowing = await UserFollowing.findBySrcDestAsync(user.document._id, targetUser.document._id, request.db, request.config);
 	if (userFollowing == null) {
-		return new ApiResult(400, 'you are not following this user');
+		return new ApiResult(204);
 	}
 
 	await userFollowing.removeAsync();

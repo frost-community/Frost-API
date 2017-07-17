@@ -11,6 +11,7 @@ const DbProvider = require('./helpers/dbProvider');
 const Db = require('./helpers/db');
 const Route = require('./helpers/route');
 const DirectoryRouter = require('./helpers/directoryRouter');
+const ApiResult = require('./helpers/apiResult');
 const apiSend = require('./helpers/middlewares/apiSend');
 const checkRequest = require('./helpers/middlewares/checkRequest');
 
@@ -88,7 +89,7 @@ module.exports = async () => {
 
 			// not found
 			app.use((req, res) => {
-				res.apiSend(new (require('./helpers/apiResult'))(404, 'not found'));
+				res.apiSend(new ApiResult(404, 'endpoint not found'));
 			});
 
 			http.listen(config.api.port, () => {
