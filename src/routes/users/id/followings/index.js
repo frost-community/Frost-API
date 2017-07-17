@@ -16,13 +16,13 @@ exports.get = async (request) => {
 		return result;
 	}
 
-	// source user
-	const sourceUser = await User.findByIdAsync(request.params.id, request.db, request.config);
-	if (sourceUser == null) {
-		return new ApiResult(404, 'source user as premise not found');
+	// user
+	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
+	if (user == null) {
+		return new ApiResult(404, 'user as premise not found');
 	}
 
-	const userFollowings = await UserFollowing.findArrayAsync(sourceUser.document._id, 30, request.db, request.config);
+	const userFollowings = await UserFollowing.findTargetsAsync(user.document._id, 30, request.db, request.config);
 	if (userFollowings == null || userFollowings.length == 0) {
 		return new ApiResult(204);
 	}
