@@ -27,7 +27,7 @@ class DbProvider {
 	}
 
 	/**
-	 * ドキュメントを検索して項目を取得します
+	 * ドキュメントを検索して単数の項目を取得します
 	 *
 	 * @param  {string} collectionName
 	 * @param  {object} query
@@ -47,7 +47,7 @@ class DbProvider {
 	 *
 	 * @param  {string} collectionName
 	 * @param  {object} query
-	 * @param  {object} option
+	 * @param  {object} sortOption
 	 * @param  {number} limit
 	 * @return {Promise<any>}
 	 */
@@ -67,6 +67,10 @@ class DbProvider {
 		}
 
 		return await cursor.toArray();
+	}
+
+	createSortOptionNatural(ascending) {
+		return {$natural: (ascending ? 1 : -1)};
 	}
 
 	/**
