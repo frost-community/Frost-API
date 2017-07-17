@@ -7,7 +7,7 @@ module.exports = () => {
 		// == general
 
 		// 全てのユーザーを対象とする、一般公開されたポストを時系列で複数取得
-		['get',  '/general/timeline'],
+		['get', '/general/timeline'],
 
 		// == Account ==
 
@@ -20,7 +20,7 @@ module.exports = () => {
 		['post', '/ice_auth'],
 
 		// verificationCode(PINコード)を取得 (認証ホスト専用)
-		['get',  '/ice_auth/verification_code'],
+		['get', '/ice_auth/verification_code'],
 
 		// 認証の対象ユーザーを設定(認証ホスト専用)
 		['post', '/ice_auth/target_user'],
@@ -40,42 +40,42 @@ module.exports = () => {
 		['get', '/applications'],
 
 		// idを指定してアプリケーション情報を取得する
-		['get',  '/applications/:id'],
+		['get', '/applications/:id'],
 
 		// アプリケーションキーを生成する
 		['post', '/applications/:id/application_key'],
 
 		// idを指定してアプリケーションキーを取得する
-		['get',  '/applications/:id/application_key'],
+		['get', '/applications/:id/application_key'],
 
 		// == Users ==
 
 		// 一つ以上のscreenNameを指定してユーザー情報を取得する
-		['get',  '/users'],
+		['get', '/users'],
 
 		// idを指定してユーザー情報を取得する
-		['get',  '/users/:id'],
+		['get', '/users/:id'],
 
 		// 対象のユーザーが投稿したポストを時系列で複数取得
-		['get',  '/users/:id/timelines/user'],
+		['get', '/users/:id/timelines/user'],
 
 		// 対象のユーザーと、そのユーザーがフォローしてるユーザーが投稿したポストを時系列で複数取得
-		['get',  '/users/:id/timelines/home'],
+		['get', '/users/:id/timelines/home'],
 
 		// フォローの一覧を取得
-		['get',  '/users/:id/followings'],
+		['get', '/users/:id/followings'],
 
 		// 指定したユーザーが対象のユーザーをフォローしているかどうかを取得
-		['get',  '/users/:id/followings/:target_id'],
+		['get', '/users/:id/followings/:target_id'],
 
 		// 指定したユーザーをフォローする
-		['put',  '/users/:id/followings/:target_id'],
+		['put', '/users/:id/followings/:target_id'],
 
 		// 指定したユーザーへのフォローを解除する
-		['del',  '/users/:id/followings/:target_id'],
+		['delete', '/users/:id/followings/:target_id'],
 
 		// フォロワーの一覧を取得
-		['get',  '/users/:id/followers'],
+		['get', '/users/:id/followers'],
 
 		// == Posts ==
 
@@ -89,7 +89,7 @@ module.exports = () => {
 		['post', '/posts/post_reference'],
 
 		// idを指定してポストを取得
-		['get',  '/posts/:id']
+		['get', '/posts/:id']
 	];
 
 	return routes;
