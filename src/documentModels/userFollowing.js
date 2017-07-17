@@ -43,12 +43,12 @@ class UserFollowing {
 
 	// static methods
 
-	static async findBySrcDestAsync(source, destination, db, config) {
-		if (source == null || destination == null || db == null || config == null) {
+	static async findBySrcDestIdAsync(sourceId, targetId, db, config) {
+		if (sourceId == null || targetId == null || db == null || config == null) {
 			throw new Error('missing arguments');
 		}
 
-		return db.userFollowings.findAsync({source: source, destination: destination});
+		return db.userFollowings.findAsync({source: sourceId, target: targetId});
 	}
 }
 module.exports = UserFollowing;
