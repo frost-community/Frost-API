@@ -1,7 +1,6 @@
 'use strict';
 
 const ApiResult = require('../../helpers/apiResult');
-const User = require('../../documentModels/user');
 const Post = require('../../documentModels/post');
 
 // TODO: 不完全な実装
