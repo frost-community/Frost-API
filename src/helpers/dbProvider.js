@@ -101,6 +101,8 @@ class DbProvider {
 			throw new Error('missing arguments');
 		}
 
+		options = options || {};
+
 		try {
 			return await this.connection.collection(collectionName).update(query, options.renewal ? data : {$set: data}, options);
 		}
