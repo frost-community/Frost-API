@@ -80,10 +80,6 @@ module.exports = async () => {
 				let method = route[0];
 				const path = route[1];
 
-				if (method == 'del') {
-					method = 'delete';
-				}
-
 				directoryRouter.addRoute(new Route(method, path));
 			}
 

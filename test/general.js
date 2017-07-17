@@ -12,7 +12,6 @@ describe('General -', () => {
 		it('存在するHTTPメソッドを利用している', () => {
 			for (const route of routeList) {
 				let method = route[0];
-				method = method.replace(/^del$/, 'delete');
 				assert(require('methods').indexOf(method) > -1);
 			}
 		});
