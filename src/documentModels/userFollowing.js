@@ -50,5 +50,13 @@ class UserFollowing {
 
 		return db.userFollowings.findAsync({source: sourceId, target: targetId});
 	}
+
+	static async findArrayAsync(sourceId, limit, db, config) {
+		if (sourceId == null || db == null || config == null) {
+			throw new Error('missing arguments');
+		}
+
+		return db.userFollowings.findArrayAsync({source: sourceId}, db.dbProvider.createSortOptionNatural(false), limit);
+	}
 }
 module.exports = UserFollowing;
