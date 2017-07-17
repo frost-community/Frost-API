@@ -26,12 +26,12 @@ exports.get = async (request) => {
 		return new ApiResult(404, 'target user as premise not found');
 	}
 
-	const userFollowing = await UserFollowing.findBySrcDestAsync(sourceUser.document._id, targetUser.document._id, request.db, request.config);
+	const userFollowing = await UserFollowing.findBySrcDestIdAsync(sourceUser.document._id, targetUser.document._id, request.db, request.config);
 	if (userFollowing == null) {
-		return new ApiResult(204);
+		return new ApiResult(404, null, false);
 	}
 
-	return new ApiResult(200);
+	return new ApiResult(204);
 };
 
 exports.put = async (request) => {
@@ -49,13 +49,13 @@ exports.put = async (request) => {
 	if (user == null) {
 		return new ApiResult(404, 'user as premise not found');
 	}
-	if (user.document._id != request.user.document._id) {
+	if (!user.document._id.equals(request.user.document._id)) {
 		return new ApiResult(403, 'you do not have permission to execute');
 	}
 	const userId = user.document._id;
 
 	// target user
-	const targetUser = await User.findByIdAsync(request.body.target_id, request.db, request.config);
+	const targetUser = await User.findByIdAsync(request.params.target_id, request.db, request.config);
 	if (targetUser == null) {
 		return new ApiResult(404, 'target user as premise not found');
 	}
@@ -68,9 +68,9 @@ exports.put = async (request) => {
 	}
 
 	// ドキュメント作成・更新
-	let userFollowing;
+	let resultUpsert;
 	try {
-		userFollowing = await request.db.userFollowings.upsertAsync({ // TODO: move to document models
+		resultUpsert = await request.db.userFollowings.upsertAsync({ // TODO: move to document models
 			source: userId,
 			target: targetUserId
 		}, {
@@ -80,11 +80,23 @@ exports.put = async (request) => {
 		}, {renewal: true});
 	}
 	catch(err) {
-		console.log(err.trace);
+		console.dir(err);
+	}
+
+	if (resultUpsert.ok != 1) {
+		return new ApiResult(500, 'failed to create or update userFollowing');
+	}
+
+	let userFollowing;
+	try {
+		userFollowing = await UserFollowing.findBySrcDestIdAsync(userId, targetUserId, request.db, request.config);
+	}
+	catch(err) {
+		console.dir(err);
 	}
 
 	if (userFollowing == null) {
-		return new ApiResult(500, 'failed to create or update userFollowing');
+		return new ApiResult(500, 'failed to fetch userFollowing');
 	}
 
 	// 購読
@@ -93,10 +105,10 @@ exports.put = async (request) => {
 		meSubscriber.subscribe(`${targetUserId.toString()}:status`); // この操作は冪等
 	}
 
-	return new ApiResult(201, {following: userFollowing.serialize()});
+	return new ApiResult(204);
 };
 
-exports.del = async (request) => {
+exports.delete = async (request) => {
 	const result = await request.checkRequestAsync({
 		query: [],
 		permissions: ['userWrite']
@@ -106,29 +118,29 @@ exports.del = async (request) => {
 		return result;
 	}
 
-	// user
-	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
-	if (user == null) {
+	// source user
+	const soruceUser = await User.findByIdAsync(request.params.id, request.db, request.config);
+	if (soruceUser == null) {
 		return new ApiResult(404, 'user as premise not found');
 	}
-	if (user.document._id != request.user.document._id) {
+	if (!soruceUser.document._id.equals(request.user.document._id)) {
 		return new ApiResult(403, 'you do not have permission to execute');
 	}
 
 	// target user
-	const targetUser = await User.findByIdAsync(request.params.id, request.db, request.config);
+	const targetUser = await User.findByIdAsync(request.params.target_id, request.db, request.config);
 	if (targetUser == null) {
 		return new ApiResult(404, 'target user as premise not found');
 	}
 
-	const userFollowing = await UserFollowing.findBySrcDestAsync(user.document._id, targetUser.document._id, request.db, request.config);
+	const userFollowing = await UserFollowing.findBySrcDestIdAsync(soruceUser.document._id, targetUser.document._id, request.db, request.config);
 
 	// ドキュメントが存在すれば削除
 	if (userFollowing != null) {
 		await userFollowing.removeAsync();
 
 		// 購読解除
-		const subscriber = request.subscribers.get(user.document._id.toString());
+		const subscriber = request.subscribers.get(soruceUser.document._id.toString());
 		if (subscriber != null) {
 			subscriber.unsubscribe(`${targetUser.document._id.toString()}:status`);
 		}
