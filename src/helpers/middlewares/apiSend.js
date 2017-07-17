@@ -20,7 +20,11 @@ module.exports = (request, response, next) => {
 			sendData = apiResult.data;
 		}
 
-		sendData.statusCode = apiResult.statusCode;
+		if (apiResult.needStatusCode)
+			sendData.statusCode = apiResult.statusCode;
+
+		if (Object.keys(sendData).length == 0)
+			sendData = null;
 
 		response.status(apiResult.statusCode).send(sendData);
 	};
