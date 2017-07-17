@@ -23,7 +23,7 @@ exports.post = async (request) => {
 		return new ApiResult(400, 'X-Ice-Auth-Key header is invalid');
 	}
 
-	if (request.db.users.findByIdAsync(userId) == null) { //TODO: move to document models
+	if ((await request.db.users.findByIdAsync(userId)) == null) { //TODO: move to document models
 		return new ApiResult(400, 'userId is invalid');
 	}
 
