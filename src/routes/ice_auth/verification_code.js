@@ -24,7 +24,7 @@ exports.get = async (request) => {
 	const authorizeRequest = await request.db.authorizeRequests.findByIdAsync(authorizeRequestId); //TODO: move to document models
 
 	if (authorizeRequest.document.verificationCode == null) {
-		throw new Error('verificationCode is empty');
+		return new ApiResult(500, 'verificationCode is empty');
 	}
 
 	return new ApiResult(200, {verificationCode: authorizeRequest.document.verificationCode});

@@ -33,7 +33,7 @@ exports.get = async (request) => {
 	const users = await User.findArrayByScreenNamesAsync(screenNames, null, request.db, request.config);
 
 	if (users == null || users.length == 0) {
-		return new ApiResult(204, 'users are empty');
+		return new ApiResult(204);
 	}
 
 	return new ApiResult(200, {users: users.map(user => user.serialize())});
