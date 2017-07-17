@@ -95,13 +95,13 @@ class DbProvider {
 	 * @param  {object} data
 	 * @return {Promise<any>}
 	 */
-	async updateAsync(collectionName, query, data) {
+	async updateAsync(collectionName, query, data, options) {
 		if (collectionName == null || query == null || data == null) {
 			throw new Error('missing arguments');
 		}
 
 		try {
-			return await this.connection.collection(collectionName).update(query, {$set: data});
+			return await this.connection.collection(collectionName).update(query, {$set: data}, options);
 		}
 		catch(e) {
 			console.log(e.trace);

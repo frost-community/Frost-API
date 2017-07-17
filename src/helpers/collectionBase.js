@@ -52,7 +52,7 @@ class CollectionBase {
 		}
 		catch(e) {
 			console.log(e.trace);
-			throw new Error('mongodb.ObjectId parse error');
+			throw new Error('object id parse error');
 		}
 
 		return await this.findAsync({_id: parsedId});
@@ -77,16 +77,23 @@ class CollectionBase {
 		return res;
 	}
 
-	async updateAsync(query, data) {
+	async updateAsync(query, data, options) {
 		if (query == null || data == null) {
 			throw new Error('missing arguments');
 		}
 
-		return (await this.db.dbProvider.updateAsync(this.collectionName, query, data)).result;
+		return (await this.db.dbProvider.updateAsync(this.collectionName, query, data, options)).result;
 	}
 
-	async updateByIdAsync(id, data) {
-		if (id == null || data == null) {
+	upsertAsync(query, data, options) {
+		options = options || {};
+		options.upsert = true;
+
+		return this.updateAsync(query, data, options);
+	}
+
+	updateByIdAsync(id, data, options) {
+		if (id == null) {
 			throw new Error('missing arguments');
 		}
 
@@ -99,10 +106,17 @@ class CollectionBase {
 		}
 		catch(e) {
 			console.log(e.trace);
-			throw new Error('mongodb.ObjectId parse error');
+			throw new Error('object id parse error');
 		}
 
-		return await this.updateAsync({_id: parsedId}, data);
+		return this.updateAsync({_id: parsedId}, data, options);
+	}
+
+	upsertByIdAsync(id, data, options) {
+		options = options || {};
+		options.upsert = true;
+
+		return this.updateByIdAsync(id, data, options);
 	}
 
 	async removeAsync(query) {
@@ -111,6 +125,26 @@ class CollectionBase {
 		}
 
 		return await this.db.dbProvider.removeAsync(this.collectionName, query);
+	}
+
+	removeByIdAsync(id) {
+		if (id == null) {
+			throw new Error('missing arguments');
+		}
+
+		let parsedId = id;
+
+		try {
+			if (typeof id == 'string') {
+				parsedId = mongo.ObjectId(id);
+			}
+		}
+		catch(e) {
+			console.log(e.trace);
+			throw new Error('object id parse error');
+		}
+
+		return this.removeAsync();
 	}
 }
 module.exports = CollectionBase;
