@@ -70,9 +70,9 @@ class CollectionBase {
 		}
 
 		const res = [];
-		documents.forEach(document => {
+		for (const document of documents) {
 			res.push(new (require(this.documentModelName))(document, this.db, this._config));
-		});
+		}
 
 		return res;
 	}
