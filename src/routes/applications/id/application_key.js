@@ -15,7 +15,7 @@ exports.get = async (request) => {
 	const application = await Application.findByIdAsync(request.params.id, request.db, request.config);
 
 	if (application == null) {
-		return new ApiResult(204, 'application is not found');
+		return new ApiResult(404, 'application is not found');
 	}
 
 	// 対象アプリケーションの所有者かどうか
@@ -51,7 +51,7 @@ exports.post = async (request) => {
 	const application = await Application.findByIdAsync(request.params.id, request.db, request.config);
 
 	if (application == null) {
-		return new ApiResult(204, 'application is not found');
+		return new ApiResult(404, 'application is not found');
 	}
 
 	// 対象アプリケーションの所有者かどうか
