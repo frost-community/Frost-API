@@ -28,7 +28,7 @@ exports.get = async (request) => {
 
 	const userFollowing = await UserFollowing.findBySrcDestIdAsync(sourceUser.document._id, targetUser.document._id, request.db, request.config);
 	if (userFollowing == null) {
-		return new ApiResult(404, null, false);
+		return new ApiResult(404, 'not following', false);
 	}
 
 	return new ApiResult(204);
