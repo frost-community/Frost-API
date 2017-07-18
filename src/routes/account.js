@@ -1,8 +1,6 @@
 'use strict';
 
 const ApiResult = require('../helpers/apiResult');
-const crypto = require('crypto');
-const randomRange = require('../helpers/randomRange');
 const User = require('../documentModels/user');
 
 exports.post = async (request) => {
@@ -31,12 +29,6 @@ exports.post = async (request) => {
 	if (description == null) {
 		description = '';
 	}
-
-	const salt = randomRange(1, 99999);
-
-	const sha256 = crypto.createHash('sha256');
-	sha256.update(`${password}.${salt}`);
-	const hash = `${sha256.digest('hex')}.${salt}`;
 
 	// screenName
 	if (!User.checkFormatScreenName(screenName)) {
@@ -71,15 +63,10 @@ exports.post = async (request) => {
 	let user;
 
 	try {
-		user = await request.db.users.createAsync({ // TODO: move to document models
-			screenName: screenName,
-			passwordHash: hash,
-			name: name,
-			description: description
-		});
+		user = await request.db.users.createAsync(screenName, password, name, description);
 	}
 	catch(err) {
-		console.log(err.trace);
+		console.dir(err);
 	}
 
 	if (user == null) {

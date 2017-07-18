@@ -42,18 +42,7 @@ describe('IceAuth API', () => {
 			(async () => {
 				try {
 					password = 'abcdefg';
-
-					const salt = randomRange(1, 99999);
-					const sha256 = crypto.createHash('sha256');
-					sha256.update(`${password}.${salt}`);
-					const hash = `${sha256.digest('hex')}.${salt}`;
-
-					user = await db.users.createAsync({
-						screenName: 'generaluser',
-						passwordHash: hash,
-						name: 'froster',
-						description: 'this is generaluser.'
-					});
+					user = await db.users.createAsync('generaluser', password, 'froster', 'this is generaluser.');
 
 					app = await db.applications.createAsync({
 						creatorId: user.document._id,
