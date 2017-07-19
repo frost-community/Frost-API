@@ -58,31 +58,21 @@ module.exports = async () => {
 					appName = 'Frost Web';
 				}
 
-				const user = await db.users.createAsync({
-					screenName: 'frost',
-					passwordHash: null,
-					name: 'Frost公式',
-					description: 'オープンソースSNS Frostです。'
-				});
+				const user = await db.users.createAsync('frost', null, 'Frost公式', 'オープンソースSNS Frostです。');
 				console.log('user created.');
 
-				const application = await db.applications.createAsync({
-					name: appName,
-					creatorId: user.document._id,
-					description: user.document.description,
-					permissions: [
-						'iceAuthHost',
-						'application',
-						'applicationSpecial',
-						'accountRead',
-						'accountWrite',
-						'accountSpecial',
-						'userRead',
-						'userWrite',
-						'postRead',
-						'postWrite'
-					]
-				});
+				const application = db.applications.createAsync(appName, user, user.document.description, [
+					'iceAuthHost',
+					'application',
+					'applicationSpecial',
+					'accountRead',
+					'accountWrite',
+					'accountSpecial',
+					'userRead',
+					'userWrite',
+					'postRead',
+					'postWrite'
+				]);
 				console.log(`application created. ${application.document}`);
 
 				const applicationKey = await application.generateApplicationKeyAsync();

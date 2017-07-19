@@ -35,13 +35,7 @@ describe('Users API', () => {
 			(async () => {
 				try {
 					user = await db.users.createAsync('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
-
-					app = await db.applications.createAsync({
-						creatorId: user.document._id,
-						name: 'generalapp',
-						description: 'this is generalapp.',
-						permissions: []
-					});
+					app = await db.applications.createAsync('generalapp', user, 'this is generalapp.', []);
 
 					done();
 				}

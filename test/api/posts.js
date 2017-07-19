@@ -32,21 +32,8 @@ describe('Posts API', () => {
 		beforeEach(done => {
 			(async () => {
 				try {
-					let res = await db.users.createAsync({
-						screenName: 'generaluser',
-						passwordHash: 'abcdefg',
-						name: 'froster',
-						description: 'this is generaluser.'
-					});
-					user = res;
-
-					res = await db.applications.createAsync({
-						creatorId: user.document._id,
-						name: 'generalapp',
-						description: 'this is generalapp.',
-						permissions: []
-					});
-					app = res;
+					user = await db.users.createAsync('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
+					app = await db.applications.createAsync('generalapp', user, 'this is generalapp.', []);
 
 					done();
 				}

@@ -43,13 +43,7 @@ describe('IceAuth API', () => {
 				try {
 					password = 'abcdefg';
 					user = await db.users.createAsync('generaluser', password, 'froster', 'this is generaluser.');
-
-					app = await db.applications.createAsync({
-						creatorId: user.document._id,
-						name: 'generalapp',
-						description: 'this is generalapp.',
-						permissions: []
-					});
+					app = await db.applications.createAsync('generalapp', user, 'this is generalapp.', []);
 
 					authorizeRequest = await db.authorizeRequests.createAsync({
 						applicationId: app.document._id

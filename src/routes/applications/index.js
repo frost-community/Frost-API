@@ -53,15 +53,10 @@ exports.post = async (request) => {
 	let application;
 
 	try {
-		application = await request.db.applications.createAsync({ // TODO: move to document models
-			name: name,
-			creatorId: userId,
-			description: description,
-			permissions: permissions
-		});
+		application = await request.db.applications.createAsync(name, request.user, description, permissions);
 	}
 	catch(err) {
-		console.log(err.trace);
+		console.dir(err);
 	}
 
 	if (application == null) {

@@ -36,33 +36,11 @@ describe('Applications API', () => {
 		beforeEach(done => {
 			(async () => {
 				try {
-					userA = await db.users.createAsync({
-						screenName: 'generaluser_a',
-						passwordHash: 'abcdefg',
-						name: 'froster',
-						description: 'this is generaluser.'
-					});
+					userA = await db.users.createAsync('generaluser_a', 'abcdefg', 'froster', 'this is generaluser.');
+					userB = await db.users.createAsync('generaluser_b', 'abcdefg', 'froster', 'this is generaluser.');
 
-					userB = await db.users.createAsync({
-						screenName: 'generaluser_b',
-						passwordHash: 'abcdefg',
-						name: 'froster',
-						description: 'this is generaluser.'
-					});
-
-					appA = await db.applications.createAsync({
-						name: 'generalapp_a',
-						creatorId: userA.document._id,
-						description: 'this is generalapp.',
-						permissions: []
-					});
-
-					appB = await db.applications.createAsync({
-						name: 'generalapp_b',
-						creatorId: userB.document._id,
-						description: 'this is generalapp.',
-						permissions: []
-					});
+					appA = await db.applications.createAsync('generalapp_a', userA, 'this is generalapp.', []);
+					appB = await db.applications.createAsync('generalapp_b', userB, 'this is generalapp.', []);
 
 					done();
 				}
