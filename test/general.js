@@ -5,7 +5,7 @@ const config = require('../built/helpers/loadConfig')();
 const Route = require('../built/helpers/route');
 const enumRange = require('../built/helpers/enumRange');
 
-describe('General -', () => {
+describe('General Tests', () => {
 	describe('routes', () => {
 		const routeList = require('../built/routeList')();
 

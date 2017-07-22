@@ -92,7 +92,7 @@ describe('Users API', () => {
 			});
 		});
 
-		describe('/id', () => {
+		describe('/:id', () => {
 			describe('[GET]', () => {
 				it('正しくリクエストされた場合は成功する', done => {
 					(async () => {
@@ -122,7 +122,12 @@ describe('Users API', () => {
 					})();
 				});
 			});
-			describe('/timeline', () => {
+			describe('/timelines/user', () => {
+				describe('[GET]', () => {
+					it('正しくリクエストされた場合は成功する');
+				});
+			});
+			describe('/timelines/home', () => {
 				describe('[GET]', () => {
 					it('正しくリクエストされた場合は成功する');
 				});
@@ -131,19 +136,20 @@ describe('Users API', () => {
 				describe('[GET]', () => {
 					it('正しくリクエストされた場合は成功する');
 				});
+				describe('/:target_id', () => {
+					describe('[GET]', () => {
+						it('正しくリクエストされた場合は成功する');
+					});
+					describe('[PUT]', () => {
+						it('正しくリクエストされた場合は成功する');
+					});
+					describe('[DELETE]', () => {
+						it('正しくリクエストされた場合は成功する');
+					});
+				});
 			});
 			describe('/followers', () => {
 				describe('[GET]', () => {
-					it('正しくリクエストされた場合は成功する');
-				});
-			});
-			describe('/follow', () => {
-				describe('[POST]', () => {
-					it('正しくリクエストされた場合は成功する');
-				});
-			});
-			describe('/follow', () => {
-				describe('[DELETE]', () => {
 					it('正しくリクエストされた場合は成功する');
 				});
 			});

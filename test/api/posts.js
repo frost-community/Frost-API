@@ -60,7 +60,7 @@ describe('Posts API', () => {
 			})();
 		});
 
-		describe('/id', () => {
+		describe('/:id', () => {
 			describe('[GET]', () => {
 				it('正しくリクエストされた場合は成功する');
 			});
@@ -75,7 +75,7 @@ describe('Posts API', () => {
 				it('正しくリクエストされた場合は成功する');
 			});
 		});
-		describe('/post_link', () => {
+		describe('/post_reference', () => {
 			describe('[POST]', () => {
 				it('正しくリクエストされた場合は成功する');
 			});
