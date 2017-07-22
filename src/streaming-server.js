@@ -2,6 +2,7 @@
 
 const Application = require('./documentModels/application');
 const ApplicationAccess = require('./documentModels/applicationAccess');
+const UserFollowing = require('./documentModels/userFollowing');
 const WebSocket = require('websocket');
 const events = require('websocket-events');
 const redis = require('redis');
@@ -121,7 +122,8 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 							db: db,
 							config: config,
 							user: connection.user,
-							application: connection.application
+							application: connection.application,
+							subscribers: subscribers
 						};
 
 						require('./helpers/middlewares/checkRequest')(req);
@@ -153,57 +155,62 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 
 				// クライアント側からタイムラインの購読リクエストを受信したとき
 				connection.on('timeline-connect', data => {
-					const timelineType = data.type;
+					(async () => {
+						const timelineType = data.type;
 
-					if (timelineType == null) {
-						return connection.send('timeline-connect', {success: false, message: '\'type\' parameter is require'});
-					}
+						if (timelineType == null) {
+							return connection.send('timeline-connect', {success: false, message: '\'type\' parameter is require'});
+						}
 
-					if (!timelineTypes.some(i => i == timelineType)) {
-						return connection.send('timeline-connect', {success: false, message: '\'type\' parameter is invalid'});
-					}
+						if (!timelineTypes.some(i => i == timelineType)) {
+							return connection.send('timeline-connect', {success: false, message: '\'type\' parameter is invalid'});
+						}
 
-					// タイムラインの購読(Redis subscribe)
+						// タイムラインの購読(Redis subscribe)
 
-					if (timelineSubscribers.get(timelineType) != null) {
-						return connection.send('timeline-connect', {success: false, message: `${timelineType} timeline is already subscribed`});
-					}
+						if (timelineSubscribers.get(timelineType) != null) {
+							return connection.send('timeline-connect', {success: false, message: `${timelineType} timeline is already subscribed`});
+						}
 
-					const timelineSubscriber = redis.createClient(6379, 'localhost');
+						const timelineSubscriber = redis.createClient(6379, 'localhost');
 
-					let timelineId;
-					if (timelineType == timelineTypes[0]) {
-						timelineId = 'public';
-					}
-					else if (timelineType == timelineTypes[1]) {
-						timelineId = meId.toString();
-					}
-					else {
-						// TODO: 未定義のtimelineTypeに対するエラー
-					}
+						let timelineId;
+						if (timelineType == timelineTypes[0]) {
+							timelineId = 'public';
 
-					timelineSubscriber.subscribe(`${timelineId}:status`); // 対象のタイムラインを購読
+							timelineSubscriber.subscribe(`${timelineId}:status`); // publicチャンネルを購読
+						}
+						else if (timelineType == timelineTypes[1]) {
+							timelineId = meId.toString();
 
-					// homeTL限定の処理
-					if (timelineType == timelineTypes[1]) {
-						// TODO: フォローしているユーザーのタイムラインを購読(全て or ユーザーの購読設定によっては選択的に)
-					}
+							timelineSubscriber.subscribe(`${timelineId}:status`); // 自身のチャンネルを購読
+							const followings = await UserFollowing.findTargetsAsync(meId, null, db, config); // フォローしているユーザーを購読 // TODO: (全て or ユーザーの購読設定によっては選択的に)
+							if (followings != null) {
+								for (const following of followings) {
+									timelineSubscriber.subscribe(`${following.document.target.toString()}:status`);
+								}
+							}
+						}
+						else {
+							// TODO: 未定義のtimelineTypeに対するエラー
+						}
 
-					timelineSubscriber.on('message', (ch, jsonData) => {
-						const chInfo = ch.split(':');
-						const dataType = chInfo[1];
+						timelineSubscriber.on('message', (ch, jsonData) => {
+							const chInfo = ch.split(':');
+							const dataType = chInfo[1];
 
-						connection.send(`data:${timelineType}:${dataType}`, JSON.parse(jsonData));
-					});
+							connection.send(`data:${timelineType}:${dataType}`, JSON.parse(jsonData));
+						});
 
-					timelineSubscriber.on('error', function(err) {
-						console.log(`redis_err(timelineSubscriber ${timelineType}): ` + String(err));
-					});
+						timelineSubscriber.on('error', function(err) {
+							console.log(`redis_err(timelineSubscriber ${timelineType}): ` + String(err));
+						});
 
-					timelineSubscribers.set(timelineId, timelineSubscriber);
+						timelineSubscribers.set(timelineId, timelineSubscriber);
 
-					console.log(`streaming/timeline-connect: ${timelineType}`);
-					connection.send('timeline-connect', {success: true, message: `connected ${timelineType} timeline`});
+						console.log(`streaming/timeline-connect: ${timelineType}`);
+						connection.send('timeline-connect', {success: true, message: `connected ${timelineType} timeline`});
+					})();
 				});
 
 				connection.on('timeline-disconnect', data => {
