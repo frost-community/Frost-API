@@ -49,12 +49,12 @@ class Post {
 		return db.posts.findByIdAsync(id);
 	}
 
-	static async findArrayByTypeAsync(type, ascending, limit, db, config) {
-		if (type == null || db == null || config == null) {
+	static async findArrayAsync(query, ascending, limit, db, config) {
+		if (query == null || db == null || config == null) {
 			throw new Error('missing arguments');
 		}
 
-		return db.posts.findArrayAsync({type: type}, {$natural: (ascending ? 1 : -1)}, limit);
+		return db.posts.findArrayAsync(query, {$natural: (ascending ? 1 : -1)}, limit);
 	}
 }
 module.exports = Post;

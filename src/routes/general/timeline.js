@@ -28,7 +28,7 @@ exports.get = async (request) => {
 	let posts;
 
 	try {
-		posts = await Post.findArrayByTypeAsync({$in: ['status']}, false, limit, request.db, request.config);
+		posts = await Post.findArrayAsync({type: 'status'}, false, limit, request.db, request.config);
 	}
 	catch(err) {
 		// noop
@@ -37,8 +37,6 @@ exports.get = async (request) => {
 	if (posts == null || posts.length == 0) {
 		return new ApiResult(204);
 	}
-
-	posts.reverse();
 
 	const serializedPosts = [];
 
