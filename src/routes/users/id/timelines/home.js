@@ -29,7 +29,7 @@ exports.get = async (request) => {
 	let posts;
 
 	try {
-		const followings = await UserFollowing.findTargetsAsync(request.user.document._id, 30, request.db, request.config);
+		const followings = await UserFollowing.findTargetsAsync(request.user.document._id, null, request.db, request.config);
 		const ids = followings.map(i => i.document.target);
 
 		posts = await Post.findArrayAsync({
