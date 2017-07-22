@@ -235,7 +235,7 @@ describe('Applications API', () => {
 					})();
 				});
 
-				it('存在しないアプリケーションを指定された場合は失敗する', done => {
+				it('存在しないアプリケーションを指定した場合は204を返す', done => {
 					(async () => {
 						try {
 							let res = await routeAppId.get({
@@ -245,7 +245,7 @@ describe('Applications API', () => {
 								db: db, config: config, checkRequestAsync: () => null
 							});
 
-							assert.equal(res.data, 'application is not found');
+							assert.equal(res.statusCode, 204);
 
 							done();
 						}
