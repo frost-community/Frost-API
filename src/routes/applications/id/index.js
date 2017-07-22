@@ -24,7 +24,7 @@ exports.get = async (request) => {
 	}
 
 	if (application == null) {
-		return new ApiResult(204, 'application is not found');
+		return new ApiResult(204);
 	}
 
 	// 対象アプリケーションの所有者かどうか

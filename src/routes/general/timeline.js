@@ -35,7 +35,7 @@ exports.get = async (request) => {
 	}
 
 	if (posts == null || posts.length == 0) {
-		return new ApiResult(204, 'posts are empty');
+		return new ApiResult(204);
 	}
 
 	posts.reverse();

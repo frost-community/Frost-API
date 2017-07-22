@@ -17,7 +17,6 @@ exports.post = async (request) => {
 		return result;
 	}
 
-	const userId = request.user.document._id;
 	const name = request.body.name;
 	let description = request.body.description;
 	const permissions = request.body.permissions;
@@ -85,7 +84,7 @@ exports.get = async (request) => {
 	}
 
 	if (applications == null || applications.length == 0) {
-		return new ApiResult(204, 'applications are empty');
+		return new ApiResult(204);
 	}
 
 	return new ApiResult(200, {applications: applications.map(i => i.serialize())});
