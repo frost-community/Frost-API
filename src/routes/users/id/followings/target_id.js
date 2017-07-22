@@ -44,6 +44,8 @@ exports.put = async (request) => {
 		return result;
 	}
 
+	request.body = request.body || {};
+
 	// user
 	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
 	if (user == null) {
