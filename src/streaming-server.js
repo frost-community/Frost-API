@@ -36,7 +36,7 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 		connection.send('authorization', {success: true, message: 'successful authorization'});
 		return {
 			applicationId: Application.splitKey(applicationKey, db, config).applicationId,
-			userId: ApplicationAccess.splitKey(accessKey, db, config).userId
+			meId: ApplicationAccess.splitKey(accessKey, db, config).userId
 		};
 	};
 
@@ -99,7 +99,7 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 						try {
 							const route = directoryRouter.findRoute(method, endpoint);
 							if (route != null) {
-								routeFuncAsync = (require(route.getMoludePath()))[method];
+								routeFuncAsync = (require(route.getModulePath()))[method];
 								params = route.getParams(endpoint);
 							}
 						}
@@ -233,7 +233,7 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 				connection.on('close', (reasonCode, description) => {
 					// console.log('streaming close:', reasonCode, description);
 
-					for (const timelineType of timelineSubscribers.keys) {
+					for (const timelineType of timelineSubscribers.keys()) {
 						const timelineSubscriber = timelineSubscribers.get(timelineType);
 						if (timelineSubscriber != null) {
 							timelineSubscriber.quit((err, res) => {
@@ -244,6 +244,8 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 				});
 			}
 			catch(err) {
+				console.log('streaming error:');
+				console.dir(err);
 				return connection.close();
 			}
 		})();

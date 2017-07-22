@@ -28,7 +28,10 @@ class Post {
 
 		if (includeEntity === true) {
 			// user
-			res.user = (await this.db.users.findByIdAsync(res.userId)).serialize();
+			const user = await this.db.users.findByIdAsync(res.userId);
+			if (user != null) {
+				res.user = user.serialize();
+			}
 		}
 
 		return objectSorter(res);
