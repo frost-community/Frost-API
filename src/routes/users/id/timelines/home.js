@@ -16,6 +16,13 @@ exports.get = async (request) => {
 		return result;
 	}
 
+	// user
+	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
+	if (user == null) {
+		return new ApiResult(404, 'user as premise not found');
+	}
+
+	// limit
 	let limit = request.query.limit;
 	if (limit != null) {
 		limit = parseInt(limit);
@@ -25,12 +32,6 @@ exports.get = async (request) => {
 	}
 	else {
 		limit = 30;
-	}
-
-	// user
-	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
-	if (user == null) {
-		return new ApiResult(404, 'user as premise not found');
 	}
 
 	let posts;
