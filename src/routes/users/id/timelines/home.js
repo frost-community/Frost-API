@@ -2,6 +2,7 @@
 
 const ApiResult = require('../../../../helpers/apiResult');
 const Post = require('../../../../documentModels/post');
+const User = require('../../../../documentModels/user');
 const UserFollowing = require('../../../../documentModels/userFollowing');
 
 // TODO: 不完全な実装
@@ -26,12 +27,18 @@ exports.get = async (request) => {
 		limit = 30;
 	}
 
+	// user
+	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
+	if (user == null) {
+		return new ApiResult(404, 'user as premise not found');
+	}
+
 	let posts;
 
 	try {
-		const followings = await UserFollowing.findTargetsAsync(request.user.document._id, null, request.db, request.config);
+		const followings = await UserFollowing.findTargetsAsync(user.document._id, null, request.db, request.config);
 		const ids = (followings != null) ? followings.map(i => i.document.target) : [];
-		ids.push(request.user.document._id); // 自身を追加
+		ids.push(user.document._id); // ソースユーザーを追加
 
 		posts = await Post.findArrayAsync({
 			$and: [
@@ -41,7 +48,6 @@ exports.get = async (request) => {
 		}, false, limit, request.db, request.config);
 	}
 	catch(err) {
-		// noop
 		console.dir(err);
 	}
 
