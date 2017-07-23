@@ -195,6 +195,7 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 							// TODO: 未定義のtimelineTypeに対するエラー
 						}
 
+						// 購読対象からのメッセージをストリーミングに流す
 						timelineSubscriber.on('message', (ch, jsonData) => {
 							const chInfo = ch.split(':');
 							const dataType = chInfo[1];
@@ -206,6 +207,7 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 							console.log(`redis_err(timelineSubscriber ${timelineType}): ` + String(err));
 						});
 
+						subscribers.set(timelineId, timelineSubscriber);
 						timelineSubscribers.set(timelineId, timelineSubscriber);
 
 						console.log(`streaming/timeline-connect: ${timelineType}`);

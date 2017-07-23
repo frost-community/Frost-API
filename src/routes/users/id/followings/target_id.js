@@ -101,7 +101,7 @@ exports.put = async (request) => {
 		return new ApiResult(500, 'failed to fetch userFollowing');
 	}
 
-	// 購読
+	// 対象ユーザーのstatusチャンネルを購読
 	const meSubscriber = request.subscribers.get(userId.toString());
 	if (meSubscriber != null) {
 		meSubscriber.subscribe(`${targetUserId.toString()}:status`); // この操作は冪等

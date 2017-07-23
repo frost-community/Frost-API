@@ -30,7 +30,7 @@ exports.get = async (request) => {
 
 	try {
 		const followings = await UserFollowing.findTargetsAsync(request.user.document._id, null, request.db, request.config);
-		const ids = followings.map(i => i.document.target);
+		const ids = (followings != null) ? followings.map(i => i.document.target) : [];
 		ids.push(request.user.document._id); // 自身を追加
 
 		posts = await Post.findArrayAsync({
@@ -42,6 +42,7 @@ exports.get = async (request) => {
 	}
 	catch(err) {
 		// noop
+		console.dir(err);
 	}
 
 	if (posts == null || posts.length == 0) {
