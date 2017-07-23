@@ -49,7 +49,7 @@ exports.post = async (request) => {
 	const json = JSON.stringify(serializedPostStatus);
 
 	publisher.publish(`${request.user.document._id.toString()}:status`, json);
-	publisher.publish('public:status', json);
+	publisher.publish('general:status', json);
 
 	return new ApiResult(200, {postStatus: serializedPostStatus});
 };

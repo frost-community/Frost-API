@@ -150,7 +150,7 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 					})();
 				});
 
-				const timelineTypes = ['public', 'home'];
+				const timelineTypes = ['general', 'home'];
 				const timelineSubscribers = new Map();
 
 				// クライアント側からタイムラインの購読リクエストを受信したとき
@@ -176,9 +176,9 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 
 						let timelineId;
 						if (timelineType == timelineTypes[0]) {
-							timelineId = 'public';
+							timelineId = 'general';
 
-							timelineSubscriber.subscribe(`${timelineId}:status`); // publicチャンネルを購読
+							timelineSubscriber.subscribe(`${timelineId}:status`); // generalチャンネルを購読
 						}
 						else if (timelineType == timelineTypes[1]) {
 							timelineId = meId.toString();
