@@ -26,6 +26,10 @@ exports.get = async (request) => {
 		return new ApiResult(404, 'target user as premise not found');
 	}
 
+	if (sourceUser.document._id.equals(targetUser.document._id)) {
+		return new ApiResult(400, 'source user and target user is same');
+	}
+
 	const userFollowing = await UserFollowing.findBySrcDestIdAsync(sourceUser.document._id, targetUser.document._id, request.db, request.config);
 	if (userFollowing == null) {
 		return new ApiResult(404, 'not following', false);
@@ -51,10 +55,11 @@ exports.put = async (request) => {
 	if (user == null) {
 		return new ApiResult(404, 'user as premise not found');
 	}
-	if (!user.document._id.equals(request.user.document._id)) {
+	const userId = user.document._id;
+
+	if (!userId.equals(request.user.document._id)) {
 		return new ApiResult(403, 'you do not have permission to execute');
 	}
-	const userId = user.document._id;
 
 	// target user
 	const targetUser = await User.findByIdAsync(request.params.target_id, request.db, request.config);
@@ -62,6 +67,10 @@ exports.put = async (request) => {
 		return new ApiResult(404, 'target user as premise not found');
 	}
 	const targetUserId = targetUser.document._id;
+
+	if (targetUserId.equals(userId)) {
+		return new ApiResult(400, 'source user and target user is same');
+	}
 
 	// message
 	const message = request.body.message;
