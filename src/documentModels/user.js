@@ -78,7 +78,9 @@ class User {
 			throw new Error('missing arguments');
 		}
 
-		return db.users.findArrayAsync({screenName: {$in: screenNames}}, null, limit);
+		const patterns = screenNames.map(screenName => new RegExp('^' + screenName + '$', 'i'));
+
+		return db.users.findArrayAsync({screenName: {$in: patterns}}, null, limit);
 	}
 
 	/**
@@ -91,7 +93,7 @@ class User {
 			throw new Error('missing arguments');
 		}
 
-		return db.users.findAsync({screenName: screenName});
+		return db.users.findAsync({screenName: new RegExp('^' + screenName + '$', 'i')});
 	}
 
 	static checkFormatScreenName(screenName) {
