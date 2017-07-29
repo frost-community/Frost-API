@@ -1,6 +1,7 @@
 'use strict';
 
 const ApiResult = require('../../helpers/apiResult');
+const Post = require('../../documentModels/post');
 
 exports.get = async (request) => {
 	const result = await request.checkRequestAsync({
@@ -12,5 +13,10 @@ exports.get = async (request) => {
 		return result;
 	}
 
-	return new ApiResult(501, 'not implemented');
+	const post = await Post.findByIdAsync(request.params.id, request.db, request.config);
+
+	if (post == null) {
+		return new ApiResult(204);
+	}
+	return new ApiResult(200, {post: post.serialize()});
 };
