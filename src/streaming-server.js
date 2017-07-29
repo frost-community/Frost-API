@@ -11,25 +11,25 @@ const methods = require('methods');
 module.exports = (http, directoryRouter, subscribers, db, config) => {
 	const authorize = async (connection, applicationKey, accessKey) => {
 		if (applicationKey == null) {
-			const message = 'applicationKey parameter is empty';
+			const message = 'application_key parameter is empty';
 			connection.send('authorization', {success: false, message: message});
 			throw new Error(message);
 		}
 
 		if (accessKey == null) {
-			const message = 'accessKey parameter is empty';
+			const message = 'access_key parameter is empty';
 			connection.send('authorization', {success: false, message: message});
 			throw new Error(message);
 		}
 
 		if (!await Application.verifyKeyAsync(applicationKey, db, config)) {
-			const message = 'applicationKey parameter is invalid';
+			const message = 'application_key parameter is invalid';
 			connection.send('authorization', {success: false, message: message});
 			throw new Error(message);
 		}
 
 		if (!await ApplicationAccess.verifyKeyAsync(accessKey, db, config)) {
-			const message = 'accessKey parameter is invalid';
+			const message = 'access_key parameter is invalid';
 			connection.send('authorization', {success: false, message: message});
 			throw new Error(message);
 		}
@@ -74,13 +74,17 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 				// クライアント側からRESTリクエストを受信したとき
 				connection.on('rest', data => {
 					(async () => {
-						const {
+						let {
 							method,
 							endpoint,
 							query,
 							headers,
 							body
 						} = data.request;
+
+						query = query || {};
+						headers = headers || {};
+						body = body || {};
 
 						if (method == null || endpoint == null) {
 							return connection.send('rest', {success: false, message: 'request format is invalid'});
