@@ -1,12 +1,12 @@
 'use strict';
 
-module.exports = (srcObject) => {
-	const array = Object.keys(srcObject);
+module.exports = (sourceObject) => {
+	const array = Object.keys(sourceObject);
 	array.sort();
 	const sorted = {};
 
 	for (const i of array) {
-		sorted[i] = srcObject[i];
+		sorted[i] = sourceObject[i];
 	}
 
 	return sorted;

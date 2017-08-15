@@ -1,12 +1,7 @@
 'use strict';
 
 const ApiResult = require('../../helpers/apiResult');
-const redis = require('redis');
-
-const publisher = redis.createClient(6379, 'localhost');
-publisher.on('error', function(err) {
-	console.log('redis_err(publisher): ' + String(err));
-});
+const { StreamPublisher } = require('../../helpers/stream');
 
 exports.post = async (request) => {
 	const result = await request.checkRequestAsync({
@@ -46,10 +41,10 @@ exports.post = async (request) => {
 
 	const serializedPostStatus = await postStatus.serializeAsync(true);
 
-	const json = JSON.stringify(serializedPostStatus);
-
-	publisher.publish(`${request.user.document._id.toString()}:status`, json);
-	publisher.publish('general:status', json);
+	const publisher = new StreamPublisher();
+	publisher.publish('home-timeline-status', request.user.document._id.toString(), serializedPostStatus);
+	publisher.publish('general-timeline-status', 'general', serializedPostStatus);
+	await publisher.quitAsync();
 
 	return new ApiResult(200, {postStatus: serializedPostStatus});
 };

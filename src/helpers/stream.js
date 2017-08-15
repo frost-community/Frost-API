@@ -8,16 +8,31 @@ class StreamUtil {
 }
 
 class StreamPublisher {
-	constructor(type, publisherId, redisClient) {
-		this.type = type;
-		this.publisherId = publisherId;
+	constructor(redisClient) {
 		this.redisClient = redisClient || redis.createClient(6379, 'localhost');
 		if (!(this.redisClient instanceof redis.RedisClient)) {
 			throw new TypeError('3rd argument "redisClient" is not a RedisClient');
 		}
+		this.redisClient.on('error', (err) => {
+			throw new Error(`${this.type} stream publisher: ${String(err)}`);
+		});
 	}
-	publish(data) {
-		this.redisClient.publish(StreamUtil.getChannelName(this.type, this.publisherId), data);
+	publish(type, publisherId, data) {
+		let strData = (strData instanceof String) ? data : JSON.stringify(data);
+		this.redisClient.publish(StreamUtil.getChannelName(type, publisherId), strData);
+	}
+	quitAsync() {
+		return new Promise((resolve, reject) => {
+			if (this.redisClient.connected) {
+				this.redisClient.quit((err) => {
+					if (err) return reject(err);
+					resolve();
+				});
+			}
+			else {
+				resolve();
+			}
+		});
 	}
 }
 
@@ -46,9 +61,7 @@ class Stream extends EventEmitter {
 		return new Promise((resolve, reject) => {
 			if (this.redisClient.connected) {
 				this.redisClient.quit((err) => {
-					if (err) {
-						reject();
-					}
+					if (err) return reject(err);
 					resolve();
 				});
 			}
