@@ -3,6 +3,7 @@
 const ApiResult = require('../../../../helpers/apiResult');
 const User = require('../../../../documentModels/user');
 const UserFollowing = require('../../../../documentModels/userFollowing');
+const { StreamUtil } = require('../../../../helpers/stream');
 
 exports.get = async (request) => {
 	const result = await request.checkRequestAsync({
@@ -50,14 +51,14 @@ exports.put = async (request) => {
 
 	request.body = request.body || {};
 
-	// user
-	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
-	if (user == null) {
+	// source user
+	const sourceUser = await User.findByIdAsync(request.params.id, request.db, request.config);
+	if (sourceUser == null) {
 		return new ApiResult(404, 'user as premise not found');
 	}
-	const userId = user.document._id;
+	const sourceUserId = sourceUser.document._id;
 
-	if (!userId.equals(request.user.document._id)) {
+	if (!sourceUserId.equals(request.user.document._id)) {
 		return new ApiResult(403, 'you do not have permission to execute');
 	}
 
@@ -68,7 +69,7 @@ exports.put = async (request) => {
 	}
 	const targetUserId = targetUser.document._id;
 
-	if (targetUserId.equals(userId)) {
+	if (targetUserId.equals(sourceUserId)) {
 		return new ApiResult(400, 'source user and target user is same');
 	}
 
@@ -82,10 +83,10 @@ exports.put = async (request) => {
 	let resultUpsert;
 	try {
 		resultUpsert = await request.db.userFollowings.upsertAsync({ // TODO: move to document models
-			source: userId,
+			source: sourceUserId,
 			target: targetUserId
 		}, {
-			source: userId,
+			source: sourceUserId,
 			target: targetUserId,
 			message: message
 		}, {renewal: true});
@@ -100,7 +101,7 @@ exports.put = async (request) => {
 
 	let userFollowing;
 	try {
-		userFollowing = await UserFollowing.findBySrcDestIdAsync(userId, targetUserId, request.db, request.config);
+		userFollowing = await UserFollowing.findBySrcDestIdAsync(sourceUserId, targetUserId, request.db, request.config);
 	}
 	catch(err) {
 		console.dir(err);
@@ -111,9 +112,9 @@ exports.put = async (request) => {
 	}
 
 	// 対象ユーザーのstatusチャンネルを購読
-	const meSubscriber = request.subscribers.get(userId.toString());
-	if (meSubscriber != null) {
-		meSubscriber.subscribe(`${targetUserId.toString()}:status`); // この操作は冪等
+	const stream = request.streams.get(StreamUtil.getChannelName('home-timeline-status', sourceUserId.toString()));
+	if (stream != null) {
+		stream.addSource(targetUserId.toString()); // この操作は冪等
 	}
 
 	return new ApiResult(204);
@@ -151,9 +152,9 @@ exports.delete = async (request) => {
 		await userFollowing.removeAsync();
 
 		// 購読解除
-		const subscriber = request.subscribers.get(soruceUser.document._id.toString());
-		if (subscriber != null) {
-			subscriber.unsubscribe(`${targetUser.document._id.toString()}:status`);
+		const stream = request.streams.get(StreamUtil.getChannelName('home-timeline-status', soruceUser.document._id.toString()));
+		if (stream != null) {
+			stream.removeSource(targetUser.document._id.toString());
 		}
 	}
 
