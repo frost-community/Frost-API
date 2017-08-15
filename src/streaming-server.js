@@ -150,7 +150,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 
 				connection.on('notification-connect', data => {
 					(async () => {
-						return connection.send('timeline-connect', {success: false, message: 'comming soon'}); // TODO
+						return connection.send('notification-connect', {success: false, message: 'comming soon'}); // TODO
 					})();
 				});
 
