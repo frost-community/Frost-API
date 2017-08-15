@@ -18,7 +18,7 @@ class StreamPublisher {
 		});
 	}
 	publish(type, publisherId, data) {
-		let strData = (strData instanceof String) ? data : JSON.stringify(data);
+		let strData = (data instanceof String) ? data : JSON.stringify(data);
 		this.redisClient.publish(StreamUtil.getChannelName(type, publisherId), strData);
 	}
 	quitAsync() {

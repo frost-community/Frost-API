@@ -170,7 +170,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 						// タイムラインのストリーム構築
 
 						if (timelineStreams.get(timelineStreamType) != null) {
-							return connection.send('timeline-connect', {success: false, message: `${timelineStreamType} timeline is already subscribed`});
+							return connection.send('timeline-connect', {success: false, message: `${timelineStreamType} timeline stream is already connected`});
 						}
 
 						let stream;
@@ -218,8 +218,8 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 
 					const stream = timelineStreams.get(timelineStreamType);
 
-					if (stream != null) {
-						return connection.send('timeline-disconnect', {success: false, message: `${timelineStreamType} timeline is not subscribed`});
+					if (stream == null) {
+						return connection.send('timeline-disconnect', {success: false, message: `${timelineStreamType} timeline stream is not connected`});
 					}
 
 					stream.quitAsync();
