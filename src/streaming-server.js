@@ -194,7 +194,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 
 						// データをwebsocketに流す
 						stream.on('data', (jsonData) => {
-							connection.send(`data:${stream.type}`, JSON.parse(jsonData));
+							connection.send(`stream:${stream.type}`, JSON.parse(jsonData));
 						});
 
 						streams.set(stream.getChannelName(meId), stream);
