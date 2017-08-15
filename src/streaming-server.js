@@ -1,54 +1,34 @@
 'use strict';
 
-const Application = require('./documentModels/application');
-const ApplicationAccess = require('./documentModels/applicationAccess');
 const UserFollowing = require('./documentModels/userFollowing');
 const WebSocket = require('websocket');
 const events = require('websocket-events');
-const redis = require('redis');
+const checkStreamingRequestAsync = require('./helpers/checkStreamingRequestAsync');
+const { Stream } = require('./helpers/stream');
 const methods = require('methods');
+const checkRequest = require('./helpers/middlewares/checkRequest');
 
-module.exports = (http, directoryRouter, subscribers, db, config) => {
-	const authorize = async (connection, applicationKey, accessKey) => {
-		if (applicationKey == null) {
-			const message = 'application_key parameter is empty';
-			connection.send('authorization', {success: false, message: message});
-			throw new Error(message);
-		}
-
-		if (accessKey == null) {
-			const message = 'access_key parameter is empty';
-			connection.send('authorization', {success: false, message: message});
-			throw new Error(message);
-		}
-
-		if (!await Application.verifyKeyAsync(applicationKey, db, config)) {
-			const message = 'application_key parameter is invalid';
-			connection.send('authorization', {success: false, message: message});
-			throw new Error(message);
-		}
-
-		if (!await ApplicationAccess.verifyKeyAsync(accessKey, db, config)) {
-			const message = 'access_key parameter is invalid';
-			connection.send('authorization', {success: false, message: message});
-			throw new Error(message);
-		}
-
-		connection.send('authorization', {success: true, message: 'successful authorization'});
-		return {
-			applicationId: Application.splitKey(applicationKey, db, config).applicationId,
-			meId: ApplicationAccess.splitKey(accessKey, db, config).userId
-		};
-	};
-
+module.exports = (http, directoryRouter, streams, db, config) => {
 	const server = new WebSocket.server({httpServer: http});
+
 	server.on('request', request => {
 		(async () => {
 			const query = request.resourceURL.query;
 			const applicationKey = query.application_key;
 			const accessKey = query.access_key;
 
-			const connection = request.accept();
+			// authorization
+			let result;
+			try {
+				result = await checkStreamingRequestAsync(request, applicationKey, accessKey, db, config);
+			}
+			catch(err) {
+				console.log('streaming authorization error:');
+				console.dir(err);
+			}
+			const { connection, meId, applicationId } = result;
+
+			// support user events
 			events(connection, {
 				keys: {
 					eventName: 'type',
@@ -56,16 +36,27 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 				}
 			});
 
+			const timelineStreamTypes = ['general', 'home'];
+			const timelineStreams = new Map(); // memo: keyはtimelineStreamTypes
+
 			connection.on('error', err => {
 				console.log('streaming error:', err);
 			});
 
-			try {
-				const {
-					meId,
-					applicationId
-				} = await authorize(connection, applicationKey, accessKey);
+			connection.on('close', (reasonCode, description) => {
+				for (const timelineStreamType of timelineStreams.keys()) {
+					const stream = timelineStreams.get(timelineStreamType);
+					if (stream != null) {
+						stream.quitAsync();
+						timelineStreams.delete(timelineStreamType);
+						streams.delete(stream.getChannelName(meId));
+					}
+				}
 
+				// console.log('streaming close:', reasonCode, description);
+			});
+
+			try {
 				[connection.user, connection.application] = await Promise.all([
 					db.users.findByIdAsync(meId),
 					db.applications.findByIdAsync(applicationId)
@@ -91,11 +82,11 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 						}
 
 						if (endpoint.indexOf('..') != -1) {
-							return connection.send('rest', {success: false, message: '\'endpoint\' parameter is invalid'});
+							return connection.send('rest', {success: false, message: '"endpoint" parameter is invalid'});
 						}
 
 						if (methods.find(i => i.toLowerCase() === method.toLowerCase()) == null) {
-							return connection.send('rest', {success: false, message: '\'method\' parameter is invalid'});
+							return connection.send('rest', {success: false, message: '"method" parameter is invalid'});
 						}
 
 						let routeFuncAsync;
@@ -113,7 +104,7 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 						}
 
 						if (routeFuncAsync == null) {
-							return connection.send('rest', {success: false, message: '\'endpoint\' parameter is invalid'});
+							return connection.send('rest', {success: false, message: '"endpoint" parameter is invalid'});
 						}
 
 						const req = {
@@ -127,10 +118,10 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 							config: config,
 							user: connection.user,
 							application: connection.application,
-							subscribers: subscribers
+							streams: streams
 						};
 
-						require('./helpers/middlewares/checkRequest')(req);
+						checkRequest(req);
 
 						const apiResult = await routeFuncAsync(req);
 
@@ -154,106 +145,79 @@ module.exports = (http, directoryRouter, subscribers, db, config) => {
 					})();
 				});
 
-				const timelineTypes = ['general', 'home'];
-				const timelineSubscribers = new Map();
-
 				// クライアント側からタイムラインの購読リクエストを受信したとき
 				connection.on('timeline-connect', data => {
 					(async () => {
-						const timelineType = data.type;
+						const timelineStreamType = data.type;
 
-						if (timelineType == null) {
-							return connection.send('timeline-connect', {success: false, message: '\'type\' parameter is require'});
+						if (timelineStreamType == null) {
+							return connection.send('timeline-connect', {success: false, message: '"type" parameter is require'});
 						}
 
-						if (!timelineTypes.some(i => i == timelineType)) {
-							return connection.send('timeline-connect', {success: false, message: '\'type\' parameter is invalid'});
+						if (!timelineStreamTypes.some(i => i == timelineStreamType)) {
+							return connection.send('timeline-connect', {success: false, message: '"type" parameter is invalid'});
 						}
 
-						// タイムラインの購読(Redis subscribe)
+						// タイムラインのストリーム構築
 
-						if (timelineSubscribers.get(timelineType) != null) {
-							return connection.send('timeline-connect', {success: false, message: `${timelineType} timeline is already subscribed`});
+						if (timelineStreams.get(timelineStreamType) != null) {
+							return connection.send('timeline-connect', {success: false, message: `${timelineStreamType} timeline is already subscribed`});
 						}
 
-						const timelineSubscriber = redis.createClient(6379, 'localhost');
-
-						let timelineId;
-						if (timelineType == timelineTypes[0]) {
-							timelineId = 'general';
-
-							timelineSubscriber.subscribe(`${timelineId}:status`); // generalチャンネルを購読
+						let stream;
+						if (timelineStreamType == timelineStreamTypes[0]) {
+							stream = new Stream('general-timeline-status');
+							stream.addSource('general');
 						}
-						else if (timelineType == timelineTypes[1]) {
-							timelineId = meId.toString();
+						else if (timelineStreamType == timelineStreamTypes[1]) {
+							stream = new Stream('home-timeline-status');
+							stream.addSource(meId);
 
-							timelineSubscriber.subscribe(`${timelineId}:status`); // 自身のチャンネルを購読
-							const followings = await UserFollowing.findTargetsAsync(meId, null, db, config); // フォローしているユーザーを購読 // TODO: (全て or ユーザーの購読設定によっては選択的に)
-							if (followings != null) {
-								for (const following of followings) {
-									timelineSubscriber.subscribe(`${following.document.target.toString()}:status`);
-								}
+							const followings = await UserFollowing.findTargetsAsync(meId, null, db, config); // TODO: (全て or ユーザーの購読設定によっては選択的に)
+							for (const following of followings || []) {
+								const followingUserId = following.document.target.toString();
+								stream.addSource(followingUserId);
 							}
 						}
 						else {
-							// TODO: 未定義のtimelineTypeに対するエラー
+							return connection.send('timeline-connect', {success: false, message: `timeline type "${timelineStreamType}" is invalid`});
 						}
 
-						// 購読対象からのメッセージをストリーミングに流す
-						timelineSubscriber.on('message', (ch, jsonData) => {
-							const chInfo = ch.split(':');
-							const dataType = chInfo[1];
-
-							connection.send(`data:${timelineType}:${dataType}`, JSON.parse(jsonData));
+						// データをwebsocketに流す
+						stream.on('data', (jsonData) => {
+							connection.send(`data:${stream.type}`, JSON.parse(jsonData));
 						});
 
-						timelineSubscriber.on('error', function(err) {
-							console.log(`redis_err(timelineSubscriber ${timelineType}): ` + String(err));
-						});
+						streams.set(stream.getChannelName(meId), stream);
+						timelineStreams.set(timelineStreamType, stream);
 
-						subscribers.set(timelineId, timelineSubscriber);
-						timelineSubscribers.set(timelineId, timelineSubscriber);
-
-						console.log(`streaming/timeline-connect: ${timelineType}`);
-						connection.send('timeline-connect', {success: true, message: `connected ${timelineType} timeline`});
+						console.log(`streaming/timeline-connect: ${timelineStreamType}`);
+						connection.send('timeline-connect', {success: true, message: `connected ${timelineStreamType} timeline`});
 					})();
 				});
 
 				connection.on('timeline-disconnect', data => {
-					const timelineType = data.type;
+					const timelineStreamType = data.type;
 
-					if (timelineType == null) {
-						return connection.send('timeline-disconnect', {success: false, message: '\'type\' parameter is require'});
+					if (timelineStreamType == null) {
+						return connection.send('timeline-disconnect', {success: false, message: '"type" parameter is require'});
 					}
 
-					if (!timelineTypes.some(i => i == timelineType)) {
-						return connection.send('timeline-disconnect', {success: false, message: '\'type\' parameter is invalid'});
+					if (!timelineStreamTypes.some(i => i == timelineStreamType)) {
+						return connection.send('timeline-disconnect', {success: false, message: '"type" parameter is invalid'});
 					}
 
-					const timelineSubscriber = timelineSubscribers.get(timelineType);
+					const stream = timelineStreams.get(timelineStreamType);
 
-					if (timelineSubscriber != null) {
-						return connection.send('timeline-disconnect', {success: false, message: `${timelineType} timeline is not subscribed`});
+					if (stream != null) {
+						return connection.send('timeline-disconnect', {success: false, message: `${timelineStreamType} timeline is not subscribed`});
 					}
 
-					timelineSubscriber.quit([], () => {
-						timelineSubscribers.delete(timelineType);
-						console.log(`streaming/timeline-disconnect: ${timelineType}`);
-						connection.send('timeline-disconnect', {success: true, message: `disconnected ${timelineType} timeline`});
-					});
-				});
-
-				connection.on('close', (reasonCode, description) => {
-					// console.log('streaming close:', reasonCode, description);
-
-					for (const timelineType of timelineSubscribers.keys()) {
-						const timelineSubscriber = timelineSubscribers.get(timelineType);
-						if (timelineSubscriber != null) {
-							timelineSubscriber.quit((err, res) => {
-								timelineSubscribers.delete(timelineType);
-							});
-						}
-					}
+					stream.quitAsync();
+					timelineStreams.delete(timelineStreamType);
+					streams.delete(stream.getChannelName(meId));
+					console.log(`streaming/timeline-disconnect: ${timelineStreamType}`);
+					connection.send('timeline-disconnect', {success: true, message: `disconnected ${timelineStreamType} timeline`});
 				});
 			}
 			catch(err) {
