@@ -145,6 +145,12 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 					})();
 				});
 
+				connection.on('notification-connect', data => {
+					(async () => {
+						return connection.send('timeline-connect', {success: false, message: 'comming soon'}); // TODO
+					})();
+				});
+
 				// クライアント側からタイムラインの購読リクエストを受信したとき
 				connection.on('timeline-connect', data => {
 					(async () => {
