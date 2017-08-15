@@ -23,8 +23,8 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				result = await checkStreamingRequestAsync(request, applicationKey, accessKey, db, config);
 			}
 			catch(err) {
-				console.log('streaming authorization error:');
-				console.dir(err);
+				console.log('streaming authorization error:', err.message);
+				return;
 			}
 			const { connection, meId, applicationId } = result;
 
@@ -65,6 +65,9 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				// クライアント側からRESTリクエストを受信したとき
 				connection.on('rest', data => {
 					(async () => {
+						if (data.request == null) {
+							return connection.send('rest', {success: false, message: 'request format is invalid'});
+						}
 						let {
 							method,
 							endpoint,
