@@ -41,7 +41,7 @@ module.exports = async () => {
 			const dbProvider = await DbProvider.connectApidbAsync(config);
 			const db = new Db(config, dbProvider);
 			const directoryRouter = new DirectoryRouter(app);
-			const subscribers = new Map();
+			const streams = new Map(); // memo: keyはChannelName
 
 			app.use(compression({
 				threshold: 0,
@@ -70,7 +70,7 @@ module.exports = async () => {
 			app.use(checkRequest);
 
 			app.use((req, res, next) => {
-				req.subscribers = subscribers;
+				req.streams = streams;
 
 				next();
 			});
@@ -92,7 +92,7 @@ module.exports = async () => {
 				console.log(`listen on port: ${config.api.port}`);
 			});
 
-			require('./streaming-server')(http, directoryRouter, subscribers, db, config);
+			require('./streaming-server')(http, directoryRouter, streams, db, config);
 		}
 	}
 	catch(err) {
