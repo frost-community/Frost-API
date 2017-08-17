@@ -9,6 +9,9 @@ const UserFollowing = require('../../../../documentModels/userFollowing');
 
 exports.get = async (request) => {
 	const result = await request.checkRequestAsync({
+		query: [
+			{name: 'limit', type: 'number', require: false}
+		],
 		permissions: ['postRead', 'userRead']
 	});
 

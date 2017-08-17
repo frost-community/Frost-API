@@ -8,6 +8,9 @@ const User = require('../../../../documentModels/user');
 
 exports.get = async (request) => {
 	const result = await request.checkRequestAsync({
+		query: [
+			{name: 'limit', type: 'number', require: false}
+		],
 		permissions: ['postRead', 'userRead']
 	});
 

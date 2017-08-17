@@ -7,6 +7,9 @@ const Post = require('../../documentModels/post');
 
 exports.get = async (request) => {
 	const result = await request.checkRequestAsync({
+		query: [
+			{name: 'limit', type: 'number', require: false}
+		],
 		permissions: ['postRead']
 	});
 
@@ -14,17 +17,7 @@ exports.get = async (request) => {
 		return result;
 	}
 
-	let limit = request.query.limit;
-	if (limit != null) {
-		limit = parseInt(limit);
-		if (isNaN(limit) || limit <= 0 || limit > 100) {
-			return new ApiResult(400, 'limit is invalid');
-		}
-	}
-	else {
-		limit = 30;
-	}
-
+	const limit = parseInt(request.query.limit || 30);
 	let posts;
 
 	try {

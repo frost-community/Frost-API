@@ -49,25 +49,23 @@ module.exports = (request, response, next) => {
 					throw new Error('extentions.query elements are missing');
 				}
 
-				const queryType = query.type;
+				const queryType = query.type.toLowerCase();
 				const queryName = query.name;
 				const isRequire = query.require != null ? query.require === true : true; // requireにtrueが設定されている場合は必須項目になる。デフォルトでtrue
 
-				if (isRequire) {
-					let requestQuery = null;
-
-					try {
-						requestQuery = request.query[queryName];
-					}
-					catch(e) {
-						/* noop */
-					}
-
-					if (requestQuery == null) {
+				if (isRequire || request.query[queryName] != null) {
+					const item = request.query[queryName];
+					if (item == null) {
 						throw new apiResult(400, `query '${queryName}' is require`);
 					}
 
-					if (type(requestQuery).toLowerCase() !== queryType.toLowerCase()) {
+					if (queryType == 'number') {
+						const parsedItem = parseInt(item);
+						if (isNaN(parsedItem)) {
+							throw new apiResult(400, `type of query '${queryName}' is invalid`);
+						}
+					}
+					else if (type(item).toLowerCase() != queryType) {
 						throw new apiResult(400, `type of query '${queryName}' is invalid`);
 					}
 				}

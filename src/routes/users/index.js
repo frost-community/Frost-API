@@ -5,9 +5,8 @@ const User = require('../../documentModels/user');
 
 exports.get = async (request) => {
 	const result = await request.checkRequestAsync({
-		query: [],
-		queries: [
-			{name: 'screen_names', type: 'string'}
+		query: [
+			{name: 'screen_names', type: 'string', require: false}
 		],
 		permissions: ['userRead']
 	});
@@ -27,6 +26,8 @@ exports.get = async (request) => {
 		if (screenNames.every(i => User.checkFormatScreenName(i)) === false) {
 			return new ApiResult(400, 'screen_names query is invalid');
 		}
+
+		// TODO: screenNamesの重複チェック
 
 		users = await User.findArrayByScreenNamesAsync(screenNames, null, request.db, request.config);
 	}
