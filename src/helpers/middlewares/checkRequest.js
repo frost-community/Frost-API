@@ -1,6 +1,6 @@
 'use strict';
 
-const apiResult = require('../apiResult');
+const ApiResult = require('../apiResult');
 const type = require('../type');
 const Application = require('../../documentModels/application');
 const ApplicationAccess = require('../../documentModels/applicationAccess');
@@ -30,11 +30,11 @@ module.exports = (request, response, next) => {
 
 				if (isRequire) {
 					if (request.body[paramName] == null) {
-						throw new apiResult(400, `body parameter '${paramName}' is require`);
+						throw new ApiResult(400, `body parameter '${paramName}' is require`);
 					}
 
 					if (type(request.body[paramName]).toLowerCase() !== paramType.toLowerCase()) {
-						throw new apiResult(400, `type of body parameter '${paramName}' is invalid`);
+						throw new ApiResult(400, `type of body parameter '${paramName}' is invalid`);
 					}
 				}
 			}
@@ -56,17 +56,17 @@ module.exports = (request, response, next) => {
 				if (isRequire || request.query[queryName] != null) {
 					const item = request.query[queryName];
 					if (item == null) {
-						throw new apiResult(400, `query '${queryName}' is require`);
+						throw new ApiResult(400, `query '${queryName}' is require`);
 					}
 
 					if (queryType == 'number') {
 						const parsedItem = parseInt(item);
 						if (isNaN(parsedItem)) {
-							throw new apiResult(400, `type of query '${queryName}' is invalid`);
+							throw new ApiResult(400, `type of query '${queryName}' is invalid`);
 						}
 					}
 					else if (type(item).toLowerCase() != queryType) {
-						throw new apiResult(400, `type of query '${queryName}' is invalid`);
+						throw new ApiResult(400, `type of query '${queryName}' is invalid`);
 					}
 				}
 			}
@@ -82,19 +82,19 @@ module.exports = (request, response, next) => {
 					const accessKey = request.get('X-Access-Key');
 
 					if (applicationKey == null) {
-						throw new apiResult(400, 'X-Application-Key header is empty');
+						throw new ApiResult(400, 'X-Application-Key header is empty');
 					}
 
 					if (accessKey == null) {
-						throw new apiResult(400, 'X-Access-Key header is empty');
+						throw new ApiResult(400, 'X-Access-Key header is empty');
 					}
 
 					if (!await Application.verifyKeyAsync(applicationKey, request.db, request.config)) {
-						throw new apiResult(400, 'X-Application-Key header is invalid');
+						throw new ApiResult(400, 'X-Application-Key header is invalid');
 					}
 
 					if (!await ApplicationAccess.verifyKeyAsync(accessKey, request.db, request.config)) {
-						throw new apiResult(400, 'X-Access-Key header is invalid');
+						throw new ApiResult(400, 'X-Access-Key header is invalid');
 					}
 
 					const applicationId = Application.splitKey(applicationKey, request.db, request.config).applicationId;
@@ -106,7 +106,7 @@ module.exports = (request, response, next) => {
 
 				const hasPermissions = routeConfig.permissions.every(p => request.application.hasPermission(p));
 				if (!hasPermissions) {
-					throw new apiResult(403, 'you do not have any permissions');
+					throw new ApiResult(403, 'you do not have any permissions');
 				}
 			}
 
@@ -130,7 +130,7 @@ module.exports = (request, response, next) => {
 
 				if (isMiddleware) {
 					if (request.get(header) == null) {
-						throw new apiResult(400, `${header} header is empty`);
+						throw new ApiResult(400, `${header} header is empty`);
 					}
 				}
 				else {
@@ -144,20 +144,20 @@ module.exports = (request, response, next) => {
 					}
 
 					if (requestHeader == null) {
-						throw new apiResult(400, `${header} header is empty`);
+						throw new ApiResult(400, `${header} header is empty`);
 					}
 				}
 			}
 
 			return null;
 		}
-		catch(e) {
-			if (e instanceof Error) {
-				console.log(`checkRequest failed: ${e}`);
-				throw e;
+		catch(err) {
+			if (err instanceof Error) {
+				console.log(`checkRequest failed: ${err}`);
+				throw err;
 			}
 			else {
-				return e;
+				return err;
 			}
 		}
 	};
