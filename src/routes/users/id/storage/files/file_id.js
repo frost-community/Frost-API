@@ -1,6 +1,6 @@
 'use strict';
 
-const ApiResult = require('../../../../helpers/apiResult');
+const ApiResult = require('../../../../../helpers/apiResult');
 
 // 対象ファイルの取得
 exports.get = async (request) => {
