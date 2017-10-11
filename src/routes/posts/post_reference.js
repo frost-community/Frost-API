@@ -12,5 +12,5 @@ exports.post = async (request) => {
 		return result;
 	}
 
-	return new ApiResult(501, 'not implemented');
+	return new ApiResult(501, 'not implemented yet');
 };
