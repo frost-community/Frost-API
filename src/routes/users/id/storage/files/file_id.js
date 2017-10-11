@@ -14,7 +14,7 @@ exports.get = async (request) => {
 
 	let file;
 	try {
-		file = await request.db.storageFiles.findByIdAsync(request.params.file_id);
+		file = await request.db.storageFiles.findAsync('user', request.params.user_id, request.params.file_id);
 	}
 	catch(err) {
 		// noop
@@ -27,13 +27,13 @@ exports.get = async (request) => {
 	let accessRightLevel = file.document.accessRight.level;
 
 	if (accessRightLevel == 'private') {
-		if (file.document.creatorId != request.user.document._id) {
+		if (file.document.creator.id != request.user.document._id) {
 			return new ApiResult(403, 'access denied');
 		}
 	}
 	else if (accessRightLevel == 'specific') {
 		// TODO: 公開してもいいかどうかを判断する
-		return new ApiResult(500, 'not implemented yet');
+		return new ApiResult(501, 'not implemented yet');
 	}
 	else if (accessRightLevel != 'public') {
 		return new ApiResult(500, 'unknown access-right level');
@@ -45,5 +45,5 @@ exports.get = async (request) => {
 // 対象ファイルの削除
 exports.delete = async (request) => {
 	// TODO
-	return new ApiResult(500, 'not implemented yet');
+	return new ApiResult(501, 'not implemented yet');
 };

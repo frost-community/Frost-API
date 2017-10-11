@@ -43,10 +43,13 @@ exports.post = async (request) => {
 
 	try {
 		storageFile = await request.db.storageFiles.createAsync({ // TODO: move to document models
-			creatorId: request.user.document._id,
+			creator: {
+				type: 'user',
+				id: request.user.document._id
+			},
 			type: fileType.mime.split('/')[0],
 			mimeType: fileType.mime,
-			file: fileDataBuffer,
+			data: fileDataBuffer,
 			accessRight: {
 				level: 'public', // 'specific' 'private'
 				// users: []
