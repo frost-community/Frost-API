@@ -6,6 +6,7 @@ const AuthorizeRequests = require('../collections/authorizeRequests');
 const Posts = require('../collections/posts');
 const Users = require('../collections/users');
 const UserFollowings = require('../collections/userFollowings');
+const StorageFiles = require('../collections/storageFiles');
 
 class Db {
 	constructor(config, dbProvider) {
@@ -23,6 +24,7 @@ class Db {
 		this.posts = new Posts(this, this._config);
 		this.users = new Users(this, this._config);
 		this.userFollowings = new UserFollowings(this, this._config);
+		this.storageFiles = new StorageFiles(this, this._config);
 	}
 }
 module.exports = Db;

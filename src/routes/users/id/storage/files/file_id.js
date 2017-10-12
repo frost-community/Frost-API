@@ -14,13 +14,14 @@ exports.get = async (request) => {
 
 	let file;
 	try {
-		file = await request.db.storageFiles.findAsync('user', request.params.user_id, request.params.file_id);
+		file = await request.db.storageFiles.findIdAsync(request.params.file_id);
 	}
 	catch(err) {
-		// noop
+		console.log(err);
 	}
 
-	if (file == null) {
+	// 存在しない もしくは creatorの不一致がある
+	if (file == null || file.document.creator.type != 'user' || file.document.creator.id.toString() != request.params.user_id) {
 		return new ApiResult(204);
 	}
 
@@ -39,7 +40,7 @@ exports.get = async (request) => {
 		return new ApiResult(500, 'unknown access-right level');
 	}
 
-	return new ApiResult(200, {storageFile: file.serialize()});
+	return new ApiResult(200, {storageFile: file.serialize(true)});
 };
 
 // 対象ファイルの削除

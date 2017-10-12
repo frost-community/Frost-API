@@ -14,7 +14,7 @@ const supportedMimeTypes = [
 exports.post = async (request) => {
 	const result = await request.checkRequestAsync({
 		body: [
-			{name: 'file', type: 'string'}
+			{name: 'fileData', type: 'string'}
 		],
 		permissions: ['storageWrite']
 	});
@@ -23,13 +23,13 @@ exports.post = async (request) => {
 		return result;
 	}
 
-	const file = request.body.file;
+	const fileData = request.body.fileData;
 
-	if (!validator.isBase64(file)) {
+	if (!validator.isBase64(fileData)) {
 		return new ApiResult(400, 'file is not base64 format');
 	}
 
-	const fileDataBuffer = Buffer.from(file, 'base64');
+	const fileDataBuffer = Buffer.from(fileData, 'base64');
 
 	// データ形式を取得
 	const fileType = getFileType(fileDataBuffer);
@@ -42,32 +42,25 @@ exports.post = async (request) => {
 	let storageFile;
 
 	try {
-		storageFile = await request.db.storageFiles.createAsync({ // TODO: move to document models
-			creator: {
-				type: 'user',
-				id: request.user.document._id
-			},
-			type: fileType.mime.split('/')[0],
-			mimeType: fileType.mime,
-			data: fileDataBuffer,
-			accessRight: {
-				level: 'public', // 'specific' 'private'
-				// users: []
-			}
-		});
+		storageFile = await request.db.storageFiles.createAsync(
+			'user',
+			request.user.document._id,
+			fileDataBuffer,
+			fileType.mime,
+			'public'); // TODO: public 以外のアクセス権タイプのサポート
 	}
 	catch(err) {
-		console.log(err.trace);
+		console.log(err);
 	}
 
 	if (storageFile == null) {
 		return new ApiResult(500, 'failed to create storage file');
 	}
 
-	return new ApiResult(200, {storageFile: storageFile.serialize()});
+	return new ApiResult(200, {storageFile: storageFile.serialize(true)});
 };
 
-// ファイル一覧取得 // TODO: フィルター指定
+// ファイル一覧取得 // TODO: フィルター指定、ページネーション
 exports.get = async (request) => {
 	const result = await request.checkRequestAsync({
 		query: [
@@ -81,15 +74,17 @@ exports.get = async (request) => {
 
 	let files;
 	try {
-		files = await request.db.storageFiles.findArrayAsync(request.user.document._id);
+		files = await request.db.storageFiles.findByCreatorArrayAsync(
+			'user',
+			request.user.document._id);
 	}
 	catch(err) {
-		// noop
+		console.log(err);
 	}
 
 	if (files == null || files.length == 0) {
 		return new ApiResult(204);
 	}
 
-	return new ApiResult(200, {storageFiles: files.map(i => i.serialize())});
+	return new ApiResult(200, {storageFiles: files.map(i => i.serialize(true))});
 };
