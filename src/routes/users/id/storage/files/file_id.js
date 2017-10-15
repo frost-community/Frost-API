@@ -25,18 +25,23 @@ exports.get = async (request) => {
 		return new ApiResult(204);
 	}
 
-	let accessRightLevel = file.document.accessRight.level;
+	let level = file.document.accessRight.level;
+	const requestUserId = request.user.document._id;
 
-	if (accessRightLevel == 'private') {
-		if (file.document.creator.id != request.user.document._id) {
+	if (level == 'private') {
+		if (file.document.creator.id != requestUserId) {
 			return new ApiResult(403, 'access denied');
 		}
 	}
-	else if (accessRightLevel == 'specific') {
-		// TODO: 公開してもいいかどうかを判断する
-		return new ApiResult(501, 'not implemented yet');
+	else if (level == 'specific') {
+		const users = file.document.accessRight.users;
+
+		// アクセスを許可したユーザーでない
+		if (users != null && !users.some(i => i == requestUserId)) {
+			return new ApiResult(403, 'access denied');
+		}
 	}
-	else if (accessRightLevel != 'public') {
+	else if (level != 'public') {
 		return new ApiResult(500, 'unknown access-right level');
 	}
 

@@ -2,11 +2,12 @@
 
 const objectSorter = require('../helpers/objectSorter');
 const moment = require('moment');
+const { MissingArgumentsError } = require('../helpers/errors');
 
 class StorageFile {
 	constructor(document, db, config) {
 		if (document == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		this.document = document;

@@ -1,6 +1,13 @@
 'use strict';
 
 const CollectionBase = require('../helpers/collectionBase');
+const { MissingArgumentsError, InvalidArgumentError } = require('../helpers/errors');
+
+const accessRightLevels = [
+	'public',
+	'specific',
+	'private'
+];
 
 class StorageFiles extends CollectionBase {
 	constructor(db, config) {
@@ -9,9 +16,14 @@ class StorageFiles extends CollectionBase {
 
 	createAsync(creatorType, creatorId, fileDataBuffer, mimeType, accessRightLevel, accessRightTargets) {
 		if (creatorType == null || creatorId == null || fileDataBuffer == null || mimeType == null)
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 
 		accessRightLevel = (accessRightLevel != null) ? accessRightLevel : 'public';
+
+		if (!accessRightLevels.some(accessRightLevel)) {
+			throw new InvalidArgumentError('accessRightLevel');
+		}
+
 		accessRightTargets = (accessRightTargets != null && accessRightLevel == 'specific') ? accessRightTargets : undefined;
 
 		return super.createAsync({
