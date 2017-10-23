@@ -20,25 +20,27 @@ class StorageFiles extends CollectionBase {
 
 		accessRightLevel = (accessRightLevel != null) ? accessRightLevel : 'public';
 
-		if (!accessRightLevels.some(accessRightLevel)) {
+		if (!accessRightLevels.some(level => level == accessRightLevel)) {
 			throw new InvalidArgumentError('accessRightLevel');
 		}
 
-		accessRightTargets = (accessRightTargets != null && accessRightLevel == 'specific') ? accessRightTargets : undefined;
-
-		return super.createAsync({
+		const data = {
 			creator: {
 				type: creatorType,
 				id: creatorId
 			},
-			fileData: fileDataBuffer,
+			fileData: fileDataBuffer.toString('base64'),
 			type: mimeType.split('/')[0],
 			mimeType: mimeType,
 			accessRight: {
-				level: accessRightLevel,
-				targets: accessRightTargets
+				level: accessRightLevel
 			}
-		});
+		};
+
+		if (accessRightTargets != null && accessRightLevel == 'specific')
+			data.targets = accessRightTargets;
+
+		return super.createAsync(data);
 	}
 
 	findByCreatorArrayAsync(creatorType, creatorId) {

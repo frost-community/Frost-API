@@ -27,6 +27,9 @@ class StorageFile {
 		res.id = res._id.toString();
 		delete res._id;
 
+		// creator.id
+		res.creator.id = res.creator.id.toString();
+
 		// exclude fileData
 		if (!includeFileData)
 			delete res.fileData;

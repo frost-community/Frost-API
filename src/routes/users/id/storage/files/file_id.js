@@ -14,14 +14,14 @@ exports.get = async (request) => {
 
 	let file;
 	try {
-		file = await request.db.storageFiles.findIdAsync(request.params.file_id);
+		file = await request.db.storageFiles.findByIdAsync(request.params.file_id);
 	}
 	catch(err) {
 		console.log(err);
 	}
 
 	// 存在しない もしくは creatorの不一致がある
-	if (file == null || file.document.creator.type != 'user' || file.document.creator.id.toString() != request.params.user_id) {
+	if (file == null || file.document.creator.type != 'user' || file.document.creator.id.toString() != request.params.id) {
 		return new ApiResult(204);
 	}
 

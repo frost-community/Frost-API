@@ -15,6 +15,7 @@ exports.post = async (request) => {
 	const result = await request.checkRequestAsync({
 		body: [
 			{name: 'fileData', type: 'string'}
+			// accessRight.level
 		],
 		permissions: ['storageWrite']
 	});
@@ -22,6 +23,8 @@ exports.post = async (request) => {
 	if (result != null) {
 		return result;
 	}
+
+	let accessRightLevel = 'public'; // TODO: public 以外のアクセス権タイプのサポート
 
 	const fileData = request.body.fileData;
 
@@ -40,14 +43,13 @@ exports.post = async (request) => {
 	}
 
 	let storageFile;
-
 	try {
 		storageFile = await request.db.storageFiles.createAsync(
 			'user',
 			request.user.document._id,
 			fileDataBuffer,
 			fileType.mime,
-			'public'); // TODO: public 以外のアクセス権タイプのサポート
+			accessRightLevel);
 	}
 	catch(err) {
 		console.log(err);
