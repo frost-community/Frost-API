@@ -12,7 +12,7 @@ const routeFiles = require('../../built/routes/users/id/storage/files');
 const routeFileId = require('../../built/routes/users/id/storage/files/file_id');
 
 describe('User Storage API', () => {
-	describe('/users/:user_id/storage', () => {
+	describe('/users/:id/storage', () => {
 		// load collections
 		let db;
 		before(done => {
@@ -122,7 +122,54 @@ describe('User Storage API', () => {
 				});
 			});
 			describe('[GET]', () => {
-				it('正しくリクエストされた場合は成功する');
+				it('正しくリクエストされた場合は成功する', done => {
+					fs.readFile(path.resolve('./logo.png'), 'base64', (err, data) => {
+						(async () => {
+							if (err)
+								return done(err);
+
+							const request = {
+								body: {
+									fileData: data
+								},
+								user: user, db: db, config: config, checkRequestAsync: () => null
+							};
+
+							let resFiles = await Promise.all([
+								routeFiles.post(request),
+								routeFiles.post(request),
+								routeFiles.post(request),
+								routeFiles.post(request)
+							]);
+
+							let res = await routeFiles.get({
+								params: {
+									id: user.document._id.toString()
+								},
+								user: user, db: db, config: config, checkRequestAsync: () => null
+							});
+
+							assert(res.data.storageFiles != null, 'invalid response');
+							assert(res.data.storageFiles.length == resFiles.length, 'invalid response length');
+
+							for (const storageFile of res.data.storageFiles) {
+								assert(validator.isBase64(storageFile.fileData), 'returned fileData is not base64');
+								delete storageFile.fileData;
+
+								delete storageFile.id;
+								delete storageFile.createdAt;
+								assert.deepEqual({
+									accessRight: { level: 'public' },
+									creator: { type: 'user', id: user.document._id.toString() },
+									mimeType: 'image/png',
+									type: 'image'
+								}, storageFile);
+							}
+							done();
+						})()
+						.catch(err => done(err));
+					});
+				});
 			});
 
 			describe('/:file_id', () => {
