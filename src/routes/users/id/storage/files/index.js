@@ -31,6 +31,11 @@ exports.post = async (request) => {
 		return new ApiResult(404, 'user as premise not found');
 	}
 
+	// 所有していないリソース
+	if (!user.document._id.equals(request.user.document._id)) {
+		return new ApiResult(403, 'access denied');
+	}
+
 	let accessRightLevel = 'public'; // TODO: public 以外のアクセス権タイプのサポート
 
 	const fileData = request.body.fileData;
@@ -86,6 +91,11 @@ exports.get = async (request) => {
 	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
 	if (user == null) {
 		return new ApiResult(404, 'user as premise not found');
+	}
+
+	// 所有していないリソース
+	if (!user.document._id.equals(request.user.document._id)) {
+		return new ApiResult(403, 'access denied');
 	}
 
 	// files
