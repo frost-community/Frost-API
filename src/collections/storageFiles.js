@@ -29,7 +29,7 @@ class StorageFiles extends CollectionBase {
 				type: creatorType,
 				id: creatorId
 			},
-			fileData: fileDataBuffer.toString('base64'),
+			fileData: fileDataBuffer,
 			type: mimeType.split('/')[0],
 			mimeType: mimeType,
 			accessRight: {

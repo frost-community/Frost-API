@@ -1,6 +1,7 @@
 'use strict';
 
 const ApiResult = require('../../../../../helpers/apiResult');
+const User = require('../../../../../documentModels/user');
 const getFileType = require('file-type');
 const validator = require('validator');
 
@@ -24,6 +25,12 @@ exports.post = async (request) => {
 		return result;
 	}
 
+	// user
+	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
+	if (user == null) {
+		return new ApiResult(404, 'user as premise not found');
+	}
+
 	let accessRightLevel = 'public'; // TODO: public 以外のアクセス権タイプのサポート
 
 	const fileData = request.body.fileData;
@@ -42,9 +49,10 @@ exports.post = async (request) => {
 		return new ApiResult(400, 'file is not supported format');
 	}
 
-	let storageFile;
+	// file
+	let file;
 	try {
-		storageFile = await request.db.storageFiles.createAsync(
+		file = await request.db.storageFiles.createAsync(
 			'user',
 			request.user.document._id,
 			fileDataBuffer,
@@ -55,14 +63,14 @@ exports.post = async (request) => {
 		console.log(err);
 	}
 
-	if (storageFile == null) {
+	if (file == null) {
 		return new ApiResult(500, 'failed to create storage file');
 	}
 
-	return new ApiResult(200, {storageFile: storageFile.serialize(true)});
+	return new ApiResult(200, {storageFile: file.serialize(true)});
 };
 
-// ファイル一覧取得 // TODO: フィルター指定、ページネーション
+// ファイル一覧取得 // TODO: フィルター指定、ページネーション、ファイル内容を含めるかどうか
 exports.get = async (request) => {
 	const result = await request.checkRequestAsync({
 		query: [
@@ -74,6 +82,13 @@ exports.get = async (request) => {
 		return result;
 	}
 
+	// user
+	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
+	if (user == null) {
+		return new ApiResult(404, 'user as premise not found');
+	}
+
+	// files
 	let files;
 	try {
 		files = await request.db.storageFiles.findByCreatorArrayAsync(

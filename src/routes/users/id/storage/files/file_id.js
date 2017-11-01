@@ -1,6 +1,7 @@
 'use strict';
 
 const ApiResult = require('../../../../../helpers/apiResult');
+const User = require('../../../../../documentModels/user');
 
 // 対象ファイルの取得
 exports.get = async (request) => {
@@ -12,6 +13,13 @@ exports.get = async (request) => {
 		return result;
 	}
 
+	// user
+	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
+	if (user == null) {
+		return new ApiResult(404, 'user as premise not found');
+	}
+
+	// file
 	let file;
 	try {
 		file = await request.db.storageFiles.findByIdAsync(request.params.file_id);
@@ -21,10 +29,11 @@ exports.get = async (request) => {
 	}
 
 	// 存在しない もしくは creatorの不一致がある
-	if (file == null || file.document.creator.type != 'user' || file.document.creator.id.toString() != request.params.id) {
+	if (file == null || file.document.creator.type != 'user' || !file.document.creator.id.equals(user.document._id)) {
 		return new ApiResult(204);
 	}
 
+	// level
 	let level = file.document.accessRight.level;
 	const requestUserId = request.user.document._id;
 
@@ -50,6 +59,20 @@ exports.get = async (request) => {
 
 // 対象ファイルの削除
 exports.delete = async (request) => {
+	const result = await request.checkRequestAsync({
+		permissions: ['storageWrite']
+	});
+
+	if (result != null) {
+		return result;
+	}
+
+	// user
+	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
+	if (user == null) {
+		return new ApiResult(404, 'user as premise not found');
+	}
+
 	// TODO
 	return new ApiResult(501, 'not implemented yet');
 };

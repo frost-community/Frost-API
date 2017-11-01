@@ -30,6 +30,9 @@ class StorageFile {
 		// creator.id
 		res.creator.id = res.creator.id.toString();
 
+		// fileData
+		res.fileData = res.fileData.toString('base64');
+
 		// exclude fileData
 		if (!includeFileData)
 			delete res.fileData;
