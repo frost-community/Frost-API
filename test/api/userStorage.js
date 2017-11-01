@@ -99,8 +99,7 @@ describe('User Storage API', () => {
 					assert.equal(spaceSize - 10065 * resFiles.length, availableSpace, 'availableSpace is invalid value');
 
 					done();
-				})()
-					.catch(err => done(err));
+				})().catch(err => done(err));
 			});
 		});
 
@@ -131,8 +130,7 @@ describe('User Storage API', () => {
 							}
 						}, res.data);
 						done();
-					})()
-						.catch(err => done(err));
+					})().catch(err => done(err));
 				});
 
 				it('fileDataが空のときは失敗する', done => {
@@ -147,8 +145,7 @@ describe('User Storage API', () => {
 
 						assert.equal('file is not base64 format', res.data);
 						done();
-					})()
-						.catch(err => done(err));
+					})().catch(err => done(err));
 				});
 			});
 			describe('[GET]', () => {
@@ -193,8 +190,7 @@ describe('User Storage API', () => {
 							}, storageFile);
 						}
 						done();
-					})()
-						.catch(err => done(err));
+					})().catch(err => done(err));
 				});
 			});
 
@@ -232,8 +228,7 @@ describe('User Storage API', () => {
 								}
 							}, res.data);
 							done();
-						})()
-							.catch(err => done(err));
+						})().catch(err => done(err));
 					});
 				});
 				describe('[DELETE]', () => {
