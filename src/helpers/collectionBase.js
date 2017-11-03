@@ -135,8 +135,9 @@ class CollectionBase {
 		let parsedId = id;
 
 		try {
-			if (!mongo.ObjectID.isValid(id) && typeof id != 'string')
+			if (!mongo.ObjectID.isValid(id) && typeof id != 'string') {
 				throw new Error('invalid ObjectId');
+			}
 
 			if (typeof id == 'string') {
 				parsedId = mongo.ObjectId(id);

@@ -25,7 +25,7 @@ class ApplicationAccess {
 			keyCode = randomRange(1, 99999);
 			isExist = await this.db.applicationAccesses.findAsync({userId: this.document.userId, keyCode: keyCode}) != null;
 		}
-		while(isExist && tryCount < 4);
+		while (isExist && tryCount < 4);
 
 		if (isExist && tryCount >= 4) {
 			throw new Error('the number of trials for keyCode generation has reached its upper limit');

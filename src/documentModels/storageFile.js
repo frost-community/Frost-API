@@ -34,8 +34,9 @@ class StorageFile {
 		res.fileData = res.fileData.toString('base64');
 
 		// exclude fileData
-		if (!includeFileData)
+		if (!includeFileData) {
 			delete res.fileData;
+		}
 
 		return objectSorter(res);
 	}

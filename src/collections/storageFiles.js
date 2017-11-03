@@ -15,8 +15,9 @@ class StorageFiles extends CollectionBase {
 	}
 
 	createAsync(creatorType, creatorId, fileDataBuffer, mimeType, accessRightLevel, accessRightTargets) {
-		if (creatorType == null || creatorId == null || fileDataBuffer == null || mimeType == null)
+		if (creatorType == null || creatorId == null || fileDataBuffer == null || mimeType == null) {
 			throw new MissingArgumentsError();
+		}
 
 		accessRightLevel = (accessRightLevel != null) ? accessRightLevel : 'public';
 
@@ -37,8 +38,9 @@ class StorageFiles extends CollectionBase {
 			}
 		};
 
-		if (accessRightTargets != null && accessRightLevel == 'specific')
+		if (accessRightTargets != null && accessRightLevel == 'specific') {
 			data.targets = accessRightTargets;
+		}
 
 		return super.createAsync(data);
 	}
