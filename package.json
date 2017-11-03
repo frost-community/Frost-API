@@ -21,6 +21,7 @@
   "author": "team FrostDevelop",
   "license": "MIT",
   "dependencies": {
+    "async-lock": "^1.1.0",
     "body-parser": "^1.17.2",
     "commander": "^2.9.0",
     "compression": "^1.6.2",

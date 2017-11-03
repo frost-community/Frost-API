@@ -108,5 +108,35 @@ describe('General Tests', () => {
 				}
 			})();
 		});
+
+		describe('ドキュメント作成と取り出し', () => {
+			afterEach(done => {
+				(async () => {
+					await testDb.removeAsync('hoges', {piyo: 'fuga'});
+					done();
+				})().catch(err => done(err));
+			});
+
+			it('テキスト', done => {
+				(async () => {
+					const document1 = await testDb.createAsync('hoges', {piyo: 'fuga', nyao: 'nya'});
+					const document2 = await testDb.findAsync('hoges', {piyo: 'fuga'});
+
+					assert.deepEqual(document1, document2);
+					done();
+				})().catch(err => done(err));
+			});
+
+			it('バイナリ', done => {
+				(async () => {
+					const buf = Buffer.from('aG9nZWhvZ2U=', 'base64');
+					const document1 = await testDb.createAsync('hoges', {piyo: 'fuga', nyao: buf});
+					const document2 = await testDb.findAsync('hoges', {piyo: 'fuga'});
+
+					assert.deepEqual(document1, document2);
+					done();
+				})().catch(err => done(err));
+			});
+		});
 	});
 });

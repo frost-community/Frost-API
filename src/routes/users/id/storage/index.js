@@ -2,8 +2,7 @@
 
 const ApiResult = require('../../../../helpers/apiResult');
 const User = require('../../../../documentModels/user');
-
-const spaceSize = 128 * 1024 * 1024; // 128MB
+const getUsedSpace = require('../../../../helpers/getUsedSpaceUserStorageAsync');
 
 exports.get = async (request) => {
 	const result = await request.checkRequestAsync({
@@ -20,30 +19,14 @@ exports.get = async (request) => {
 		return new ApiResult(404, 'user as premise not found');
 	}
 
-	// files
-	let files;
-	try {
-		files = await request.db.storageFiles.findArrayAsync({
-			creator: {
-				type: 'user',
-				id: user.document._id
-			}
-		});
-	}
-	catch(err) {
-		console.log(err);
-	}
-
-	let totalSize = 0;
-	for (const file of files) {
-		totalSize += file.document.fileData.length();
-	}
+	const usedSpace = await getUsedSpace(user.document._id, request.db, request.config);
+	const availableSpace = request.config.api.storage.spaceSize - usedSpace;
 
 	return new ApiResult(200, {
 		storage: {
-			spaceSize: spaceSize,
-			usedSpace: totalSize,
-			availableSpace: spaceSize - totalSize
+			spaceSize: request.config.api.storage.spaceSize,
+			usedSpace: usedSpace,
+			availableSpace: availableSpace
 		}
 	});
 };

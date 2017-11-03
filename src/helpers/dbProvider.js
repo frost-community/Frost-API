@@ -23,7 +23,8 @@ class DbProvider {
 			throw new Error('missing arguments');
 		}
 
-		return (await this.connection.collection(collectionName).insert(data)).ops[0];
+		const document = (await this.connection.collection(collectionName).insert(data)).ops[0];
+		return await this.findAsync(collectionName, {_id: document._id});
 	}
 
 	/**

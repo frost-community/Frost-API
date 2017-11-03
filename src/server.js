@@ -14,6 +14,7 @@ const DirectoryRouter = require('./helpers/directoryRouter');
 const ApiResult = require('./helpers/apiResult');
 const apiSend = require('./helpers/middlewares/apiSend');
 const checkRequest = require('./helpers/middlewares/checkRequest');
+const AsyncLock = require('async-lock');
 
 const q = async str => (await readLine(str)).toLowerCase().indexOf('y') === 0;
 
@@ -29,73 +30,77 @@ module.exports = async () => {
 				await require('./setup')();
 				config = loadConfig();
 			}
-		}
 
-		if (config != null) {
-			const app = express();
-			const http = httpClass.Server(app);
-			app.disable('x-powered-by');
-
-			app.set('etag', 'weak');
-
-			const dbProvider = await DbProvider.connectApidbAsync(config);
-			const db = new Db(config, dbProvider);
-			const directoryRouter = new DirectoryRouter(app);
-			const streams = new Map(); // memo: keyはChannelName
-
-			app.use(compression({
-				threshold: 0,
-				level: 9,
-				memLevel: 9
-			}));
-
-			app.use((req, res, next) => {
-				// services
-				req.db = db;
-				req.config = config;
-
-				// sanitize
-				req.body = sanitize(req.body);
-				req.params = sanitize(req.params);
-
-				// cors headers
-				res.header('Access-Control-Allow-Origin', '*');
-				res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-
-				next();
-			});
-
-			app.use(bodyParser.json());
-			app.use(apiSend);
-			app.use(checkRequest);
-
-			app.use((req, res, next) => {
-				req.streams = streams;
-
-				next();
-			});
-
-			// add routes
-			for (const route of require('./routeList')()) {
-				let method = route[0];
-				const path = route[1];
-
-				directoryRouter.addRoute(new Route(method, path));
+			if (config == null) {
+				return;
 			}
-
-			// not found
-			app.use((req, res) => {
-				res.apiSend(new ApiResult(404, 'endpoint not found'));
-			});
-
-			http.listen(config.api.port, () => {
-				console.log(`listen on port: ${config.api.port}`);
-			});
-
-			require('./streaming-server')(http, directoryRouter, streams, db, config);
 		}
+
+		const app = express();
+		const http = httpClass.Server(app);
+		app.disable('x-powered-by');
+
+		app.set('etag', 'weak');
+
+		const dbProvider = await DbProvider.connectApidbAsync(config);
+		const db = new Db(config, dbProvider);
+		const directoryRouter = new DirectoryRouter(app);
+		const streams = new Map(); // memo: keyはChannelName
+
+		app.use(compression({
+			threshold: 0,
+			level: 9,
+			memLevel: 9
+		}));
+
+		app.use((req, res, next) => {
+			// services
+			req.db = db;
+			req.config = config;
+
+			// sanitize
+			req.body = sanitize(req.body);
+			req.params = sanitize(req.params);
+
+			// cors headers
+			res.header('Access-Control-Allow-Origin', '*');
+			res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+
+			next();
+		});
+
+		app.use(bodyParser.json());
+		app.use(apiSend);
+		app.use(checkRequest);
+
+		app.use((req, res, next) => {
+			req.streams = streams;
+			req.lock = new AsyncLock();
+
+			next();
+		});
+
+		// add routes
+		for (const route of require('./routeList')()) {
+			let method = route[0];
+			const path = route[1];
+
+			directoryRouter.addRoute(new Route(method, path));
+		}
+
+		// not found
+		app.use((req, res) => {
+			res.apiSend(new ApiResult(404, 'endpoint not found'));
+		});
+
+		http.listen(config.api.port, () => {
+			console.log(`listen on port: ${config.api.port}`);
+		});
+
+		require('./streaming-server')(http, directoryRouter, streams, db, config);
 	}
 	catch(err) {
-		console.log(`Unprocessed Server Error: ${err.stack}`);
+		console.log('Unprocessed Server Error:');
+		console.log(err);
 	}
 };

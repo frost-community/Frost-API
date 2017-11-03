@@ -30,6 +30,9 @@ class StorageFile {
 		// creator.id
 		res.creator.id = res.creator.id.toString();
 
+		// size
+		res.size = res.fileData.length();
+
 		// fileData
 		res.fileData = res.fileData.toString('base64');
 

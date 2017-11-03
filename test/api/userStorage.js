@@ -10,11 +10,13 @@ const validator = require('validator');
 const route = require('../../built/routes/users/id/storage');
 const routeFiles = require('../../built/routes/users/id/storage/files');
 const routeFileId = require('../../built/routes/users/id/storage/files/file_id');
+const AsyncLock = require('async-lock');
+
 
 describe('User Storage API', () => {
 	describe('/users/:id/storage', () => {
 		// load collections
-		let db;
+		let db, lock;
 		before(done => {
 			(async () => {
 				try {
@@ -26,6 +28,8 @@ describe('User Storage API', () => {
 					await db.users.removeAsync({});
 					await db.applications.removeAsync({});
 
+					lock = new AsyncLock();
+
 					done();
 				}
 				catch (e) {
@@ -35,16 +39,19 @@ describe('User Storage API', () => {
 		});
 
 		// add general user, general application
-		let user, app, base64Data;
+		let user, app, base64TestData, testDataSize;
 		beforeEach(done => {
 			(async () => {
 				try {
 					user = await db.users.createAsync('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
 					app = await db.applications.createAsync('generalapp', user, 'this is generalapp.', []);
 
-					fs.readFile(path.resolve('./logo.png'), 'base64', (err, data) => {
-						if (err) done(err);
-						base64Data = data;
+					fs.readFile(path.resolve(__dirname, '../resources/kawaii.png'), 'base64', (err, data) => {
+						if (err) {
+							done(err);
+						}
+						base64TestData = data;
+						testDataSize = Buffer.from(base64TestData, 'base64').length;
 						done();
 					});
 				}
@@ -76,18 +83,16 @@ describe('User Storage API', () => {
 				(async () => {
 					const request = {
 						body: {
-							fileData: base64Data
+							fileData: base64TestData
 						},
 						params: { id: user.document._id.toString() },
-						user: user, db: db, config: config, checkRequestAsync: () => null
+						user: user, db: db, config: config, lock: lock, checkRequestAsync: () => null
 					};
 
-					let resFiles = await Promise.all([
-						routeFiles.post(request),
-						routeFiles.post(request),
-						routeFiles.post(request),
-						routeFiles.post(request)
-					]);
+					let resFiles = [];
+					for (const i of require('../../built/helpers/enumRange')(0, 10)) {
+						resFiles.push(await routeFiles.post(request));
+					}
 
 					const res = await route.get({
 						params: { id: user.document._id.toString() },
@@ -95,8 +100,8 @@ describe('User Storage API', () => {
 					});
 
 					const { spaceSize, usedSpace, availableSpace } = res.data.storage;
-					assert.equal(10065 * 4, usedSpace, 'usedSpace is invalid value');
-					assert.equal(spaceSize - 10065 * resFiles.length, availableSpace, 'availableSpace is invalid value');
+					assert.equal(testDataSize * resFiles.length, usedSpace, 'usedSpace is invalid value');
+					assert.equal(spaceSize - testDataSize * resFiles.length, availableSpace, 'availableSpace is invalid value');
 
 					done();
 				})().catch(err => done(err));
@@ -105,14 +110,14 @@ describe('User Storage API', () => {
 
 		describe('/files', () => {
 			describe('[POST]', () => {
-				it('正しくリクエストされた場合は成功する(public)', done => {
+				it('正しくリクエストされた場合は成功する(1件、public)', done => {
 					(async () => {
 						let res = await routeFiles.post({
 							body: {
-								fileData: base64Data
+								fileData: base64TestData
 							},
 							params: { id: user.document._id.toString() },
-							user: user, db: db, config: config, checkRequestAsync: () => null
+							user: user, db: db, config: config, lock: lock, checkRequestAsync: () => null
 						});
 
 						assert(validator.isBase64(res.data.storageFile.fileData), 'returned fileData is not base64');
@@ -126,12 +131,57 @@ describe('User Storage API', () => {
 								accessRight: { level: 'public' },
 								creator: { type: 'user', id: user.document._id.toString() },
 								mimeType: 'image/png',
-								type: 'image'
+								type: 'image',
+								size: testDataSize
 							}
 						}, res.data);
 						done();
 					})().catch(err => done(err));
 				});
+
+				// Disabled because heavy load
+				/*it('非同期で一度に容量制限を超える量のドキュメントを作成した場合でも、容量制限が正常に動作し作成に失敗する(public)', async () => {
+					const req = {
+						body: {
+							fileData: base64TestData
+						},
+						params: { id: user.document._id.toString() },
+						user: user, db: db, config: config, lock: lock, checkRequestAsync: () => null
+					};
+
+					const promises = [];
+					const count = parseInt(10 * 1024 * 1024 / testDataSize) + 1; // 49
+					for (let i = 0; i < count; i++) {
+						promises.push(routeFiles.post(req));
+					}
+					const resArray = await Promise.all(promises); // parseInt(10MB / testDataSize) + 1 > 10MB
+
+					let failureCount = 0;
+					for (const res of resArray) {
+						if (res.data.storageFile != null) {
+							assert(validator.isBase64(res.data.storageFile.fileData), 'returned fileData is not base64');
+							delete res.data.storageFile.fileData;
+
+							delete res.data.storageFile.id;
+							delete res.data.storageFile.createdAt;
+
+							assert.deepEqual({
+								storageFile: {
+									accessRight: { level: 'public' },
+									creator: { type: 'user', id: user.document._id.toString() },
+									mimeType: 'image/png',
+									type: 'image',
+									size: testDataSize
+								}
+							}, res.data);
+						}
+						else {
+							failureCount++;
+						}
+					}
+
+					assert(failureCount == 1, 'error respond: ' + failureCount);
+				});*/
 
 				it('fileDataが空のときは失敗する', done => {
 					(async () => {
@@ -140,10 +190,11 @@ describe('User Storage API', () => {
 								fileData: ''
 							},
 							params: { id: user.document._id.toString() },
-							user: user, db: db, config: config, checkRequestAsync: () => null
+							user: user, db: db, config: config, lock: lock, checkRequestAsync: () => null
 						});
 
 						assert.equal('file is not base64 format', res.data);
+
 						done();
 					})().catch(err => done(err));
 				});
@@ -153,10 +204,10 @@ describe('User Storage API', () => {
 					(async () => {
 						const request = {
 							body: {
-								fileData: base64Data
+								fileData: base64TestData
 							},
 							params: { id: user.document._id.toString() },
-							user: user, db: db, config: config, checkRequestAsync: () => null
+							user: user, db: db, config: config, lock: lock, checkRequestAsync: () => null
 						};
 
 						let resFiles = await Promise.all([
@@ -186,9 +237,11 @@ describe('User Storage API', () => {
 								accessRight: { level: 'public' },
 								creator: { type: 'user', id: user.document._id.toString() },
 								mimeType: 'image/png',
-								type: 'image'
+								type: 'image',
+								size: testDataSize
 							}, storageFile);
 						}
+
 						done();
 					})().catch(err => done(err));
 				});
@@ -200,10 +253,10 @@ describe('User Storage API', () => {
 						(async () => {
 							let resFile = await routeFiles.post({
 								body: {
-									fileData: base64Data
+									fileData: base64TestData
 								},
 								params: { id: user.document._id.toString() },
-								user: user, db: db, config: config, checkRequestAsync: () => null
+								user: user, db: db, config: config, lock: lock, checkRequestAsync: () => null
 							});
 
 							let res = await routeFileId.get({
@@ -224,9 +277,11 @@ describe('User Storage API', () => {
 									accessRight: { level: 'public' },
 									creator: { type: 'user', id: user.document._id.toString() },
 									mimeType: 'image/png',
-									type: 'image'
+									type: 'image',
+									size: testDataSize
 								}
 							}, res.data);
+
 							done();
 						})().catch(err => done(err));
 					});
