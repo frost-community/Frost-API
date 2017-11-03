@@ -50,8 +50,8 @@ class CollectionBase {
 				parsedId = mongo.ObjectId(id);
 			}
 		}
-		catch(e) {
-			console.log(e.trace);
+		catch(err) {
+			console.log(err);
 			throw new Error('object id parse error');
 		}
 
@@ -104,8 +104,8 @@ class CollectionBase {
 				parsedId = mongo.ObjectId(id);
 			}
 		}
-		catch(e) {
-			console.log(e.trace);
+		catch(err) {
+			console.log(err);
 			throw new Error('object id parse error');
 		}
 
@@ -143,8 +143,8 @@ class CollectionBase {
 				parsedId = mongo.ObjectId(id);
 			}
 		}
-		catch(e) {
-			console.log(e.trace);
+		catch(err) {
+			console.log(err);
 			throw new Error('object id parse error');
 		}
 

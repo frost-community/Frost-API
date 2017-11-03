@@ -55,8 +55,8 @@ class DirectoryRouter {
 				}
 				catch (err) {
 					if (err instanceof Error) {
-						console.log(`Internal Error: ${err.stack}`);
-						response.apiSend(new ApiResult(500, {message: 'internal error', details: err.stack}));
+						console.log(`Internal Error: ${err}`);
+						response.apiSend(new ApiResult(500, {message: 'internal error', details: err}));
 					}
 					else {
 						response.apiSend(new ApiResult(500, {message: 'internal error(unknown type)', details: err}));

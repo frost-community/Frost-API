@@ -30,7 +30,7 @@ exports.post = async (request) => {
 		});
 	}
 	catch(err) {
-		console.log(err.stack);
+		console.log(err);
 	}
 
 	if (authorizeRequest == null) {

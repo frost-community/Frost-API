@@ -53,7 +53,7 @@ exports.post = async (request) => {
 			});
 		}
 		catch(err) {
-			console.log(err.stack);
+			console.log(err);
 		}
 
 		if (applicationAccess == null) {
@@ -64,7 +64,7 @@ exports.post = async (request) => {
 			accessKey = await applicationAccess.generateAccessKeyAsync();
 		}
 		catch(err) {
-			console.log(err.stack);
+			console.log(err);
 		}
 
 		if (accessKey == null) {
@@ -76,7 +76,7 @@ exports.post = async (request) => {
 			accessKey = applicationAccess.getAccessKey();
 		}
 		catch(err) {
-			console.log(err.stack);
+			console.log(err);
 		}
 
 		if (accessKey == null) {

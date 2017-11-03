@@ -39,7 +39,7 @@ exports.post = async (request) => {
 		});
 	}
 	catch(err) {
-		console.log(err.trace);
+		console.log(err);
 	}
 
 	if (postArticle == null) {
