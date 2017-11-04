@@ -30,6 +30,8 @@ describe('User Storage API', () => {
 
 					lock = new AsyncLock();
 
+					config.api.storage.spaceSize = 500 * 1024; // テスト用の容量(500KB)に設定
+
 					done();
 				}
 				catch (e) {
@@ -39,19 +41,19 @@ describe('User Storage API', () => {
 		});
 
 		// add general user, general application
-		let user, app, base64TestData, testDataSize;
+		let user, app, testData64, testData64Size;
 		beforeEach(done => {
 			(async () => {
 				try {
 					user = await db.users.createAsync('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
 					app = await db.applications.createAsync('generalapp', user, 'this is generalapp.', []);
 
-					fs.readFile(path.resolve(__dirname, '../resources/kawaii.png'), 'base64', (err, data) => {
+					fs.readFile(path.resolve(__dirname, '../resources/squid.png'), 'base64', (err, data) => {
 						if (err) {
 							done(err);
 						}
-						base64TestData = data;
-						testDataSize = Buffer.from(base64TestData, 'base64').length;
+						testData64 = data;
+						testData64Size = Buffer.from(testData64, 'base64').length;
 						done();
 					});
 				}
@@ -83,14 +85,14 @@ describe('User Storage API', () => {
 				(async () => {
 					const request = {
 						body: {
-							fileData: base64TestData
+							fileData: testData64
 						},
 						params: { id: user.document._id.toString() },
 						user: user, db: db, config: config, lock: lock, checkRequestAsync: () => null
 					};
 
 					let resFiles = [];
-					for (const i of require('../../built/helpers/enumRange')(0, 10)) {
+					for (let i = 0; i < 4; i++) {
 						resFiles.push(await routeFiles.post(request));
 					}
 
@@ -100,8 +102,8 @@ describe('User Storage API', () => {
 					});
 
 					const { spaceSize, usedSpace, availableSpace } = res.data.storage;
-					assert.equal(testDataSize * resFiles.length, usedSpace, 'usedSpace is invalid value');
-					assert.equal(spaceSize - testDataSize * resFiles.length, availableSpace, 'availableSpace is invalid value');
+					assert.equal(testData64Size * resFiles.length, usedSpace, 'usedSpace is invalid value');
+					assert.equal(spaceSize - testData64Size * resFiles.length, availableSpace, 'availableSpace is invalid value');
 
 					done();
 				})().catch(err => done(err));
@@ -114,7 +116,7 @@ describe('User Storage API', () => {
 					(async () => {
 						let res = await routeFiles.post({
 							body: {
-								fileData: base64TestData
+								fileData: testData64
 							},
 							params: { id: user.document._id.toString() },
 							user: user, db: db, config: config, lock: lock, checkRequestAsync: () => null
@@ -132,29 +134,28 @@ describe('User Storage API', () => {
 								creator: { type: 'user', id: user.document._id.toString() },
 								mimeType: 'image/png',
 								type: 'image',
-								size: testDataSize
+								size: testData64Size
 							}
 						}, res.data);
 						done();
 					})().catch(err => done(err));
 				});
 
-				// Disabled because heavy load
-				/*it('非同期で一度に容量制限を超える量のドキュメントを作成した場合でも、容量制限が正常に動作し作成に失敗する(public)', async () => {
+				it('非同期で一度に容量制限を超える量のドキュメントを作成した場合でも、容量制限が正常に動作し作成に失敗する(public)', async () => {
 					const req = {
 						body: {
-							fileData: base64TestData
+							fileData: testData64
 						},
 						params: { id: user.document._id.toString() },
 						user: user, db: db, config: config, lock: lock, checkRequestAsync: () => null
 					};
 
 					const promises = [];
-					const count = parseInt(10 * 1024 * 1024 / testDataSize) + 1; // 49
+					const count = parseInt(config.api.storage.spaceSize / testData64Size) + 1; // parseInt(500KB / 53.8KB) + 1 = 10 items, 10 * 53.8KB > 500KB
 					for (let i = 0; i < count; i++) {
 						promises.push(routeFiles.post(req));
 					}
-					const resArray = await Promise.all(promises); // parseInt(10MB / testDataSize) + 1 > 10MB
+					const resArray = await Promise.all(promises);
 
 					let failureCount = 0;
 					for (const res of resArray) {
@@ -171,7 +172,7 @@ describe('User Storage API', () => {
 									creator: { type: 'user', id: user.document._id.toString() },
 									mimeType: 'image/png',
 									type: 'image',
-									size: testDataSize
+									size: testData64Size
 								}
 							}, res.data);
 						}
@@ -181,7 +182,7 @@ describe('User Storage API', () => {
 					}
 
 					assert(failureCount == 1, 'error respond: ' + failureCount);
-				});*/
+				});
 
 				it('fileDataが空のときは失敗する', done => {
 					(async () => {
@@ -204,7 +205,7 @@ describe('User Storage API', () => {
 					(async () => {
 						const request = {
 							body: {
-								fileData: base64TestData
+								fileData: testData64
 							},
 							params: { id: user.document._id.toString() },
 							user: user, db: db, config: config, lock: lock, checkRequestAsync: () => null
@@ -238,7 +239,7 @@ describe('User Storage API', () => {
 								creator: { type: 'user', id: user.document._id.toString() },
 								mimeType: 'image/png',
 								type: 'image',
-								size: testDataSize
+								size: testData64Size
 							}, storageFile);
 						}
 
@@ -253,7 +254,7 @@ describe('User Storage API', () => {
 						(async () => {
 							let resFile = await routeFiles.post({
 								body: {
-									fileData: base64TestData
+									fileData: testData64
 								},
 								params: { id: user.document._id.toString() },
 								user: user, db: db, config: config, lock: lock, checkRequestAsync: () => null
@@ -278,7 +279,7 @@ describe('User Storage API', () => {
 									creator: { type: 'user', id: user.document._id.toString() },
 									mimeType: 'image/png',
 									type: 'image',
-									size: testDataSize
+									size: testData64Size
 								}
 							}, res.data);
 
