@@ -225,7 +225,7 @@ describe('Applications API', () => {
 								db: db, config: config, checkRequestAsync: () => null
 							});
 
-							assert.equal(res.data, 'you do not own this application');
+							assert.equal(res.data, 'this operation is not permitted');
 
 							done();
 						}
@@ -288,7 +288,7 @@ describe('Applications API', () => {
 									params: {id: appA.document._id.toString()},
 									db: db, config: config, checkRequestAsync: () => null
 								});
-								assert.equal(res.data, 'you do not own this application');
+								assert.equal(res.data, 'this operation is not permitted');
 
 								done();
 							}
@@ -333,7 +333,7 @@ describe('Applications API', () => {
 									params: {id: appB.document._id.toString()},
 									db: db, config: config, checkRequestAsync: () => null
 								});
-								assert.equal(res.data, 'you do not own this application');
+								assert.equal(res.data, 'this operation is not permitted');
 
 								done();
 							}

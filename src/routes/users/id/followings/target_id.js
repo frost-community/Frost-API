@@ -59,7 +59,7 @@ exports.put = async (request) => {
 	const sourceUserId = sourceUser.document._id;
 
 	if (!sourceUserId.equals(request.user.document._id)) {
-		return new ApiResult(403, 'you do not have permission to execute');
+		return new ApiResult(403, 'this operation is not permitted');
 	}
 
 	// target user
@@ -136,7 +136,7 @@ exports.delete = async (request) => {
 		return new ApiResult(404, 'user as premise not found');
 	}
 	if (!soruceUser.document._id.equals(request.user.document._id)) {
-		return new ApiResult(403, 'you do not have permission to execute');
+		return new ApiResult(403, 'this operation is not permitted');
 	}
 
 	// target user

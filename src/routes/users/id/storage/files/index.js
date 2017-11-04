@@ -30,8 +30,10 @@ exports.post = async (request) => {
 	if (user == null) {
 		return new ApiResult(404, 'user as premise not found');
 	}
-	if (!user.document._id.equals(request.user.document._id)) { // is not owned resource
-		return new ApiResult(403, 'access denied');
+
+	const isOwnerAccess = user.document._id.equals(request.user.document._id);
+	if (!isOwnerAccess) {
+		return new ApiResult(403, 'this operation is not permitted');
 	}
 
 	let accessRightLevel = 'public'; // TODO: public 以外のアクセス権タイプのサポート
@@ -52,7 +54,7 @@ exports.post = async (request) => {
 
 	const apiResult = await request.lock.acquire(user.document._id.toString(), async () => {
 		// calculate available space
-		const usedSpace = await getUsedSpace(user.document._id, request.db, request.config);
+		const usedSpace = await getUsedSpace(user.document._id, request.db);
 		if (request.config.api.storage.spaceSize - usedSpace - fileDataBuffer.length < 0) {
 			return new ApiResult(400, 'storage space is full');
 		}
@@ -97,8 +99,10 @@ exports.get = async (request) => { // TODO: フィルター指定、ページネ
 	if (user == null) {
 		return new ApiResult(404, 'user as premise not found');
 	}
-	if (!user.document._id.equals(request.user.document._id)) { // is not owned resource
-		return new ApiResult(403, 'access denied');
+
+	const isOwnerAccess = user.document._id.equals(request.user.document._id);
+	if (!isOwnerAccess) {
+		return new ApiResult(403, 'this operation is not permitted');
 	}
 
 	// fetch document

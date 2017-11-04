@@ -1,6 +1,6 @@
 'use strict';
 
-const getUsedSpaceUserStorageAsync = async (userId, db, config) => {
+const getUsedSpaceUserStorageAsync = async (userId, db) => {
 	let files;
 	try {
 		files = await db.storageFiles.findArrayAsync({

@@ -35,21 +35,22 @@ exports.get = async (request) => {
 
 	// level
 	let level = file.document.accessRight.level;
+
 	const requestUserId = request.user.document._id;
-	const isOwner = file.document.creator.id.equals(requestUserId);
+	const isOwnerAccess = file.document.creator.id.equals(requestUserId);
 
 	if (level == 'private') {
 		// 所有者以外のユーザー
-		if (!isOwner) {
-			return new ApiResult(403, 'access denied');
+		if (!isOwnerAccess) {
+			return new ApiResult(403, 'this operation is not permitted');
 		}
 	}
 	else if (level == 'specific') {
 		const users = file.document.accessRight.users;
 
 		// アクセスを許可していないユーザー
-		if (!isOwner && (users == null || !users.some(i => i == requestUserId))) {
-			return new ApiResult(403, 'access denied');
+		if (!isOwnerAccess && (users == null || !users.some(i => i == requestUserId))) {
+			return new ApiResult(403, 'this operation is not permitted');
 		}
 	}
 	else if (level != 'public') {
@@ -73,6 +74,11 @@ exports.delete = async (request) => {
 	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
 	if (user == null) {
 		return new ApiResult(404, 'user as premise not found');
+	}
+
+	const isOwnerAccess = user.document._id.equals(request.user.document._id);
+	if (!isOwnerAccess) {
+		return new ApiResult(403, 'this operation is not permitted');
 	}
 
 	// file

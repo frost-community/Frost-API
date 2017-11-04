@@ -12,7 +12,6 @@ const routeFiles = require('../../built/routes/users/id/storage/files');
 const routeFileId = require('../../built/routes/users/id/storage/files/file_id');
 const AsyncLock = require('async-lock');
 
-
 describe('User Storage API', () => {
 	describe('/users/:id/storage', () => {
 		// load collections

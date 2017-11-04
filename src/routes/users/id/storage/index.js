@@ -19,7 +19,12 @@ exports.get = async (request) => {
 		return new ApiResult(404, 'user as premise not found');
 	}
 
-	const usedSpace = await getUsedSpace(user.document._id, request.db, request.config);
+	const isOwned = user.document._id.equals(request.user.document._id);
+	if (!isOwned) {
+		return new ApiResult(403, 'this operation is not permitted');
+	}
+
+	const usedSpace = await getUsedSpace(user.document._id, request.db);
 	const availableSpace = request.config.api.storage.spaceSize - usedSpace;
 
 	return new ApiResult(200, {

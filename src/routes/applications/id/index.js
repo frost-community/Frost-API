@@ -28,8 +28,8 @@ exports.get = async (request) => {
 	}
 
 	// 対象アプリケーションの所有者かどうか
-	if (application.document.creatorId.toString() !== request.user.document._id.toString()) {
-		return new ApiResult(403, 'you do not own this application');
+	if (!application.document.creatorId.equals(request.user.document._id)) {
+		return new ApiResult(403, 'this operation is not permitted');
 	}
 
 	return new ApiResult(200, {application: application.serialize()});
