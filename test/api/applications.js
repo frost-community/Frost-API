@@ -12,335 +12,210 @@ describe('Applications API', () => {
 	describe('/applications', () => {
 		// load collections
 		let db;
-		before(done => {
-			(async () => {
-				try {
-					config.api.database = config.api.testDatabase;
+		before(async () => {
+			config.api.database = config.api.testDatabase;
 
-					const dbProvider = await DbProvider.connectApidbAsync(config);
-					db = new Db(config, dbProvider);
+			const dbProvider = await DbProvider.connectApidbAsync(config);
+			db = new Db(config, dbProvider);
 
-					await db.users.removeAsync({});
-					await db.applications.removeAsync({});
-
-					done();
-				}
-				catch(e) {
-					done(e);
-				}
-			})();
+			await db.users.removeAsync({});
+			await db.applications.removeAsync({});
 		});
 
 		// add general users, general applications
 		let userA, userB, appA, appB;
-		beforeEach(done => {
-			(async () => {
-				try {
-					userA = await db.users.createAsync('generaluser_a', 'abcdefg', 'froster', 'this is generaluser.');
-					userB = await db.users.createAsync('generaluser_b', 'abcdefg', 'froster', 'this is generaluser.');
+		beforeEach(async () => {
+			userA = await db.users.createAsync('generaluser_a', 'abcdefg', 'froster', 'this is generaluser.');
+			userB = await db.users.createAsync('generaluser_b', 'abcdefg', 'froster', 'this is generaluser.');
 
-					appA = await db.applications.createAsync('generalapp_a', userA, 'this is generalapp.', []);
-					appB = await db.applications.createAsync('generalapp_b', userB, 'this is generalapp.', []);
-
-					done();
-				}
-				catch(e) {
-					done(e);
-				}
-			})();
+			appA = await db.applications.createAsync('generalapp_a', userA, 'this is generalapp.', []);
+			appB = await db.applications.createAsync('generalapp_b', userB, 'this is generalapp.', []);
 		});
 
 		// remove all users, all applications
-		afterEach(done => {
-			(async () => {
-				try {
-					await db.users.removeAsync({});
-					await db.applications.removeAsync({});
-
-					done();
-				}
-				catch(e) {
-					done(e);
-				}
-			})();
+		afterEach(async () => {
+			await db.users.removeAsync({});
+			await db.applications.removeAsync({});
 		});
 
 		describe('[POST]', () => {
-			it('正しくリクエストされた場合は成功する', done => {
-				(async () => {
-					try {
-						let res = await routeApp.post({
-							user: userA,
-							body: {
-								name: 'temp',
-								description: 'hogehoge',
-								permissions: []
-							},
-							db: db, config: config, checkRequestAsync: () => null
-						});
+			it('正しくリクエストされた場合は成功する', async () => {
+				let res = await routeApp.post({
+					user: userA,
+					body: {
+						name: 'temp',
+						description: 'hogehoge',
+						permissions: []
+					},
+					db: db, config: config, checkRequestAsync: () => null
+				});
 
-						delete res.data.application.id;
-						delete res.data.application.createdAt;
-						assert.deepEqual(res.data, {
-							application: {
-								name: 'temp',
-								creatorId: userA.document._id.toString(),
-								description: 'hogehoge',
-								permissions: []
-							}
-						});
-						done();
+				delete res.data.application.id;
+				delete res.data.application.createdAt;
+				assert.deepEqual(res.data, {
+					application: {
+						name: 'temp',
+						creatorId: userA.document._id.toString(),
+						description: 'hogehoge',
+						permissions: []
 					}
-					catch(e) {
-						done(e);
-					}
-				})();
+				});
 			});
 
-			it('nameが空もしくは33文字以上の場合は失敗する', done => {
-				(async () => {
-					try {
-						let res = await routeApp.post({
-							user: userA,
-							body: {
-								name: '',
-								description: 'hogehoge',
-								permissions: ''
-							},
-							db: db, config: config, checkRequestAsync: () => null
-						});
-						assert.equal(res.data, 'name is invalid format');
+			it('nameが空もしくは33文字以上の場合は失敗する', async () => {
+				let res = await routeApp.post({
+					user: userA,
+					body: {
+						name: '',
+						description: 'hogehoge',
+						permissions: ''
+					},
+					db: db, config: config, checkRequestAsync: () => null
+				});
+				assert.equal(res.data, 'name is invalid format');
 
-						res = await routeApp.post({
-							user: userA,
-							body: {
-								name: 'superFrostersuperFrostersuperFros',
-								description: 'hogehoge',
-								permissions: ''
-							},
-							db: db, config: config, checkRequestAsync: () => null
-						});
-						assert.equal(res.data, 'name is invalid format');
-
-						done();
-					}
-					catch(e) {
-						done(e);
-					}
-				})();
+				res = await routeApp.post({
+					user: userA,
+					body: {
+						name: 'superFrostersuperFrostersuperFros',
+						description: 'hogehoge',
+						permissions: ''
+					},
+					db: db, config: config, checkRequestAsync: () => null
+				});
+				assert.equal(res.data, 'name is invalid format');
 			});
 
-			it('descriptionが257文字以上のときは失敗する', done => {
-				(async () => {
-					try {
-						let res = await routeApp.post({
-							user: userA,
-							body: {
-								name: 'temp',
-								description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget',
-								permissions: ''
-							},
-							db: db, config: config, checkRequestAsync: () => null
-						});
-						assert.equal(res.data, 'description is invalid format');
-
-						done();
-					}
-					catch(e) {
-						done(e);
-					}
-				})();
+			it('descriptionが257文字以上のときは失敗する', async () => {
+				let res = await routeApp.post({
+					user: userA,
+					body: {
+						name: 'temp',
+						description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget',
+						permissions: ''
+					},
+					db: db, config: config, checkRequestAsync: () => null
+				});
+				assert.equal(res.data, 'description is invalid format');
 			});
 		});
 
 		describe('[GET]', () => {
-			it('正しくリクエストされた場合は成功する', done => {
-				(async () => {
-					try {
-						let res = await routeApp.get({
-							user: userA,
-							params: {},
-							body: {},
-							db: db, config: config, checkRequestAsync: () => null
-						});
+			it('正しくリクエストされた場合は成功する', async () => {
+				let res = await routeApp.get({
+					user: userA,
+					params: {},
+					body: {},
+					db: db, config: config, checkRequestAsync: () => null
+				});
 
-						delete res.data.applications[0].id;
-						delete res.data.applications[0].createdAt;
-						assert.deepEqual(res.data, {
-							applications: [{
-								creatorId: userA.document._id.toString(),
-								name: appA.document.name,
-								description: appA.document.description,
-								permissions: appA.document.permissions
-							}]
-						});
-
-						done();
-					}
-					catch(e) {
-						done(e);
-					}
-				})();
+				delete res.data.applications[0].id;
+				delete res.data.applications[0].createdAt;
+				assert.deepEqual(res.data, {
+					applications: [{
+						creatorId: userA.document._id.toString(),
+						name: appA.document.name,
+						description: appA.document.description,
+						permissions: appA.document.permissions
+					}]
+				});
 			});
 		});
 
 		describe('/:id', () => {
 			describe('[GET]', () => {
-				it('正しくリクエストされた場合は成功する', done => {
-					(async () => {
-						try {
-							let res = await routeAppId.get({
-								user: userA,
-								params: {id: appA.document._id.toString()},
-								body: {},
-								db: db, config: config, checkRequestAsync: () => null
-							});
+				it('正しくリクエストされた場合は成功する', async () => {
+					let res = await routeAppId.get({
+						user: userA,
+						params: { id: appA.document._id.toString() },
+						body: {},
+						db: db, config: config, checkRequestAsync: () => null
+					});
 
-							delete res.data.application.id;
-							delete res.data.application.createdAt;
-							assert.deepEqual(res.data, {
-								application: {
-									creatorId: userA.document._id.toString(),
-									name: appA.document.name,
-									description: appA.document.description,
-									permissions: appA.document.permissions
-								}
-							});
-
-							done();
+					delete res.data.application.id;
+					delete res.data.application.createdAt;
+					assert.deepEqual(res.data, {
+						application: {
+							creatorId: userA.document._id.toString(),
+							name: appA.document.name,
+							description: appA.document.description,
+							permissions: appA.document.permissions
 						}
-						catch(e) {
-							done(e);
-						}
-					})();
+					});
 				});
 
-				it('所有していないアプリケーションを指定された場合は失敗する', done => {
-					(async () => {
-						try {
-							let res = await routeAppId.get({
-								user: userA,
-								params: {id: appB.document._id.toString()},
-								body: {},
-								db: db, config: config, checkRequestAsync: () => null
-							});
+				it('所有していないアプリケーションを指定された場合は失敗する', async () => {
+					let res = await routeAppId.get({
+						user: userA,
+						params: { id: appB.document._id.toString() },
+						body: {},
+						db: db, config: config, checkRequestAsync: () => null
+					});
 
-							assert.equal(res.data, 'this operation is not permitted');
-
-							done();
-						}
-						catch(e) {
-							done(e);
-						}
-					})();
+					assert.equal(res.data, 'this operation is not permitted');
 				});
 
-				it('存在しないアプリケーションを指定した場合は204を返す', done => {
-					(async () => {
-						try {
-							let res = await routeAppId.get({
-								user: userA,
-								params: {id: 'abcdefg1234'},
-								body: {},
-								db: db, config: config, checkRequestAsync: () => null
-							});
+				it('存在しないアプリケーションを指定した場合は204を返す', async () => {
+					let res = await routeAppId.get({
+						user: userA,
+						params: { id: 'abcdefg1234' },
+						body: {},
+						db: db, config: config, checkRequestAsync: () => null
+					});
 
-							assert.equal(res.statusCode, 204);
-
-							done();
-						}
-						catch(e) {
-							done(e);
-						}
-					})();
+					assert.equal(res.statusCode, 204);
 				});
 			});
 
 			describe('/application_key', () => {
 				describe('[POST]', () => {
-					it('正しくリクエストされた場合は成功する', done => {
-						(async () => {
-							try {
-								let res = await routeAppIdApplicationKey.post({
-									user: userA,
-									params: {id: appA.document._id.toString()},
-									db: db, config: config, checkRequestAsync: () => null
-								});
+					it('正しくリクエストされた場合は成功する', async () => {
+						let res = await routeAppIdApplicationKey.post({
+							user: userA,
+							params: { id: appA.document._id.toString() },
+							db: db, config: config, checkRequestAsync: () => null
+						});
 
-								await appA.fetchAsync();
-								assert.deepEqual(res.data, {
-									applicationKey: appA.getApplicationKey()
-								});
-
-								done();
-							}
-							catch(e) {
-								done(e);
-							}
-						})();
+						await appA.fetchAsync();
+						assert.deepEqual(res.data, {
+							applicationKey: appA.getApplicationKey()
+						});
 					});
 
-					it('所有していないアプリケーションを指定された場合は失敗する', done => {
-						(async () => {
-							try {
-								let res = await routeAppIdApplicationKey.post({
-									user: userB,
-									params: {id: appA.document._id.toString()},
-									db: db, config: config, checkRequestAsync: () => null
-								});
-								assert.equal(res.data, 'this operation is not permitted');
-
-								done();
-							}
-							catch(e) {
-								done(e);
-							}
-						})();
+					it('所有していないアプリケーションを指定された場合は失敗する', async () => {
+						let res = await routeAppIdApplicationKey.post({
+							user: userB,
+							params: { id: appA.document._id.toString() },
+							db: db, config: config, checkRequestAsync: () => null
+						});
+						assert.equal(res.data, 'this operation is not permitted');
 					});
 				});
 
 				describe('[GET]', () => {
-					it('正しくリクエストされた場合は成功する', done => {
-						(async () => {
-							try {
-								const key = await appA.generateApplicationKeyAsync();
+					it('正しくリクエストされた場合は成功する', async () => {
+						const key = await appA.generateApplicationKeyAsync();
 
-								const res = await routeAppIdApplicationKey.get({
-									user: userA,
-									params: {id: appA.document._id.toString()},
-									db: db, config: config, checkRequestAsync: () => null
-								});
+						const res = await routeAppIdApplicationKey.get({
+							user: userA,
+							params: { id: appA.document._id.toString() },
+							db: db, config: config, checkRequestAsync: () => null
+						});
 
-								assert.deepEqual(res.data, {
-									applicationKey: key
-								});
-
-								done();
-							}
-							catch(e) {
-								done(e);
-							}
-						})();
+						assert.deepEqual(res.data, {
+							applicationKey: key
+						});
 					});
 
-					it('持っていないアプリケーションを指定された場合は失敗する', done => {
-						(async () => {
-							try {
-								await appB.generateApplicationKeyAsync();
+					it('持っていないアプリケーションを指定された場合は失敗する', async () => {
+						await appB.generateApplicationKeyAsync();
 
-								const res = await routeAppIdApplicationKey.get({
-									user: userA,
-									params: {id: appB.document._id.toString()},
-									db: db, config: config, checkRequestAsync: () => null
-								});
-								assert.equal(res.data, 'this operation is not permitted');
-
-								done();
-							}
-							catch(e) {
-								done(e);
-							}
-						})();
+						const res = await routeAppIdApplicationKey.get({
+							user: userA,
+							params: { id: appB.document._id.toString() },
+							db: db, config: config, checkRequestAsync: () => null
+						});
+						assert.equal(res.data, 'this operation is not permitted');
 					});
 				});
 			});
