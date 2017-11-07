@@ -1,5 +1,3 @@
-'use strict';
-
 const ApiResult = require('../../helpers/apiResult');
 const AuthorizeRequest = require('../../documentModels/authorizeRequest');
 

@@ -1,5 +1,3 @@
-'use strict';
-
 const assert = require('assert');
 const config = require('../../built/helpers/loadConfig')();
 const DbProvider = require('../../built/helpers/dbProvider');

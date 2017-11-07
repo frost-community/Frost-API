@@ -1,5 +1,3 @@
-'use strict';
-
 const randomRange = require('../helpers/randomRange');
 const objectSorter = require('../helpers/objectSorter');
 const permissionTypes = require('../helpers/permission').permissionTypes;

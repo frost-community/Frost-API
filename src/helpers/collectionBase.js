@@ -1,5 +1,3 @@
-'use strict';
-
 const mongo = require('mongodb');
 
 class CollectionBase {

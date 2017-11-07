@@ -1,5 +1,3 @@
-'use strict';
-
 const ApiResult = require('../apiResult');
 const type = require('../type');
 const Application = require('../../documentModels/application');

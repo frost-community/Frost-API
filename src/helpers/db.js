@@ -1,5 +1,3 @@
-'use strict';
-
 const Applications = require('../collections/applications');
 const ApplicationAccesses = require('../collections/applicationAccesses');
 const AuthorizeRequests = require('../collections/authorizeRequests');

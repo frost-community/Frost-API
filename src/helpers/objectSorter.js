@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports = (sourceObject) => {
 	const array = Object.keys(sourceObject);
 	array.sort();

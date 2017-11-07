@@ -1,5 +1,3 @@
-'use strict';
-
 const fs = require('fs');
 const requestAsync = require('./helpers/requestAsync');
 const readLine = require('./helpers/readline');

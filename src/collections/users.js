@@ -1,5 +1,3 @@
-'use strict';
-
 const CollectionBase = require('../helpers/collectionBase');
 const crypto = require('crypto');
 const randomRange = require('../helpers/randomRange');

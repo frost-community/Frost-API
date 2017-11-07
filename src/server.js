@@ -1,5 +1,3 @@
-'use strict';
-
 const readLine = require('./helpers/readline');
 const express = require('express');
 const httpClass = require('http');

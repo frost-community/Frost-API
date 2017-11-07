@@ -1,5 +1,3 @@
-'use strict';
-
 const objectSorter = require('../helpers/objectSorter');
 const moment = require('moment');
 const { MissingArgumentsError } = require('../helpers/errors');

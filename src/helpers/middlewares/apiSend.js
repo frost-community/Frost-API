@@ -1,5 +1,3 @@
-'use strict';
-
 module.exports = (request, response, next) => {
 	/**
 	 * APIリクエストのレスポンスとして返します

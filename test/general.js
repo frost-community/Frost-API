@@ -1,9 +1,6 @@
-'use strict';
-
 const assert = require('assert');
 const config = require('../built/helpers/loadConfig')();
 const Route = require('../built/helpers/route');
-const enumRange = require('../built/helpers/enumRange');
 
 describe('General Tests', () => {
 	describe('routes', () => {
@@ -42,7 +39,7 @@ describe('General Tests', () => {
 		const random = require('../built/helpers/randomRange');
 
 		it('範囲を指定して生成した乱数の値はその範囲内にある', () => {
-			for (const i of enumRange(0, 1000)) {
+			for (let i = 0; i < 1000; i++) {
 				const value = random(64, 1024);
 				assert(value >= 64 && value <= 1024);
 			}

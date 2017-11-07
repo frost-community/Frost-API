@@ -1,8 +1,6 @@
-'use strict';
-
 const ApiResult = require('../../../../helpers/apiResult');
 const User = require('../../../../documentModels/user');
-const getUsedSpace = require('../../../../helpers/getUsedSpaceUserStorageAsync');
+const { getUsedSpace } = require('../../../../helpers/UserStorageHelpers');
 
 exports.get = async (request) => {
 	const result = await request.checkRequestAsync({

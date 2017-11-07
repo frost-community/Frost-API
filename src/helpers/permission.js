@@ -1,5 +1,3 @@
-'use strict';
-
 exports.permissionTypes = [
 	'iceAuthHost',        // 認証のホスト権限
 	'application',        // 連携アプリ操作

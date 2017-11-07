@@ -8,8 +8,8 @@
     "node": ">= 7.0.0"
   },
   "scripts": {
-    "start": "node ./",
-    "setup": "node ./ --setup",
+    "start": "node --use_strict ./",
+    "setup": "node --use_strict ./ --setup",
     "build:copy": "cpx \"./src/**/*.js\" built",
     "build": "npm run build:copy",
     "clean": "rimraf ./built",

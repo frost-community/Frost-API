@@ -1,5 +1,3 @@
-'use strict';
-
 const commander = require('commander');
 const setup = require('./setup');
 const server = require('./server');

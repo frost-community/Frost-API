@@ -1,5 +1,3 @@
-'use strict';
-
 const CollectionBase = require('../helpers/collectionBase');
 
 class Posts extends CollectionBase {

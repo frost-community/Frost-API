@@ -1,5 +1,3 @@
-'use strict';
-
 const ApiResult = require('./apiResult');
 const pathToRegexp = require('path-to-regexp');
 

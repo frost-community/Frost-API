@@ -1,8 +1,5 @@
-'use strict';
-
 const randomRange = require('../helpers/randomRange');
 const objectSorter = require('../helpers/objectSorter');
-const enumRange = require('../helpers/enumRange');
 const crypto = require('crypto');
 const mongo = require('mongodb');
 const moment = require('moment');
@@ -20,7 +17,7 @@ class AuthorizeRequest {
 
 	async generateVerificationCodeAsync() {
 		let verificationCode = '';
-		for (const i in enumRange(0, 6)) {
+		for (let i = 0; i < 6; i++) {
 			verificationCode += String(randomRange(0, 9));
 		}
 		await this.db.authorizeRequests.updateAsync({_id: this.document._id}, {verificationCode: verificationCode});

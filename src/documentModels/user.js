@@ -1,5 +1,3 @@
-'use strict';
-
 const objectSorter = require('../helpers/objectSorter');
 const crypto = require('crypto');
 const moment = require('moment');

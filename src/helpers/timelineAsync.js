@@ -1,5 +1,3 @@
-'use strict';
-
 const ApiResult = require('./apiResult');
 const Post = require('../documentModels/post');
 

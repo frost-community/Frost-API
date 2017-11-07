@@ -1,5 +1,3 @@
-'use strict';
-
 const ApiResult = require('../../helpers/apiResult');
 const { StreamPublisher } = require('../../helpers/stream');
 

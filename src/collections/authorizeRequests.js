@@ -1,5 +1,3 @@
-'use strict';
-
 const CollectionBase = require('../helpers/collectionBase');
 
 class AuthorizeRequests extends CollectionBase {

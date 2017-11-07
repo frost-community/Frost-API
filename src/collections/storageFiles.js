@@ -1,5 +1,3 @@
-'use strict';
-
 const CollectionBase = require('../helpers/collectionBase');
 const { MissingArgumentsError, InvalidArgumentError } = require('../helpers/errors');
 

@@ -1,5 +1,3 @@
-'use strict';
-
 const ApiResult = require('../../helpers/apiResult');
 const timelineAsync = require('../../helpers/timelineAsync');
 

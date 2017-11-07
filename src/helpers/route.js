@@ -1,6 +1,3 @@
-'use strict';
-
-const enumRange = require('./enumRange');
 const path = require('path');
 const pathToRegexp = require('path-to-regexp');
 
@@ -40,7 +37,7 @@ class Route {
 		const values = pathRegex.exec(endpoint);
 
 		const params = [];
-		for (const i of enumRange(0, keys.length)) {
+		for (let i = 0; i < keys.length; i++) {
 			params[keys[i].name] = values[i+1];
 		}
 
