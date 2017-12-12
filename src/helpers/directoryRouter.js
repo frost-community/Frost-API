@@ -1,4 +1,5 @@
-const ApiResult = require('./apiResult');
+const ApiContext = require('./ApiContext');
+const { ApiError } = require('./errors');
 const pathToRegexp = require('path-to-regexp');
 
 class DirectoryRouter {
@@ -33,6 +34,13 @@ class DirectoryRouter {
 			(async () => {
 				request.version = request.params.ver;
 
+				const apiContext = new ApiContext(request.streams, request.lock, request.db, request.config, {
+					params: request.params,
+					query: request.query,
+					body: request.body,
+					headers: request.headers
+				});
+
 				try {
 					let routeFuncAsync;
 
@@ -47,17 +55,24 @@ class DirectoryRouter {
 						throw new Error(`route function is not found\ntarget: ${route.method} ${route.path}`);
 					}
 
-					const result = await routeFuncAsync(request);
-					console.log(`rest: ${route.method.toUpperCase()} ${route.path}, status=${result.statusCode}`);
-					response.apiSend(result);
+					await routeFuncAsync(apiContext);
+					console.log(`rest: ${route.method.toUpperCase()} ${route.path}, status=${apiContext.statusCode}`);
+					response.apiSend(apiContext);
 				}
 				catch (err) {
-					if (err instanceof Error) {
-						console.log(`Internal Error: ${err}`);
-						response.apiSend(new ApiResult(500, {message: 'internal error', details: err}));
+					if (err instanceof ApiError) {
+						console.log(`rest: ${route.method.toUpperCase()} ${route.path}, status=${err.statusCode}`);
+						response.apiSend(apiContext.response(err.statusCode, err.message));
+					}
+					else if (err instanceof Error) {
+						console.log('Internal Error:', err);
+						apiContext.response(500, {message: 'internal error', details: err});
+						response.apiSend(apiContext);
 					}
 					else {
-						response.apiSend(new ApiResult(500, {message: 'internal error(unknown type)', details: err}));
+						console.log('Internal Error(unknown type):', err);
+						apiContext.response(500, {message: 'internal error(unknown type)', details: err});
+						response.apiSend(apiContext);
 					}
 				}
 			})();

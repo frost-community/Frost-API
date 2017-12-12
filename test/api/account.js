@@ -2,6 +2,7 @@ const assert = require('assert');
 const config = require('../../built/helpers/loadConfig')();
 const DbProvider = require('../../built/helpers/dbProvider');
 const Db = require('../../built/helpers/db');
+const ApiContext = require('../../built/helpers/ApiContext');
 const route = require('../../built/routes/account');
 
 describe('Account API', () => {
@@ -20,19 +21,21 @@ describe('Account API', () => {
 			});
 
 			it('正しくリクエストされた場合は成功する', async () => {
-				let res = await route.post({
+				const context = new ApiContext(null, null, db, config, {
 					body: {
 						screenName: 'hogehoge',
 						password: 'a1b2c3d4e5f6g',
 						name: 'froster',
 						description: 'testhoge'
 					},
-					db: db, config: config, checkRequestAsync: () => null
+					headers: { 'X-Api-Version': 1 },
+					testMode: true
 				});
+				await route.post(context);
 
-				delete res.data.user.id;
-				delete res.data.user.createdAt;
-				assert.deepEqual(res.data, {
+				delete context.data.user.id;
+				delete context.data.user.createdAt;
+				assert.deepEqual(context.data, {
 					user: {
 						screenName: 'hogehoge',
 						name: 'froster',
@@ -42,66 +45,106 @@ describe('Account API', () => {
 			});
 
 			it('screenNameが4文字未満もしくは16文字以上のとき失敗する', async () => {
-				let res = await route.post({
+				let context = new ApiContext(null, null, db, config, {
 					body: {
 						screenName: 'abc',
 						password: 'a1b2c3d4e5f6g',
 						name: 'froster',
 						description: 'testhoge'
 					},
-					db: db, config: config, checkRequestAsync: () => null
+					headers: { 'X-Api-Version': 1 },
+					testMode: true
 				});
-				assert.equal(res.data, 'screenName is invalid format');
 
-				res = await route.post({
+				try {
+					await route.post(context);
+					assert.fail();
+				}
+				catch(err) {
+					assert.equal(err.statusCode, 400);
+				}
+
+				context = new ApiContext(null, null, db, config, {
 					body: {
 						screenName: 'abcdefghijklmnop',
 						password: 'a1b2c3d4e5f6g',
 						name: 'froster',
 						description: 'testhoge'
 					},
-					db: db, config: config, checkRequestAsync: () => null
+					headers: { 'X-Api-Version': 1 },
+					testMode: true
 				});
-				assert.equal(res.data, 'screenName is invalid format');
+
+				try {
+					await route.post(context);
+					assert.fail();
+				}
+				catch(err) {
+					assert.equal(err.statusCode, 400);
+				}
 			});
 
 			it('passwordが6文字未満のときは失敗する', async () => {
-				let res = await route.post({
+				const context = new ApiContext(null, null, db, config, {
 					body: {
 						screenName: 'hogehoge',
 						password: 'a1b2c',
 						name: 'froster',
 						description: 'testhoge'
 					},
-					db: db, config: config, checkRequestAsync: () => null
+					headers: { 'X-Api-Version': 1 },
+					testMode: true
 				});
-				assert.equal(res.data, 'password is invalid format');
+
+				try {
+					await route.post(context);
+					assert.fail();
+				}
+				catch(err) {
+					assert.equal(err.statusCode, 400);
+				}
 			});
 
 			it('nameが33文字以上のときは失敗する', async () => {
-				let res = await route.post({
+				const context = new ApiContext(null, null, db, config, {
 					body: {
 						screenName: 'hogehoge',
 						password: 'a1b2c3d4e5f6g',
 						name: 'superFrostersuperFrostersuperFros',
 						description: 'testhoge'
 					},
-					db: db, config: config, checkRequestAsync: () => null
+					headers: { 'X-Api-Version': 1 },
+					testMode: true
 				});
-				assert.equal(res.data, 'name is invalid format');
+
+				try {
+					await route.post(context);
+					assert.fail();
+				}
+				catch(err) {
+					assert.equal(err.statusCode, 400);
+				}
 			});
 
 			it('descriptionが257文字以上のときは失敗する', async () => {
-				let res = await route.post({
+				const context = new ApiContext(null, null, db, config, {
 					body: {
 						screenName: 'hogehoge',
 						password: 'a1b2c3d4e5f6g',
 						name: '',
 						description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget'
 					},
-					db: db, config: config, checkRequestAsync: () => null
+					headers: { 'X-Api-Version': 1 },
+					testMode: true
 				});
-				assert.equal(res.data, 'description is invalid format');
+
+				try {
+					await route.post(context);
+					assert.fail();
+				}
+				catch(err) {
+					assert.equal(err.statusCode, 400);
+				}
 			});
 		});
 	});
