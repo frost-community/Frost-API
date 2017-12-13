@@ -1,20 +1,18 @@
-const ApiResult = require('../../helpers/apiResult');
 const Post = require('../../documentModels/post');
+// const $ = require('cafy').default;
 
-exports.get = async (request) => {
-	const result = await request.checkRequestAsync({
-		query: [],
+exports.get = async (apiContext) => {
+	await apiContext.check({
+		query: {},
 		permissions: ['postRead']
 	});
 
-	if (result != null) {
-		return result;
-	}
-
-	const post = await Post.findByIdAsync(request.params.id, request.db, request.config);
+	const post = await Post.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
 
 	if (post == null) {
-		return new ApiResult(204);
+		apiContext.response(204);
+		return;
 	}
-	return new ApiResult(200, {post: post.serialize()});
+
+	apiContext.response(200, {post: post.serialize()});
 };

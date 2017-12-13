@@ -1,4 +1,4 @@
-exports.permissionTypes = [
+const permissionTypes = [
 	'iceAuthHost',        // 認証のホスト権限
 	'application',        // 連携アプリ操作
 	'applicationSpecial', // 連携アプリ特殊操作
@@ -10,3 +10,7 @@ exports.permissionTypes = [
 	'postRead',           // 投稿やリアクションの取得
 	'postWrite',          // 投稿やリアクションの作成・削除等のアクション
 ];
+
+module.exports = {
+	permissionTypes
+};

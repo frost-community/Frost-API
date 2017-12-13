@@ -25,7 +25,9 @@ class StreamPublisher {
 		return new Promise((resolve, reject) => {
 			if (this.redisClient.connected) {
 				this.redisClient.quit((err) => {
-					if (err) return reject(err);
+					if (err) {
+						return reject(err);
+					}
 					resolve();
 				});
 			}
@@ -48,9 +50,6 @@ class Stream extends EventEmitter {
 			throw new Error(`${this.type} stream: ${String(err)}`);
 		});
 	}
-	getChannelName(publisherId) {
-		return `${this.type}:${publisherId}`;
-	}
 	addSource(publisherId) {
 		this.redisClient.subscribe(StreamUtil.getChannelName(this.type, publisherId));
 	}
@@ -61,7 +60,9 @@ class Stream extends EventEmitter {
 		return new Promise((resolve, reject) => {
 			if (this.redisClient.connected) {
 				this.redisClient.quit((err) => {
-					if (err) return reject(err);
+					if (err) {
+						return reject(err);
+					}
 					resolve();
 				});
 			}

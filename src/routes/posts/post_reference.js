@@ -1,14 +1,11 @@
-const ApiResult = require('../../helpers/apiResult');
+// const $ = require('cafy').default;
+const { ApiError } = require('../../helpers/errors');
 
-exports.post = async (request) => {
-	const result = await request.checkRequestAsync({
-		body: [],
+exports.post = async (apiContext) => {
+	await apiContext.check({
+		body: {},
 		permissions: ['postWrite']
 	});
 
-	if (result != null) {
-		return result;
-	}
-
-	return new ApiResult(501, 'not implemented yet');
+	throw new ApiError(501, 'not implemented yet');
 };

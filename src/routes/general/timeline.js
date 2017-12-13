@@ -1,36 +1,20 @@
-const ApiResult = require('../../helpers/apiResult');
 const timelineAsync = require('../../helpers/timelineAsync');
+const $ = require('cafy').default;
 
 // TODO: 不完全な実装
 
-exports.get = async (request) => {
-	const result = await request.checkRequestAsync({
-		query: [
-			{name: 'limit', type: 'number', require: false}
-		],
+exports.get = async (apiContext) => {
+	await apiContext.check({
+		query: {
+			limit: { cafy: $().number().range(0, 100), default: 30 }
+		},
 		permissions: ['postRead']
 	});
 
-	if (result != null) {
-		return result;
-	}
-
 	try {
-		// limit
-		let limit = request.query.limit;
-		if (limit != null) {
-			limit = parseInt(limit);
-			if (isNaN(limit) || limit <= 0 || limit > 100) {
-				return new ApiResult(400, 'limit is invalid');
-			}
-		}
-		else {
-			limit = 30;
-		}
-
-		return await timelineAsync('status', null, limit, request.db, request.config);
+		return await timelineAsync(apiContext, 'status', null, apiContext.query.limit);
 	}
 	catch(err) {
-		console.dir(err);
+		console.log(err);
 	}
 };

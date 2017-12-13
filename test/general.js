@@ -4,7 +4,7 @@ const Route = require('../built/helpers/route');
 
 describe('General Tests', () => {
 	describe('routes', () => {
-		const routeList = require('../built/routeList')();
+		const routeList = require('../built/routeList');
 
 		it('存在するHTTPメソッドを利用している', () => {
 			for (const route of routeList) {
@@ -27,7 +27,7 @@ describe('General Tests', () => {
 				}
 
 				if (routeModule == null) {
-					console.log(`route module not found: ${route[0]} ${route[1]}`);
+					console.log('route module not found:', route[0], route[1]);
 					errorCount++;
 				}
 			}

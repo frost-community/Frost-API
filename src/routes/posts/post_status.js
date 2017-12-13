@@ -1,29 +1,26 @@
-const ApiResult = require('../../helpers/apiResult');
 const { StreamPublisher } = require('../../helpers/stream');
+const $ = require('cafy').default;
+const { ApiError } = require('../../helpers/errors');
 
-exports.post = async (request) => {
-	const result = await request.checkRequestAsync({
-		body: [
-			{name: 'text', type: 'string'}
-		],
+exports.post = async (apiContext) => {
+	await apiContext.check({
+		body: {
+			text: { cafy: $().string() }
+		},
 		permissions: ['postWrite']
 	});
 
-	if (result != null) {
-		return result;
-	}
-
-	const userId = request.user.document._id;
-	const text = request.body.text;
+	const userId = apiContext.user.document._id;
+	const text = apiContext.body.text;
 
 	if (/^\s*$/.test(text) || /^[\s\S]{1,256}$/.test(text) == false) {
-		return new ApiResult(400, 'text is invalid format.');
+		throw new ApiError(400, 'text is invalid format.');
 	}
 
 	let postStatus;
 
 	try {
-		postStatus = await request.db.posts.createAsync({ // TODO: move to document models
+		postStatus = await apiContext.db.posts.createAsync({ // TODO: move to document models
 			type: 'status',
 			userId: userId,
 			text: text
@@ -34,15 +31,15 @@ exports.post = async (request) => {
 	}
 
 	if (postStatus == null) {
-		return new ApiResult(500, 'failed to create postStatus');
+		throw new ApiError(500, 'failed to create postStatus');
 	}
 
 	const serializedPostStatus = await postStatus.serializeAsync(true);
 
 	const publisher = new StreamPublisher();
-	publisher.publish('home-timeline-status', request.user.document._id.toString(), serializedPostStatus);
+	publisher.publish('home-timeline-status', apiContext.user.document._id.toString(), serializedPostStatus);
 	publisher.publish('general-timeline-status', 'general', serializedPostStatus);
 	await publisher.quitAsync();
 
-	return new ApiResult(200, {postStatus: serializedPostStatus});
+	apiContext.response(200, {postStatus: serializedPostStatus});
 };

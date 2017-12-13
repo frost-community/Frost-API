@@ -1,7 +1,6 @@
-const ApiResult = require('./apiResult');
 const Post = require('../documentModels/post');
 
-module.exports = async (type, ids, limit, db, config) => {
+module.exports = async (apiContext, type, ids, limit) => {
 	let query = {type: type};
 
 	if (ids != null) {
@@ -11,10 +10,11 @@ module.exports = async (type, ids, limit, db, config) => {
 		]};
 	}
 
-	const posts = await Post.findArrayAsync(query, false, limit, db, config);
+	const posts = await Post.findArrayAsync(query, false, limit, apiContext.db, apiContext.config);
 
 	if (posts == null || posts.length == 0) {
-		return new ApiResult(204);
+		apiContext.error(204);
+		return;
 	}
 
 	const serializedPosts = [];
@@ -22,5 +22,5 @@ module.exports = async (type, ids, limit, db, config) => {
 		serializedPosts.push(await post.serializeAsync(true));
 	}
 
-	return new ApiResult(200, {posts: serializedPosts});
+	apiContext.response(200, {posts: serializedPosts});
 };

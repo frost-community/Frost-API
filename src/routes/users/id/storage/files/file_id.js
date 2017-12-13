@@ -1,26 +1,23 @@
-const ApiResult = require('../../../../../helpers/apiResult');
 const User = require('../../../../../documentModels/user');
+// const $ = require('cafy').default;
+const { ApiError } = require('../../../../../helpers/errors');
 
 // 対象ファイルの取得
-exports.get = async (request) => {
-	const result = await request.checkRequestAsync({
+exports.get = async (apiContext) => {
+	await apiContext.check({
 		permissions: ['storageRead']
 	});
 
-	if (result != null) {
-		return result;
-	}
-
 	// user
-	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
+	const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
 	if (user == null) {
-		return new ApiResult(404, 'user as premise not found');
+		throw new ApiError(404, 'user as premise not found');
 	}
 
 	// file
 	let file;
 	try {
-		file = await request.db.storageFiles.findByIdAsync(request.params.file_id);
+		file = await apiContext.db.storageFiles.findByIdAsync(apiContext.params.file_id);
 	}
 	catch(err) {
 		console.log(err);
@@ -28,19 +25,20 @@ exports.get = async (request) => {
 
 	// 存在しない もしくは creatorの不一致がある
 	if (file == null || file.document.creator.type != 'user' || !file.document.creator.id.equals(user.document._id)) {
-		return new ApiResult(204);
+		apiContext.response(204);
+		return;
 	}
 
 	// level
 	let level = file.document.accessRight.level;
 
-	const requestUserId = request.user.document._id;
+	const requestUserId = apiContext.user.document._id;
 	const isOwnerAccess = file.document.creator.id.equals(requestUserId);
 
 	if (level == 'private') {
 		// 所有者以外のユーザー
 		if (!isOwnerAccess) {
-			return new ApiResult(403, 'this operation is not permitted');
+			throw new ApiError(403, 'this operation is not permitted');
 		}
 	}
 	else if (level == 'specific') {
@@ -48,55 +46,53 @@ exports.get = async (request) => {
 
 		// アクセスを許可していないユーザー
 		if (!isOwnerAccess && (users == null || !users.some(i => i == requestUserId))) {
-			return new ApiResult(403, 'this operation is not permitted');
+			throw new ApiError(403, 'this operation is not permitted');
 		}
 	}
 	else if (level != 'public') {
-		return new ApiResult(500, 'unknown access-right level');
+		throw new ApiError(500, 'unknown access-right level');
 	}
 
-	return new ApiResult(200, {storageFile: file.serialize(true)});
+	apiContext.response(200, {storageFile: file.serialize(true)});
 };
 
 // 対象ファイルの削除
-exports.delete = async (request) => {
-	const result = await request.checkRequestAsync({
+exports.delete = async (apiContext) => {
+	await apiContext.check({
 		permissions: ['storageWrite']
 	});
 
-	if (result != null) {
-		return result;
-	}
-
 	// user
-	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
+	const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
 	if (user == null) {
-		return new ApiResult(404, 'user as premise not found');
+		throw new ApiError(404, 'user as premise not found');
 	}
 
-	const isOwnerAccess = user.document._id.equals(request.user.document._id);
+	const isOwnerAccess = user.document._id.equals(apiContext.user.document._id);
 	if (!isOwnerAccess) {
-		return new ApiResult(403, 'this operation is not permitted');
+		throw new ApiError(403, 'this operation is not permitted');
 	}
 
 	// file
 	let file;
 	try {
-		file = await request.db.storageFiles.findByIdAsync(request.params.file_id);
+		file = await apiContext.db.storageFiles.findByIdAsync(apiContext.params.file_id);
 	}
 	catch(err) {
 		console.log(err);
 	}
 
 	if (file == null) {
-		return new ApiResult(404);
+		apiContext.response(404);
+		return;
 	}
 
 	// 所有していないリソース
 	if (file.document.creator.type != 'user' || !file.document.creator.id.equals(user.document._id)) {
-		return new ApiResult(403);
+		apiContext.response(403);
+		return;
 	}
 
 	// TODO
-	return new ApiResult(501, 'not implemented yet');
+	throw new ApiError(501, 'not implemented yet');
 };

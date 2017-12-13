@@ -1,63 +1,50 @@
-const ApiResult = require('../../../helpers/apiResult');
 const Application = require('../../../documentModels/application');
+// const $ = require('cafy').default;
+const { ApiError } = require('../../../helpers/errors');
 
-exports.get = async (request) => {
-	const result = await request.checkRequestAsync({
+exports.get = async (apiContext) => {
+	await apiContext.check({
 		permissions: ['applicationSpecial']
 	});
 
-	if (result != null) {
-		return result;
-	}
-
-	const application = await Application.findByIdAsync(request.params.id, request.db, request.config);
+	const application = await Application.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
 
 	if (application == null) {
-		return new ApiResult(404, 'application as premise not found');
+		throw new ApiError(404, 'application as premise not found');
 	}
 
 	// 対象アプリケーションの所有者かどうか
-	if (!application.document.creatorId.equals(request.user.document._id)) {
-		return new ApiResult(403, 'this operation is not permitted');
+	if (!application.document.creatorId.equals(apiContext.user.document._id)) {
+		throw new ApiError(403, 'this operation is not permitted');
 	}
 
 	if (application.document.keyCode == null) {
-		return new ApiResult(400, 'applicationKey has not been generated yet');
+		throw new ApiError(400, 'applicationKey has not been generated yet');
 	}
 
 	const key = application.getApplicationKey();
 
-	return new ApiResult(200, {applicationKey: key});
+	apiContext.response(200, {applicationKey: key});
 };
 
-exports.post = async (request) => {
-	try {
-		await request.checkRequestAsync({
-			body: [],
-			permissions: ['applicationSpecial']
-		});
-	}
-	catch(e) {
-		if (e instanceof Error) {
-			throw e;
-		}
-		else {
-			return e;
-		}
-	}
+exports.post = async (apiContext) => {
+	await apiContext.check({
+		body: {},
+		permissions: ['applicationSpecial']
+	});
 
-	const application = await Application.findByIdAsync(request.params.id, request.db, request.config);
+	const application = await Application.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
 
 	if (application == null) {
-		return new ApiResult(404, 'application as premise not found');
+		throw new ApiError(404, 'application as premise not found');
 	}
 
 	// 対象アプリケーションの所有者かどうか
-	if (!application.document.creatorId.equals(request.user.document._id)) {
-		return new ApiResult(403, 'this operation is not permitted');
+	if (!application.document.creatorId.equals(apiContext.user.document._id)) {
+		throw new ApiError(403, 'this operation is not permitted');
 	}
 
 	const key = await application.generateApplicationKeyAsync();
 
-	return new ApiResult(200, {applicationKey: key});
+	apiContext.response(200, {applicationKey: key});
 };

@@ -1,49 +1,37 @@
-const ApiResult = require('../../../../helpers/apiResult');
 const User = require('../../../../documentModels/user');
 const UserFollowing = require('../../../../documentModels/userFollowing');
 const timelineAsync = require('../../../../helpers/timelineAsync');
+const $ = require('cafy').default;
+const { ApiError } = require('../../../../helpers/errors');
 
 // TODO: 不完全な実装
 
-exports.get = async (request) => {
-	const result = await request.checkRequestAsync({
-		query: [
-			{name: 'limit', type: 'number', require: false}
-		],
+exports.get = async (apiContext) => {
+	await apiContext.check({
+		query: {
+			limit: { cafy: $().number().range(0, 100), default: 30 }
+		},
 		permissions: ['postRead', 'userRead']
 	});
 
-	if (result != null) {
-		return result;
-	}
-
 	try {
 		// user
-		const user = await User.findByIdAsync(request.params.id, request.db, request.config);
+		const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
 		if (user == null) {
-			return new ApiResult(404, 'user as premise not found');
+			throw new ApiError(404, 'user as premise not found');
 		}
 
 		// limit
-		let limit = request.query.limit;
-		if (limit != null) {
-			limit = parseInt(limit);
-			if (isNaN(limit) || limit <= 0 || limit > 100) {
-				return new ApiResult(400, 'limit is invalid');
-			}
-		}
-		else {
-			limit = 30;
-		}
+		let limit = apiContext.query.limit;
 
 		// ids
-		const followings = await UserFollowing.findTargetsAsync(user.document._id, null, request.db, request.config);
+		const followings = await UserFollowing.findTargetsAsync(user.document._id, null, apiContext.db, apiContext.config);
 		const ids = (followings != null) ? followings.map(i => i.document.target) : [];
 		ids.push(user.document._id); // ソースユーザーを追加
 
-		return await timelineAsync('status', ids, limit, request.db, request.config);
+		return await timelineAsync('status', ids, limit, apiContext.db, apiContext.config);
 	}
 	catch(err) {
-		console.dir(err);
+		console.log(err);
 	}
 };
