@@ -9,7 +9,7 @@ const { ApiError } = require('./helpers/errors');
 
 /*
 # 各種変数の説明
-streamType: 'home-timeline-status' | 'general-timeline-status'
+streamType: 'user-timeline-status' | 'home-timeline-status' | 'general-timeline-status'
 streamPublisher: ストリームの発行者情報
 streamId : StreamUtil.buildStreamId(streamType, streamPublisher) ストリームの識別子
 streams: Map<streamId, Stream> 全てのストリーム一覧
@@ -37,7 +37,6 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 		}
 		catch (err) {
 			console.log('streaming verification error:', err);
-			request.reject();
 			return;
 		}
 		const { meId, applicationId } = verification;
@@ -53,7 +52,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 			keys: { eventName: 'type', eventContent: 'data' }
 		});
 
-		// 接続されているストリーム名の一覧
+		// 接続されているストリームIDの一覧
 		const connectedStreamIds = [];
 
 		// ストリームの購読解除メソッド
@@ -69,6 +68,11 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				stream.quitAsync();
 				streams.delete(streamId);
 			}
+		};
+
+		// イベントのエラー返却メソッド
+		const error = (eventName, message) => {
+			connection.send(eventName, { success: false, message });
 		};
 
 		connection.on('close', (reasonCode, description) => {
@@ -95,7 +99,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 		connection.on('rest', data => {
 			(async () => {
 				if (data.request == null) {
-					return connection.send('rest', { success: false, message: 'request format is invalid' });
+					return error('rest', 'request format is invalid');
 				}
 
 				let {
@@ -108,15 +112,15 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 
 				// パラメータを検証
 				if (method == null || endpoint == null) {
-					return connection.send('rest', { success: false, message: 'request format is invalid' });
+					return error('rest', 'request format is invalid');
 				}
 
 				if (endpoint.indexOf('..') != -1) {
-					return connection.send('rest', { success: false, message: '"endpoint" parameter is invalid' });
+					return error('rest', '"endpoint" parameter is invalid');
 				}
 
 				if (methods.find(i => i.toLowerCase() === method.toLowerCase()) == null) {
-					return connection.send('rest', { success: false, message: '"method" parameter is invalid' });
+					return error('rest', '"method" parameter is invalid');
 				}
 
 				// 対象Routeのモジュールを取得
@@ -135,7 +139,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				}
 
 				if (routeFuncAsync == null) {
-					return connection.send('rest', { success: false, message: '"endpoint" parameter is invalid' });
+					return error('rest', '"endpoint" parameter is invalid');
 				}
 
 				// ApiContextを構築
@@ -191,7 +195,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 		// クライアント側から通知の購読リクエストを受信したとき
 		connection.on('notification-connect', async data => {
 			try {
-				return connection.send('notification-connect', { success: false, message: 'comming soon' }); // TODO
+				return error('notification-connect', 'comming soon'); // TODO
 			}
 			catch (err) {
 				console.log(err);
@@ -204,56 +208,54 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				const timelineType = data.type;
 
 				if (timelineType == null) {
-					return connection.send('timeline-connect', { success: false, message: '"type" parameter is require' });
+					return error('timeline-connect', '"type" parameter is require');
 				}
 
-				// タイムラインのストリームの取得または構築
+				// ストリームの取得または構築
 				let stream, streamId;
 				if (timelineType == 'general') {
 					streamId = generalTimelineStreamId;
 
 					// 既に接続済みなら中断
-					if (connectedStreamIds.indexOf(generalTimelineStreamId) != -1) {
-						return connection.send('timeline-connect', { success: false, message: `${timelineType} timeline stream is already connected` });
+					if (connectedStreamIds.indexOf(streamId) != -1) {
+						return error('timeline-connect', `${timelineType} timeline stream is already connected`);
 					}
 
 					stream = generalTimelineStream;
 				}
 				else if (timelineType == 'home') {
+					// memo: フォローユーザーのuser-timeline-statusストリームを統合したhome-timeline-statusストリームを生成
 					streamId = StreamUtil.buildStreamId('home-timeline-status', meId);
 
 					// 既に接続済みなら中断
 					if (connectedStreamIds.indexOf(streamId) != -1) {
-						return connection.send('timeline-connect', { success: false, message: `${timelineType} timeline stream is already connected` });
+						return error('timeline-connect', `${timelineType} timeline stream is already connected`);
 					}
 
+					// ストリームを生成
 					stream = new Stream();
-					stream.addSource(streamId);
+					stream.addSource(StreamUtil.buildStreamId('user-timeline-status', meId));
 					const followings = await UserFollowing.findTargetsAsync(meId, null, db, config); // TODO: (全て or ユーザーの購読設定によっては選択的に)
 					for (const following of followings || []) {
 						const followingUserId = following.document.target.toString();
-						stream.addSource(StreamUtil.buildStreamId('home-timeline-status', followingUserId));
+						stream.addSource(StreamUtil.buildStreamId('user-timeline-status', followingUserId));
 					}
 
 					streams.set(streamId, stream);
 				}
 				else {
-					return connection.send('timeline-connect', { success: false, message: `timeline type "${timelineType}" is invalid` });
+					return error('timeline-connect', `timeline type "${timelineType}" is invalid`);
 				}
 
-				// ストリームからのデータをwebsocketに流す // TODO: コネクションが確立されていなかったらハンドラを解除したい
-				let streamHandler = data => {
+				// ストリームからのデータをwebsocketに流す
+				stream.addListener(data => {
 					if (connection.connected) {
 						console.log(`streaming/stream:${stream.type}`);
 						connection.send(`stream:${stream.type}`, data);
 					}
-					/*else {
-						stream.removeListener(streamHandler);
-					}*/
-				};
-				stream.addListener(streamHandler);
+				});
 
-				// timelineStreamsに設定
+				// connectedStreamIdsに追加
 				connectedStreamIds.push(streamId);
 
 				console.log('streaming/timeline-connect:', timelineType);
@@ -268,7 +270,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 			const timelineType = data.type;
 
 			if (timelineType == null) {
-				return connection.send('timeline-disconnect', { success: false, message: '"type" parameter is require' });
+				return error('timeline-disconnect', '"type" parameter is require');
 			}
 
 			// 対象タイムラインのストリームを取得
@@ -280,7 +282,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				streamId = StreamUtil.buildStreamId('home-timeline-status', meId);
 			}
 			else {
-				return connection.send('timeline-disconnect', { success: false, message: `timeline type "${timelineType}" is invalid` });
+				return error('timeline-disconnect', `timeline type "${timelineType}" is invalid`);
 			}
 
 			disconnectStream(streamId);
