@@ -80,7 +80,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 			for (const streamId of connectedStreamIds) {
 				disconnectStream(streamId);
 			}
-			console.log('stream closed');
+			console.log(`disconnected streaming. user: @${connection.user.document.screenName}`);
 		});
 
 		// 各種データのフェッチ
