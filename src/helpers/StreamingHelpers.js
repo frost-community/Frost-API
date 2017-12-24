@@ -1,5 +1,5 @@
-const { Application } = require('../documentModels/application');
-const { ApplicationAccess } = require('../documentModels/applicationAccess');
+const Application = require('../documentModels/application');
+const ApplicationAccess = require('../documentModels/applicationAccess');
 
 class StreamingHelpers {
 	static async checkRequest (request, db, config) {

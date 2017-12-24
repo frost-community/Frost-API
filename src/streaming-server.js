@@ -49,7 +49,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 
 		// support user events
 		events(connection, {
-			keys: { eventName: 'type', eventContent: 'data' }
+			keys: { eventName: 'type', eventContent: 'data' }, debug: true
 		});
 
 		// 接続されているストリームIDの一覧
@@ -96,9 +96,9 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 		}
 
 		// クライアント側からRESTリクエストを受信したとき
-		connection.on('rest', data => {
-			(async () => {
-				if (data.request == null) {
+		connection.on('rest', async data => {
+			try {
+				if (data == null) {
 					return error('rest', 'request format is invalid');
 				}
 
@@ -108,7 +108,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 					query = {},
 					headers = {},
 					body = {}
-				} = data.request;
+				} = data;
 
 				// パラメータを検証
 				if (method == null || endpoint == null) {
@@ -151,13 +151,16 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				});
 				apiContext.user = connection.user;
 				apiContext.application = connection.application;
+				const requestQuery = request.resourceURL.query;
+				apiContext.headers['X-Application-Key'] = requestQuery.application_key;
+				apiContext.headers['X-Access-Key'] = requestQuery.access_key;
 
 				try {
 					// 対象のRouteモジュールを実行
 					await routeFuncAsync(apiContext);
 
 					if (!apiContext.responsed) {
-						throw new ApiError(500, 'response is empty');
+						throw new ApiError(500, 'not responsed');
 					}
 				}
 				catch (err) {
@@ -166,30 +169,28 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 
 						return connection.send('rest', {
 							success: true,
-							request: data.request,
-							response: { message: err.message },
-							statusCode: err.statusCode
+							statusCode: err.statusCode,
+							response: { message: err.message }
 						});
 					}
 				}
 
 				console.log(`streaming/rest: ${method} ${endpoint}, status=${apiContext.statusCode}`);
 
-				let sendData;
+				let response;
 				if (typeof apiContext.data == 'string') {
-					sendData = { message: apiContext.data };
+					response = { message: apiContext.data };
 				}
 				else {
-					sendData = (apiContext.data != null) ? apiContext.data : {};
+					response = (apiContext.data != null) ? apiContext.data : {};
 				}
 
-				return connection.send('rest', {
-					success: true,
-					request: data.request,
-					response: sendData,
-					statusCode: apiContext.statusCode
-				});
-			})();
+				return connection.send('rest', { success: true, statusCode: apiContext.statusCode, response });
+			}
+			catch(err) {
+				console.log(err);
+				error('rest', 'server error');
+			}
 		});
 
 		// クライアント側から通知の購読リクエストを受信したとき
@@ -199,6 +200,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 			}
 			catch (err) {
 				console.log(err);
+				error('notification-connect', 'server error');
 			}
 		});
 
@@ -263,32 +265,45 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 			}
 			catch (err) {
 				console.log(err);
+				error('timeline-disconnect', 'server error');
 			}
 		});
 
 		connection.on('timeline-disconnect', data => {
-			const timelineType = data.type;
+			try {
+				const timelineType = data.type;
 
-			if (timelineType == null) {
-				return error('timeline-disconnect', '"type" parameter is require');
-			}
+				if (timelineType == null) {
+					return error('timeline-disconnect', '"type" parameter is require');
+				}
 
-			// 対象タイムラインのストリームを取得
-			let streamId;
-			if (timelineType == 'general') {
-				streamId = generalTimelineStreamId;
-			}
-			else if (timelineType == 'home') {
-				streamId = StreamUtil.buildStreamId('home-timeline-status', meId);
-			}
-			else {
-				return error('timeline-disconnect', `timeline type "${timelineType}" is invalid`);
-			}
+				// 対象タイムラインのストリームを取得
+				let streamId;
+				if (timelineType == 'general') {
+					streamId = generalTimelineStreamId;
+				}
+				else if (timelineType == 'home') {
+					streamId = StreamUtil.buildStreamId('home-timeline-status', meId);
+				}
+				else {
+					return error('timeline-disconnect', `timeline type "${timelineType}" is invalid`);
+				}
 
-			disconnectStream(streamId);
-			console.log('streaming/timeline-disconnect:', timelineType);
-			connection.send('timeline-disconnect', { success: true, message: `disconnected ${timelineType} timeline` });
+				disconnectStream(streamId);
+				console.log('streaming/timeline-disconnect:', timelineType);
+				connection.send('timeline-disconnect', { success: true, message: `disconnected ${timelineType} timeline` });
+			}
+			catch(err) {
+				console.log(err);
+				error('timeline-disconnect', 'server error');
+			}
 		});
+
+		connection.on('default', (eventData) => {
+			error('default', 'invalid event name');
+		});
+
+		console.log(`connected streaming. user: @${connection.user.document.screenName}`);
 	});
 
 	console.log('streaming server is ready.');
