@@ -9,23 +9,24 @@ const DbProvider = require('./helpers/dbProvider');
 const Db = require('./helpers/db');
 const Route = require('./helpers/route');
 const DirectoryRouter = require('./helpers/directoryRouter');
-const ApiResult = require('./helpers/apiResult');
 const apiSend = require('./helpers/middlewares/apiSend');
-const checkRequest = require('./helpers/middlewares/checkRequest');
 const AsyncLock = require('async-lock');
+const ApiContext = require('./helpers/ApiContext');
+const routeList = require('./routeList');
+const setup = require('./setup');
 
 const q = async str => (await readLine(str)).toLowerCase().indexOf('y') === 0;
 
 module.exports = async () => {
 	try {
-		console.log('--------------------');
-		console.log('  Frost API Server  ');
-		console.log('--------------------');
+		console.log('+------------------+');
+		console.log('| Frost API Server |');
+		console.log('+------------------+');
 
 		let config = loadConfig();
 		if (config == null) {
 			if (await q('config file is not found. display setting mode now? (y/n) ')) {
-				await require('./setup')();
+				await setup();
 				config = loadConfig();
 			}
 
@@ -37,13 +38,11 @@ module.exports = async () => {
 		const app = express();
 		const http = httpClass.Server(app);
 		app.disable('x-powered-by');
-
 		app.set('etag', 'weak');
 
-		const dbProvider = await DbProvider.connectApidbAsync(config);
-		const db = new Db(config, dbProvider);
 		const directoryRouter = new DirectoryRouter(app);
 		const streams = new Map(); // memo: keyはChannelName
+		const db = new Db(config, await DbProvider.connectApidbAsync(config));
 
 		app.use(compression({
 			threshold: 0,
@@ -51,10 +50,16 @@ module.exports = async () => {
 			memLevel: 9
 		}));
 
+		app.use(bodyParser.json());
+
+		app.use(apiSend);
+
 		app.use((req, res, next) => {
 			// services
-			req.db = db;
 			req.config = config;
+			req.streams = streams;
+			req.db = db;
+			req.lock = new AsyncLock();
 
 			// sanitize
 			req.body = sanitize(req.body);
@@ -67,28 +72,16 @@ module.exports = async () => {
 			next();
 		});
 
-		app.use(bodyParser.json());
-		app.use(apiSend);
-		app.use(checkRequest);
-
-		app.use((req, res, next) => {
-			req.streams = streams;
-			req.lock = new AsyncLock();
-
-			next();
-		});
-
-		// add routes
-		for (const route of require('./routeList')()) {
-			let method = route[0];
-			const path = route[1];
-
-			directoryRouter.addRoute(new Route(method, path));
+		// add all routes
+		for (const route of routeList) {
+			directoryRouter.addRoute(new Route(route[0], route[1]));
 		}
 
 		// not found
 		app.use((req, res) => {
-			res.apiSend(new ApiResult(404, 'endpoint not found'));
+			const apiContext = new ApiContext(req.streams, req.lock, req.db, req.config);
+			apiContext.response(404, 'endpoint not found');
+			res.apiSend(apiContext);
 		});
 
 		http.listen(config.api.port, () => {
@@ -98,7 +91,6 @@ module.exports = async () => {
 		require('./streaming-server')(http, directoryRouter, streams, db, config);
 	}
 	catch(err) {
-		console.log('Unprocessed Server Error:');
-		console.log(err);
+		console.log('Unprocessed Server Error:', err);
 	}
 };

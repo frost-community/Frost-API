@@ -22,54 +22,6 @@ class ApiContext {
 			rule = {};
 		}
 
-		// body
-
-		if (rule.body == null) {
-			rule.body = [];
-		}
-
-		for (const paramName of Object.keys(rule.body)) {
-			if (this.body[paramName] == null) {
-				const required = rule.body[paramName].default === undefined;
-				if (required) {
-					throw new ApiError(400, `body parameter '${paramName}' is require`);
-				}
-			}
-			else {
-				if (rule.body[paramName].cafy == null) {
-					throw new Error('cafy is required');
-				}
-
-				if (rule.body[paramName].cafy.nok(this.body[paramName])) {
-					throw new ApiError(400, `type of body parameter '${paramName}' is invalid`);
-				}
-			}
-		}
-
-		// query strings
-
-		if (rule.query == null) {
-			rule.query = [];
-		}
-
-		for (const paramName of Object.keys(rule.query)) {
-			if (this.query[paramName] == null) {
-				const required = rule.query[paramName].default === undefined;
-				if (required) {
-					throw new ApiError(400, `query parameter '${paramName}' is require`);
-				}
-			}
-			else {
-				if (rule.query[paramName].cafy == null) {
-					throw new Error('cafy is required');
-				}
-
-				if (rule.query[paramName].cafy.ok(this.query[paramName])) {
-					throw new ApiError(400, `type of query parameter '${paramName}' is invalid`);
-				}
-			}
-		}
-
 		// headers
 
 		if (rule.headers == null) {
@@ -122,6 +74,57 @@ class ApiContext {
 
 			this.applicationKey = applicationKey;
 			this.accessKey = accessKey;
+		}
+
+		// body
+
+		if (rule.body == null) {
+			rule.body = [];
+		}
+
+		for (const paramName of Object.keys(rule.body)) {
+			if (this.body[paramName] == null) {
+				const required = rule.body[paramName].default === undefined;
+				if (required) {
+					throw new ApiError(400, `body parameter '${paramName}' is require`);
+				}
+				else {
+					this.body[paramName] = rule.body[paramName].default;
+				}
+			}
+			else {
+				if (rule.body[paramName].cafy == null) {
+					throw new Error('cafy is required');
+				}
+
+				if (rule.body[paramName].cafy.nok(this.body[paramName])) {
+					throw new ApiError(400, `type of body parameter '${paramName}' is invalid`);
+				}
+			}
+		}
+
+		// query strings
+
+		if (rule.query == null) {
+			rule.query = [];
+		}
+
+		for (const paramName of Object.keys(rule.query)) {
+			if (this.query[paramName] == null) {
+				const required = rule.query[paramName].default === undefined;
+				if (required) {
+					throw new ApiError(400, `query parameter '${paramName}' is require`);
+				}
+			}
+			else {
+				if (rule.query[paramName].cafy == null) {
+					throw new Error('cafy is required');
+				}
+
+				if (rule.query[paramName].cafy.ok(this.query[paramName])) {
+					throw new ApiError(400, `type of query parameter '${paramName}' is invalid`);
+				}
+			}
 		}
 
 		this.checked = true;

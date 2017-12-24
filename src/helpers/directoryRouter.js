@@ -47,8 +47,8 @@ class DirectoryRouter {
 					try {
 						routeFuncAsync = require(route.getModulePath())[route.method];
 					}
-					catch(e) {
-						// noop
+					catch(err) {
+						console.log('route error:', err);
 					}
 
 					if (routeFuncAsync == null) {

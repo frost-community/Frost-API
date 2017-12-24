@@ -9,13 +9,12 @@ exports.get = async (apiContext) => {
 	});
 
 	let application;
-
 	try {
 		const applicationId = mongo.ObjectId(apiContext.params.id);
 		application = await Application.findByIdAsync(applicationId, apiContext.db, apiContext.config);
 	}
 	catch(err) {
-		// noop
+		console.log(err);
 	}
 
 	if (application == null) {
