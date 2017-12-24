@@ -62,7 +62,8 @@ class DirectoryRouter {
 				catch (err) {
 					if (err instanceof ApiError) {
 						console.log(`rest: ${route.method.toUpperCase()} ${route.path}, status=${err.statusCode}`);
-						response.apiSend(apiContext.response(err.statusCode, err.message));
+						apiContext.response(err.statusCode, err.message);
+						response.apiSend(apiContext);
 					}
 					else if (err instanceof Error) {
 						console.log('Internal Error:', err);
