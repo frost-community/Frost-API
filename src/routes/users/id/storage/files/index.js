@@ -16,10 +16,8 @@ exports.post = async (apiContext) => {
 	await apiContext.check({
 		body: {
 			fileData: { cafy: $().string().pipe(i => validator.isBase64(i)) }
-		}[
-			{ name: 'fileData', type: 'string' }
 			// accessRight.level
-		],
+		},
 		permissions: ['storageWrite']
 	});
 

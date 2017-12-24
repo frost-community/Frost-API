@@ -58,7 +58,7 @@ describe('Account API', () => {
 
 				try {
 					await route.post(context);
-					assert.fail();
+					assert.fail('not throwed');
 				}
 				catch(err) {
 					assert.equal(err.statusCode, 400);
@@ -77,7 +77,7 @@ describe('Account API', () => {
 
 				try {
 					await route.post(context);
-					assert.fail();
+					assert.fail('not throwed');
 				}
 				catch(err) {
 					assert.equal(err.statusCode, 400);
@@ -98,7 +98,7 @@ describe('Account API', () => {
 
 				try {
 					await route.post(context);
-					assert.fail();
+					assert.fail('not throwed');
 				}
 				catch(err) {
 					assert.equal(err.statusCode, 400);
@@ -119,7 +119,7 @@ describe('Account API', () => {
 
 				try {
 					await route.post(context);
-					assert.fail();
+					assert.fail('not throwed');
 				}
 				catch(err) {
 					assert.equal(err.statusCode, 400);
@@ -140,7 +140,7 @@ describe('Account API', () => {
 
 				try {
 					await route.post(context);
-					assert.fail();
+					assert.fail('not throwed');
 				}
 				catch(err) {
 					assert.equal(err.statusCode, 400);

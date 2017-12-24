@@ -24,8 +24,6 @@ class UserFollowing {
 		res.id = res._id.toString();
 		delete res._id;
 
-		Object.keys(res).sort();
-
 		return objectSorter(res);
 	}
 
