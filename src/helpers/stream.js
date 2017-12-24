@@ -2,8 +2,15 @@ const redis = require('redis');
 const { EventEmitter } = require('events');
 
 class StreamUtil {
-	static getChannelName(type, publisherId) {
+	static buildStreamId(type, publisherId) {
 		return `${type}:${publisherId}`;
+	}
+	static parseStreamId(streamId) {
+		const elements = streamId.split(':');
+		return {
+			streamType: elements[0],
+			streamPublisher: elements[1]
+		};
 	}
 }
 
@@ -11,7 +18,7 @@ class StreamPublisher {
 	constructor(redisClient) {
 		this.redisClient = redisClient || redis.createClient(6379, 'localhost');
 		if (!(this.redisClient instanceof redis.RedisClient)) {
-			throw new TypeError('3rd argument "redisClient" is not a RedisClient');
+			throw new TypeError('argument "redisClient" is not a RedisClient');
 		}
 		this.redisClient.on('error', (err) => {
 			throw new Error(`${this.type} stream publisher: ${String(err)}`);
@@ -38,23 +45,50 @@ class StreamPublisher {
 	}
 }
 
-class Stream extends EventEmitter {
-	constructor(type, redisClient) {
-		super();
-		this.type = type;
+class Stream {
+	/**
+	 * @param {redis.RedisClient?} redisClient
+	*/
+	constructor(redisClient) {
+		this.sources = [];
+		this.emitter = new EventEmitter();
 		this.redisClient = redisClient || redis.createClient(6379, 'localhost');
 		this.redisClient.on('message', (channel, message) => {
-			this.emit('data', message);
+			this.emitter.emit('data', data => (data instanceof String) ? data : JSON.parse(message));
 		});
 		this.redisClient.on('error', (err) => {
 			throw new Error(`${this.type} stream: ${String(err)}`);
 		});
 	}
-	addSource(publisherId) {
-		this.redisClient.subscribe(StreamUtil.getChannelName(this.type, publisherId));
+	getSources() {
+		return this.sources;
 	}
-	removeSource(publisherId) {
-		this.redisClient.unsubscribe(StreamUtil.getChannelName(this.type, publisherId));
+	addSource(streamId) {
+		const { streamType, streamPublisher } = StreamUtil.parseStreamId(streamId);
+		if (this.sources.indexOf(streamId) != -1) {
+			throw new Error('already added');
+		}
+		this.sources.push(streamId);
+		this.redisClient.subscribe(StreamUtil.getChannelName(streamType, streamPublisher));
+	}
+	removeSource(streamId) {
+		const index = this.sources.indexOf(streamId);
+		if (index == -1) {
+			throw new Error('not exist');
+		}
+		this.sources.splice(index, 1);
+		const { streamType, streamPublisher } = StreamUtil.parseStreamId(streamId);
+		this.redisClient.unsubscribe(StreamUtil.getChannelName(streamType, streamPublisher));
+	}
+	addListener(listener) {
+		this.emitter.addListener('data', listener);
+		return listener;
+	}
+	removeListener(listener) {
+		this.emitter.removeListener('data', listener);
+	}
+	listenerCount() {
+		return this.emitter.listenerCount('data');
 	}
 	quitAsync() {
 		return new Promise((resolve, reject) => {

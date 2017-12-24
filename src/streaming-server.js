@@ -1,239 +1,293 @@
-'use strict';
-
 const UserFollowing = require('./documentModels/userFollowing');
 const WebSocket = require('websocket');
 const events = require('websocket-events');
-const checkStreamingRequestAsync = require('./helpers/checkStreamingRequestAsync');
-const { Stream } = require('./helpers/stream');
+const { checkRequest: checkRequestStreaming } = require('./helpers/StreamingHelpers');
+const { Stream, StreamUtil } = require('./helpers/stream');
 const methods = require('methods');
-const checkRequest = require('./helpers/middlewares/checkRequest');
+const ApiContext = require('./helpers/ApiContext');
+const { ApiError } = require('./helpers/errors');
+
+/*
+# 各種変数の説明
+streamType: 'user-timeline-status' | 'home-timeline-status' | 'general-timeline-status'
+streamPublisher: ストリームの発行者情報
+streamId : StreamUtil.buildStreamId(streamType, streamPublisher) ストリームの識別子
+streams: Map<streamId, Stream> 全てのストリーム一覧
+connectedStreamIds: streamId[] 接続済みのストリーム名一覧
+
+# streamIdの例
+general-timeline-status:general generalに向けて流されたポストを受信可能なStreamです
+home-timeline-status:(userId) そのユーザーのホームTLに向けて流されたポストを受信可能なStreamです
+*/
 
 module.exports = (http, directoryRouter, streams, db, config) => {
-	const server = new WebSocket.server({httpServer: http});
+	const server = new WebSocket.server({ httpServer: http });
 
-	server.on('request', request => {
-		(async () => {
-			const query = request.resourceURL.query;
-			const applicationKey = query.application_key;
-			const accessKey = query.access_key;
+	// generate stream for general timeline (global)
+	const generalTimelineStream = new Stream();
+	const generalTimelineStreamId = StreamUtil.buildStreamId('general-timeline-status', 'general');
+	generalTimelineStream.addSource(generalTimelineStreamId);
+	streams.set(generalTimelineStreamId, generalTimelineStream);
 
-			// authorization
-			let result;
-			try {
-				result = await checkStreamingRequestAsync(request, applicationKey, accessKey, db, config);
-			}
-			catch(err) {
-				console.log('streaming authorization error:', err.message);
+	server.on('request', async request => {
+		// verification
+		let verification;
+		try {
+			verification = await checkRequestStreaming(request, db, config);
+		}
+		catch (err) {
+			console.log('streaming verification error:', err);
+			return;
+		}
+		const { meId, applicationId } = verification;
+
+		const connection = request.accept();
+
+		connection.on('error', err => {
+			console.log('streaming error:', err);
+		});
+
+		// support user events
+		events(connection, {
+			keys: { eventName: 'type', eventContent: 'data' }
+		});
+
+		// 接続されているストリームIDの一覧
+		const connectedStreamIds = [];
+
+		// ストリームの購読解除メソッド
+		const disconnectStream = (streamId) => {
+			const { streamType } = StreamUtil.parseStreamId(streamId);
+			const index = connectedStreamIds.indexOf(streamId);
+			connectedStreamIds.splice(index, 1);
+			if (streamType == 'general-timeline-status') {
 				return;
 			}
-			const { connection, meId, applicationId } = result;
+			let stream = streams.get(streamId);
+			if (stream != null) {
+				stream.quitAsync();
+				streams.delete(streamId);
+			}
+		};
 
-			// support user events
-			events(connection, {
-				keys: {
-					eventName: 'type',
-					eventContent: 'data'
+		// イベントのエラー返却メソッド
+		const error = (eventName, message) => {
+			connection.send(eventName, { success: false, message });
+		};
+
+		connection.on('close', (reasonCode, description) => {
+			// 全ての接続済みストリームを購読解除
+			for (const streamId of connectedStreamIds) {
+				disconnectStream(streamId);
+			}
+			console.log('stream closed');
+		});
+
+		// 各種データのフェッチ
+		try {
+			[connection.user, connection.application] = await Promise.all([
+				db.users.findByIdAsync(meId),
+				db.applications.findByIdAsync(applicationId)
+			]);
+		}
+		catch (err) {
+			console.log('fetching error:', err);
+			return connection.close();
+		}
+
+		// クライアント側からRESTリクエストを受信したとき
+		connection.on('rest', data => {
+			(async () => {
+				if (data.request == null) {
+					return error('rest', 'request format is invalid');
 				}
-			});
 
-			const timelineStreamTypes = ['general', 'home'];
-			const timelineStreams = new Map(); // memo: keyはtimelineStreamTypes
+				let {
+					method,
+					endpoint,
+					query = {},
+					headers = {},
+					body = {}
+				} = data.request;
 
-			connection.on('error', err => {
-				console.log('streaming error:', err);
-			});
+				// パラメータを検証
+				if (method == null || endpoint == null) {
+					return error('rest', 'request format is invalid');
+				}
 
-			connection.on('close', (reasonCode, description) => {
-				for (const timelineStreamType of timelineStreams.keys()) {
-					const stream = timelineStreams.get(timelineStreamType);
-					if (stream != null) {
-						stream.quitAsync();
-						timelineStreams.delete(timelineStreamType);
-						streams.delete(stream.getChannelName(meId));
+				if (endpoint.indexOf('..') != -1) {
+					return error('rest', '"endpoint" parameter is invalid');
+				}
+
+				if (methods.find(i => i.toLowerCase() === method.toLowerCase()) == null) {
+					return error('rest', '"method" parameter is invalid');
+				}
+
+				// 対象Routeのモジュールを取得
+				let routeFuncAsync;
+				let params = [];
+
+				try {
+					const route = directoryRouter.findRoute(method, endpoint);
+					if (route != null) {
+						routeFuncAsync = (require(route.getModulePath()))[method];
+						params = route.getParams(endpoint);
 					}
 				}
+				catch (err) {
+					console.log('error: failed to parse route info.', 'reason:', err);
+				}
 
-				// console.log('streaming close:', reasonCode, description);
-			});
+				if (routeFuncAsync == null) {
+					return error('rest', '"endpoint" parameter is invalid');
+				}
 
-			try {
-				[connection.user, connection.application] = await Promise.all([
-					db.users.findByIdAsync(meId),
-					db.applications.findByIdAsync(applicationId)
-				]);
-
-				// クライアント側からRESTリクエストを受信したとき
-				connection.on('rest', data => {
-					(async () => {
-						if (data.request == null) {
-							return connection.send('rest', {success: false, message: 'request format is invalid'});
-						}
-						let {
-							method,
-							endpoint,
-							query,
-							headers,
-							body
-						} = data.request;
-
-						query = query || {};
-						headers = headers || {};
-						body = body || {};
-
-						if (method == null || endpoint == null) {
-							return connection.send('rest', {success: false, message: 'request format is invalid'});
-						}
-
-						if (endpoint.indexOf('..') != -1) {
-							return connection.send('rest', {success: false, message: '"endpoint" parameter is invalid'});
-						}
-
-						if (methods.find(i => i.toLowerCase() === method.toLowerCase()) == null) {
-							return connection.send('rest', {success: false, message: '"method" parameter is invalid'});
-						}
-
-						let routeFuncAsync;
-						let params = [];
-
-						try {
-							const route = directoryRouter.findRoute(method, endpoint);
-							if (route != null) {
-								routeFuncAsync = (require(route.getModulePath()))[method];
-								params = route.getParams(endpoint);
-							}
-						}
-						catch(err) {
-							console.log('error: failed to parse route info.', 'reason:', err);
-						}
-
-						if (routeFuncAsync == null) {
-							return connection.send('rest', {success: false, message: '"endpoint" parameter is invalid'});
-						}
-
-						const req = {
-							method: method,
-							endpoint: endpoint,
-							query: query,
-							params: params,
-							headers: headers,
-							body: body,
-							db: db,
-							config: config,
-							user: connection.user,
-							application: connection.application,
-							streams: streams
-						};
-
-						checkRequest(req);
-
-						const apiResult = await routeFuncAsync(req);
-
-						if (apiResult.statusCode == null) {
-							apiResult.statusCode = 200;
-						}
-
-						let sendData;
-						if (typeof apiResult.data == 'string') {
-							sendData = {message: apiResult.data};
-						}
-						else if (apiResult.data != null) {
-							sendData = apiResult.data;
-						}
-						else {
-							sendData = {};
-						}
-
-						console.log(`streaming/rest: ${method} ${endpoint}, status=${apiResult.statusCode}`);
-						return connection.send('rest', {success: true, request: data.request, response: sendData, statusCode: apiResult.statusCode});
-					})();
+				// ApiContextを構築
+				const apiContext = new ApiContext(streams, null, db, config, {
+					params,
+					query,
+					body,
+					headers
 				});
+				apiContext.user = connection.user;
+				apiContext.application = connection.application;
 
-				connection.on('notification-connect', data => {
-					(async () => {
-						return connection.send('notification-connect', {success: false, message: 'comming soon'}); // TODO
-					})();
-				});
+				try {
+					// 対象のRouteモジュールを実行
+					await routeFuncAsync(apiContext);
 
-				// クライアント側からタイムラインの購読リクエストを受信したとき
-				connection.on('timeline-connect', data => {
-					(async () => {
-						const timelineStreamType = data.type;
+					if (!apiContext.responsed) {
+						throw new ApiError(500, 'response is empty');
+					}
+				}
+				catch (err) {
+					if (err instanceof ApiError) {
+						console.log(`streaming/rest: ${method} ${endpoint}, status=${err.statusCode}`);
 
-						if (timelineStreamType == null) {
-							return connection.send('timeline-connect', {success: false, message: '"type" parameter is require'});
-						}
-
-						if (!timelineStreamTypes.some(i => i == timelineStreamType)) {
-							return connection.send('timeline-connect', {success: false, message: '"type" parameter is invalid'});
-						}
-
-						// タイムラインのストリーム構築
-
-						if (timelineStreams.get(timelineStreamType) != null) {
-							return connection.send('timeline-connect', {success: false, message: `${timelineStreamType} timeline stream is already connected`});
-						}
-
-						let stream;
-						if (timelineStreamType == timelineStreamTypes[0]) {
-							stream = new Stream('general-timeline-status');
-							stream.addSource('general');
-						}
-						else if (timelineStreamType == timelineStreamTypes[1]) {
-							stream = new Stream('home-timeline-status');
-							stream.addSource(meId);
-
-							const followings = await UserFollowing.findTargetsAsync(meId, null, db, config); // TODO: (全て or ユーザーの購読設定によっては選択的に)
-							for (const following of followings || []) {
-								const followingUserId = following.document.target.toString();
-								stream.addSource(followingUserId);
-							}
-						}
-						else {
-							return connection.send('timeline-connect', {success: false, message: `timeline type "${timelineStreamType}" is invalid`});
-						}
-
-						// データをwebsocketに流す
-						stream.on('data', (jsonData) => {
-							connection.send(`stream:${stream.type}`, JSON.parse(jsonData));
+						return connection.send('rest', {
+							success: true,
+							request: data.request,
+							response: { message: err.message },
+							statusCode: err.statusCode
 						});
+					}
+				}
 
-						streams.set(stream.getChannelName(meId), stream);
-						timelineStreams.set(timelineStreamType, stream);
+				console.log(`streaming/rest: ${method} ${endpoint}, status=${apiContext.statusCode}`);
 
-						console.log(`streaming/timeline-connect: ${timelineStreamType}`);
-						connection.send('timeline-connect', {success: true, message: `connected ${timelineStreamType} timeline`});
-					})();
+				let sendData;
+				if (typeof apiContext.data == 'string') {
+					sendData = { message: apiContext.data };
+				}
+				else {
+					sendData = (apiContext.data != null) ? apiContext.data : {};
+				}
+
+				return connection.send('rest', {
+					success: true,
+					request: data.request,
+					response: sendData,
+					statusCode: apiContext.statusCode
+				});
+			})();
+		});
+
+		// クライアント側から通知の購読リクエストを受信したとき
+		connection.on('notification-connect', async data => {
+			try {
+				return error('notification-connect', 'comming soon'); // TODO
+			}
+			catch (err) {
+				console.log(err);
+			}
+		});
+
+		// クライアント側からタイムラインの購読リクエストを受信したとき
+		connection.on('timeline-connect', async (data) => {
+			try {
+				const timelineType = data.type;
+
+				if (timelineType == null) {
+					return error('timeline-connect', '"type" parameter is require');
+				}
+
+				// ストリームの取得または構築
+				let stream, streamId;
+				if (timelineType == 'general') {
+					streamId = generalTimelineStreamId;
+
+					// 既に接続済みなら中断
+					if (connectedStreamIds.indexOf(streamId) != -1) {
+						return error('timeline-connect', `${timelineType} timeline stream is already connected`);
+					}
+
+					stream = generalTimelineStream;
+				}
+				else if (timelineType == 'home') {
+					// memo: フォローユーザーのuser-timeline-statusストリームを統合したhome-timeline-statusストリームを生成
+					streamId = StreamUtil.buildStreamId('home-timeline-status', meId);
+
+					// 既に接続済みなら中断
+					if (connectedStreamIds.indexOf(streamId) != -1) {
+						return error('timeline-connect', `${timelineType} timeline stream is already connected`);
+					}
+
+					// ストリームを生成
+					stream = new Stream();
+					stream.addSource(StreamUtil.buildStreamId('user-timeline-status', meId));
+					const followings = await UserFollowing.findTargetsAsync(meId, null, db, config); // TODO: (全て or ユーザーの購読設定によっては選択的に)
+					for (const following of followings || []) {
+						const followingUserId = following.document.target.toString();
+						stream.addSource(StreamUtil.buildStreamId('user-timeline-status', followingUserId));
+					}
+
+					streams.set(streamId, stream);
+				}
+				else {
+					return error('timeline-connect', `timeline type "${timelineType}" is invalid`);
+				}
+
+				// ストリームからのデータをwebsocketに流す
+				stream.addListener(data => {
+					if (connection.connected) {
+						console.log(`streaming/stream:${stream.type}`);
+						connection.send(`stream:${stream.type}`, data);
+					}
 				});
 
-				connection.on('timeline-disconnect', data => {
-					const timelineStreamType = data.type;
+				// connectedStreamIdsに追加
+				connectedStreamIds.push(streamId);
 
-					if (timelineStreamType == null) {
-						return connection.send('timeline-disconnect', {success: false, message: '"type" parameter is require'});
-					}
-
-					if (!timelineStreamTypes.some(i => i == timelineStreamType)) {
-						return connection.send('timeline-disconnect', {success: false, message: '"type" parameter is invalid'});
-					}
-
-					const stream = timelineStreams.get(timelineStreamType);
-
-					if (stream == null) {
-						return connection.send('timeline-disconnect', {success: false, message: `${timelineStreamType} timeline stream is not connected`});
-					}
-
-					stream.quitAsync();
-					timelineStreams.delete(timelineStreamType);
-					streams.delete(stream.getChannelName(meId));
-					console.log(`streaming/timeline-disconnect: ${timelineStreamType}`);
-					connection.send('timeline-disconnect', {success: true, message: `disconnected ${timelineStreamType} timeline`});
-				});
+				console.log('streaming/timeline-connect:', timelineType);
+				connection.send('timeline-connect', { success: true, message: `connected ${timelineType} timeline` });
 			}
-			catch(err) {
-				console.log('streaming error:');
-				console.dir(err);
-				return connection.close();
+			catch (err) {
+				console.log(err);
 			}
-		})();
+		});
+
+		connection.on('timeline-disconnect', data => {
+			const timelineType = data.type;
+
+			if (timelineType == null) {
+				return error('timeline-disconnect', '"type" parameter is require');
+			}
+
+			// 対象タイムラインのストリームを取得
+			let streamId;
+			if (timelineType == 'general') {
+				streamId = generalTimelineStreamId;
+			}
+			else if (timelineType == 'home') {
+				streamId = StreamUtil.buildStreamId('home-timeline-status', meId);
+			}
+			else {
+				return error('timeline-disconnect', `timeline type "${timelineType}" is invalid`);
+			}
+
+			disconnectStream(streamId);
+			console.log('streaming/timeline-disconnect:', timelineType);
+			connection.send('timeline-disconnect', { success: true, message: `disconnected ${timelineType} timeline` });
+		});
 	});
 };
