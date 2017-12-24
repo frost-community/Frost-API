@@ -129,13 +129,16 @@ class ApiContext {
 				if (required) {
 					throw new ApiError(400, `query parameter '${paramName}' is require`);
 				}
+				else {
+					this.query[paramName] = rule.query[paramName].default;
+				}
 			}
 			else {
 				if (rule.query[paramName].cafy == null) {
 					throw new Error('cafy is required');
 				}
 
-				if (rule.query[paramName].cafy.ok(this.query[paramName])) {
+				if (rule.query[paramName].cafy.nok(this.query[paramName])) {
 					throw new ApiError(400, `query parameter '${paramName}' is invalid`);
 				}
 			}
