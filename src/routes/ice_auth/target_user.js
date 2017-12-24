@@ -7,16 +7,16 @@ exports.post = async (apiContext) => {
 		body: {
 			userId: { cafy: $().string() }
 		},
-		headers: ['X-Ice-Auth-Key'],
+		headers: ['x-ice-auth-key'],
 		permissions: ['iceAuthHost']
 	});
 
 
-	const iceAuthKey = apiContext.headers['X-Ice-Auth-Key'];
+	const iceAuthKey = apiContext.headers['x-ice-auth-key'];
 	const userId = apiContext.body.userId;
 
 	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, apiContext.db, apiContext.config)) {
-		throw new ApiError(400, 'X-Ice-Auth-Key header is invalid');
+		throw new ApiError(400, 'x-ice-auth-key header is invalid');
 	}
 
 	if ((await apiContext.db.users.findByIdAsync(userId)) == null) { //TODO: move to document models

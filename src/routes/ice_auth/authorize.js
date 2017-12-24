@@ -7,14 +7,14 @@ exports.post = async (apiContext) => {
 		body: {
 			verificationCode: { cafy: $().string() }
 		},
-		headers: ['X-Ice-Auth-Key']
+		headers: ['x-ice-auth-key']
 	});
 
-	const iceAuthKey = apiContext.headers['X-Ice-Auth-Key'];
+	const iceAuthKey = apiContext.headers['x-ice-auth-key'];
 	const verificationCode = apiContext.body.verificationCode;
 
 	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, apiContext.db, apiContext.config)) {
-		throw new ApiError(400, 'X-Ice-Auth-Key header is invalid');
+		throw new ApiError(400, 'x-ice-auth-key header is invalid');
 	}
 
 	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, apiContext.db, apiContext.config).authorizeRequestId;
