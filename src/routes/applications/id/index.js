@@ -8,13 +8,22 @@ exports.get = async (apiContext) => {
 		permissions: ['application']
 	});
 
-	let application;
+	let applicationId;
 	try {
-		const applicationId = mongo.ObjectId(apiContext.params.id);
-		application = await Application.findByIdAsync(applicationId, apiContext.db, apiContext.config);
+		applicationId = mongo.ObjectId(apiContext.params.id);
 	}
 	catch (err) {
-		console.log(err);
+		// noop
+	}
+
+	let application;
+	if (applicationId) {
+		try {
+			application = await Application.findByIdAsync(applicationId, apiContext.db, apiContext.config);
+		}
+		catch (err) {
+			console.log(err);
+		}
 	}
 
 	if (application == null) {
