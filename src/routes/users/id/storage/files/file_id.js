@@ -19,7 +19,7 @@ exports.get = async (apiContext) => {
 	try {
 		file = await apiContext.db.storageFiles.findByIdAsync(apiContext.params.file_id);
 	}
-	catch(err) {
+	catch (err) {
 		console.log(err);
 	}
 
@@ -53,7 +53,7 @@ exports.get = async (apiContext) => {
 		throw new ApiError(500, 'unknown access-right level');
 	}
 
-	apiContext.response(200, {storageFile: file.serialize(true)});
+	apiContext.response(200, { storageFile: file.serialize(true) });
 };
 
 // 対象ファイルの削除
@@ -78,19 +78,17 @@ exports.delete = async (apiContext) => {
 	try {
 		file = await apiContext.db.storageFiles.findByIdAsync(apiContext.params.file_id);
 	}
-	catch(err) {
+	catch (err) {
 		console.log(err);
 	}
 
 	if (file == null) {
-		apiContext.response(404);
-		return;
+		throw new ApiError(404);
 	}
 
 	// 所有していないリソース
 	if (file.document.creator.type != 'user' || !file.document.creator.id.equals(user.document._id)) {
-		apiContext.response(403);
-		return;
+		throw new ApiError(403);
 	}
 
 	// TODO

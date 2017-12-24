@@ -1,42 +1,38 @@
-const ApiResult = require('../../helpers/apiResult');
 const Application = require('../../documentModels/application');
+const $ = require('cafy').default;
+const { ApiError } = require('../../helpers/errors');
 
-exports.post = async (request) => {
-	const result = await request.checkRequestAsync({
-		body: [
-			{name: 'applicationKey', type: 'string'}
-		]
+exports.post = async (apiContext) => {
+	await apiContext.check({
+		body: {
+			applicationKey: { cafy: $().string() }
+		}
 	});
 
-	if (result != null) {
-		return result;
+	const applicationKey = apiContext.body.applicationKey;
+
+	if (!await Application.verifyKeyAsync(applicationKey, apiContext.db, apiContext.config)) {
+		throw new ApiError(400, 'applicationKey is invalid');
 	}
 
-	const applicationKey = request.body.applicationKey;
-
-	if (!await Application.verifyKeyAsync(applicationKey, request.db, request.config)) {
-		return new ApiResult(400, 'applicationKey is invalid');
-	}
-
-	const applicationId = Application.splitKey(applicationKey, request.db, request.config).applicationId;
+	const applicationId = Application.splitKey(applicationKey, apiContext.db, apiContext.config).applicationId;
 
 	let authorizeRequest;
-
 	try {
-		authorizeRequest = await request.db.authorizeRequests.createAsync({ // TODO: move to document models
+		authorizeRequest = await apiContext.db.authorizeRequests.createAsync({ // TODO: move to document models
 			applicationId: applicationId
 		});
 	}
-	catch(err) {
+	catch (err) {
 		console.log(err);
 	}
 
 	if (authorizeRequest == null) {
-		return new ApiResult(500, 'failed to create authorizeRequest');
+		throw new ApiError(500, 'failed to create authorizeRequest');
 	}
 
 	const iceAuthKey = await authorizeRequest.generateIceAuthKeyAsync();
 	await authorizeRequest.generateVerificationCodeAsync();
 
-	return new ApiResult(200, {iceAuthKey: iceAuthKey});
+	apiContext.response(200, { iceAuthKey: iceAuthKey });
 };
