@@ -8,10 +8,17 @@ class ApiContext {
 		this.streams = streams;
 		this.db = db;
 		this.config = config;
+		options = options || {};
 		this.params = options.params;
 		this.query = options.query;
 		this.body = options.body;
-		this.headers = options.headers;
+
+		this.headers = {};
+		// ヘッダーのキーを小文字に変換して格納
+		for (const headerKey of Object.keys(options.headers || {})) {
+			this.headers[headerKey.toLowerCase()] = options.headers[headerKey];
+		}
+
 		this.checked = false;
 		this.responsed = false;
 		this.testMode = options.testMode == true;
@@ -32,8 +39,16 @@ class ApiContext {
 			this.headers = {};
 		}
 
-		if (rule.headers.indexOf('X-Api-Version') == -1) {
-			rule.headers.push('X-Api-Version');
+		// ヘッダールールを小文字に変換
+		const headerRules = [];
+		for(const headerRule of rule.headers) {
+			headerRules.push(headerRule.toLowerCase());
+		}
+		rule.headers = headerRules;
+
+		// apiバージョンのヘッダールールがなければ追加
+		if (rule.headers.indexOf('x-api-version') == -1) {
+			rule.headers.push('x-api-version');
 		}
 
 		for (const header of rule.headers) {
@@ -41,35 +56,34 @@ class ApiContext {
 				throw new Error('extentions.headers elements are missing');
 			}
 
-			if (Object.keys(this.headers).find(i => i.toLowerCase() == header.toLowerCase()) == null) {
+			if (this.headers[header] == null) {
 				throw new ApiError(400, `${header} header is empty`);
 			}
 		}
 
-		// keys
-
+		// 必要であればApplicationKey、AccessKeyを検証
 		if (rule.permissions == null) {
 			rule.permissions = [];
 		}
 
 		if ((!this.testMode) && rule.permissions.length !== 0) {
-			const applicationKey = this.headers['X-Application-Key'];
-			const accessKey = this.headers['X-Access-Key'];
+			const applicationKey = this.headers['x-application-key'];
+			const accessKey = this.headers['x-access-key'];
 
 			if (applicationKey == null) {
-				throw new ApiError(400, 'X-Application-Key header is empty');
+				throw new ApiError(400, 'x-application-key header is empty');
 			}
 
 			if (accessKey == null) {
-				throw new ApiError(400, 'X-Access-Key header is empty');
+				throw new ApiError(400, 'x-access-key header is empty');
 			}
 
 			if (!await Application.verifyKeyAsync(applicationKey, this.db, this.config)) {
-				throw new ApiError(400, 'X-Application-Key header is invalid');
+				throw new ApiError(400, 'x-application-key header is invalid');
 			}
 
 			if (!await ApplicationAccess.verifyKeyAsync(accessKey, this.db, this.config)) {
-				throw new ApiError(400, 'X-Access-Key header is invalid');
+				throw new ApiError(400, 'x-access-key header is invalid');
 			}
 
 			this.applicationKey = applicationKey;

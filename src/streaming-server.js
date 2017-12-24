@@ -152,8 +152,8 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				apiContext.user = connection.user;
 				apiContext.application = connection.application;
 				const requestQuery = request.resourceURL.query;
-				apiContext.headers['X-Application-Key'] = requestQuery.application_key;
-				apiContext.headers['X-Access-Key'] = requestQuery.access_key;
+				apiContext.headers['x-application-key'] = requestQuery.application_key;
+				apiContext.headers['x-access-key'] = requestQuery.access_key;
 
 				try {
 					// 対象のRouteモジュールを実行
