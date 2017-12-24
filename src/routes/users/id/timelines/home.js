@@ -31,7 +31,7 @@ exports.get = async (apiContext) => {
 
 		return await timelineAsync('status', ids, limit, apiContext.db, apiContext.config);
 	}
-	catch(err) {
+	catch (err) {
 		console.log(err);
 	}
 };

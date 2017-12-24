@@ -20,7 +20,7 @@ class AuthorizeRequest {
 		for (let i = 0; i < 6; i++) {
 			verificationCode += String(randomRange(0, 9));
 		}
-		await this.db.authorizeRequests.updateAsync({_id: this.document._id}, {verificationCode: verificationCode});
+		await this.db.authorizeRequests.updateAsync({ _id: this.document._id }, { verificationCode });
 		await this.fetchAsync();
 
 		return this.getVerificationCode();
@@ -36,7 +36,7 @@ class AuthorizeRequest {
 
 	async generateIceAuthKeyAsync() {
 		const keyCode = randomRange(1, 99999);
-		await this.db.authorizeRequests.updateByIdAsync(this.document._id, {keyCode: keyCode});
+		await this.db.authorizeRequests.updateByIdAsync(this.document._id, { keyCode });
 		await this.fetchAsync();
 
 		return this.getIceAuthKey();
@@ -57,7 +57,7 @@ class AuthorizeRequest {
 			throw new Error('missing arguments');
 		}
 
-		await this.db.authorizeRequests.updateByIdAsync(this.document._id, {targetUserId: mongo.ObjectId(userId)});
+		await this.db.authorizeRequests.updateByIdAsync(this.document._id, { targetUserId: mongo.ObjectId(userId) });
 		await this.fetchAsync();
 	}
 
@@ -84,7 +84,7 @@ class AuthorizeRequest {
 	}
 
 	async removeAsync() {
-		await this.db.authorizeRequests.removeAsync({_id: this.document._id});
+		await this.db.authorizeRequests.removeAsync({ _id: this.document._id });
 		this.document = null;
 	}
 
@@ -120,7 +120,7 @@ class AuthorizeRequest {
 			throw new Error('falid to split key');
 		}
 
-		return {authorizeRequestId: mongo.ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
+		return { authorizeRequestId: mongo.ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3]) };
 	}
 
 	static async verifyKeyAsync(key, db, config) {

@@ -80,9 +80,9 @@ exports.put = async (apiContext) => {
 			source: sourceUserId,
 			target: targetUserId,
 			message: message
-		}, {renewal: true});
+		}, { renewal: true });
 	}
-	catch(err) {
+	catch (err) {
 		console.log(err);
 	}
 
@@ -94,7 +94,7 @@ exports.put = async (apiContext) => {
 	try {
 		userFollowing = await UserFollowing.findBySrcDestIdAsync(sourceUserId, targetUserId, apiContext.db, apiContext.config);
 	}
-	catch(err) {
+	catch (err) {
 		console.log(err);
 	}
 

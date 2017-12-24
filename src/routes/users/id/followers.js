@@ -27,5 +27,5 @@ exports.get = async (apiContext) => {
 	for (const i of userFollowings) {
 		serialized.push(i.document.source.toString());
 	}
-	apiContext.response(200, {userfollowings: serialized});
+	apiContext.response(200, { userfollowings: serialized });
 };

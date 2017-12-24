@@ -14,5 +14,5 @@ exports.get = async (apiContext) => {
 		return;
 	}
 
-	apiContext.response(200, {user: user.serialize()});
+	apiContext.response(200, { user: user.serialize() });
 };

@@ -22,7 +22,7 @@ class DbProvider {
 		}
 
 		const document = (await this.connection.collection(collectionName).insert(data)).ops[0];
-		return await this.findAsync(collectionName, {_id: document._id});
+		return await this.findAsync(collectionName, { _id: document._id });
 	}
 
 	/**
@@ -69,7 +69,7 @@ class DbProvider {
 	}
 
 	createSortOptionNatural(ascending) {
-		return {$natural: (ascending ? 1 : -1)};
+		return { $natural: (ascending ? 1 : -1) };
 	}
 
 	/**
@@ -88,7 +88,7 @@ class DbProvider {
 
 		options = options || {};
 
-		return (await this.connection.collection(collectionName).update(query, options.renewal ? data : {$set: data}, options)).result;
+		return (await this.connection.collection(collectionName).update(query, options.renewal ? data : { $set: data }, options)).result;
 	}
 
 	/**

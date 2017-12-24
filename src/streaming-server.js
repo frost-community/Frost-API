@@ -187,7 +187,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 
 				return connection.send('rest', { success: true, statusCode: apiContext.statusCode, response });
 			}
-			catch(err) {
+			catch (err) {
 				console.log(err);
 				error('rest', 'server error');
 			}
@@ -293,7 +293,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				console.log('streaming/timeline-disconnect:', timelineType);
 				connection.send('timeline-disconnect', { success: true, message: `disconnected ${timelineType} timeline` });
 			}
-			catch(err) {
+			catch (err) {
 				console.log(err);
 				error('timeline-disconnect', 'server error');
 			}

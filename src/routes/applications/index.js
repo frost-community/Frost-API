@@ -29,7 +29,7 @@ module.exports.post = async (apiContext) => {
 	try {
 		application = await apiContext.db.applications.createAsync(name, apiContext.user, description, permissions);
 	}
-	catch(err) {
+	catch (err) {
 		console.log(err);
 	}
 
@@ -37,7 +37,7 @@ module.exports.post = async (apiContext) => {
 		throw new ApiError(500, 'failed to create application');
 	}
 
-	apiContext.response(200, {application: application.serialize()});
+	apiContext.response(200, { application: application.serialize() });
 };
 
 module.exports.get = async (apiContext) => {
@@ -49,7 +49,7 @@ module.exports.get = async (apiContext) => {
 	try {
 		applications = await Application.findArrayByCreatorIdAsync(apiContext.user.document._id, apiContext.db, apiContext.config);
 	}
-	catch(err) {
+	catch (err) {
 		console.log(err);
 		applications = [];
 	}
@@ -59,5 +59,5 @@ module.exports.get = async (apiContext) => {
 		return;
 	}
 
-	apiContext.response(200, {applications: applications.map(i => i.serialize())});
+	apiContext.response(200, { applications: applications.map(i => i.serialize()) });
 };

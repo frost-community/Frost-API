@@ -48,12 +48,12 @@ class CollectionBase {
 				parsedId = mongo.ObjectId(id);
 			}
 		}
-		catch(err) {
+		catch (err) {
 			console.log(err);
 			throw new Error('object id parse error');
 		}
 
-		return await this.findAsync({_id: parsedId});
+		return await this.findAsync({ _id: parsedId });
 	}
 
 	async findArrayAsync(query, sortOption, limit) {
@@ -102,12 +102,12 @@ class CollectionBase {
 				parsedId = mongo.ObjectId(id);
 			}
 		}
-		catch(err) {
+		catch (err) {
 			console.log(err);
 			throw new Error('object id parse error');
 		}
 
-		return this.updateAsync({_id: parsedId}, data, options);
+		return this.updateAsync({ _id: parsedId }, data, options);
 	}
 
 	upsertByIdAsync(id, data, options) {
@@ -141,12 +141,12 @@ class CollectionBase {
 				parsedId = mongo.ObjectId(id);
 			}
 		}
-		catch(err) {
+		catch (err) {
 			console.log(err);
 			throw new Error('object id parse error');
 		}
 
-		return this.removeAsync({_id: parsedId});
+		return this.removeAsync({ _id: parsedId });
 	}
 }
 module.exports = CollectionBase;

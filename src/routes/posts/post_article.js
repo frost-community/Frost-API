@@ -31,7 +31,7 @@ exports.post = async (apiContext) => {
 			text: text
 		});
 	}
-	catch(err) {
+	catch (err) {
 		console.log(err);
 	}
 
@@ -39,5 +39,5 @@ exports.post = async (apiContext) => {
 		throw new ApiError(500, 'failed to create postArticle');
 	}
 
-	apiContext.response(200, {postArticle: postArticle.serialize()});
+	apiContext.response(200, { postArticle: postArticle.serialize() });
 };

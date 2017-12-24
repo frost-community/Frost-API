@@ -47,7 +47,7 @@ class DirectoryRouter {
 					try {
 						routeFuncAsync = require(route.getModulePath())[route.method];
 					}
-					catch(err) {
+					catch (err) {
 						console.log('route error:', err);
 					}
 
@@ -66,12 +66,12 @@ class DirectoryRouter {
 					}
 					else if (err instanceof Error) {
 						console.log('Internal Error:', err);
-						apiContext.response(500, {message: 'internal error', details: err});
+						apiContext.response(500, { message: 'internal error', details: err });
 						response.apiSend(apiContext);
 					}
 					else {
 						console.log('Internal Error(unknown type):', err);
-						apiContext.response(500, {message: 'internal error(unknown type)', details: err});
+						apiContext.response(500, { message: 'internal error(unknown type)', details: err });
 						response.apiSend(apiContext);
 					}
 				}
@@ -97,7 +97,7 @@ class DirectoryRouter {
 			throw new Error('invalid type');
 		}
 
-		return this.routes.find(i => i.method === method.toLowerCase() && pathToRegexp(i.path, []).test(endpoint) );
+		return this.routes.find(i => i.method === method.toLowerCase() && pathToRegexp(i.path, []).test(endpoint));
 	}
 }
 module.exports = DirectoryRouter;

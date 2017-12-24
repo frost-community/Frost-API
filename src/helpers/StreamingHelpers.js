@@ -2,7 +2,7 @@ const Application = require('../documentModels/application');
 const ApplicationAccess = require('../documentModels/applicationAccess');
 
 class StreamingHelpers {
-	static async checkRequest (request, db, config) {
+	static async checkRequest(request, db, config) {
 		const query = request.resourceURL.query;
 		const applicationKey = query.application_key;
 		const accessKey = query.access_key;

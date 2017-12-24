@@ -90,7 +90,7 @@ module.exports = async () => {
 
 		require('./streaming-server')(http, directoryRouter, streams, db, config);
 	}
-	catch(err) {
+	catch (err) {
 		console.log('Unprocessed Server Error:', err);
 	}
 };

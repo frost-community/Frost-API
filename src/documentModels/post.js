@@ -55,7 +55,7 @@ class Post {
 			throw new Error('missing arguments');
 		}
 
-		return db.posts.findArrayAsync(query, {$natural: (ascending ? 1 : -1)}, limit);
+		return db.posts.findArrayAsync(query, { $natural: (ascending ? 1 : -1) }, limit);
 	}
 }
 module.exports = Post;

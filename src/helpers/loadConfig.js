@@ -9,11 +9,11 @@ module.exports = () => {
 	try {
 		return require(`${process.cwd()}/config.json`);
 	}
-	catch(err) {
+	catch (err) {
 		try {
 			return require(`${process.cwd()}/../config.json`);
 		}
-		catch(err2) {
+		catch (err2) {
 			return null;
 		}
 	}

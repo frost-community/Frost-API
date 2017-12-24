@@ -24,7 +24,7 @@ exports.get = async (apiContext) => {
 
 	const key = application.getApplicationKey();
 
-	apiContext.response(200, {applicationKey: key});
+	apiContext.response(200, { applicationKey: key });
 };
 
 exports.post = async (apiContext) => {
@@ -46,5 +46,5 @@ exports.post = async (apiContext) => {
 
 	const key = await application.generateApplicationKeyAsync();
 
-	apiContext.response(200, {applicationKey: key});
+	apiContext.response(200, { applicationKey: key });
 };

@@ -26,7 +26,7 @@ exports.post = async (apiContext) => {
 			text: text
 		});
 	}
-	catch(err) {
+	catch (err) {
 		console.log(err);
 	}
 
@@ -41,5 +41,5 @@ exports.post = async (apiContext) => {
 	publisher.publish('general-timeline-status', 'general', serializedPostStatus);
 	await publisher.quitAsync();
 
-	apiContext.response(200, {postStatus: serializedPostStatus});
+	apiContext.response(200, { postStatus: serializedPostStatus });
 };

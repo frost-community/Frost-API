@@ -26,7 +26,7 @@ class Application {
 
 	async generateApplicationKeyAsync() {
 		const keyCode = randomRange(1, 99999);
-		await this.db.applications.updateByIdAsync(this.document._id.toString(), {keyCode: keyCode});
+		await this.db.applications.updateByIdAsync(this.document._id.toString(), { keyCode });
 		await this.fetchAsync();
 
 		return this.getApplicationKey();
@@ -82,7 +82,7 @@ class Application {
 			throw new Error('missing arguments');
 		}
 
-		return db.applications.findAsync({name: name});
+		return db.applications.findAsync({ name });
 	}
 
 	static async findArrayByCreatorIdAsync(creatorId, db, config) {
@@ -90,7 +90,7 @@ class Application {
 			throw new Error('missing arguments');
 		}
 
-		return db.applications.findArrayAsync({creatorId: creatorId});
+		return db.applications.findArrayAsync({ creatorId });
 	}
 
 	static checkFormatPermissions(permissions, db, config) {
@@ -130,7 +130,7 @@ class Application {
 			throw new Error('falid to split key');
 		}
 
-		return {applicationId: mongo.ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
+		return { applicationId: mongo.ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3]) };
 	}
 
 	static async verifyKeyAsync(key, db, config) {
@@ -147,7 +147,7 @@ class Application {
 			return false;
 		}
 
-		const application = await db.applications.findAsync({_id: elements.applicationId, keyCode: elements.keyCode});
+		const application = await db.applications.findAsync({ _id: elements.applicationId, keyCode: elements.keyCode });
 
 		if (application == null) {
 			return false;

@@ -13,7 +13,7 @@ exports.get = async (apiContext) => {
 		const applicationId = mongo.ObjectId(apiContext.params.id);
 		application = await Application.findByIdAsync(applicationId, apiContext.db, apiContext.config);
 	}
-	catch(err) {
+	catch (err) {
 		console.log(err);
 	}
 
@@ -27,5 +27,5 @@ exports.get = async (apiContext) => {
 		throw new ApiError(403, 'this operation is not permitted');
 	}
 
-	apiContext.response(200, {application: application.serialize()});
+	apiContext.response(200, { application: application.serialize() });
 };

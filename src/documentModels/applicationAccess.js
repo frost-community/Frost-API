@@ -21,7 +21,7 @@ class ApplicationAccess {
 		do {
 			tryCount++;
 			keyCode = randomRange(1, 99999);
-			isExist = await this.db.applicationAccesses.findAsync({userId: this.document.userId, keyCode: keyCode}) != null;
+			isExist = await this.db.applicationAccesses.findAsync({ userId: this.document.userId, keyCode }) != null;
 		}
 		while (isExist && tryCount < 4);
 
@@ -29,7 +29,7 @@ class ApplicationAccess {
 			throw new Error('the number of trials for keyCode generation has reached its upper limit');
 		}
 
-		await this.db.applicationAccesses.updateByIdAsync(this.document._id, {keyCode: keyCode});
+		await this.db.applicationAccesses.updateByIdAsync(this.document._id, { keyCode });
 		await this.fetchAsync();
 
 		return this.getAccessKey();
@@ -99,7 +99,7 @@ class ApplicationAccess {
 			throw new Error('falid to split key');
 		}
 
-		return {userId: mongo.ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
+		return { userId: mongo.ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3]) };
 	}
 
 	static async verifyKeyAsync(key, db, config) {
@@ -116,7 +116,7 @@ class ApplicationAccess {
 			return false;
 		}
 
-		const applicationAccess = await db.applicationAccesses.findAsync({userId: elements.userId, keyCode: elements.keyCode});
+		const applicationAccess = await db.applicationAccesses.findAsync({ userId: elements.userId, keyCode: elements.keyCode });
 
 		if (applicationAccess == null) {
 			return false;

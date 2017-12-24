@@ -45,5 +45,5 @@ exports.post = async (apiContext) => {
 		throw new ApiError(500, 'failed to create account');
 	}
 
-	apiContext.response(200, {user: user.serialize()});
+	apiContext.response(200, { user: user.serialize() });
 };

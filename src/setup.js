@@ -95,7 +95,7 @@ module.exports = async () => {
 			}
 		}
 	}
-	catch(err) {
+	catch (err) {
 		console.log(`Unprocessed Setup Error: ${err}`);
 	}
 

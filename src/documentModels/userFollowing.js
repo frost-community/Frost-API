@@ -35,7 +35,7 @@ class UserFollowing {
 	}
 
 	async removeAsync() {
-		await this.db.userFollowings.removeAsync({_id: this.document._id});
+		await this.db.userFollowings.removeAsync({ _id: this.document._id });
 		this.document = null;
 	}
 
@@ -46,7 +46,7 @@ class UserFollowing {
 			throw new Error('missing arguments');
 		}
 
-		return db.userFollowings.findAsync({source: sourceId, target: targetId});
+		return db.userFollowings.findAsync({ source: sourceId, target: targetId });
 	}
 
 	static async findTargetsAsync(sourceId, limit, db, config) {
@@ -54,7 +54,7 @@ class UserFollowing {
 			throw new Error('missing arguments');
 		}
 
-		return db.userFollowings.findArrayAsync({source: sourceId}, db.dbProvider.createSortOptionNatural(false), limit);
+		return db.userFollowings.findArrayAsync({ source: sourceId }, db.dbProvider.createSortOptionNatural(false), limit);
 	}
 
 	static async findSourcesAsync(targetId, limit, db, config) {
@@ -62,7 +62,7 @@ class UserFollowing {
 			throw new Error('missing arguments');
 		}
 
-		return db.userFollowings.findArrayAsync({target: targetId}, db.dbProvider.createSortOptionNatural(false), limit);
+		return db.userFollowings.findArrayAsync({ target: targetId }, db.dbProvider.createSortOptionNatural(false), limit);
 	}
 }
 module.exports = UserFollowing;
