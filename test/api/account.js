@@ -6,20 +6,20 @@ const ApiContext = require('../../built/helpers/ApiContext');
 const route = require('../../built/routes/account');
 
 describe('Account API', () => {
-	let db;
-	before(async () => {
-		config.api.database = config.api.testDatabase;
-
-		const dbProvider = await DbProvider.connectApidbAsync(config);
-		db = new Db(config, dbProvider);
-	});
-
 	describe('/account', () => {
-		describe('[POST]', () => {
-			afterEach(async () => {
-				await db.users.removeAsync({});
-			});
+		let db;
+		before(async () => {
+			config.api.database = config.api.testDatabase;
 
+			const dbProvider = await DbProvider.connectApidbAsync(config);
+			db = new Db(config, dbProvider);
+		});
+
+		afterEach(async () => {
+			await db.users.removeAsync({});
+		});
+
+		describe('[POST]', () => {
 			it('正しくリクエストされた場合は成功する', async () => {
 				const context = new ApiContext(null, null, db, config, {
 					body: {
