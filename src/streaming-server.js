@@ -119,7 +119,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 					return error('rest', '"endpoint" parameter is invalid');
 				}
 
-				if (methods.find(i => i.toLowerCase() === method.toLowerCase()) == null) {
+				if (methods.indexOf(method.toLowerCase()) == -1) {
 					return error('rest', '"method" parameter is invalid');
 				}
 
@@ -290,4 +290,6 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 			connection.send('timeline-disconnect', { success: true, message: `disconnected ${timelineType} timeline` });
 		});
 	});
+
+	console.log('streaming server is ready.');
 };

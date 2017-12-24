@@ -26,7 +26,7 @@ class StreamPublisher {
 	}
 	publish(type, publisherId, data) {
 		let strData = (data instanceof String) ? data : JSON.stringify(data);
-		this.redisClient.publish(StreamUtil.getChannelName(type, publisherId), strData);
+		this.redisClient.publish(StreamUtil.buildStreamId(type, publisherId), strData);
 	}
 	quitAsync() {
 		return new Promise((resolve, reject) => {
@@ -69,7 +69,7 @@ class Stream {
 			throw new Error('already added');
 		}
 		this.sources.push(streamId);
-		this.redisClient.subscribe(StreamUtil.getChannelName(streamType, streamPublisher));
+		this.redisClient.subscribe(StreamUtil.buildStreamId(streamType, streamPublisher));
 	}
 	removeSource(streamId) {
 		const index = this.sources.indexOf(streamId);
@@ -78,7 +78,7 @@ class Stream {
 		}
 		this.sources.splice(index, 1);
 		const { streamType, streamPublisher } = StreamUtil.parseStreamId(streamId);
-		this.redisClient.unsubscribe(StreamUtil.getChannelName(streamType, streamPublisher));
+		this.redisClient.unsubscribe(StreamUtil.buildStreamId(streamType, streamPublisher));
 	}
 	addListener(listener) {
 		this.emitter.addListener('data', listener);

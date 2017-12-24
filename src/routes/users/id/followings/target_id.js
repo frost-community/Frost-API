@@ -102,8 +102,8 @@ exports.put = async (apiContext) => {
 		throw new ApiError(500, 'failed to fetch userFollowing');
 	}
 
-	// 対象ユーザーのstatusチャンネルを購読
-	const stream = apiContext.streams.get(StreamUtil.getChannelName('home-timeline-status', sourceUserId.toString()));
+	// 対象ユーザーのストリームを購読
+	const stream = apiContext.streams.get(StreamUtil.buildStreamId('user-timeline-status', sourceUserId.toString()));
 	if (stream != null) {
 		stream.addSource(targetUserId.toString()); // この操作は冪等
 	}
@@ -138,8 +138,8 @@ exports.delete = async (apiContext) => {
 	if (userFollowing != null) {
 		await userFollowing.removeAsync();
 
-		// 購読解除
-		const stream = apiContext.streams.get(StreamUtil.getChannelName('home-timeline-status', soruceUser.document._id.toString()));
+		// 対象ユーザーのストリームを購読解除
+		const stream = apiContext.streams.get(StreamUtil.buildStreamId('user-timeline-status', soruceUser.document._id.toString()));
 		if (stream != null) {
 			stream.removeSource(targetUser.document._id.toString());
 		}
