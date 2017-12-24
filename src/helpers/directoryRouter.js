@@ -7,8 +7,6 @@ class DirectoryRouter {
 	 * このモジュールを初期化します
 	 *
 	 * @param  {e} app 対象のサーバアプリケーション
-	 * @param  {Object} db 対象のDB
-	 * @param  {[]} config 対象のconfig
 	 */
 	constructor(app) {
 		if (app == null) {

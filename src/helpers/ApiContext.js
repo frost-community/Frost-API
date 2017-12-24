@@ -112,7 +112,7 @@ class ApiContext {
 				}
 
 				if (rule.body[paramName].cafy.nok(this.body[paramName])) {
-					throw new ApiError(400, `type of body parameter '${paramName}' is invalid`);
+					throw new ApiError(400, `body parameter '${paramName}' is invalid`);
 				}
 			}
 		}
@@ -136,7 +136,7 @@ class ApiContext {
 				}
 
 				if (rule.query[paramName].cafy.ok(this.query[paramName])) {
-					throw new ApiError(400, `type of query parameter '${paramName}' is invalid`);
+					throw new ApiError(400, `query parameter '${paramName}' is invalid`);
 				}
 			}
 		}
