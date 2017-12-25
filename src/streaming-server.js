@@ -24,7 +24,8 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 
 	// generate stream for general timeline (global)
 	const generalTimelineStream = new Stream();
-	const generalTimelineStreamId = StreamUtil.buildStreamId('general-timeline-status', 'general');
+	const generalTimelineStreamType = 'general-timeline-status';
+	const generalTimelineStreamId = StreamUtil.buildStreamId(generalTimelineStreamType, 'general');
 	generalTimelineStream.addSource(generalTimelineStreamId);
 	streams.set(generalTimelineStreamId, generalTimelineStream);
 
@@ -53,17 +54,26 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 
 		// 接続されているストリームIDの一覧
 		const connectedStreamIds = [];
+		const connectedStreamHandlers = new Map();
 
 		// ストリームの購読解除メソッド
 		const disconnectStream = (streamId) => {
-			const { streamType } = StreamUtil.parseStreamId(streamId);
-			const index = connectedStreamIds.indexOf(streamId);
-			connectedStreamIds.splice(index, 1);
-			if (streamType == 'general-timeline-status') {
-				return;
-			}
+			const removeIndex = connectedStreamIds.indexOf(streamId);
+			connectedStreamIds.splice(removeIndex, 1);
+
 			let stream = streams.get(streamId);
 			if (stream != null) {
+				const streamHandler = connectedStreamHandlers.get(streamId);
+				if (streamHandler != null) {
+					stream.removeListener(streamHandler);
+					connectedStreamHandlers.delete(streamId);
+				}
+
+				const { streamType } = StreamUtil.parseStreamId(streamId);
+				if (streamType == 'general-timeline-status') {
+					return;
+				}
+
 				stream.quitAsync();
 				streams.delete(streamId);
 			}
@@ -106,8 +116,6 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 					return error('rest', '"method" parameter is invalid');
 				}
 
-				console.log('before:', endpoint);
-
 				// endpointを整形
 				if (endpoint == '') {
 					endpoint = '/';
@@ -115,8 +123,6 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				else if (endpoint != '/' && endpoint[endpoint.length - 1] == '/') {
 					endpoint = endpoint.substr(0, endpoint.length - 1);
 				}
-
-				console.log('after:', endpoint);
 
 				// 対象Routeのモジュールを取得
 				let routeFuncAsync;
@@ -193,8 +199,9 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				}
 
 				// ストリームの取得または構築
-				let stream, streamId;
+				let stream, streamType, streamId;
 				if (timelineType == 'general') {
+					streamType = generalTimelineStreamType;
 					streamId = generalTimelineStreamId;
 
 					// 既に接続済みなら中断
@@ -206,7 +213,8 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				}
 				else if (timelineType == 'home') {
 					// memo: フォローユーザーのuser-timeline-statusストリームを統合したhome-timeline-statusストリームを生成
-					streamId = StreamUtil.buildStreamId('home-timeline-status', meId);
+					streamType = 'home-timeline-status';
+					streamId = StreamUtil.buildStreamId(streamType, meId);
 
 					// 既に接続済みなら中断
 					if (connectedStreamIds.indexOf(streamId) != -1) {
@@ -229,12 +237,14 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				}
 
 				// ストリームからのデータをwebsocketに流す
-				stream.addListener(data => {
+				const streamHandler = data => {
 					if (connection.connected) {
-						console.log(`streaming/stream:${stream.type}`);
-						connection.send(`stream:${stream.type}`, data);
+						console.log(`streaming/stream:${streamType}`, { streamId, resource: data });
+						connection.send(`stream:${streamType}`, { streamId, resource: data });
 					}
-				});
+				};
+				stream.addListener(streamHandler);
+				connectedStreamHandlers.set(streamId, streamHandler);
 
 				// connectedStreamIdsに追加
 				connectedStreamIds.push(streamId);
@@ -269,7 +279,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				}
 
 				disconnectStream(streamId);
-				console.log('streaming/timeline-disconnect:', timelineType);
+				console.log('streaming/timeline-disconnect:', streamId);
 				connection.send('timeline-disconnect', { success: true, message: `disconnected ${timelineType} timeline` });
 			}
 			catch (err) {

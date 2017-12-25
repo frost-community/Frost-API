@@ -23,7 +23,7 @@ exports.get = async (apiContext) => {
 		// limit
 		let limit = apiContext.query.limit;
 
-		return await timelineAsync('status', [user.document._id], limit, apiContext.db, apiContext.config);
+		return await timelineAsync(apiContext, 'status', [user.document._id], limit);
 	}
 	catch (err) {
 		console.log(err);

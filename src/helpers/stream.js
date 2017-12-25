@@ -54,7 +54,7 @@ class Stream {
 		this.emitter = new EventEmitter();
 		this.redisClient = redisClient || redis.createClient(6379, 'localhost');
 		this.redisClient.on('message', (channel, message) => {
-			this.emitter.emit('data', data => (data instanceof String) ? data : JSON.parse(message));
+			this.emitter.emit('data', (message instanceof String) ? message : JSON.parse(message));
 		});
 		this.redisClient.on('error', (err) => {
 			throw new Error(`${this.type} stream: ${String(err)}`);

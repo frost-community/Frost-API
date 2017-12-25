@@ -29,7 +29,7 @@ exports.get = async (apiContext) => {
 		const ids = (followings != null) ? followings.map(i => i.document.target) : [];
 		ids.push(user.document._id); // ソースユーザーを追加
 
-		return await timelineAsync('status', ids, limit, apiContext.db, apiContext.config);
+		return await timelineAsync(apiContext, 'status', ids, limit);
 	}
 	catch (err) {
 		console.log(err);
