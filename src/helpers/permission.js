@@ -9,6 +9,8 @@ const permissionTypes = [
 	'userWrite',          // ユーザーのフォロー等のアクション
 	'postRead',           // 投稿やリアクションの取得
 	'postWrite',          // 投稿やリアクションの作成・削除等のアクション
+	'storageRead',        // ストレージへの読み取り操作
+	'storageWrite',       // ストレージへの書き込み操作
 ];
 
 module.exports = {
