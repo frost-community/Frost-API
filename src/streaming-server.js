@@ -239,7 +239,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				// ストリームからのデータをwebsocketに流す
 				const streamHandler = data => {
 					if (connection.connected) {
-						console.log(`streaming/stream:${streamType}`, { streamId, resource: data });
+						console.log(`streaming/stream:${streamType}`);
 						connection.send(`stream:${streamType}`, { streamId, resource: data });
 					}
 				};
