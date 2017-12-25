@@ -1,15 +1,15 @@
 const assert = require('assert');
-const config = require('../../built/helpers/loadConfig')();
-const DbProvider = require('../../built/helpers/dbProvider');
-const Db = require('../../built/helpers/db');
+const config = require('../../src/helpers/loadConfig')();
+const DbProvider = require('../../src/helpers/dbProvider');
+const Db = require('../../src/helpers/db');
 const path = require('path');
 const validator = require('validator');
 const AsyncLock = require('async-lock');
-const { getFileDataAsync } = require('../../built/helpers/fileSystemHelpers');
-const ApiContext = require('../../built/helpers/ApiContext');
-const route = require('../../built/routes/users/id/storage');
-const routeFiles = require('../../built/routes/users/id/storage/files');
-const routeFileId = require('../../built/routes/users/id/storage/files/file_id');
+const { getFileDataAsync } = require('../../src/helpers/fileSystemHelpers');
+const ApiContext = require('../../src/helpers/ApiContext');
+const route = require('../../src/routes/users/id/storage');
+const routeFiles = require('../../src/routes/users/id/storage/files');
+const routeFileId = require('../../src/routes/users/id/storage/files/file_id');
 
 describe('User Storage API', () => {
 	describe('/users/:id/storage', () => {

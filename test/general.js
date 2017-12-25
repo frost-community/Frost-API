@@ -1,10 +1,10 @@
 const assert = require('assert');
-const config = require('../built/helpers/loadConfig')();
-const Route = require('../built/helpers/route');
+const config = require('../src/helpers/loadConfig')();
+const Route = require('../src/helpers/route');
 
 describe('General Tests', () => {
 	describe('routes', () => {
-		const routeList = require('../built/routeList');
+		const routeList = require('../src/routeList');
 
 		it('存在するHTTPメソッドを利用している', () => {
 			for (const route of routeList) {
@@ -36,7 +36,7 @@ describe('General Tests', () => {
 	});
 
 	describe('randomRange', () => {
-		const random = require('../built/helpers/randomRange');
+		const random = require('../src/helpers/randomRange');
 
 		it('範囲を指定して生成した乱数の値はその範囲内にある', () => {
 			for (let i = 0; i < 1000; i++) {
@@ -47,7 +47,7 @@ describe('General Tests', () => {
 	});
 
 	describe('database', () => {
-		const DbProvider = require('../built/helpers/dbProvider');
+		const DbProvider = require('../src/helpers/dbProvider');
 		let testDb;
 
 		it('DBに接続してそのインスタンスが取得できる', async () => {

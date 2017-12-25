@@ -1,15 +1,15 @@
 const assert = require('assert');
-const config = require('../../built/helpers/loadConfig')();
-const DbProvider = require('../../built/helpers/dbProvider');
-const Db = require('../../built/helpers/db');
-const AuthorizeRequest = require('../../built/documentModels/authorizeRequest');
-const ApplicationAccess = require('../../built/documentModels/applicationAccess');
-const ApiContext = require('../../built/helpers/ApiContext');
-const route = require('../../built/routes/ice_auth');
-const routeVerificationCode = require('../../built/routes/ice_auth/verification_code');
-const routeTargetUser = require('../../built/routes/ice_auth/target_user');
-const routeAuthorize = require('../../built/routes/ice_auth/authorize');
-const routeAuthorizeBasic = require('../../built/routes/ice_auth/authorize_basic');
+const config = require('../../src/helpers/loadConfig')();
+const DbProvider = require('../../src/helpers/dbProvider');
+const Db = require('../../src/helpers/db');
+const AuthorizeRequest = require('../../src/documentModels/authorizeRequest');
+const ApplicationAccess = require('../../src/documentModels/applicationAccess');
+const ApiContext = require('../../src/helpers/ApiContext');
+const route = require('../../src/routes/ice_auth');
+const routeVerificationCode = require('../../src/routes/ice_auth/verification_code');
+const routeTargetUser = require('../../src/routes/ice_auth/target_user');
+const routeAuthorize = require('../../src/routes/ice_auth/authorize');
+const routeAuthorizeBasic = require('../../src/routes/ice_auth/authorize_basic');
 
 describe('IceAuth API', () => {
 	describe('/ice_auth', () => {

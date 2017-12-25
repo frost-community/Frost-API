@@ -1,9 +1,9 @@
 const assert = require('assert');
-const config = require('../../built/helpers/loadConfig')();
-const DbProvider = require('../../built/helpers/dbProvider');
-const Db = require('../../built/helpers/db');
-const ApiContext = require('../../built/helpers/ApiContext');
-const route = require('../../built/routes/account');
+const config = require('../../src/helpers/loadConfig')();
+const DbProvider = require('../../src/helpers/dbProvider');
+const Db = require('../../src/helpers/db');
+const ApiContext = require('../../src/helpers/ApiContext');
+const route = require('../../src/routes/account');
 
 describe('Account API', () => {
 	describe('/account', () => {

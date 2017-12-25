@@ -3,18 +3,14 @@
   "version": "0.1.0",
   "description": "Frost API Server",
   "private": true,
-  "main": "./built/index.js",
+  "main": "./src/index.js",
   "engines": {
     "node": ">= 7.0.0"
   },
   "scripts": {
     "start": "node --use_strict ./",
     "setup": "node --use_strict ./ --setup",
-    "build:copy": "cpx \"./src/**/*.js\" built",
-    "build": "npm run build:copy",
-    "clean": "rimraf ./built",
-    "rebuild": "npm run clean && npm run build",
-    "test:lint": "eslint ./built/**/*.js",
+    "test:lint": "eslint ./src/**/*.js",
     "test:mocha": "mocha",
     "test:mocha-watch": "mocha -w",
     "test": "npm run test:lint && npm run test:mocha"

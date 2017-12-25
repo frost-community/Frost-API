@@ -1,8 +1,8 @@
 const assert = require('assert');
-const config = require('../../built/helpers/loadConfig')();
-const DbProvider = require('../../built/helpers/dbProvider');
-const Db = require('../../built/helpers/db');
-const routeTimeline = require('../../built/routes/general/timeline');
+const config = require('../../src/helpers/loadConfig')();
+const DbProvider = require('../../src/helpers/dbProvider');
+const Db = require('../../src/helpers/db');
+const routeTimeline = require('../../src/routes/general/timeline');
 
 describe('General API', () => {
 	describe('/general', () => {

@@ -1,11 +1,11 @@
 const assert = require('assert');
-const config = require('../../built/helpers/loadConfig')();
-const DbProvider = require('../../built/helpers/dbProvider');
-const Db = require('../../built/helpers/db');
-const ApiContext = require('../../built/helpers/ApiContext');
-const routeApp = require('../../built/routes/applications');
-const routeAppId = require('../../built/routes/applications/id');
-const routeAppIdApplicationKey = require('../../built/routes/applications/id/application_key');
+const config = require('../../src/helpers/loadConfig')();
+const DbProvider = require('../../src/helpers/dbProvider');
+const Db = require('../../src/helpers/db');
+const ApiContext = require('../../src/helpers/ApiContext');
+const routeApp = require('../../src/routes/applications');
+const routeAppId = require('../../src/routes/applications/id');
+const routeAppIdApplicationKey = require('../../src/routes/applications/id/application_key');
 
 describe('Applications API', () => {
 	describe('/applications', () => {
