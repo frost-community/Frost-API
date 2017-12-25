@@ -159,7 +159,7 @@ describe('Applications API', () => {
 					});
 				});
 
-				it('所有していないアプリケーションを指定された場合は失敗する', async () => {
+				it('所有していないアプリケーションを指定された場合でも成功する', async () => {
 					const context = new ApiContext(null, null, db, config, {
 						params: { id: appB.document._id.toString() },
 						headers: { 'X-Api-Version': 1 },
@@ -167,7 +167,7 @@ describe('Applications API', () => {
 						application: appA
 					});
 					await routeAppId.get(context);
-					assert.equal(context.data, 'this operation is not permitted');
+					assert.equal(context.statusCode, 200);
 				});
 
 				it('存在しないアプリケーションを指定した場合は204を返す', async () => {
