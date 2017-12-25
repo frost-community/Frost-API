@@ -92,9 +92,9 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				let {
 					method,
 					endpoint,
-					query = {},
-					headers = {},
-					body = {}
+					query,
+					headers,
+					body
 				} = data;
 
 				// パラメータを検証
@@ -102,13 +102,21 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 					return error('rest', 'request format is invalid');
 				}
 
-				if (endpoint.indexOf('..') != -1) {
-					return error('rest', '"endpoint" parameter is invalid');
-				}
-
 				if (methods.indexOf(method.toLowerCase()) == -1) {
 					return error('rest', '"method" parameter is invalid');
 				}
+
+				console.log('before:', endpoint);
+
+				// endpointを整形
+				if (endpoint == '') {
+					endpoint = '/';
+				}
+				else if (endpoint != '/' && endpoint[endpoint.length - 1] == '/') {
+					endpoint = endpoint.substr(0, endpoint.length - 1);
+				}
+
+				console.log('after:', endpoint);
 
 				// 対象Routeのモジュールを取得
 				let routeFuncAsync;
@@ -156,7 +164,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 					response = (apiContext.data != null) ? apiContext.data : {};
 				}
 
-				return connection.send('rest', { success: true, statusCode: apiContext.statusCode, response });
+				return connection.send('rest', { success: true, statusCode: apiContext.statusCode, request: { method, endpoint, query, headers, body }, response });
 			}
 			catch (err) {
 				console.log(err);

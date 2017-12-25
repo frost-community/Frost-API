@@ -9,9 +9,9 @@ class ApiContext {
 		this.db = db;
 		this.config = config;
 		options = options || {};
-		this.params = options.params;
-		this.query = options.query;
-		this.body = options.body;
+		this.params = options.params || {};
+		this.query = options.query || {};
+		this.body = options.body || {};
 		this.user = options.user;
 		this.application = options.application;
 
