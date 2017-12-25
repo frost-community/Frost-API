@@ -17,5 +17,4 @@ cache:
 
 script:
   - wget https://raw.githubusercontent.com/Frost-Dev/Frost/master/config.json
-  - npm run rebuild
   - npm run test
