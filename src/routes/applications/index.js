@@ -1,10 +1,9 @@
 const Application = require('../../documentModels/application');
 const { permissionTypes } = require('../../helpers/permission');
 const $ = require('cafy').default;
-const { ApiError } = require('../../helpers/errors');
 
 module.exports.post = async (apiContext) => {
-	await apiContext.check({
+	await apiContext.proceed({
 		body: {
 			name: { cafy: $().string().min(1).max(32) },
 			description: { cafy: $().string().max(256), default: '' },
@@ -12,17 +11,18 @@ module.exports.post = async (apiContext) => {
 		},
 		permissions: ['applicationSpecial']
 	});
+	if (apiContext.responsed) return;
 
 	const { name, description, permissions } = apiContext.body;
 
 	// check name duplication
 	if (await Application.findByNameAsync(name, apiContext.db, apiContext.config) != null) {
-		throw new ApiError(400, 'already exists name');
+		return apiContext.response(400, 'already exists name');
 	}
 
 	// check permissions(利用を禁止された権限をが含まれていないかどうか)
 	if (permissions.some(permission => apiContext.config.api.additionDisabledPermissions.indexOf(permission) != -1)) {
-		throw new ApiError(400, 'some permissions use are disabled');
+		return apiContext.response(400, 'some permissions use are disabled');
 	}
 
 	let application;
@@ -34,16 +34,17 @@ module.exports.post = async (apiContext) => {
 	}
 
 	if (application == null) {
-		throw new ApiError(500, 'failed to create application');
+		return apiContext.response(500, 'failed to create application');
 	}
 
 	apiContext.response(200, { application: application.serialize() });
 };
 
 module.exports.get = async (apiContext) => {
-	await apiContext.check({
+	await apiContext.proceed({
 		permissions: ['application']
 	});
+	if (apiContext.responsed) return;
 
 	let applications;
 	try {

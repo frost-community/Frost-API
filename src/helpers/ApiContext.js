@@ -1,6 +1,6 @@
 const Application = require('../documentModels/application');
 const ApplicationAccess = require('../documentModels/applicationAccess');
-const { ApiError } = require('../helpers/errors');
+const { InvalidOperationError } = require('./errors');
 
 class ApiContext {
 	constructor(streams, lock, db, config, options) {
@@ -12,6 +12,8 @@ class ApiContext {
 		this.params = options.params;
 		this.query = options.query;
 		this.body = options.body;
+		this.user = options.user;
+		this.application = options.application;
 
 		this.headers = {};
 		// ヘッダーのキーを小文字に変換して格納
@@ -19,12 +21,10 @@ class ApiContext {
 			this.headers[headerKey.toLowerCase()] = options.headers[headerKey];
 		}
 
-		this.checked = false;
 		this.responsed = false;
-		this.testMode = options.testMode == true;
 	}
 
-	async check(rule) {
+	async proceed(rule) {
 		if (rule == null) {
 			rule = {};
 		}
@@ -41,7 +41,7 @@ class ApiContext {
 
 		// ヘッダールールを小文字に変換
 		const headerRules = [];
-		for(const headerRule of rule.headers) {
+		for (const headerRule of rule.headers) {
 			headerRules.push(headerRule.toLowerCase());
 		}
 		rule.headers = headerRules;
@@ -53,11 +53,11 @@ class ApiContext {
 
 		for (const header of rule.headers) {
 			if (header == null) {
-				throw new Error('extentions.headers elements are missing');
+				throw new Error('headers rule is invalid');
 			}
 
 			if (this.headers[header] == null) {
-				throw new ApiError(400, `${header} header is empty`);
+				return this.response(400, `${header} header is empty`);
 			}
 		}
 
@@ -66,28 +66,44 @@ class ApiContext {
 			rule.permissions = [];
 		}
 
-		if ((!this.testMode) && rule.permissions.length !== 0) {
+		if (rule.permissions.length !== 0 && (this.user == null || this.application == null)) {
 			const applicationKey = this.headers['x-application-key'];
 			const accessKey = this.headers['x-access-key'];
 
 			if (applicationKey == null) {
-				throw new ApiError(400, 'x-application-key header is empty');
+				return this.response(400, 'x-application-key header is empty');
 			}
 
 			if (accessKey == null) {
-				throw new ApiError(400, 'x-access-key header is empty');
+				return this.response(400, 'x-access-key header is empty');
 			}
 
 			if (!await Application.verifyKeyAsync(applicationKey, this.db, this.config)) {
-				throw new ApiError(400, 'x-application-key header is invalid');
+				return this.response(400, 'x-application-key header is invalid');
 			}
 
 			if (!await ApplicationAccess.verifyKeyAsync(accessKey, this.db, this.config)) {
-				throw new ApiError(400, 'x-access-key header is invalid');
+				return this.response(400, 'x-access-key header is invalid');
 			}
 
 			this.applicationKey = applicationKey;
 			this.accessKey = accessKey;
+
+			const { userId } = ApplicationAccess.splitKey(this.accessKey, this.db, this.config);
+			const { applicationId } = Application.splitKey(this.applicationKey, this.db, this.config);
+
+			// fetch
+			[this.user, this.application] = await Promise.all([
+				this.db.users.findByIdAsync(userId),
+				this.db.applications.findByIdAsync(applicationId)
+			]);
+		}
+
+		// check permissions
+
+		const hasPermissions = rule.permissions.every(p => this.application.hasPermission(p));
+		if (!hasPermissions) {
+			return this.response(403, 'you do not have any permissions');
 		}
 
 		// body
@@ -100,7 +116,7 @@ class ApiContext {
 			if (this.body[paramName] == null) {
 				const required = rule.body[paramName].default === undefined;
 				if (required) {
-					throw new ApiError(400, `body parameter '${paramName}' is require`);
+					return this.response(400, `body parameter '${paramName}' is require`);
 				}
 				else {
 					this.body[paramName] = rule.body[paramName].default;
@@ -112,7 +128,7 @@ class ApiContext {
 				}
 
 				if (rule.body[paramName].cafy.nok(this.body[paramName])) {
-					throw new ApiError(400, `body parameter '${paramName}' is invalid`);
+					return this.response(400, `body parameter '${paramName}' is invalid`);
 				}
 			}
 		}
@@ -127,7 +143,7 @@ class ApiContext {
 			if (this.query[paramName] == null) {
 				const required = rule.query[paramName].default === undefined;
 				if (required) {
-					throw new ApiError(400, `query parameter '${paramName}' is require`);
+					return this.response(400, `query parameter '${paramName}' is require`);
 				}
 				else {
 					this.query[paramName] = rule.query[paramName].default;
@@ -139,38 +155,16 @@ class ApiContext {
 				}
 
 				if (rule.query[paramName].cafy.nok(this.query[paramName])) {
-					throw new ApiError(400, `query parameter '${paramName}' is invalid`);
+					return this.response(400, `query parameter '${paramName}' is invalid`);
 				}
 			}
 		}
-
-		this.checked = true;
-	}
-
-	checkApiPermissions(rule) {
-		if (this.application == null) {
-			throw new Error('application has been not fetched');
-		}
-
-		const hasPermissions = rule.permissions.every(p => this.application.hasPermission(p));
-		if (!hasPermissions) {
-			throw new ApiError(403, 'you do not have any permissions');
-		}
-	}
-
-	async fetchApplicationAndUser() {
-		if (!this.checked) {
-			throw new Error('request has been not checked');
-		}
-
-		const applicationId = Application.splitKey(this.applicationKey, this.db, this.config).applicationId;
-		this.application = (await this.db.applications.findByIdAsync(applicationId));
-
-		const userId = ApplicationAccess.splitKey(this.accessKey, this.db, this.config).userId;
-		this.user = (await this.db.users.findByIdAsync(userId));
 	}
 
 	response(statusCode, data, needStatusCode) {
+		if (this.responsed) {
+			throw new InvalidOperationError('already responsed');
+		}
 		this.statusCode = statusCode;
 		this.data = data;
 		this.needStatusCode = needStatusCode != false;

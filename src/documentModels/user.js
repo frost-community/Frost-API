@@ -1,11 +1,12 @@
 const objectSorter = require('../helpers/objectSorter');
 const crypto = require('crypto');
 const moment = require('moment');
+const { MissingArgumentsError } = require('../helpers/errors');
 
 class User {
 	constructor(document, db, config) {
 		if (document == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		this.document = document;
@@ -16,7 +17,7 @@ class User {
 
 	verifyPassword(password) {
 		if (password == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		const passwordHashElements = this.document.passwordHash.split('.');
@@ -60,7 +61,7 @@ class User {
 	 */
 	static async findByIdAsync(id, db, config) {
 		if (id == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		return db.users.findByIdAsync(id);
@@ -73,7 +74,7 @@ class User {
 	 */
 	static async findArrayByScreenNamesAsync(screenNames, limit, db, config) {
 		if (screenNames == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		const patterns = screenNames.map(screenName => new RegExp('^' + screenName + '$', 'i'));
@@ -88,7 +89,7 @@ class User {
 	 */
 	static async findByScreenNameAsync(screenName, db, config) {
 		if (screenName == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		return db.users.findAsync({ screenName: new RegExp('^' + screenName + '$', 'i') });
@@ -96,7 +97,7 @@ class User {
 
 	static checkFormatScreenName(screenName) {
 		if (screenName == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		return /^[a-zA-Z0-9_-]{4,15}$/.test(screenName) || /^(.)\1{3,}$/.test(screenName);
@@ -104,7 +105,7 @@ class User {
 
 	static checkFormatPassword(password) {
 		if (password == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		return /^[!-~]{6,}$/.test(password);

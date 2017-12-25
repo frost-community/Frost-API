@@ -1,10 +1,11 @@
 const objectSorter = require('../helpers/objectSorter');
 const moment = require('moment');
+const { MissingArgumentsError } = require('../helpers/errors');
 
 class Post {
 	constructor(document, db, config) {
 		if (document == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		this.document = document;
@@ -44,7 +45,7 @@ class Post {
 
 	static async findByIdAsync(id, db, config) {
 		if (id == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		return db.posts.findByIdAsync(id);
@@ -52,7 +53,7 @@ class Post {
 
 	static async findArrayAsync(query, ascending, limit, db, config) {
 		if (query == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		return db.posts.findArrayAsync(query, { $natural: (ascending ? 1 : -1) }, limit);

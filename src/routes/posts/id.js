@@ -2,10 +2,11 @@ const Post = require('../../documentModels/post');
 // const $ = require('cafy').default;
 
 exports.get = async (apiContext) => {
-	await apiContext.check({
+	await apiContext.proceed({
 		query: {},
 		permissions: ['postRead']
 	});
+	if (apiContext.responsed) return;
 
 	const post = await Post.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
 

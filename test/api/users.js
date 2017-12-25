@@ -23,7 +23,7 @@ describe('Users API', () => {
 		let user, app;
 		beforeEach(async () => {
 			user = await db.users.createAsync('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
-			app = await db.applications.createAsync('generalapp', user, 'this is generalapp.', []);
+			app = await db.applications.createAsync('generalapp', user, 'this is generalapp.', ['userRead']);
 		});
 
 		// remove all users, all applications
@@ -40,10 +40,12 @@ describe('Users API', () => {
 					params: { id: user.document._id },
 					query: { 'screen_names': user.document.screenName },
 					headers: { 'X-Api-Version': 1 },
-					testMode: true
+					user,
+					application: app
 				});
-				context.user = user;
 				await route.get(context);
+
+				assert(typeof context.data != 'string', `api error: ${context.data}`);
 
 				delete context.data.users[0].id;
 				delete context.data.users[0].createdAt;
@@ -63,10 +65,12 @@ describe('Users API', () => {
 					const context = new ApiContext(null, null, db, config, {
 						params: { id: user.document._id },
 						headers: { 'X-Api-Version': 1 },
-						testMode: true
+						user,
+						application: app
 					});
-					context.user = user;
 					await routeId.get(context);
+
+					assert(typeof context.data != 'string', `api error: ${context.data}`);
 
 					delete context.data.user.id;
 					delete context.data.user.createdAt;

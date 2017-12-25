@@ -79,7 +79,7 @@ module.exports = async () => {
 
 		// not found
 		app.use((req, res) => {
-			const apiContext = new ApiContext(req.streams, req.lock, req.db, req.config);
+			const apiContext = new ApiContext();
 			apiContext.response(404, 'endpoint not found, or method is not supported');
 			res.apiSend(apiContext);
 		});

@@ -1,5 +1,6 @@
 const path = require('path');
 const pathToRegexp = require('path-to-regexp');
+const { MissingArgumentsError } = require('./errors');
 
 class Route {
 	/**
@@ -8,7 +9,7 @@ class Route {
 	 */
 	constructor(method, path) {
 		if (method == null || path == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		if (typeof method != 'string' || typeof path != 'string') {

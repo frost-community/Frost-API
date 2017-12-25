@@ -1,9 +1,8 @@
 const User = require('../documentModels/user');
 const $ = require('cafy').default;
-const { ApiError } = require('../helpers/errors');
 
 exports.post = async (apiContext) => {
-	await apiContext.check({
+	await apiContext.proceed({
 		body: {
 			screenName: { cafy: $().string() },
 			password: { cafy: $().string() },
@@ -11,6 +10,7 @@ exports.post = async (apiContext) => {
 			name: { cafy: $().string().range(1, 32), default: 'froster' }
 		}, permissions: ['accountSpecial']
 	});
+	if (apiContext.responsed) return;
 
 	const {
 		screenName,
@@ -21,28 +21,28 @@ exports.post = async (apiContext) => {
 
 	// screenName
 	if (!User.checkFormatScreenName(screenName)) {
-		throw new ApiError(400, 'screenName is invalid format');
+		return apiContext.response(400, 'screenName is invalid format');
 	}
 
 	// check validation
 	if (apiContext.config.api.invalidScreenNames.some(invalidScreenName => screenName == invalidScreenName)) {
-		throw new ApiError(400, 'screenName is invalid');
+		return apiContext.response(400, 'screenName is invalid');
 	}
 
 	// check duplication
 	if (await User.findByScreenNameAsync(screenName, apiContext.db, apiContext.config) != null) {
-		throw new ApiError(400, 'this screenName is already exists');
+		return apiContext.response(400, 'this screenName is already exists');
 	}
 
 	// password
 	if (!User.checkFormatPassword(password)) {
-		throw new ApiError(400, 'password is invalid format');
+		return apiContext.response(400, 'password is invalid format');
 	}
 
 	let user = await apiContext.db.users.createAsync(screenName, password, name, description);
 
 	if (user == null) {
-		throw new ApiError(500, 'failed to create account');
+		return apiContext.response(500, 'failed to create account');
 	}
 
 	apiContext.response(200, { user: user.serialize() });

@@ -1,20 +1,20 @@
 const { StreamPublisher } = require('../../helpers/stream');
 const $ = require('cafy').default;
-const { ApiError } = require('../../helpers/errors');
 
 exports.post = async (apiContext) => {
-	await apiContext.check({
+	await apiContext.proceed({
 		body: {
 			text: { cafy: $().string() }
 		},
 		permissions: ['postWrite']
 	});
+	if (apiContext.responsed) return;
 
 	const userId = apiContext.user.document._id;
 	const text = apiContext.body.text;
 
 	if (/^\s*$/.test(text) || /^[\s\S]{1,256}$/.test(text) == false) {
-		throw new ApiError(400, 'text is invalid format.');
+		return apiContext.response(400, 'text is invalid format.');
 	}
 
 	let postStatus;
@@ -31,7 +31,7 @@ exports.post = async (apiContext) => {
 	}
 
 	if (postStatus == null) {
-		throw new ApiError(500, 'failed to create postStatus');
+		return apiContext.response(500, 'failed to create postStatus');
 	}
 
 	const serializedPostStatus = await postStatus.serializeAsync(true);

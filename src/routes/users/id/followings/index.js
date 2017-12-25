@@ -1,20 +1,20 @@
 const User = require('../../../../documentModels/user');
 const UserFollowing = require('../../../../documentModels/userFollowing');
 // const $ = require('cafy').default;
-const { ApiError } = require('../../../../helpers/errors');
 
 // TODO: limit指定、カーソル送り等
 
 exports.get = async (apiContext) => {
-	await apiContext.check({
+	await apiContext.proceed({
 		query: {},
 		permissions: ['userRead']
 	});
+	if (apiContext.responsed) return;
 
 	// user
 	const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
 	if (user == null) {
-		throw new ApiError(404, 'user as premise not found');
+		return apiContext.response(404, 'user as premise not found');
 	}
 
 	const userFollowings = await UserFollowing.findTargetsAsync(user.document._id, 30, apiContext.db, apiContext.config);

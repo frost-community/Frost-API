@@ -10,18 +10,18 @@ class InvalidArgumentError extends Error {
 	}
 }
 
-class DataBaseAccessError extends Error { }
-
-class ApiError extends Error {
-	constructor(statusCode, message) {
+/** 現在の状態に対しては無効な操作が行われたときに発生します */
+class InvalidOperationError extends Error {
+	constructor(message) {
 		super(message);
-		this.statusCode = statusCode;
 	}
 }
+
+class DataBaseAccessError extends Error { }
 
 module.exports = {
 	MissingArgumentsError,
 	InvalidArgumentError,
-	DataBaseAccessError,
-	ApiError
+	InvalidOperationError,
+	DataBaseAccessError
 };

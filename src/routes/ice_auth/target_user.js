@@ -1,26 +1,25 @@
 const AuthorizeRequest = require('../../documentModels/authorizeRequest');
 const $ = require('cafy').default;
-const { ApiError } = require('../../helpers/errors');
 
 exports.post = async (apiContext) => {
-	await apiContext.check({
+	await apiContext.proceed({
 		body: {
 			userId: { cafy: $().string() }
 		},
 		headers: ['x-ice-auth-key'],
 		permissions: ['iceAuthHost']
 	});
-
+	if (apiContext.responsed) return;
 
 	const iceAuthKey = apiContext.headers['x-ice-auth-key'];
 	const userId = apiContext.body.userId;
 
 	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, apiContext.db, apiContext.config)) {
-		throw new ApiError(400, 'x-ice-auth-key header is invalid');
+		return apiContext.response(400, 'x-ice-auth-key header is invalid');
 	}
 
 	if ((await apiContext.db.users.findByIdAsync(userId)) == null) { //TODO: move to document models
-		throw new ApiError(400, 'userId is invalid');
+		return apiContext.response(400, 'userId is invalid');
 	}
 
 	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, apiContext.db, apiContext.config).authorizeRequestId;

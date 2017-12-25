@@ -1,10 +1,9 @@
 const AuthorizeRequest = require('../../documentModels/authorizeRequest');
 const User = require('../../documentModels/user');
 const $ = require('cafy').default;
-const { ApiError } = require('../../helpers/errors');
 
 exports.post = async (apiContext) => {
-	await apiContext.check({
+	await apiContext.proceed({
 		body: {
 			screenName: { cafy: $().string() },
 			password: { cafy: $().string() }
@@ -12,13 +11,14 @@ exports.post = async (apiContext) => {
 		headers: ['x-ice-auth-key'],
 		permissions: ['iceAuthHost']
 	});
+	if (apiContext.responsed) return;
 
 	const iceAuthKey = apiContext.headers['x-ice-auth-key'];
 	const screenName = apiContext.body.screenName;
 	const password = apiContext.body.password;
 
 	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, apiContext.db, apiContext.config)) {
-		throw new ApiError(400, 'x-ice-auth-key header is invalid');
+		return apiContext.response(400, 'x-ice-auth-key header is invalid');
 	}
 
 	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, apiContext.db, apiContext.config).authorizeRequestId;
@@ -27,21 +27,21 @@ exports.post = async (apiContext) => {
 	await authorizeRequest.removeAsync();
 
 	if (!User.checkFormatScreenName(screenName)) {
-		throw new ApiError(400, 'screenName is invalid format');
+		return apiContext.response(400, 'screenName is invalid format');
 	}
 
 	if (!User.checkFormatPassword(password)) {
-		throw new ApiError(400, 'password is invalid format');
+		return apiContext.response(400, 'password is invalid format');
 	}
 
 	const user = await User.findByScreenNameAsync(screenName, apiContext.db, apiContext.config);
 
 	if (user == null) {
-		throw new ApiError(400, 'screenName is invalid');
+		return apiContext.response(400, 'screenName is invalid');
 	}
 
 	if (!user.verifyPassword(password)) {
-		throw new ApiError(400, 'password is invalid');
+		return apiContext.response(400, 'password is invalid');
 	}
 
 	// TODO: refactoring(duplication)
@@ -66,7 +66,7 @@ exports.post = async (apiContext) => {
 		}
 
 		if (applicationAccess == null) {
-			throw new ApiError(500, 'failed to create applicationAccess');
+			return apiContext.response(500, 'failed to create applicationAccess');
 		}
 
 		try {
@@ -77,7 +77,7 @@ exports.post = async (apiContext) => {
 		}
 
 		if (accessKey == null) {
-			throw new ApiError(500, 'failed to generate accessKey');
+			return apiContext.response(500, 'failed to generate accessKey');
 		}
 	}
 	else {
@@ -89,7 +89,7 @@ exports.post = async (apiContext) => {
 		}
 
 		if (accessKey == null) {
-			throw new ApiError(500, 'failed to build accessKey');
+			return apiContext.response(500, 'failed to build accessKey');
 		}
 	}
 

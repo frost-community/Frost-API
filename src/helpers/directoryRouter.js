@@ -1,16 +1,16 @@
 const ApiContext = require('./ApiContext');
-const { ApiError } = require('./errors');
 const pathToRegexp = require('path-to-regexp');
+const { MissingArgumentsError } = require('./errors');
 
 class DirectoryRouter {
 	/**
 	 * このモジュールを初期化します
 	 *
-	 * @param  {e} app 対象のサーバアプリケーション
+	 * @param {e} app 対象のサーバアプリケーション
 	 */
 	constructor(app) {
 		if (app == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		this.app = app;
@@ -20,50 +20,43 @@ class DirectoryRouter {
 	/**
 	 * ルートを追加します
 	 *
-	 * @param  {Route} route
+	 * @param {Route} route
 	 * @return {void}
 	 */
 	addRoute(route) {
 		if (route == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		this.app[route.method](route.path, (request, response) => {
 			(async () => {
-				request.version = request.params.ver;
-
-				const apiContext = new ApiContext(request.streams, request.lock, request.db, request.config, {
-					params: request.params,
-					query: request.query,
-					body: request.body,
-					headers: request.headers
-				});
-
+				let apiContext;
 				try {
 					let routeFuncAsync;
-
 					try {
 						routeFuncAsync = require(route.getModulePath())[route.method];
 					}
 					catch (err) {
-						console.log('route error:', err);
+						console.log(err);
 					}
 
 					if (routeFuncAsync == null) {
 						throw new Error(`route function is not found\ntarget: ${route.method} ${route.path}`);
 					}
 
+					apiContext = new ApiContext(request.streams, request.lock, request.db, request.config, {
+						params: request.params,
+						query: request.query,
+						body: request.body,
+						headers: request.headers
+					});
 					await routeFuncAsync(apiContext);
+
 					console.log(`rest: ${route.method.toUpperCase()} ${route.path}, status=${apiContext.statusCode}`);
 					response.apiSend(apiContext);
 				}
 				catch (err) {
-					if (err instanceof ApiError) {
-						console.log(`rest: ${route.method.toUpperCase()} ${route.path}, status=${err.statusCode}`);
-						apiContext.response(err.statusCode, err.message);
-						response.apiSend(apiContext);
-					}
-					else if (err instanceof Error) {
+					if (err instanceof Error) {
 						console.log('Internal Error:', err);
 						apiContext.response(500, { message: 'internal error', details: err });
 						response.apiSend(apiContext);
@@ -83,13 +76,13 @@ class DirectoryRouter {
 	/**
 	 * 該当するルートを取得します
 	 *
-	 * @param  {string} method
-	 * @param  {string} endpoint
+	 * @param {string} method
+	 * @param {string} endpoint
 	 * @return {Object} Route instance
 	 */
 	findRoute(method, endpoint) {
 		if (method == null || endpoint == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		if (typeof method != 'string' || typeof endpoint != 'string') {

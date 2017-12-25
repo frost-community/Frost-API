@@ -3,11 +3,12 @@ const objectSorter = require('../helpers/objectSorter');
 const crypto = require('crypto');
 const mongo = require('mongodb');
 const moment = require('moment');
+const { MissingArgumentsError, InvalidArgumentError, InvalidOperationError } = require('../helpers/errors');
 
 class ApplicationAccess {
 	constructor(document, db, config) {
 		if (document == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		this.document = document;
@@ -37,7 +38,7 @@ class ApplicationAccess {
 
 	getAccessKey() {
 		if (this.document.keyCode == null) {
-			throw new Error('keyCode is empty');
+			throw new InvalidOperationError('keyCode is empty');
 		}
 
 		const hash = ApplicationAccess.buildHash(this.document.applicationId, this.document.userId, this.document.keyCode, this.db, this.config);
@@ -71,7 +72,7 @@ class ApplicationAccess {
 
 	static async findByIdAsync(id, db, config) {
 		if (id == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		return db.applicationAccesses.findByIdAsync(id);
@@ -79,7 +80,7 @@ class ApplicationAccess {
 
 	static buildHash(applicationId, userId, keyCode, db, config) {
 		if (applicationId == null || userId == null || keyCode == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		const sha256 = crypto.createHash('sha256');
@@ -90,13 +91,13 @@ class ApplicationAccess {
 
 	static splitKey(key, db, config) {
 		if (key == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
 
 		if (reg == null) {
-			throw new Error('falid to split key');
+			throw new InvalidArgumentError('key');
 		}
 
 		return { userId: mongo.ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3]) };
@@ -104,7 +105,7 @@ class ApplicationAccess {
 
 	static async verifyKeyAsync(key, db, config) {
 		if (key == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		let elements;

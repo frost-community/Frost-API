@@ -27,8 +27,8 @@ describe('Applications API', () => {
 			userA = await db.users.createAsync('generaluser_a', 'abcdefg', 'froster', 'this is generaluser.');
 			userB = await db.users.createAsync('generaluser_b', 'abcdefg', 'froster', 'this is generaluser.');
 
-			appA = await db.applications.createAsync('generalapp_a', userA, 'this is generalapp.', []);
-			appB = await db.applications.createAsync('generalapp_b', userB, 'this is generalapp.', []);
+			appA = await db.applications.createAsync('generalapp_a', userA, 'this is generalapp.', ['application', 'applicationSpecial']);
+			appB = await db.applications.createAsync('generalapp_b', userB, 'this is generalapp.', ['application', 'applicationSpecial']);
 		});
 
 		// remove all users, all applications
@@ -46,11 +46,14 @@ describe('Applications API', () => {
 						permissions: []
 					},
 					headers: { 'X-Api-Version': 1 },
-					testMode: true
+					user: userA,
+					application: appA
 				});
-				context.user = userA;
 				await routeApp.post(context);
 
+				assert(typeof context.data != 'string', `api error: ${context.data}`);
+
+				assert(context.data.application != null, `application is null. ${context.data}`);
 				delete context.data.application.id;
 				delete context.data.application.createdAt;
 				assert.deepEqual(context.data, {
@@ -71,16 +74,11 @@ describe('Applications API', () => {
 						permissions: []
 					},
 					headers: { 'X-Api-Version': 1 },
-					testMode: true
+					user: userA,
+					application: appA
 				});
-				context.user = userA;
-				try {
-					await routeApp.post(context);
-					assert.fail('not throwed');
-				}
-				catch (err) {
-					assert.equal(err.message, 'body parameter \'name\' is invalid');
-				}
+				await routeApp.post(context);
+				assert.equal(context.data, 'body parameter \'name\' is invalid');
 
 				context = new ApiContext(null, null, db, config, {
 					body: {
@@ -89,16 +87,11 @@ describe('Applications API', () => {
 						permissions: []
 					},
 					headers: { 'X-Api-Version': 1 },
-					testMode: true
+					user: userA,
+					application: appA
 				});
-				context.user = userA;
-				try {
-					await routeApp.post(context);
-					assert.fail('not throwed');
-				}
-				catch (err) {
-					assert.equal(err.message, 'body parameter \'name\' is invalid');
-				}
+				await routeApp.post(context);
+				assert.equal(context.data, 'body parameter \'name\' is invalid');
 			});
 
 			it('descriptionが257文字以上のときは失敗する', async () => {
@@ -109,16 +102,11 @@ describe('Applications API', () => {
 						permissions: []
 					},
 					headers: { 'X-Api-Version': 1 },
-					testMode: true
+					user: userA,
+					application: appA
 				});
-				context.user = userA;
-				try {
-					await routeApp.post(context);
-					assert.fail('not throwed');
-				}
-				catch (err) {
-					assert.equal(err.message, 'body parameter \'description\' is invalid');
-				}
+				await routeApp.post(context);
+				assert.equal(context.data, 'body parameter \'description\' is invalid');
 			});
 		});
 
@@ -126,10 +114,12 @@ describe('Applications API', () => {
 			it('正しくリクエストされた場合は成功する', async () => {
 				const context = new ApiContext(null, null, db, config, {
 					headers: { 'X-Api-Version': 1 },
-					testMode: true
+					user: userA,
+					application: appA
 				});
-				context.user = userA;
 				await routeApp.get(context);
+
+				assert(typeof context.data != 'string', `api error: ${context.data}`);
 
 				delete context.data.applications[0].id;
 				delete context.data.applications[0].createdAt;
@@ -150,10 +140,12 @@ describe('Applications API', () => {
 					const context = new ApiContext(null, null, db, config, {
 						params: { id: appA.document._id.toString() },
 						headers: { 'X-Api-Version': 1 },
-						testMode: true
+						user: userA,
+						application: appA
 					});
-					context.user = userA;
 					await routeAppId.get(context);
+
+					assert(typeof context.data != 'string', `api error: ${context.data}`);
 
 					delete context.data.application.id;
 					delete context.data.application.createdAt;
@@ -171,27 +163,21 @@ describe('Applications API', () => {
 					const context = new ApiContext(null, null, db, config, {
 						params: { id: appB.document._id.toString() },
 						headers: { 'X-Api-Version': 1 },
-						testMode: true
+						user: userA,
+						application: appA
 					});
-					context.user = userA;
-					try {
-						await routeAppId.get(context);
-						assert.fail('not throwed');
-					}
-					catch (err) {
-						assert.equal(err.message, 'this operation is not permitted');
-					}
+					await routeAppId.get(context);
+					assert.equal(context.data, 'this operation is not permitted');
 				});
 
 				it('存在しないアプリケーションを指定した場合は204を返す', async () => {
 					const context = new ApiContext(null, null, db, config, {
 						params: { id: 'abcdefg1234' },
 						headers: { 'X-Api-Version': 1 },
-						testMode: true
+						user: userA,
+						application: appA
 					});
-					context.user = userA;
 					await routeAppId.get(context);
-
 					assert.equal(context.statusCode, 204);
 				});
 			});
@@ -202,10 +188,12 @@ describe('Applications API', () => {
 						const context = new ApiContext(null, null, db, config, {
 							params: { id: appA.document._id.toString() },
 							headers: { 'X-Api-Version': 1 },
-							testMode: true
+							user: userA,
+							application: appA
 						});
-						context.user = userA;
 						await routeAppIdApplicationKey.post(context);
+
+						assert(typeof context.data != 'string', `api error: ${context.data}`);
 
 						await appA.fetchAsync();
 						assert.deepEqual(context.data, {
@@ -217,16 +205,11 @@ describe('Applications API', () => {
 						const context = new ApiContext(null, null, db, config, {
 							params: { id: appA.document._id.toString() },
 							headers: { 'X-Api-Version': 1 },
-							testMode: true
+							user: userB,
+							application: appB
 						});
-						context.user = userB;
-						try {
-							await routeAppIdApplicationKey.post(context);
-							assert.fail('not throwed');
-						}
-						catch (err) {
-							assert.equal(err.message, 'this operation is not permitted');
-						}
+						await routeAppIdApplicationKey.post(context);
+						assert.equal(context.data, 'this operation is not permitted');
 					});
 				});
 
@@ -237,10 +220,12 @@ describe('Applications API', () => {
 						const context = new ApiContext(null, null, db, config, {
 							params: { id: appA.document._id.toString() },
 							headers: { 'X-Api-Version': 1 },
-							testMode: true
+							user: userA,
+							application: appA
 						});
-						context.user = userA;
 						await routeAppIdApplicationKey.get(context);
+
+						assert(typeof context.data != 'string', `api error: ${context.data}`);
 
 						assert.deepEqual(context.data, {
 							applicationKey: key
@@ -253,16 +238,12 @@ describe('Applications API', () => {
 						const context = new ApiContext(null, null, db, config, {
 							params: { id: appB.document._id.toString() },
 							headers: { 'X-Api-Version': 1 },
-							testMode: true
+							user: userA,
+							application: appA
 						});
-						context.user = userA;
-						try {
-							await routeAppIdApplicationKey.get(context);
-							assert.fail('not throwed');
-						}
-						catch (err) {
-							assert.equal(err.message, 'this operation is not permitted');
-						}
+						await routeAppIdApplicationKey.get(context);
+
+						assert.equal(context.data, 'this operation is not permitted');
 					});
 				});
 			});

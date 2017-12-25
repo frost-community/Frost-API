@@ -3,7 +3,6 @@ const { getUsedSpace } = require('../../../../../helpers/UserStorageHelpers');
 const getFileType = require('file-type');
 const validator = require('validator');
 const $ = require('cafy').default;
-const { ApiError } = require('../../../../../helpers/errors');
 
 const supportedMimeTypes = [
 	'image/jpeg',
@@ -13,23 +12,24 @@ const supportedMimeTypes = [
 
 // create a storage file
 exports.post = async (apiContext) => {
-	await apiContext.check({
+	await apiContext.proceed({
 		body: {
 			fileData: { cafy: $().string().pipe(i => validator.isBase64(i)) }
 			// accessRight.level
 		},
 		permissions: ['storageWrite']
 	});
+	if (apiContext.responsed) return;
 
 	// user
 	const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
 	if (user == null) {
-		throw new ApiError(404, 'user as premise not found');
+		return apiContext.response(404, 'user as premise not found');
 	}
 
 	const isOwnerAccess = user.document._id.equals(apiContext.user.document._id);
 	if (!isOwnerAccess) {
-		throw new ApiError(403, 'this operation is not permitted');
+		return apiContext.response(403, 'this operation is not permitted');
 	}
 
 	let accessRightLevel = 'public'; // TODO: public 以外のアクセス権タイプのサポート
@@ -40,7 +40,7 @@ exports.post = async (apiContext) => {
 	// file type
 	const fileType = getFileType(fileDataBuffer);
 	if (fileType == null || !supportedMimeTypes.some(i => i == fileType.mime)) {
-		throw new ApiError(400, 'file is not supported format');
+		return apiContext.response(400, 'file is not supported format');
 	}
 
 	let file;
@@ -49,7 +49,7 @@ exports.post = async (apiContext) => {
 		// calculate available space
 		const usedSpace = await getUsedSpace(user.document._id, apiContext.db);
 		if (apiContext.config.api.storage.spaceSize - usedSpace - fileDataBuffer.length < 0) {
-			throw new ApiError(400, 'storage space is full');
+			return apiContext.response(400, 'storage space is full');
 		}
 
 		// create a document
@@ -70,7 +70,7 @@ exports.post = async (apiContext) => {
 	}
 
 	if (file == null) {
-		throw new ApiError(500, 'failed to create storage file');
+		return apiContext.response(500, 'failed to create storage file');
 	}
 
 	apiContext.response(200, { storageFile: file.serialize(true) });
@@ -78,20 +78,21 @@ exports.post = async (apiContext) => {
 
 // fetch a list of files
 exports.get = async (apiContext) => { // TODO: フィルター指定、ページネーション、ファイル内容を含めるかどうか
-	await apiContext.check({
+	await apiContext.proceed({
 		query: {},
 		permissions: ['storageRead']
 	});
+	if (apiContext.responsed) return;
 
 	// user
 	const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
 	if (user == null) {
-		throw new ApiError(404, 'user as premise not found');
+		return apiContext.response(404, 'user as premise not found');
 	}
 
 	const isOwnerAccess = user.document._id.equals(apiContext.user.document._id);
 	if (!isOwnerAccess) {
-		throw new ApiError(403, 'this operation is not permitted');
+		return apiContext.response(403, 'this operation is not permitted');
 	}
 
 	// fetch document

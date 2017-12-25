@@ -1,20 +1,20 @@
 const AuthorizeRequest = require('../../documentModels/authorizeRequest');
 const $ = require('cafy').default;
-const { ApiError } = require('../../helpers/errors');
 
 exports.post = async (apiContext) => {
-	await apiContext.check({
+	await apiContext.proceed({
 		body: {
 			verificationCode: { cafy: $().string() }
 		},
 		headers: ['x-ice-auth-key']
 	});
+	if (apiContext.responsed) return;
 
 	const iceAuthKey = apiContext.headers['x-ice-auth-key'];
 	const verificationCode = apiContext.body.verificationCode;
 
 	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, apiContext.db, apiContext.config)) {
-		throw new ApiError(400, 'x-ice-auth-key header is invalid');
+		return apiContext.response(400, 'x-ice-auth-key header is invalid');
 	}
 
 	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, apiContext.db, apiContext.config).authorizeRequestId;
@@ -23,11 +23,11 @@ exports.post = async (apiContext) => {
 	await authorizeRequest.removeAsync();
 
 	if (document.targetUserId == null) {
-		throw new ApiError(400, 'authorization has not been done yet');
+		return apiContext.response(400, 'authorization has not been done yet');
 	}
 
 	if (verificationCode !== document.verificationCode) {
-		throw new ApiError(400, 'verificationCode is invalid');
+		return apiContext.response(400, 'verificationCode is invalid');
 	}
 
 	// TODO: refactoring(duplication)
@@ -52,7 +52,7 @@ exports.post = async (apiContext) => {
 		}
 
 		if (applicationAccess == null) {
-			throw new ApiError(500, 'failed to create applicationAccess');
+			return apiContext.response(500, 'failed to create applicationAccess');
 		}
 
 		try {
@@ -63,7 +63,7 @@ exports.post = async (apiContext) => {
 		}
 
 		if (accessKey == null) {
-			throw new ApiError(500, 'failed to generate accessKey');
+			return apiContext.response(500, 'failed to generate accessKey');
 		}
 	}
 	else {
@@ -75,7 +75,7 @@ exports.post = async (apiContext) => {
 		}
 
 		if (accessKey == null) {
-			throw new ApiError(500, 'failed to build accessKey');
+			return apiContext.response(500, 'failed to build accessKey');
 		}
 	}
 

@@ -1,25 +1,25 @@
 const User = require('../../documentModels/user');
 const $ = require('cafy').default;
-const { ApiError } = require('../../helpers/errors');
 
 exports.get = async (apiContext) => {
-	await apiContext.check({
+	await apiContext.proceed({
 		query: {
 			'screen_names': { cafy: $().string(), default: '' }
 		},
 		permissions: ['userRead']
 	});
+	if (apiContext.responsed) return;
 
 	let users;
 	if (apiContext.query.screen_names != '') {
 		const screenNames = apiContext.query.screen_names.split(',');
 
 		if (screenNames.lenth > 100) {
-			throw new ApiError(400, 'screen_names query is limit over(100 items or less)');
+			return apiContext.response(400, 'screen_names query is limit over(100 items or less)');
 		}
 
 		if (screenNames.every(i => User.checkFormatScreenName(i)) === false) {
-			throw new ApiError(400, 'screen_names query is invalid');
+			return apiContext.response(400, 'screen_names query is invalid');
 		}
 
 		// TODO: screenNamesの重複チェック

@@ -6,6 +6,7 @@ const path = require('path');
 const validator = require('validator');
 const AsyncLock = require('async-lock');
 const { getFileDataAsync } = require('../../built/helpers/fileSystemHelpers');
+const ApiContext = require('../../built/helpers/ApiContext');
 const route = require('../../built/routes/users/id/storage');
 const routeFiles = require('../../built/routes/users/id/storage/files');
 const routeFileId = require('../../built/routes/users/id/storage/files/file_id');
@@ -13,7 +14,7 @@ const routeFileId = require('../../built/routes/users/id/storage/files/file_id')
 describe('User Storage API', () => {
 	describe('/users/:id/storage', () => {
 		// load collections
-		let db, lock;
+		let db, lock, testData64, testData64Size;
 		before(async () => {
 			config.api.database = config.api.testDatabase;
 
@@ -26,16 +27,16 @@ describe('User Storage API', () => {
 			lock = new AsyncLock();
 
 			config.api.storage.spaceSize = 500 * 1024; // テスト用の容量(500KB)に設定
-		});
-
-		// add general user, general application
-		let user, app, testData64, testData64Size;
-		beforeEach(async () => {
-			user = await db.users.createAsync('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
-			app = await db.applications.createAsync('generalapp', user, 'this is generalapp.', []);
 
 			testData64 = await getFileDataAsync(path.resolve(__dirname, '../resources/squid.png'), 'base64');
 			testData64Size = Buffer.from(testData64, 'base64').length;
+		});
+
+		// add general user, general application
+		let user, app;
+		beforeEach(async () => {
+			user = await db.users.createAsync('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
+			app = await db.applications.createAsync('generalapp', user, 'this is generalapp.', ['storageRead', 'storageWrite']);
 		});
 
 		// remove all users, all applications
@@ -47,46 +48,60 @@ describe('User Storage API', () => {
 
 		describe('[GET]', () => {
 			it('正しくリクエストされた場合は成功する', async () => {
-				const request = {
-					body: {
-						fileData: testData64
-					},
-					params: { id: user.document._id.toString() },
-					user: user, db: db, config: config, lock: lock, checkRequestAsync: () => null
-				};
-
-				let resFiles = [];
+				let context;
+				const fileApiContexts = [];
+				const promises = [];
 				for (let i = 0; i < 4; i++) {
-					resFiles.push(await routeFiles.post(request));
+					context = new ApiContext(null, lock, db, config, {
+						params: { id: user.document._id.toString() },
+						body: { fileData: testData64 },
+						headers: { 'X-Api-Version': 1 },
+						testMode: true
+					});
+					context.application = app;
+					context.user = user;
+					fileApiContexts.push(context);
+					promises.push(routeFiles.post(context));
 				}
+				await Promise.all(promises);
 
-				const res = await route.get({
+				context = new ApiContext(null, lock, db, config, {
 					params: { id: user.document._id.toString() },
-					user: user, db: db, config: config, checkRequestAsync: () => null
+					headers: { 'X-Api-Version': 1 },
+					testMode: true
 				});
+				context.application = app;
+				context.user = user;
+				await route.get(context);
 
-				const { spaceSize, usedSpace, availableSpace } = res.data.storage;
-				assert.equal(testData64Size * resFiles.length, usedSpace, 'usedSpace is invalid value');
-				assert.equal(spaceSize - testData64Size * resFiles.length, availableSpace, 'availableSpace is invalid value');
+				assert(typeof context.data != 'string', `api error: ${context.data}`);
+
+				const { spaceSize, usedSpace, availableSpace } = context.data.storage;
+				assert.equal(testData64Size * fileApiContexts.length, usedSpace, 'usedSpace is invalid value');
+				assert.equal(spaceSize - testData64Size * fileApiContexts.length, availableSpace, 'availableSpace is invalid value');
 			});
 		});
 
 		describe('/files', () => {
 			describe('[POST]', () => {
 				it('正しくリクエストされた場合は成功する(1件、public)', async () => {
-					let res = await routeFiles.post({
-						body: {
-							fileData: testData64
-						},
+					const context = new ApiContext(null, lock, db, config, {
 						params: { id: user.document._id.toString() },
-						user: user, db: db, config: config, lock: lock, checkRequestAsync: () => null
+						body: { fileData: testData64 },
+						headers: { 'X-Api-Version': 1 },
+						testMode: true
 					});
+					context.application = app;
+					context.user = user;
+					await routeFiles.post(context);
 
-					assert(validator.isBase64(res.data.storageFile.fileData), 'returned fileData is not base64');
-					delete res.data.storageFile.fileData;
+					assert(typeof context.data != 'string', `api error: ${context.data}`);
 
-					delete res.data.storageFile.id;
-					delete res.data.storageFile.createdAt;
+					assert(validator.isBase64(context.data.storageFile.fileData), 'returned fileData is not base64');
+					delete context.data.storageFile.fileData;
+
+					delete context.data.storageFile.id;
+					delete context.data.storageFile.createdAt;
 
 					assert.deepEqual({
 						storageFile: {
@@ -96,33 +111,33 @@ describe('User Storage API', () => {
 							type: 'image',
 							size: testData64Size
 						}
-					}, res.data);
+					}, context.data);
 				});
 
 				it('非同期で一度に容量制限を超える量のドキュメントを作成した場合でも、容量制限が正常に動作し作成に失敗する(public)', async () => {
-					const req = {
-						body: {
-							fileData: testData64
-						},
-						params: { id: user.document._id.toString() },
-						user: user, db: db, config: config, lock: lock, checkRequestAsync: () => null
-					};
-
+					const contexts = [];
 					const promises = [];
 					const count = parseInt(config.api.storage.spaceSize / testData64Size) + 1; // parseInt(500KB / 53.8KB) + 1 = 10 items, 10 * 53.8KB > 500KB
 					for (let i = 0; i < count; i++) {
-						promises.push(routeFiles.post(req));
+						const context = new ApiContext(null, lock, db, config, {
+							params: { id: user.document._id.toString() },
+							body: { fileData: testData64 },
+							headers: { 'X-Api-Version': 1 },
+							user,
+							application: app
+						});
+						contexts.push(context);
+						promises.push(routeFiles.post(context));
 					}
-					const resArray = await Promise.all(promises);
+					await Promise.all(promises);
 
 					let failureCount = 0;
-					for (const res of resArray) {
-						if (res.data.storageFile != null) {
-							assert(validator.isBase64(res.data.storageFile.fileData), 'returned fileData is not base64');
-							delete res.data.storageFile.fileData;
-
-							delete res.data.storageFile.id;
-							delete res.data.storageFile.createdAt;
+					for (const context of contexts) {
+						if (context.responsed && context.data.storageFile != null) {
+							assert(validator.isBase64(context.data.storageFile.fileData), 'returned fileData is not base64');
+							delete context.data.storageFile.fileData;
+							delete context.data.storageFile.id;
+							delete context.data.storageFile.createdAt;
 
 							assert.deepEqual({
 								storageFile: {
@@ -132,59 +147,61 @@ describe('User Storage API', () => {
 									type: 'image',
 									size: testData64Size
 								}
-							}, res.data);
+							}, context.data);
 						}
 						else {
 							failureCount++;
 						}
 					}
-
-					assert(failureCount == 1, 'error respond: ' + failureCount);
+					assert(failureCount == 1, 'invalid failureCount: ' + failureCount);
 				});
 
 				it('fileDataが空のときは失敗する', async () => {
-					let res = await routeFiles.post({
-						body: {
-							fileData: ''
-						},
+					const context = new ApiContext(null, lock, db, config, {
 						params: { id: user.document._id.toString() },
-						user: user, db: db, config: config, lock: lock, checkRequestAsync: () => null
+						body: { fileData: '' },
+						headers: { 'X-Api-Version': 1 },
+						user,
+						application: app
 					});
+					await routeFiles.post(context);
 
-					assert.equal('file is not base64 format', res.data);
+					assert.equal('body parameter \'fileData\' is invalid', context.data);
 				});
+
 			});
 			describe('[GET]', () => {
 				it('正しくリクエストされた場合は成功する', async () => {
-					const request = {
-						body: {
-							fileData: testData64
-						},
+					let context;
+					const contexts = [];
+					for (let i = 0; i < 4; i++) {
+						context = new ApiContext(null, lock, db, config, {
+							params: { id: user.document._id.toString() },
+							body: { fileData: testData64 },
+							headers: { 'X-Api-Version': 1 },
+							user,
+							application: app
+						});
+						contexts.push(context);
+					}
+					await Promise.all(contexts.map(c => routeFiles.post(c)));
+
+					context = new ApiContext(null, lock, db, config, {
 						params: { id: user.document._id.toString() },
-						user: user, db: db, config: config, lock: lock, checkRequestAsync: () => null
-					};
-
-					let resFiles = await Promise.all([
-						routeFiles.post(request),
-						routeFiles.post(request),
-						routeFiles.post(request),
-						routeFiles.post(request)
-					]);
-
-					let res = await routeFiles.get({
-						params: {
-							id: user.document._id.toString()
-						},
-						user: user, db: db, config: config, checkRequestAsync: () => null
+						headers: { 'X-Api-Version': 1 },
+						user,
+						application: app
 					});
+					await routeFiles.get(context);
 
-					assert(res.data.storageFiles != null, 'invalid response');
-					assert(res.data.storageFiles.length == resFiles.length, 'invalid response length');
+					assert(typeof context.data != 'string', `api error: ${context.data}`);
 
-					for (const storageFile of res.data.storageFiles) {
+					assert(context.data.storageFiles != null, 'invalid response');
+					assert.equal(context.data.storageFiles.length, contexts.length, 'invalid response length');
+
+					for (const storageFile of context.data.storageFiles) {
 						assert(validator.isBase64(storageFile.fileData), 'returned fileData is not base64');
 						delete storageFile.fileData;
-
 						delete storageFile.id;
 						delete storageFile.createdAt;
 						assert.deepEqual({
@@ -201,27 +218,34 @@ describe('User Storage API', () => {
 			describe('/:file_id', () => {
 				describe('[GET]', () => {
 					it('正しくリクエストされた場合は成功する', async () => {
-						let resFile = await routeFiles.post({
-							body: {
-								fileData: testData64
-							},
+						const contextFile = new ApiContext(null, lock, db, config, {
 							params: { id: user.document._id.toString() },
-							user: user, db: db, config: config, lock: lock, checkRequestAsync: () => null
+							body: { fileData: testData64 },
+							headers: { 'X-Api-Version': 1 },
+							user,
+							application: app
 						});
+						await routeFiles.post(contextFile);
 
-						let res = await routeFileId.get({
+						assert(typeof contextFile.data != 'string', `api error: ${contextFile.data}`);
+
+						const context = new ApiContext(null, lock, db, config, {
 							params: {
 								id: user.document._id.toString(),
-								'file_id': resFile.data.storageFile.id
+								'file_id': contextFile.data.storageFile.id
 							},
-							user: user, db: db, config: config, checkRequestAsync: () => null
+							headers: { 'X-Api-Version': 1 },
+							user,
+							application: app
 						});
+						await routeFileId.get(context);
 
-						assert(validator.isBase64(res.data.storageFile.fileData), 'returned fileData is not base64');
-						delete res.data.storageFile.fileData;
+						assert(typeof context.data != 'string', `api error: ${context.data}`);
 
-						delete res.data.storageFile.id;
-						delete res.data.storageFile.createdAt;
+						assert(validator.isBase64(context.data.storageFile.fileData), 'returned fileData is not base64');
+						delete context.data.storageFile.fileData;
+						delete context.data.storageFile.id;
+						delete context.data.storageFile.createdAt;
 						assert.deepEqual({
 							storageFile: {
 								accessRight: { level: 'public' },
@@ -230,7 +254,7 @@ describe('User Storage API', () => {
 								type: 'image',
 								size: testData64Size
 							}
-						}, res.data);
+						}, context.data);
 					});
 				});
 				describe('[DELETE]', () => {

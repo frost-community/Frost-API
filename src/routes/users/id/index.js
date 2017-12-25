@@ -2,10 +2,11 @@ const User = require('../../../documentModels/user');
 // const $ = require('cafy').default;
 
 exports.get = async (apiContext) => {
-	await apiContext.check({
+	await apiContext.proceed({
 		query: {},
 		permissions: ['userRead']
 	});
+	if (apiContext.responsed) return;
 
 	const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
 

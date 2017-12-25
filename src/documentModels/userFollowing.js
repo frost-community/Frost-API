@@ -1,10 +1,11 @@
 const objectSorter = require('../helpers/objectSorter');
 const moment = require('moment');
+const { MissingArgumentsError } = require('../helpers/errors');
 
 class UserFollowing {
 	constructor(document, db, config) {
 		if (document == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		this.document = document;
@@ -41,7 +42,7 @@ class UserFollowing {
 
 	static async findBySrcDestIdAsync(sourceId, targetId, db, config) {
 		if (sourceId == null || targetId == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		return db.userFollowings.findAsync({ source: sourceId, target: targetId });
@@ -49,7 +50,7 @@ class UserFollowing {
 
 	static async findTargetsAsync(sourceId, limit, db, config) {
 		if (sourceId == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		return db.userFollowings.findArrayAsync({ source: sourceId }, db.dbProvider.createSortOptionNatural(false), limit);
@@ -57,7 +58,7 @@ class UserFollowing {
 
 	static async findSourcesAsync(targetId, limit, db, config) {
 		if (targetId == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		return db.userFollowings.findArrayAsync({ target: targetId }, db.dbProvider.createSortOptionNatural(false), limit);

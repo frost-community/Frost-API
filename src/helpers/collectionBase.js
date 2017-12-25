@@ -1,9 +1,10 @@
 const mongo = require('mongodb');
+const { MissingArgumentsError } = require('./errors');
 
 class CollectionBase {
 	constructor(collectionName, documentModelName, db, config) {
 		if (collectionName == null || documentModelName == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		this.collectionName = collectionName;
@@ -14,7 +15,7 @@ class CollectionBase {
 
 	async createAsync(data) {
 		if (data == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		const result = await this.db.dbProvider.createAsync(this.collectionName, data);
@@ -24,7 +25,7 @@ class CollectionBase {
 
 	async findAsync(query) {
 		if (query == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		const document = await this.db.dbProvider.findAsync(this.collectionName, query);
@@ -38,7 +39,7 @@ class CollectionBase {
 
 	async findByIdAsync(id) {
 		if (id == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		let parsedId = id;
@@ -58,7 +59,7 @@ class CollectionBase {
 
 	async findArrayAsync(query, sortOption, limit) {
 		if (query == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		const documents = await this.db.dbProvider.findArrayAsync(this.collectionName, query, sortOption, limit);
@@ -77,7 +78,7 @@ class CollectionBase {
 
 	async updateAsync(query, data, options) {
 		if (query == null || data == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		return await this.db.dbProvider.updateAsync(this.collectionName, query, data, options);
@@ -92,7 +93,7 @@ class CollectionBase {
 
 	updateByIdAsync(id, data, options) {
 		if (id == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		let parsedId = id;
@@ -119,7 +120,7 @@ class CollectionBase {
 
 	removeAsync(query) {
 		if (query == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		return this.db.dbProvider.removeAsync(this.collectionName, query);
@@ -127,7 +128,7 @@ class CollectionBase {
 
 	removeByIdAsync(id) {
 		if (id == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		let parsedId = id;

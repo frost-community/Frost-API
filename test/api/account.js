@@ -13,10 +13,21 @@ describe('Account API', () => {
 
 			const dbProvider = await DbProvider.connectApidbAsync(config);
 			db = new Db(config, dbProvider);
+
+			await db.users.removeAsync({});
+			await db.applications.removeAsync({});
+		});
+
+		// add general user, general application
+		let user, application;
+		beforeEach(async () => {
+			user = await db.users.createAsync('generaluser_a', 'abcdefg', 'froster', 'this is generaluser.');
+			application = await db.applications.createAsync('generalapp_a', user, 'this is generalapp.', ['accountSpecial']);
 		});
 
 		afterEach(async () => {
 			await db.users.removeAsync({});
+			await db.applications.removeAsync({});
 		});
 
 		describe('[POST]', () => {
@@ -29,9 +40,12 @@ describe('Account API', () => {
 						description: 'testhoge'
 					},
 					headers: { 'X-Api-Version': 1 },
-					testMode: true
+					user,
+					application
 				});
 				await route.post(context);
+
+				assert(typeof context.data != 'string', `api error: ${context.data}`);
 
 				delete context.data.user.id;
 				delete context.data.user.createdAt;
@@ -53,16 +67,12 @@ describe('Account API', () => {
 						description: 'testhoge'
 					},
 					headers: { 'X-Api-Version': 1 },
-					testMode: true
+					user,
+					application
 				});
 
-				try {
-					await route.post(context);
-					assert.fail('not throwed');
-				}
-				catch(err) {
-					assert.equal(err.statusCode, 400);
-				}
+				await route.post(context);
+				assert.equal(context.statusCode, 400);
 
 				context = new ApiContext(null, null, db, config, {
 					body: {
@@ -72,16 +82,12 @@ describe('Account API', () => {
 						description: 'testhoge'
 					},
 					headers: { 'X-Api-Version': 1 },
-					testMode: true
+					user,
+					application
 				});
 
-				try {
-					await route.post(context);
-					assert.fail('not throwed');
-				}
-				catch(err) {
-					assert.equal(err.statusCode, 400);
-				}
+				await route.post(context);
+				assert.equal(context.statusCode, 400);
 			});
 
 			it('passwordが6文字未満のときは失敗する', async () => {
@@ -93,16 +99,12 @@ describe('Account API', () => {
 						description: 'testhoge'
 					},
 					headers: { 'X-Api-Version': 1 },
-					testMode: true
+					user,
+					application
 				});
 
-				try {
-					await route.post(context);
-					assert.fail('not throwed');
-				}
-				catch(err) {
-					assert.equal(err.statusCode, 400);
-				}
+				await route.post(context);
+				assert.equal(context.statusCode, 400);
 			});
 
 			it('nameが33文字以上のときは失敗する', async () => {
@@ -114,16 +116,12 @@ describe('Account API', () => {
 						description: 'testhoge'
 					},
 					headers: { 'X-Api-Version': 1 },
-					testMode: true
+					user,
+					application
 				});
 
-				try {
-					await route.post(context);
-					assert.fail('not throwed');
-				}
-				catch(err) {
-					assert.equal(err.statusCode, 400);
-				}
+				await route.post(context);
+				assert.equal(context.statusCode, 400);
 			});
 
 			it('descriptionが257文字以上のときは失敗する', async () => {
@@ -135,16 +133,12 @@ describe('Account API', () => {
 						description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget'
 					},
 					headers: { 'X-Api-Version': 1 },
-					testMode: true
+					user,
+					application
 				});
 
-				try {
-					await route.post(context);
-					assert.fail('not throwed');
-				}
-				catch(err) {
-					assert.equal(err.statusCode, 400);
-				}
+				await route.post(context);
+				assert.equal(context.statusCode, 400);
 			});
 		});
 	});

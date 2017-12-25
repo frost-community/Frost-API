@@ -31,7 +31,7 @@ describe('IceAuth API', () => {
 		beforeEach(async () => {
 			password = 'abcdefg';
 			user = await db.users.createAsync('generaluser', password, 'froster', 'this is generaluser.');
-			app = await db.applications.createAsync('generalapp', user, 'this is generalapp.', []);
+			app = await db.applications.createAsync('generalapp', user, 'this is generalapp.', ['iceAuthHost']);
 
 			authorizeRequest = await db.authorizeRequests.createAsync({
 				applicationId: app.document._id
@@ -55,9 +55,12 @@ describe('IceAuth API', () => {
 						applicationKey: applicationKey
 					},
 					headers: { 'X-Api-Version': 1 },
-					testMode: true
+					user,
+					application: app
 				});
 				await route.post(context);
+
+				assert(typeof context.data != 'string', `api error: ${context.data}`);
 
 				assert(await AuthorizeRequest.verifyKeyAsync(context.data.iceAuthKey, db, config));
 			});
@@ -71,7 +74,8 @@ describe('IceAuth API', () => {
 
 					const context = new ApiContext(null, null, db, config, {
 						headers: { 'X-Ice-Auth-Key': iceAuthKey, 'X-Api-Version': 1 },
-						testMode: true
+						user,
+						application: app
 					});
 					await routeVerificationCode.get(context);
 
@@ -91,10 +95,12 @@ describe('IceAuth API', () => {
 							applicationKey: await app.generateApplicationKeyAsync()
 						},
 						headers: { 'X-Api-Version': 1 },
-						testMode: true
+						user,
+						application: app
 					});
 					await route.post(context);
-					assert.equal(typeof context.data, 'object');
+
+					assert(typeof context.data != 'string', `api error: ${context.data}`);
 
 					// targetUser
 					context = new ApiContext(null, null, db, config, {
@@ -103,9 +109,11 @@ describe('IceAuth API', () => {
 							userId: user.document._id.toString()
 						},
 						headers: { 'X-Ice-Auth-Key': context.data.iceAuthKey, 'X-Api-Version': 1 },
-						testMode: true
+						user,
+						application: app
 					});
 					await routeTargetUser.post(context);
+
 					assert.equal(typeof context.data, 'object');
 				});
 			});
@@ -120,10 +128,12 @@ describe('IceAuth API', () => {
 							applicationKey: await app.generateApplicationKeyAsync()
 						},
 						headers: { 'X-Api-Version': 1 },
-						testMode: true
+						user,
+						application: app
 					});
 					await route.post(context);
-					assert.equal(typeof context.data, 'object');
+
+					assert(typeof context.data != 'string', `api error: ${context.data}`);
 
 					const authorizeRequest = await db.authorizeRequests.findByIdAsync(AuthorizeRequest.splitKey(context.data.iceAuthKey, db, config).authorizeRequestId);
 					const iceAuthKey = context.data.iceAuthKey;
@@ -134,7 +144,8 @@ describe('IceAuth API', () => {
 							userId: user.document._id.toString()
 						},
 						headers: { 'X-Ice-Auth-Key': iceAuthKey, 'X-Api-Version': 1 },
-						testMode: true
+						user,
+						application: app
 					});
 					await routeTargetUser.post(context);
 					assert.equal(typeof context.data, 'object');
@@ -145,7 +156,8 @@ describe('IceAuth API', () => {
 							verificationCode: authorizeRequest.document.verificationCode
 						},
 						headers: { 'X-Ice-Auth-Key': iceAuthKey, 'X-Api-Version': 1 },
-						testMode: true
+						user,
+						application: app
 					});
 					await routeAuthorize.post(context);
 					assert(await ApplicationAccess.verifyKeyAsync(context.data.accessKey, db, config));
@@ -160,9 +172,11 @@ describe('IceAuth API', () => {
 					let context = new ApiContext(null, null, db, config, {
 						body: { applicationKey: await app.generateApplicationKeyAsync() },
 						headers: { 'X-Api-Version': 1 },
-						testMode: true
+						user,
+						application: app
 					});
 					await route.post(context);
+
 					assert.equal(typeof context.data, 'object');
 					const iceAuthKey = context.data.iceAuthKey;
 
@@ -172,9 +186,13 @@ describe('IceAuth API', () => {
 							password: password
 						},
 						headers: { 'X-Ice-Auth-Key': iceAuthKey, 'X-Api-Version': 1 },
-						testMode: true
+						user,
+						application: app
 					});
 					await routeAuthorizeBasic.post(context);
+
+					assert(typeof context.data != 'string', `api error: ${context.data}`);
+
 					assert(await ApplicationAccess.verifyKeyAsync(context.data.accessKey, db, config));
 				});
 			});

@@ -1,11 +1,10 @@
 const UserFollowing = require('./documentModels/userFollowing');
 const WebSocket = require('websocket');
 const events = require('websocket-events');
-const { checkRequest: checkRequestStreaming } = require('./helpers/StreamingHelpers');
+const { checkRequest } = require('./helpers/StreamingHelpers');
 const { Stream, StreamUtil } = require('./helpers/stream');
 const methods = require('methods');
 const ApiContext = require('./helpers/ApiContext');
-const { ApiError } = require('./helpers/errors');
 
 /*
 # 各種変数の説明
@@ -33,13 +32,13 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 		// verification
 		let verification;
 		try {
-			verification = await checkRequestStreaming(request, db, config);
+			verification = await checkRequest(request, db, config);
 		}
 		catch (err) {
 			console.log('streaming verification error:', err);
 			return;
 		}
-		const { meId, applicationId } = verification;
+		const { meId, applicationKey, accessKey } = verification;
 
 		const connection = request.accept();
 
@@ -80,20 +79,8 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 			for (const streamId of connectedStreamIds) {
 				disconnectStream(streamId);
 			}
-			console.log(`disconnected streaming. user: @${connection.user.document.screenName}`);
+			console.log(`disconnected streaming. user: ${meId}`);
 		});
-
-		// 各種データのフェッチ
-		try {
-			[connection.user, connection.application] = await Promise.all([
-				db.users.findByIdAsync(meId),
-				db.applications.findByIdAsync(applicationId)
-			]);
-		}
-		catch (err) {
-			console.log('fetching error:', err);
-			return connection.close();
-		}
 
 		// クライアント側からRESTリクエストを受信したとき
 		connection.on('rest', async data => {
@@ -149,30 +136,14 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 					body,
 					headers
 				});
-				apiContext.user = connection.user;
-				apiContext.application = connection.application;
-				const requestQuery = request.resourceURL.query;
-				apiContext.headers['x-application-key'] = requestQuery.application_key;
-				apiContext.headers['x-access-key'] = requestQuery.access_key;
+				apiContext.headers['x-application-key'] = applicationKey;
+				apiContext.headers['x-access-key'] = accessKey;
 
-				try {
-					// 対象のRouteモジュールを実行
-					await routeFuncAsync(apiContext);
+				// 対象のRouteモジュールを実行
+				await routeFuncAsync(apiContext);
 
-					if (!apiContext.responsed) {
-						throw new ApiError(500, 'not responsed');
-					}
-				}
-				catch (err) {
-					if (err instanceof ApiError) {
-						console.log(`streaming/rest: ${method} ${endpoint}, status=${err.statusCode}`);
-
-						return connection.send('rest', {
-							success: true,
-							statusCode: err.statusCode,
-							response: { message: err.message }
-						});
-					}
+				if (!apiContext.responsed) {
+					return apiContext.response(500, 'not responsed');
 				}
 
 				console.log(`streaming/rest: ${method} ${endpoint}, status=${apiContext.statusCode}`);

@@ -32,6 +32,8 @@ class StreamingHelpers {
 		}
 
 		return {
+			applicationKey,
+			accessKey,
 			applicationId: Application.splitKey(applicationKey, db, config).applicationId,
 			meId: ApplicationAccess.splitKey(accessKey, db, config).userId
 		};
