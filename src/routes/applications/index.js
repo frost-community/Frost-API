@@ -55,7 +55,7 @@ module.exports.get = async (apiContext) => {
 		applications = [];
 	}
 
-	if (applications.length == 0) {
+	if (applications == null || applications.length == 0) {
 		apiContext.response(204);
 		return;
 	}
