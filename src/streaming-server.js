@@ -274,7 +274,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 			error('default', 'invalid event name');
 		});
 
-		console.log(`connected streaming. user: @${connection.user.document.screenName}`);
+		console.log(`connected streaming. user: ${meId}`);
 	});
 
 	console.log('streaming server is ready.');

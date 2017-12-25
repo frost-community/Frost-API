@@ -39,5 +39,5 @@ exports.post = async (apiContext) => {
 		return apiContext.response(500, 'failed to create postArticle');
 	}
 
-	apiContext.response(200, { postArticle: postArticle.serialize() });
+	apiContext.response(200, { postArticle: await postArticle.serializeAsync(true) });
 };
