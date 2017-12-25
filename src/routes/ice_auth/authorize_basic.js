@@ -1,55 +1,52 @@
-const ApiResult = require('../../helpers/apiResult');
 const AuthorizeRequest = require('../../documentModels/authorizeRequest');
 const User = require('../../documentModels/user');
+const $ = require('cafy').default;
 
-exports.post = async (request) => {
-	const result = await request.checkRequestAsync({
-		body: [
-			{name: 'screenName', type: 'string'},
-			{name: 'password', type: 'string'}
-		],
-		headers: ['X-Ice-Auth-Key'],
+exports.post = async (apiContext) => {
+	await apiContext.proceed({
+		body: {
+			screenName: { cafy: $().string() },
+			password: { cafy: $().string() }
+		},
+		headers: ['x-ice-auth-key'],
 		permissions: ['iceAuthHost']
 	});
+	if (apiContext.responsed) return;
 
-	if (result != null) {
-		return result;
+	const iceAuthKey = apiContext.headers['x-ice-auth-key'];
+	const screenName = apiContext.body.screenName;
+	const password = apiContext.body.password;
+
+	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, apiContext.db, apiContext.config)) {
+		return apiContext.response(400, 'x-ice-auth-key header is invalid');
 	}
 
-	const iceAuthKey = request.get('X-Ice-Auth-Key');
-	const screenName = request.body.screenName;
-	const password = request.body.password;
-
-	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, request.db, request.config)) {
-		return new ApiResult(400, 'X-Ice-Auth-Key header is invalid');
-	}
-
-	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, request.db, request.config).authorizeRequestId;
-	const authorizeRequest = await AuthorizeRequest.findByIdAsync(authorizeRequestId, request.db, request.config);
+	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, apiContext.db, apiContext.config).authorizeRequestId;
+	const authorizeRequest = await AuthorizeRequest.findByIdAsync(authorizeRequestId, apiContext.db, apiContext.config);
 	const applicationId = authorizeRequest.document.applicationId;
 	await authorizeRequest.removeAsync();
 
 	if (!User.checkFormatScreenName(screenName)) {
-		return new ApiResult(400, 'screenName is invalid format');
+		return apiContext.response(400, 'screenName is invalid format');
 	}
 
 	if (!User.checkFormatPassword(password)) {
-		return new ApiResult(400, 'password is invalid format');
+		return apiContext.response(400, 'password is invalid format');
 	}
 
-	const user = await User.findByScreenNameAsync(screenName, request.db, request.config);
+	const user = await User.findByScreenNameAsync(screenName, apiContext.db, apiContext.config);
 
 	if (user == null) {
-		return new ApiResult(400, 'screenName is invalid');
+		return apiContext.response(400, 'screenName is invalid');
 	}
 
 	if (!user.verifyPassword(password)) {
-		return new ApiResult(400, 'password is invalid');
+		return apiContext.response(400, 'password is invalid');
 	}
 
 	// TODO: refactoring(duplication)
 
-	let applicationAccess = await request.db.applicationAccesses.findAsync({
+	let applicationAccess = await apiContext.db.applicationAccesses.findAsync({
 		applicationId: applicationId,
 		userId: user.document._id
 	});
@@ -58,43 +55,43 @@ exports.post = async (request) => {
 
 	if (applicationAccess == null) {
 		try {
-			applicationAccess = await request.db.applicationAccesses.createAsync({ // TODO: move to document models
+			applicationAccess = await apiContext.db.applicationAccesses.createAsync({ // TODO: move to document models
 				applicationId: applicationId,
 				userId: user.document._id,
 				keyCode: null
 			});
 		}
-		catch(err) {
+		catch (err) {
 			console.log(err);
 		}
 
 		if (applicationAccess == null) {
-			return new ApiResult(500, 'failed to create applicationAccess');
+			return apiContext.response(500, 'failed to create applicationAccess');
 		}
 
 		try {
 			accessKey = await applicationAccess.generateAccessKeyAsync();
 		}
-		catch(err) {
+		catch (err) {
 			console.log(err);
 		}
 
 		if (accessKey == null) {
-			return new ApiResult(500, 'failed to generate accessKey');
+			return apiContext.response(500, 'failed to generate accessKey');
 		}
 	}
 	else {
 		try {
 			accessKey = applicationAccess.getAccessKey();
 		}
-		catch(err) {
+		catch (err) {
 			console.log(err);
 		}
 
 		if (accessKey == null) {
-			return new ApiResult(500, 'failed to build accessKey');
+			return apiContext.response(500, 'failed to build accessKey');
 		}
 	}
 
-	return new ApiResult(200, {accessKey: accessKey});
+	apiContext.response(200, { accessKey: accessKey });
 };

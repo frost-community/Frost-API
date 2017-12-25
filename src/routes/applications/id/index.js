@@ -1,34 +1,35 @@
-const ApiResult = require('../../../helpers/apiResult');
 const Application = require('../../../documentModels/application');
 const mongo = require('mongodb');
+// const $ = require('cafy').default;
 
-exports.get = async (request) => {
-	const result = await request.checkRequestAsync({
+exports.get = async (apiContext) => {
+	await apiContext.proceed({
 		permissions: ['application']
 	});
+	if (apiContext.responsed) return;
 
-	if (result != null) {
-		return result;
-	}
-
-	let application;
-
+	let applicationId;
 	try {
-		const applicationId = mongo.ObjectId(request.params.id);
-		application = await Application.findByIdAsync(applicationId, request.db, request.config);
+		applicationId = mongo.ObjectId(apiContext.params.id);
 	}
-	catch(err) {
+	catch (err) {
 		// noop
 	}
 
+	let application;
+	if (applicationId) {
+		try {
+			application = await Application.findByIdAsync(applicationId, apiContext.db, apiContext.config);
+		}
+		catch (err) {
+			console.log(err);
+		}
+	}
+
 	if (application == null) {
-		return new ApiResult(204);
+		apiContext.response(204);
+		return;
 	}
 
-	// 対象アプリケーションの所有者かどうか
-	if (!application.document.creatorId.equals(request.user.document._id)) {
-		return new ApiResult(403, 'this operation is not permitted');
-	}
-
-	return new ApiResult(200, {application: application.serialize()});
+	apiContext.response(200, { application: application.serialize() });
 };

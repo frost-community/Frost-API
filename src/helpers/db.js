@@ -5,11 +5,12 @@ const Posts = require('../collections/posts');
 const Users = require('../collections/users');
 const UserFollowings = require('../collections/userFollowings');
 const StorageFiles = require('../collections/storageFiles');
+const { MissingArgumentsError } = require('./errors');
 
 class Db {
 	constructor(config, dbProvider) {
 		if (config == null || dbProvider == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		this._config = config;

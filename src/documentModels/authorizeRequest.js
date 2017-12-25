@@ -3,11 +3,12 @@ const objectSorter = require('../helpers/objectSorter');
 const crypto = require('crypto');
 const mongo = require('mongodb');
 const moment = require('moment');
+const { MissingArgumentsError, InvalidArgumentError, InvalidOperationError } = require('../helpers/errors');
 
 class AuthorizeRequest {
 	constructor(document, db, config) {
 		if (document == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		this.document = document;
@@ -20,7 +21,7 @@ class AuthorizeRequest {
 		for (let i = 0; i < 6; i++) {
 			verificationCode += String(randomRange(0, 9));
 		}
-		await this.db.authorizeRequests.updateAsync({_id: this.document._id}, {verificationCode: verificationCode});
+		await this.db.authorizeRequests.updateAsync({ _id: this.document._id }, { verificationCode });
 		await this.fetchAsync();
 
 		return this.getVerificationCode();
@@ -28,7 +29,7 @@ class AuthorizeRequest {
 
 	getVerificationCode() {
 		if (this.document.verificationCode == null) {
-			throw new Error('verificationCode is empty');
+			throw new InvalidOperationError('verificationCode is empty');
 		}
 
 		return this.document.verificationCode;
@@ -36,7 +37,7 @@ class AuthorizeRequest {
 
 	async generateIceAuthKeyAsync() {
 		const keyCode = randomRange(1, 99999);
-		await this.db.authorizeRequests.updateByIdAsync(this.document._id, {keyCode: keyCode});
+		await this.db.authorizeRequests.updateByIdAsync(this.document._id, { keyCode });
 		await this.fetchAsync();
 
 		return this.getIceAuthKey();
@@ -44,7 +45,7 @@ class AuthorizeRequest {
 
 	getIceAuthKey() {
 		if (this.document.keyCode == null) {
-			throw new Error('keyCode is empty');
+			throw new InvalidOperationError('keyCode is empty');
 		}
 
 		const hash = AuthorizeRequest.buildHash(this.document._id, this.document.applicationId, this.document.keyCode, this.db, this.config);
@@ -54,10 +55,10 @@ class AuthorizeRequest {
 
 	async setTargetUserIdAsync(userId) {
 		if (userId == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
-		await this.db.authorizeRequests.updateByIdAsync(this.document._id, {targetUserId: mongo.ObjectId(userId)});
+		await this.db.authorizeRequests.updateByIdAsync(this.document._id, { targetUserId: mongo.ObjectId(userId) });
 		await this.fetchAsync();
 	}
 
@@ -84,7 +85,7 @@ class AuthorizeRequest {
 	}
 
 	async removeAsync() {
-		await this.db.authorizeRequests.removeAsync({_id: this.document._id});
+		await this.db.authorizeRequests.removeAsync({ _id: this.document._id });
 		this.document = null;
 	}
 
@@ -92,7 +93,7 @@ class AuthorizeRequest {
 
 	static async findByIdAsync(id, db, config) {
 		if (id == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		return db.authorizeRequests.findByIdAsync(id);
@@ -100,7 +101,7 @@ class AuthorizeRequest {
 
 	static buildHash(authorizeRequestId, applicationId, keyCode, db, config) {
 		if (authorizeRequestId == null || applicationId == null || keyCode == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		const sha256 = crypto.createHash('sha256');
@@ -111,21 +112,21 @@ class AuthorizeRequest {
 
 	static splitKey(key, db, config) {
 		if (key == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
 
 		if (reg == null) {
-			throw new Error('falid to split key');
+			throw new InvalidArgumentError('key');
 		}
 
-		return {authorizeRequestId: mongo.ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3])};
+		return { authorizeRequestId: mongo.ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3]) };
 	}
 
 	static async verifyKeyAsync(key, db, config) {
 		if (key == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		let elements;

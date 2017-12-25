@@ -2,31 +2,35 @@ module.exports = (request, response, next) => {
 	/**
 	 * APIリクエストのレスポンスとして返します
 	 *
-	 * @param  {ApiResult} apiResult APIコールの結果情報
+	 * @param  {ApiContext} apiContext APIコールの結果情報
 	 */
-	response.apiSend = (apiResult) => {
+	response.apiSend = (apiContext) => {
 		let sendData = {};
 
-		if (apiResult.statusCode == null) {
-			apiResult.statusCode = 200;
+		if (!apiContext.responsed) {
+			throw new Error('api has not responsed yet');
 		}
 
-		if (typeof apiResult.data == 'string') {
-			sendData.message = apiResult.data;
-		}
-		else if (apiResult.data != null) {
-			sendData = apiResult.data;
+		if (apiContext.statusCode == null) {
+			apiContext.statusCode = 200;
 		}
 
-		if (apiResult.needStatusCode) {
-			sendData.statusCode = apiResult.statusCode;
+		if (typeof apiContext.data == 'string') {
+			sendData.message = apiContext.data;
+		}
+		else if (apiContext.data != null) {
+			sendData = apiContext.data;
+		}
+
+		if (apiContext.needStatusCode) {
+			sendData.statusCode = apiContext.statusCode;
 		}
 
 		if (Object.keys(sendData).length == 0) {
 			sendData = null;
 		}
 
-		response.status(apiResult.statusCode).send(sendData);
+		response.status(apiContext.statusCode).send(sendData);
 	};
 
 	next();

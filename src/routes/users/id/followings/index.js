@@ -1,33 +1,31 @@
-const ApiResult = require('../../../../helpers/apiResult');
 const User = require('../../../../documentModels/user');
 const UserFollowing = require('../../../../documentModels/userFollowing');
+// const $ = require('cafy').default;
 
 // TODO: limit指定、カーソル送り等
 
-exports.get = async (request) => {
-	const result = await request.checkRequestAsync({
-		query: [],
+exports.get = async (apiContext) => {
+	await apiContext.proceed({
+		query: {},
 		permissions: ['userRead']
 	});
-
-	if (result != null) {
-		return result;
-	}
+	if (apiContext.responsed) return;
 
 	// user
-	const user = await User.findByIdAsync(request.params.id, request.db, request.config);
+	const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
 	if (user == null) {
-		return new ApiResult(404, 'user as premise not found');
+		return apiContext.response(404, 'user as premise not found');
 	}
 
-	const userFollowings = await UserFollowing.findTargetsAsync(user.document._id, 30, request.db, request.config);
+	const userFollowings = await UserFollowing.findTargetsAsync(user.document._id, 30, apiContext.db, apiContext.config);
 	if (userFollowings == null || userFollowings.length == 0) {
-		return new ApiResult(204);
+		apiContext.response(204);
+		return;
 	}
 
 	const serialized = [];
 	for (const i of userFollowings) {
 		serialized.push(i.document.target.toString());
 	}
-	return new ApiResult(200, {userfollowings: serialized});
+	apiContext.response(200, { userfollowings: serialized });
 };

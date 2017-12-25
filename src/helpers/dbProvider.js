@@ -1,9 +1,10 @@
 const mongo = require('mongodb');
+const { MissingArgumentsError } = require('./errors');
 
 class DbProvider {
 	constructor(connection) {
 		if (connection == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		this.connection = connection;
@@ -18,11 +19,11 @@ class DbProvider {
 	 */
 	async createAsync(collectionName, data) {
 		if (collectionName == null || data == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		const document = (await this.connection.collection(collectionName).insert(data)).ops[0];
-		return await this.findAsync(collectionName, {_id: document._id});
+		return await this.findAsync(collectionName, { _id: document._id });
 	}
 
 	/**
@@ -35,7 +36,7 @@ class DbProvider {
 	 */
 	async findAsync(collectionName, query, options) {
 		if (collectionName == null || query == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		return await this.connection.collection(collectionName).findOne(query, options);
@@ -52,7 +53,7 @@ class DbProvider {
 	 */
 	async findArrayAsync(collectionName, query, sortOption, limit) {
 		if (collectionName == null || query == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		let cursor = this.connection.collection(collectionName).find(query);
@@ -69,7 +70,7 @@ class DbProvider {
 	}
 
 	createSortOptionNatural(ascending) {
-		return {$natural: (ascending ? 1 : -1)};
+		return { $natural: (ascending ? 1 : -1) };
 	}
 
 	/**
@@ -83,12 +84,12 @@ class DbProvider {
 	 */
 	async updateAsync(collectionName, query, data, options) {
 		if (collectionName == null || query == null || data == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		options = options || {};
 
-		return (await this.connection.collection(collectionName).update(query, options.renewal ? data : {$set: data}, options)).result;
+		return (await this.connection.collection(collectionName).update(query, options.renewal ? data : { $set: data }, options)).result;
 	}
 
 	/**
@@ -100,7 +101,7 @@ class DbProvider {
 	 */
 	async removeAsync(collectionName, query) {
 		if (collectionName == null || query == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		return await this.connection.collection(collectionName).remove(query);
@@ -116,7 +117,7 @@ class DbProvider {
 	 */
 	static async connectAsync(host, dbname, authenticate) {
 		if (host == null || dbname == null || authenticate == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		return await (new Promise((resolve, reject) => {
@@ -139,7 +140,7 @@ class DbProvider {
 	 */
 	static async connectApidbAsync(config) {
 		if (config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;

@@ -1,41 +1,39 @@
-const ApiResult = require('../../helpers/apiResult');
 const User = require('../../documentModels/user');
+const $ = require('cafy').default;
 
-exports.get = async (request) => {
-	const result = await request.checkRequestAsync({
-		query: [
-			{name: 'screen_names', type: 'string', require: false}
-		],
+exports.get = async (apiContext) => {
+	await apiContext.proceed({
+		query: {
+			'screen_names': { cafy: $().string(), default: '' }
+		},
 		permissions: ['userRead']
 	});
-
-	if (result != null) {
-		return result;
-	}
+	if (apiContext.responsed) return;
 
 	let users;
-	if (request.query.screen_names != null) {
-		const screenNames = request.query.screen_names.split(',');
+	if (apiContext.query.screen_names != '') {
+		const screenNames = apiContext.query.screen_names.split(',');
 
 		if (screenNames.lenth > 100) {
-			return new ApiResult(400, 'screen_names query is limit over(100 items or less)');
+			return apiContext.response(400, 'screen_names query is limit over(100 items or less)');
 		}
 
 		if (screenNames.every(i => User.checkFormatScreenName(i)) === false) {
-			return new ApiResult(400, 'screen_names query is invalid');
+			return apiContext.response(400, 'screen_names query is invalid');
 		}
 
 		// TODO: screenNamesの重複チェック
 
-		users = await User.findArrayByScreenNamesAsync(screenNames, null, request.db, request.config);
+		users = await User.findArrayByScreenNamesAsync(screenNames, null, apiContext.db, apiContext.config);
 	}
 	else {
-		users = await request.db.users.findArrayAsync({});
+		users = await apiContext.db.users.findArrayAsync({});
 	}
 
 	if (users == null || users.length == 0) {
-		return new ApiResult(204);
+		apiContext.response(204);
+		return;
 	}
 
-	return new ApiResult(200, {users: users.map(user => user.serialize())});
+	apiContext.response(200, { users: users.map(user => user.serialize()) });
 };

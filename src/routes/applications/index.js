@@ -1,91 +1,64 @@
-'use strict';
-
-const ApiResult = require('../../helpers/apiResult');
 const Application = require('../../documentModels/application');
+const { permissionTypes } = require('../../helpers/permission');
+const $ = require('cafy').default;
 
-exports.post = async (request) => {
-	const result = await request.checkRequestAsync({
-		body: [
-			{name: 'name', type: 'string'},
-			{name: 'description', type: 'string', require: false},
-			{name: 'permissions', type: 'array'}
-		],
+module.exports.post = async (apiContext) => {
+	await apiContext.proceed({
+		body: {
+			name: { cafy: $().string().min(1).max(32) },
+			description: { cafy: $().string().max(256), default: '' },
+			permissions: { cafy: $().array('string').unique().eachQ(q => q.or(permissionTypes)), default: [] }
+		},
 		permissions: ['applicationSpecial']
 	});
+	if (apiContext.responsed) return;
 
-	if (result != null) {
-		return result;
-	}
-
-	const name = request.body.name;
-	let description = request.body.description;
-	const permissions = request.body.permissions;
-
-	// name
-	if (!/^.{1,32}$/.test(name)) {
-		return new ApiResult(400, 'name is invalid format');
-	}
+	const { name, description, permissions } = apiContext.body;
 
 	// check name duplication
-	if (await Application.findByNameAsync(name, request.db, request.config) != null) {
-		return new ApiResult(400, 'already exists name');
+	if (await Application.findByNameAsync(name, apiContext.db, apiContext.config) != null) {
+		return apiContext.response(400, 'already exists name');
 	}
 
-	// description
-	if (description == null) {
-		description = '';
-	}
-
-	if (!/^.{0,256}$/.test(description)) {
-		return new ApiResult(400, 'description is invalid format');
-	}
-
-	// permissions
-	if (!Application.checkFormatPermissions(permissions, request.db, request.config)) {
-		return new ApiResult(400, 'permissions is invalid format. must be an array of string type.');
-	}
-
-	if (permissions.some(permission => request.config.api.additionDisabledPermissions.indexOf(permission) != -1)) { // 利用を禁止された権限を含む
-		return new ApiResult(400, 'some permissions use are disabled');
+	// check permissions(利用を禁止された権限をが含まれていないかどうか)
+	if (permissions.some(permission => apiContext.config.api.additionDisabledPermissions.indexOf(permission) != -1)) {
+		return apiContext.response(400, 'some permissions use are disabled');
 	}
 
 	let application;
-
 	try {
-		application = await request.db.applications.createAsync(name, request.user, description, permissions);
+		application = await apiContext.db.applications.createAsync(name, apiContext.user, description, permissions);
 	}
-	catch(err) {
-		console.dir(err);
+	catch (err) {
+		console.log(err);
 	}
 
 	if (application == null) {
-		return new ApiResult(500, 'failed to create application');
+		return apiContext.response(500, 'failed to create application');
 	}
 
-	return new ApiResult(200, {application: application.serialize()});
+	apiContext.response(200, { application: application.serialize() });
 };
 
-exports.get = async (request) => {
-	const result = await request.checkRequestAsync({
+module.exports.get = async (apiContext) => {
+	await apiContext.proceed({
 		permissions: ['application']
 	});
-
-	if (result != null) {
-		return result;
-	}
+	if (apiContext.responsed) return;
 
 	let applications;
-
 	try {
-		applications = await Application.findArrayByCreatorIdAsync(request.user.document._id, request.db, request.config);
+		applications = await Application.findArrayByCreatorIdAsync(apiContext.user.document._id, apiContext.db, apiContext.config);
 	}
-	catch(err) {
-		// noop
-	}
-
-	if (applications == null || applications.length == 0) {
-		return new ApiResult(204);
+	catch (err) {
+		console.log(err);
+		applications = [];
 	}
 
-	return new ApiResult(200, {applications: applications.map(i => i.serialize())});
+	if (applications.length == 0) {
+		apiContext.response(204);
+		return;
+	}
+
+	apiContext.response(200, { applications: applications.map(i => i.serialize()) });
 };

@@ -8,9 +8,16 @@ const Db = require('./helpers/db');
 const urlConfigFile = 'https://raw.githubusercontent.com/Frost-Dev/Frost/master/config.json';
 const q = async str => (await readLine(str)).toLowerCase().indexOf('y') === 0;
 
+const writeFile = (filePath, data) => new Promise((resolve, reject) => {
+	fs.writeFile(filePath, data, err => {
+		if (err) reject(err);
+		resolve();
+	});
+});
+
 module.exports = async () => {
 	console.log();
-	console.log('-- Setup Mode --');
+	console.log('## Setup Mode');
 	console.log();
 
 	try {
@@ -26,7 +33,7 @@ module.exports = async () => {
 				}
 
 				const configJson = (await requestAsync(urlConfigFile)).body;
-				fs.writeFileSync(configPath, configJson);
+				await writeFile(configPath, configJson);
 			}
 		}
 
@@ -88,9 +95,9 @@ module.exports = async () => {
 			}
 		}
 	}
-	catch(err) {
+	catch (err) {
 		console.log(`Unprocessed Setup Error: ${err}`);
 	}
 
-	console.log('----------------');
+	console.log('## End Setup Mode');
 };

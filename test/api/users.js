@@ -2,6 +2,7 @@ const assert = require('assert');
 const config = require('../../built/helpers/loadConfig')();
 const DbProvider = require('../../built/helpers/dbProvider');
 const Db = require('../../built/helpers/db');
+const ApiContext = require('../../built/helpers/ApiContext');
 const route = require('../../built/routes/users');
 const routeId = require('../../built/routes/users/id');
 
@@ -22,7 +23,7 @@ describe('Users API', () => {
 		let user, app;
 		beforeEach(async () => {
 			user = await db.users.createAsync('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
-			app = await db.applications.createAsync('generalapp', user, 'this is generalapp.', []);
+			app = await db.applications.createAsync('generalapp', user, 'this is generalapp.', ['userRead']);
 		});
 
 		// remove all users, all applications
@@ -35,17 +36,20 @@ describe('Users API', () => {
 
 		describe('[GET]', () => {
 			it('正しくリクエストされた場合は成功する', async () => {
-				let res = await route.get({
-					user: user,
+				const context = new ApiContext(null, null, db, config, {
 					params: { id: user.document._id },
 					query: { 'screen_names': user.document.screenName },
-					body: {},
-					db: db, config: config, checkRequestAsync: () => null
+					headers: { 'X-Api-Version': 1 },
+					user,
+					application: app
 				});
+				await route.get(context);
 
-				delete res.data.users[0].id;
-				delete res.data.users[0].createdAt;
-				assert.deepEqual(res.data, {
+				assert(typeof context.data != 'string', `api error: ${context.data}`);
+
+				delete context.data.users[0].id;
+				delete context.data.users[0].createdAt;
+				assert.deepEqual(context.data, {
 					users: [{
 						screenName: user.document.screenName,
 						name: user.document.name,
@@ -58,16 +62,19 @@ describe('Users API', () => {
 		describe('/:id', () => {
 			describe('[GET]', () => {
 				it('正しくリクエストされた場合は成功する', async () => {
-					let res = await routeId.get({
-						user: user,
+					const context = new ApiContext(null, null, db, config, {
 						params: { id: user.document._id },
-						body: {},
-						db: db, config: config, checkRequestAsync: () => null
+						headers: { 'X-Api-Version': 1 },
+						user,
+						application: app
 					});
+					await routeId.get(context);
 
-					delete res.data.user.id;
-					delete res.data.user.createdAt;
-					assert.deepEqual(res.data, {
+					assert(typeof context.data != 'string', `api error: ${context.data}`);
+
+					delete context.data.user.id;
+					delete context.data.user.createdAt;
+					assert.deepEqual(context.data, {
 						user: {
 							screenName: user.document.screenName,
 							name: user.document.name,

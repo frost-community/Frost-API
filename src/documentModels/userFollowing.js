@@ -1,10 +1,11 @@
 const objectSorter = require('../helpers/objectSorter');
 const moment = require('moment');
+const { MissingArgumentsError } = require('../helpers/errors');
 
 class UserFollowing {
 	constructor(document, db, config) {
 		if (document == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
 		this.document = document;
@@ -24,8 +25,6 @@ class UserFollowing {
 		res.id = res._id.toString();
 		delete res._id;
 
-		Object.keys(res).sort();
-
 		return objectSorter(res);
 	}
 
@@ -35,7 +34,7 @@ class UserFollowing {
 	}
 
 	async removeAsync() {
-		await this.db.userFollowings.removeAsync({_id: this.document._id});
+		await this.db.userFollowings.removeAsync({ _id: this.document._id });
 		this.document = null;
 	}
 
@@ -43,26 +42,26 @@ class UserFollowing {
 
 	static async findBySrcDestIdAsync(sourceId, targetId, db, config) {
 		if (sourceId == null || targetId == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
-		return db.userFollowings.findAsync({source: sourceId, target: targetId});
+		return db.userFollowings.findAsync({ source: sourceId, target: targetId });
 	}
 
 	static async findTargetsAsync(sourceId, limit, db, config) {
 		if (sourceId == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
-		return db.userFollowings.findArrayAsync({source: sourceId}, db.dbProvider.createSortOptionNatural(false), limit);
+		return db.userFollowings.findArrayAsync({ source: sourceId }, db.dbProvider.createSortOptionNatural(false), limit);
 	}
 
 	static async findSourcesAsync(targetId, limit, db, config) {
 		if (targetId == null || db == null || config == null) {
-			throw new Error('missing arguments');
+			throw new MissingArgumentsError();
 		}
 
-		return db.userFollowings.findArrayAsync({target: targetId}, db.dbProvider.createSortOptionNatural(false), limit);
+		return db.userFollowings.findArrayAsync({ target: targetId }, db.dbProvider.createSortOptionNatural(false), limit);
 	}
 }
 module.exports = UserFollowing;

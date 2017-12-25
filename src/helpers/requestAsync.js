@@ -6,6 +6,6 @@ module.exports = (url, options) => new Promise((resolve, reject) => {
 			reject(err);
 		}
 
-		resolve({res: res, body: body});
+		resolve({ res, body });
 	});
 });

@@ -2,6 +2,7 @@ const assert = require('assert');
 const config = require('../../built/helpers/loadConfig')();
 const DbProvider = require('../../built/helpers/dbProvider');
 const Db = require('../../built/helpers/db');
+const ApiContext = require('../../built/helpers/ApiContext');
 const routeApp = require('../../built/routes/applications');
 const routeAppId = require('../../built/routes/applications/id');
 const routeAppIdApplicationKey = require('../../built/routes/applications/id/application_key');
@@ -26,8 +27,8 @@ describe('Applications API', () => {
 			userA = await db.users.createAsync('generaluser_a', 'abcdefg', 'froster', 'this is generaluser.');
 			userB = await db.users.createAsync('generaluser_b', 'abcdefg', 'froster', 'this is generaluser.');
 
-			appA = await db.applications.createAsync('generalapp_a', userA, 'this is generalapp.', []);
-			appB = await db.applications.createAsync('generalapp_b', userB, 'this is generalapp.', []);
+			appA = await db.applications.createAsync('generalapp_a', userA, 'this is generalapp.', ['application', 'applicationSpecial']);
+			appB = await db.applications.createAsync('generalapp_b', userB, 'this is generalapp.', ['application', 'applicationSpecial']);
 		});
 
 		// remove all users, all applications
@@ -38,19 +39,24 @@ describe('Applications API', () => {
 
 		describe('[POST]', () => {
 			it('正しくリクエストされた場合は成功する', async () => {
-				let res = await routeApp.post({
-					user: userA,
+				const context = new ApiContext(null, null, db, config, {
 					body: {
 						name: 'temp',
 						description: 'hogehoge',
 						permissions: []
 					},
-					db: db, config: config, checkRequestAsync: () => null
+					headers: { 'X-Api-Version': 1 },
+					user: userA,
+					application: appA
 				});
+				await routeApp.post(context);
 
-				delete res.data.application.id;
-				delete res.data.application.createdAt;
-				assert.deepEqual(res.data, {
+				assert(typeof context.data != 'string', `api error: ${context.data}`);
+
+				assert(context.data.application != null, `application is null. ${context.data}`);
+				delete context.data.application.id;
+				delete context.data.application.createdAt;
+				assert.deepEqual(context.data, {
 					application: {
 						name: 'temp',
 						creatorId: userA.document._id.toString(),
@@ -61,55 +67,63 @@ describe('Applications API', () => {
 			});
 
 			it('nameが空もしくは33文字以上の場合は失敗する', async () => {
-				let res = await routeApp.post({
-					user: userA,
+				let context = new ApiContext(null, null, db, config, {
 					body: {
 						name: '',
 						description: 'hogehoge',
-						permissions: ''
+						permissions: []
 					},
-					db: db, config: config, checkRequestAsync: () => null
-				});
-				assert.equal(res.data, 'name is invalid format');
-
-				res = await routeApp.post({
+					headers: { 'X-Api-Version': 1 },
 					user: userA,
+					application: appA
+				});
+				await routeApp.post(context);
+				assert.equal(context.data, 'body parameter \'name\' is invalid');
+
+				context = new ApiContext(null, null, db, config, {
 					body: {
 						name: 'superFrostersuperFrostersuperFros',
 						description: 'hogehoge',
-						permissions: ''
+						permissions: []
 					},
-					db: db, config: config, checkRequestAsync: () => null
+					headers: { 'X-Api-Version': 1 },
+					user: userA,
+					application: appA
 				});
-				assert.equal(res.data, 'name is invalid format');
+				await routeApp.post(context);
+				assert.equal(context.data, 'body parameter \'name\' is invalid');
 			});
 
 			it('descriptionが257文字以上のときは失敗する', async () => {
-				let res = await routeApp.post({
-					user: userA,
+				const context = new ApiContext(null, null, db, config, {
 					body: {
 						name: 'temp',
 						description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget',
-						permissions: ''
+						permissions: []
 					},
-					db: db, config: config, checkRequestAsync: () => null
+					headers: { 'X-Api-Version': 1 },
+					user: userA,
+					application: appA
 				});
-				assert.equal(res.data, 'description is invalid format');
+				await routeApp.post(context);
+				assert.equal(context.data, 'body parameter \'description\' is invalid');
 			});
 		});
 
 		describe('[GET]', () => {
 			it('正しくリクエストされた場合は成功する', async () => {
-				let res = await routeApp.get({
+				const context = new ApiContext(null, null, db, config, {
+					headers: { 'X-Api-Version': 1 },
 					user: userA,
-					params: {},
-					body: {},
-					db: db, config: config, checkRequestAsync: () => null
+					application: appA
 				});
+				await routeApp.get(context);
 
-				delete res.data.applications[0].id;
-				delete res.data.applications[0].createdAt;
-				assert.deepEqual(res.data, {
+				assert(typeof context.data != 'string', `api error: ${context.data}`);
+
+				delete context.data.applications[0].id;
+				delete context.data.applications[0].createdAt;
+				assert.deepEqual(context.data, {
 					applications: [{
 						creatorId: userA.document._id.toString(),
 						name: appA.document.name,
@@ -123,16 +137,19 @@ describe('Applications API', () => {
 		describe('/:id', () => {
 			describe('[GET]', () => {
 				it('正しくリクエストされた場合は成功する', async () => {
-					let res = await routeAppId.get({
-						user: userA,
+					const context = new ApiContext(null, null, db, config, {
 						params: { id: appA.document._id.toString() },
-						body: {},
-						db: db, config: config, checkRequestAsync: () => null
+						headers: { 'X-Api-Version': 1 },
+						user: userA,
+						application: appA
 					});
+					await routeAppId.get(context);
 
-					delete res.data.application.id;
-					delete res.data.application.createdAt;
-					assert.deepEqual(res.data, {
+					assert(typeof context.data != 'string', `api error: ${context.data}`);
+
+					delete context.data.application.id;
+					delete context.data.application.createdAt;
+					assert.deepEqual(context.data, {
 						application: {
 							creatorId: userA.document._id.toString(),
 							name: appA.document.name,
@@ -142,51 +159,57 @@ describe('Applications API', () => {
 					});
 				});
 
-				it('所有していないアプリケーションを指定された場合は失敗する', async () => {
-					let res = await routeAppId.get({
-						user: userA,
+				it('所有していないアプリケーションを指定された場合でも成功する', async () => {
+					const context = new ApiContext(null, null, db, config, {
 						params: { id: appB.document._id.toString() },
-						body: {},
-						db: db, config: config, checkRequestAsync: () => null
+						headers: { 'X-Api-Version': 1 },
+						user: userA,
+						application: appA
 					});
-
-					assert.equal(res.data, 'this operation is not permitted');
+					await routeAppId.get(context);
+					assert.equal(context.statusCode, 200);
 				});
 
 				it('存在しないアプリケーションを指定した場合は204を返す', async () => {
-					let res = await routeAppId.get({
-						user: userA,
+					const context = new ApiContext(null, null, db, config, {
 						params: { id: 'abcdefg1234' },
-						body: {},
-						db: db, config: config, checkRequestAsync: () => null
+						headers: { 'X-Api-Version': 1 },
+						user: userA,
+						application: appA
 					});
-
-					assert.equal(res.statusCode, 204);
+					await routeAppId.get(context);
+					assert.equal(context.statusCode, 204);
 				});
 			});
 
 			describe('/application_key', () => {
 				describe('[POST]', () => {
 					it('正しくリクエストされた場合は成功する', async () => {
-						let res = await routeAppIdApplicationKey.post({
-							user: userA,
+						const context = new ApiContext(null, null, db, config, {
 							params: { id: appA.document._id.toString() },
-							db: db, config: config, checkRequestAsync: () => null
+							headers: { 'X-Api-Version': 1 },
+							user: userA,
+							application: appA
 						});
+						await routeAppIdApplicationKey.post(context);
+
+						assert(typeof context.data != 'string', `api error: ${context.data}`);
 
 						await appA.fetchAsync();
-						assert.deepEqual(res.data, {
+						assert.deepEqual(context.data, {
 							applicationKey: appA.getApplicationKey()
 						});
 					});
 
 					it('所有していないアプリケーションを指定された場合は失敗する', async () => {
-						let res = await routeAppIdApplicationKey.post({
-							user: userB,
+						const context = new ApiContext(null, null, db, config, {
 							params: { id: appA.document._id.toString() },
-							db: db, config: config, checkRequestAsync: () => null
+							headers: { 'X-Api-Version': 1 },
+							user: userB,
+							application: appB
 						});
-						assert.equal(res.data, 'this operation is not permitted');
+						await routeAppIdApplicationKey.post(context);
+						assert.equal(context.data, 'this operation is not permitted');
 					});
 				});
 
@@ -194,13 +217,17 @@ describe('Applications API', () => {
 					it('正しくリクエストされた場合は成功する', async () => {
 						const key = await appA.generateApplicationKeyAsync();
 
-						const res = await routeAppIdApplicationKey.get({
-							user: userA,
+						const context = new ApiContext(null, null, db, config, {
 							params: { id: appA.document._id.toString() },
-							db: db, config: config, checkRequestAsync: () => null
+							headers: { 'X-Api-Version': 1 },
+							user: userA,
+							application: appA
 						});
+						await routeAppIdApplicationKey.get(context);
 
-						assert.deepEqual(res.data, {
+						assert(typeof context.data != 'string', `api error: ${context.data}`);
+
+						assert.deepEqual(context.data, {
 							applicationKey: key
 						});
 					});
@@ -208,12 +235,15 @@ describe('Applications API', () => {
 					it('持っていないアプリケーションを指定された場合は失敗する', async () => {
 						await appB.generateApplicationKeyAsync();
 
-						const res = await routeAppIdApplicationKey.get({
-							user: userA,
+						const context = new ApiContext(null, null, db, config, {
 							params: { id: appB.document._id.toString() },
-							db: db, config: config, checkRequestAsync: () => null
+							headers: { 'X-Api-Version': 1 },
+							user: userA,
+							application: appA
 						});
-						assert.equal(res.data, 'this operation is not permitted');
+						await routeAppIdApplicationKey.get(context);
+
+						assert.equal(context.data, 'this operation is not permitted');
 					});
 				});
 			});

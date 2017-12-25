@@ -1,14 +1,8 @@
-const ApiResult = require('../helpers/apiResult');
-
-exports.get = async (request) => {
-	const result = await request.checkRequestAsync({
-		query: [],
+exports.get = async (apiContext) => {
+	await apiContext.proceed({
 		permissions: []
 	});
+	if (apiContext.responsed) return;
 
-	if (result != null) {
-		return result;
-	}
-
-	return new ApiResult(200, 'Frost API Server');
+	apiContext.response(200, 'Frost API Server');
 };

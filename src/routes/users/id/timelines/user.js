@@ -1,43 +1,31 @@
-const ApiResult = require('../../../../helpers/apiResult');
 const User = require('../../../../documentModels/user');
 const timelineAsync = require('../../../../helpers/timelineAsync');
+const $ = require('cafy').default;
 
 // TODO: 不完全な実装
 
-exports.get = async (request) => {
-	const result = await request.checkRequestAsync({
-		query: [
-			{name: 'limit', type: 'number', require: false}
-		],
+exports.get = async (apiContext) => {
+	await apiContext.proceed({
+		query: {
+			limit: { cafy: $().number().range(0, 100), default: 30 }
+		},
 		permissions: ['postRead', 'userRead']
 	});
-
-	if (result != null) {
-		return result;
-	}
+	if (apiContext.responsed) return;
 
 	try {
 		// user
-		const user = await User.findByIdAsync(request.params.id, request.db, request.config);
+		const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
 		if (user == null) {
-			return new ApiResult(404, 'user as premise not found');
+			return apiContext.response(404, 'user as premise not found');
 		}
 
 		// limit
-		let limit = request.query.limit;
-		if (limit != null) {
-			limit = parseInt(limit);
-			if (isNaN(limit) || limit <= 0 || limit > 100) {
-				return new ApiResult(400, 'limit is invalid');
-			}
-		}
-		else {
-			limit = 30;
-		}
+		let limit = apiContext.query.limit;
 
-		return await timelineAsync('status', [user.document._id], limit, request.db, request.config);
+		return await timelineAsync('status', [user.document._id], limit, apiContext.db, apiContext.config);
 	}
-	catch(err) {
-		console.dir(err);
+	catch (err) {
+		console.log(err);
 	}
 };

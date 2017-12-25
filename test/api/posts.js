@@ -2,6 +2,7 @@ const assert = require('assert');
 const config = require('../../built/helpers/loadConfig')();
 const DbProvider = require('../../built/helpers/dbProvider');
 const Db = require('../../built/helpers/db');
+const ApiContext = require('../../built/helpers/ApiContext');
 
 describe('Posts API', () => {
 	describe('/posts', () => {

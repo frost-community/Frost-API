@@ -1,29 +1,26 @@
-const ApiResult = require('../../helpers/apiResult');
 const AuthorizeRequest = require('../../documentModels/authorizeRequest');
+// const $ = require('cafy').default;
 
-exports.get = async (request) => {
-	const result = await request.checkRequestAsync({
-		headers: ['X-Ice-Auth-Key'],
-		query: [],
+exports.get = async (apiContext) => {
+	await apiContext.proceed({
+		query: {},
+		headers: ['x-ice-auth-key'],
 		permissions: ['iceAuthHost']
 	});
+	if (apiContext.responsed) return;
 
-	if (result != null) {
-		return result;
+	const iceAuthKey = apiContext.headers['x-ice-auth-key'];
+
+	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, apiContext.db, apiContext.config)) {
+		return apiContext.response(400, 'x-ice-auth-key header is invalid');
 	}
 
-	const iceAuthKey = request.get('X-Ice-Auth-Key');
-
-	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, request.db, request.config)) {
-		return new ApiResult(400, 'X-Ice-Auth-Key header is invalid');
-	}
-
-	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, request.db, request.config).authorizeRequestId;
-	const authorizeRequest = await request.db.authorizeRequests.findByIdAsync(authorizeRequestId); //TODO: move to document models
+	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, apiContext.db, apiContext.config).authorizeRequestId;
+	const authorizeRequest = await apiContext.db.authorizeRequests.findByIdAsync(authorizeRequestId); //TODO: move to document models
 
 	if (authorizeRequest.document.verificationCode == null) {
-		return new ApiResult(500, 'verificationCode is empty');
+		return apiContext.response(500, 'verificationCode is empty');
 	}
 
-	return new ApiResult(200, {verificationCode: authorizeRequest.document.verificationCode});
+	apiContext.response(200, { verificationCode: authorizeRequest.document.verificationCode });
 };
