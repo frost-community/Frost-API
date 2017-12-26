@@ -49,15 +49,15 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 
 		// support user events
 		events(connection, {
-			keys: { eventName: 'type', eventContent: 'data' }, debug: true
+			keys: { eventName: 'type', eventContent: 'data' }
 		});
 
-		// 接続されているストリームIDの一覧
+		// このコネクション上で接続されているストリームID/ハンドラの一覧
 		const connectedStreamIds = [];
 		const connectedStreamHandlers = new Map();
 
 		// ストリームの購読解除メソッド
-		const disconnectStream = (streamId) => {
+		const disconnectStreamAsync = async (streamId) => {
 			const removeIndex = connectedStreamIds.indexOf(streamId);
 			connectedStreamIds.splice(removeIndex, 1);
 
@@ -69,13 +69,17 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 					connectedStreamHandlers.delete(streamId);
 				}
 
+				// general-timeline-statusはストリーム自体の解放は行わない
 				const { streamType } = StreamUtil.parseStreamId(streamId);
 				if (streamType == 'general-timeline-status') {
 					return;
 				}
 
-				stream.quitAsync();
-				streams.delete(streamId);
+				// リスナが1つもなければストリーム自体を解放
+				if (stream.listenerCount() == 0) {
+					await stream.quitAsync();
+					streams.delete(streamId);
+				}
 			}
 		};
 
@@ -87,7 +91,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 		connection.on('close', (reasonCode, description) => {
 			// 全ての接続済みストリームを購読解除
 			for (const streamId of connectedStreamIds) {
-				disconnectStream(streamId);
+				disconnectStreamAsync(streamId);
 			}
 			console.log(`disconnected streaming. user: ${meId}`);
 		});
@@ -221,29 +225,33 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 						return error('timeline-connect', `${timelineType} timeline stream is already connected`);
 					}
 
-					// ストリームを生成
-					stream = new Stream();
-					stream.addSource(StreamUtil.buildStreamId('user-timeline-status', meId));
-					const followings = await UserFollowing.findTargetsAsync(meId, null, db, config); // TODO: (全て or ユーザーの購読設定によっては選択的に)
-					for (const following of followings || []) {
-						const followingUserId = following.document.target.toString();
-						stream.addSource(StreamUtil.buildStreamId('user-timeline-status', followingUserId));
+					stream = streams.get(streamId);
+					if (stream == null) {
+						// ストリームを生成
+						stream = new Stream();
+						stream.addSource(StreamUtil.buildStreamId('user-timeline-status', meId));
+						const followings = await UserFollowing.findTargetsAsync(meId, null, db, config); // TODO: (全て or ユーザーの購読設定によっては選択的に)
+						for (const following of followings || []) {
+							const followingUserId = following.document.target.toString();
+							stream.addSource(StreamUtil.buildStreamId('user-timeline-status', followingUserId));
+						}
+						streams.set(streamId, stream);
 					}
-
-					streams.set(streamId, stream);
 				}
 				else {
 					return error('timeline-connect', `timeline type "${timelineType}" is invalid`);
 				}
 
 				// ストリームからのデータをwebsocketに流す
-				const streamHandler = data => {
+				const streamHandler = stream.addListener(data => {
 					if (connection.connected) {
 						console.log(`streaming/stream:${streamType}`);
 						connection.send(`stream:${streamType}`, { streamId, resource: data });
 					}
-				};
-				stream.addListener(streamHandler);
+					else {
+						console.log('not connected');
+					}
+				});
 				connectedStreamHandlers.set(streamId, streamHandler);
 
 				// connectedStreamIdsに追加
@@ -258,7 +266,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 			}
 		});
 
-		connection.on('timeline-disconnect', data => {
+		connection.on('timeline-disconnect', async data => {
 			try {
 				const timelineType = data.type;
 
@@ -278,7 +286,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 					return error('timeline-disconnect', `timeline type "${timelineType}" is invalid`);
 				}
 
-				disconnectStream(streamId);
+				await disconnectStreamAsync(streamId);
 				console.log('streaming/timeline-disconnect:', streamId);
 				connection.send('timeline-disconnect', { success: true, message: `disconnected ${timelineType} timeline` });
 			}
