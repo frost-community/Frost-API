@@ -1,6 +1,5 @@
 const crypto = require('crypto');
 const moment = require('moment');
-const UserFollowing = require('./userFollowing');
 const objectSorter = require('../helpers/objectSorter');
 const { MissingArgumentsError } = require('../helpers/errors');
 
@@ -47,12 +46,13 @@ class User {
 		delete res.passwordHash;
 
 		// followingsCount, followersCount
-		let [followings, followers] = await Promise.all([
-			UserFollowing.findTargetsAsync(this.document._id, 1000, this.db, this.config),
-			UserFollowing.findSourcesAsync(this.document._id, 1000, this.db, this.config)
+		const userFollowingsCollection = this.db.dbProvider.connection.collection('userFollowings'); // TODO: dbProviderを直接操作しないように修正する
+		const postsCollection = this.db.dbProvider.connection.collection('posts');
+		[res.followingsCount, res.followersCount, res.postsCount] = await Promise.all([
+			userFollowingsCollection.count({ source: this.document._id }),
+			userFollowingsCollection.count({ target: this.document._id }),
+			postsCollection.count({ type: 'status', userId: this.document._id })
 		]);
-		res.followingsCount = (followings || []).length;
-		res.followersCount = (followers || []).length;
 
 		return objectSorter(res);
 	}
