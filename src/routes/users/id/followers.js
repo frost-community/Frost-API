@@ -34,7 +34,7 @@ exports.get = async (apiContext) => {
 	const fetchPromises = userFollowings.map(following => User.findByIdAsync(following.document.source, apiContext.db, apiContext.config));
 	const fetchedUsers = await Promise.all(fetchPromises);
 
-	// sort in original order,
+	// sort in original order, and serialize
 	const serialized = userFollowings.map(following => {
 		const user = fetchedUsers.find(u => u.document._id.equals(new ObjectId(following.document.source)));
 		return user.serialize();
