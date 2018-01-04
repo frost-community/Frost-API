@@ -147,6 +147,11 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 					return error('rest', '"endpoint" parameter is invalid');
 				}
 
+				// queryを全て文字列にする
+				for (const key of Object.keys(query || {})) {
+					query[key] += '';
+				}
+
 				// ApiContextを構築
 				const apiContext = new ApiContext(streams, null, db, config, {
 					params,

@@ -35,5 +35,10 @@ exports.get = async (apiContext) => {
 		return;
 	}
 
-	apiContext.response(200, { users: users.map(user => user.serialize()) });
+	const serializedUsers = [];
+	for (const user of users) {
+		serializedUsers.push(await user.serializeAsync());
+	}
+
+	apiContext.response(200, { users: serializedUsers });
 };

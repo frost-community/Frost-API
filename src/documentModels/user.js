@@ -1,6 +1,6 @@
-const objectSorter = require('../helpers/objectSorter');
 const crypto = require('crypto');
 const moment = require('moment');
+const objectSorter = require('../helpers/objectSorter');
 const { MissingArgumentsError } = require('../helpers/errors');
 
 class User {
@@ -11,6 +11,7 @@ class User {
 
 		this.document = document;
 		this.db = db;
+		this.config = config;
 	}
 
 	// TODO: 各種操作用メソッドの追加
@@ -30,7 +31,7 @@ class User {
 		return hash == sha256.digest('hex');
 	}
 
-	serialize() {
+	async serializeAsync() {
 		const res = {};
 		Object.assign(res, this.document);
 
@@ -43,6 +44,16 @@ class User {
 
 		// passwordHash
 		delete res.passwordHash;
+
+		// followingsCount, followersCount, postsCount.status
+		const userFollowingsCollection = this.db.dbProvider.connection.collection('userFollowings'); // TODO: dbProviderを直接操作しないように修正する
+		const postsCollection = this.db.dbProvider.connection.collection('posts');
+		res.postsCount = {};
+		[res.followingsCount, res.followersCount, res.postsCount.status] = await Promise.all([
+			userFollowingsCollection.count({ source: this.document._id }),
+			userFollowingsCollection.count({ target: this.document._id }),
+			postsCollection.count({ type: 'status', userId: this.document._id })
+		]);
 
 		return objectSorter(res);
 	}

@@ -24,21 +24,22 @@ exports.get = async (apiContext) => {
 		return apiContext.response(404, 'user as premise not found');
 	}
 
+	// このユーザーを対象とするフォロー関係をすべて取得
 	const userFollowings = await UserFollowing.findTargetsAsync(user.document._id, apiContext.query.limit, apiContext.db, apiContext.config);
 	if (userFollowings == null || userFollowings.length == 0) {
 		apiContext.response(204);
 		return;
 	}
 
-	// fetch users
-	const fetchPromises = userFollowings.map(following => User.findByIdAsync(following.document.target, apiContext.db, apiContext.config));
-	const fetchedUsers = await Promise.all(fetchPromises);
-
-	// sort in original order, and serialize
-	const serialized = userFollowings.map(following => {
-		const user = fetchedUsers.find(u => u.document._id.equals(new ObjectId(following.document.target)));
-		return user.serialize();
+	// fetch and serialize users
+	const promises = userFollowings.map(async following => {
+		const user = await User.findByIdAsync(following.document.target, apiContext.db, apiContext.config);
+		return await user.serializeAsync();
 	});
+	const pureSerializedUsers = await Promise.all(promises);
 
-	apiContext.response(200, { users: serialized });
+	// sort in original order
+	const serializedUsers = userFollowings.map(following => pureSerializedUsers.find(u => u.id == following.document.target));
+
+	apiContext.response(200, { users: serializedUsers });
 };
