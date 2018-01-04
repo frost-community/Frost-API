@@ -1,3 +1,4 @@
+const { ObjectId } = require('mongodb');
 const User = require('../../../documentModels/user');
 const UserFollowing = require('../../../documentModels/userFollowing');
 const v = require('validator');
@@ -8,14 +9,14 @@ const $ = require('cafy').default;
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		query: {
-			detail: { cafy: $().string().pipe(i => v.isBoolean(i)), default: 'false' }
+			limit: { cafy: $().string().pipe(i => v.isInt(i, { min: 0, max: 100 })), default: '30' }
 		},
 		permissions: ['userRead']
 	});
 	if (apiContext.responsed) return;
 
 	// convert query value
-	apiContext.query.detail = v.toBoolean(apiContext.query.detail);
+	apiContext.query.limit = v.toInt(apiContext.query.limit);
 
 	// user
 	const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
@@ -23,15 +24,21 @@ exports.get = async (apiContext) => {
 		return apiContext.response(404, 'user as premise not found');
 	}
 
-	const userFollowings = await UserFollowing.findSourcesAsync(user.document._id, 30, apiContext.db, apiContext.config);
+	const userFollowings = await UserFollowing.findSourcesAsync(user.document._id, apiContext.query.limit, apiContext.db, apiContext.config);
 	if (userFollowings == null || userFollowings.length == 0) {
 		apiContext.response(204);
 		return;
 	}
 
-	const serialized = [];
-	for (const i of userFollowings) {
-		serialized.push(i.document.source.toString());
-	}
-	apiContext.response(200, { userfollowings: serialized });
+	// fetch users
+	const fetchPromises = userFollowings.map(following => User.findByIdAsync(following.document.source, apiContext.db, apiContext.config));
+	const fetchedUsers = await Promise.all(fetchPromises);
+
+	// sort in original order,
+	const serialized = userFollowings.map(following => {
+		const user = fetchedUsers.find(u => u.document._id.equals(new ObjectId(following.document.source)));
+		return user.serialize();
+	});
+
+	apiContext.response(200, { users: serialized });
 };
