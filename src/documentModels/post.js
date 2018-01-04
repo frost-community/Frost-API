@@ -29,7 +29,7 @@ class Post {
 			// user
 			const user = await this.db.users.findByIdAsync(res.userId);
 			if (user != null) {
-				res.user = user.serialize();
+				res.user = await user.serializeAsync();
 			}
 		}
 

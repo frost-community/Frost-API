@@ -1,5 +1,4 @@
 const User = require('../../../documentModels/user');
-const UserFollowing = require('../../../documentModels/userFollowing');
 // const $ = require('cafy').default;
 
 exports.get = async (apiContext) => {
@@ -14,14 +13,6 @@ exports.get = async (apiContext) => {
 		apiContext.response(204);
 		return;
 	}
-	const serialized = user.serialize();
 
-	let [followings, followers] = await Promise.all([
-		UserFollowing.findTargetsAsync(user.document._id, 1000, apiContext.db, apiContext.config),
-		UserFollowing.findSourcesAsync(user.document._id, 1000, apiContext.db, apiContext.config)
-	]);
-	serialized.followingsCount = (followings || []).length;
-	serialized.followersCount = (followers || []).length;
-
-	apiContext.response(200, { user: serialized });
+	apiContext.response(200, { user: await user.serializeAsync() });
 };

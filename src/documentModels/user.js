@@ -1,6 +1,7 @@
-const objectSorter = require('../helpers/objectSorter');
 const crypto = require('crypto');
 const moment = require('moment');
+const UserFollowing = require('./userFollowing');
+const objectSorter = require('../helpers/objectSorter');
 const { MissingArgumentsError } = require('../helpers/errors');
 
 class User {
@@ -11,6 +12,7 @@ class User {
 
 		this.document = document;
 		this.db = db;
+		this.config = config;
 	}
 
 	// TODO: 各種操作用メソッドの追加
@@ -30,7 +32,7 @@ class User {
 		return hash == sha256.digest('hex');
 	}
 
-	serialize() {
+	async serializeAsync() {
 		const res = {};
 		Object.assign(res, this.document);
 
@@ -43,6 +45,14 @@ class User {
 
 		// passwordHash
 		delete res.passwordHash;
+
+		// followingsCount, followersCount
+		let [followings, followers] = await Promise.all([
+			UserFollowing.findTargetsAsync(this.document._id, 1000, this.db, this.config),
+			UserFollowing.findSourcesAsync(this.document._id, 1000, this.db, this.config)
+		]);
+		res.followingsCount = (followings || []).length;
+		res.followersCount = (followers || []).length;
 
 		return objectSorter(res);
 	}
