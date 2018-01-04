@@ -1,15 +1,21 @@
 const User = require('../../../documentModels/user');
 const UserFollowing = require('../../../documentModels/userFollowing');
-// const $ = require('cafy').default;
+const v = require('validator');
+const $ = require('cafy').default;
 
 // TODO: limit指定、カーソル送り等
 
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
-		query: {},
+		query: {
+			detail: { cafy: $().string().pipe(i => v.isBoolean(i)), default: 'false' }
+		},
 		permissions: ['userRead']
 	});
 	if (apiContext.responsed) return;
+
+	// convert query value
+	apiContext.query.detail = v.toBoolean(apiContext.query.detail);
 
 	// user
 	const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
