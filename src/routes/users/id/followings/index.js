@@ -24,6 +24,7 @@ exports.get = async (apiContext) => {
 		return apiContext.response(404, 'user as premise not found');
 	}
 
+	// このユーザーを対象とするフォロー関係をすべて取得
 	const userFollowings = await UserFollowing.findTargetsAsync(user.document._id, apiContext.query.limit, apiContext.db, apiContext.config);
 	if (userFollowings == null || userFollowings.length == 0) {
 		apiContext.response(204);
