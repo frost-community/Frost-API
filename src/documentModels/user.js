@@ -57,7 +57,7 @@ class User {
 	/**
 	 * idからドキュメントモデルのインスタンスを取得します
 	 *
-	 * @return {User}
+	 * @return {Promise<User>}
 	 */
 	static async findByIdAsync(id, db, config) {
 		if (id == null || db == null || config == null) {
@@ -70,7 +70,7 @@ class User {
 	/**
 	 * 複数のscreenNameからドキュメントモデルのインスタンスを取得します
 	 *
-	 * @return {User}
+	 * @return {Promise<User>}
 	 */
 	static async findArrayByScreenNamesAsync(screenNames, limit, db, config) {
 		if (screenNames == null || db == null || config == null) {
@@ -85,7 +85,7 @@ class User {
 	/**
 	 * screenNameからドキュメントモデルのインスタンスを取得します
 	 *
-	 * @return {User}
+	 * @return {Promise<User>}
 	 */
 	static async findByScreenNameAsync(screenName, db, config) {
 		if (screenName == null || db == null || config == null) {
