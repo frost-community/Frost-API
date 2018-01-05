@@ -34,6 +34,10 @@ exports.get = async (apiContext) => {
 	// fetch and serialize users
 	const promises = userFollowings.map(async following => {
 		const user = await User.findByIdAsync(following.document.target, apiContext.db, apiContext.config);
+		if (user == null) {
+			console.log(`notfound userId: ${following.document.target.toString()}`);
+			return;
+		}
 		return await user.serializeAsync();
 	});
 	const pureSerializedUsers = await Promise.all(promises);
