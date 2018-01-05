@@ -4,19 +4,21 @@ const UserFollowing = require('../../../documentModels/userFollowing');
 const v = require('validator');
 const $ = require('cafy').default;
 
-// TODO: limit指定、カーソル送り等
+// TODO: カーソル送り
 
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		query: {
-			limit: { cafy: $().string().pipe(i => v.isInt(i, { min: 0, max: 100 })), default: '30' }
+			limit: { cafy: $().string().pipe(i => v.isInt(i, { min: 0, max: 100 })), default: '30' },
+			cursor: { cafy: $().string().pipe(i => ObjectId.isValid(i)), default: null }
 		},
 		permissions: ['userRead']
 	});
 	if (apiContext.responsed) return;
 
 	// convert query value
-	apiContext.query.limit = v.toInt(apiContext.query.limit);
+	const limit = v.toInt(apiContext.query.limit);
+	const cursor = new ObjectId(apiContext.query.cursor);
 
 	// user
 	const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
@@ -25,7 +27,7 @@ exports.get = async (apiContext) => {
 	}
 
 	// このユーザーがフォロー元であるフォロー関係をすべて取得
-	const userFollowings = await UserFollowing.findSourcesAsync(user.document._id, apiContext.query.limit, apiContext.db, apiContext.config);
+	const userFollowings = await UserFollowing.findSourcesAsync(user.document._id, limit, apiContext.db, apiContext.config);
 	if (userFollowings == null || userFollowings.length == 0) {
 		apiContext.response(204);
 		return;
@@ -34,6 +36,10 @@ exports.get = async (apiContext) => {
 	// fetch and serialize users
 	const promises = userFollowings.map(async following => {
 		const user = await User.findByIdAsync(following.document.source, apiContext.db, apiContext.config);
+		if (user == null) {
+			console.log(`notfound following source userId: ${following.document.source.toString()}`);
+			return;
+		}
 		return await user.serializeAsync();
 	});
 	const pureSerializedUsers = await Promise.all(promises);
