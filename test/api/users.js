@@ -53,7 +53,10 @@ describe('Users API', () => {
 					users: [{
 						screenName: user.document.screenName,
 						name: user.document.name,
-						description: user.document.description
+						description: user.document.description,
+						followersCount: 0,
+						followingsCount: 0,
+						postsCount: { status: 0 }
 					}]
 				});
 			});
@@ -78,7 +81,10 @@ describe('Users API', () => {
 						user: {
 							screenName: user.document.screenName,
 							name: user.document.name,
-							description: user.document.description
+							description: user.document.description,
+							followersCount: 0,
+							followingsCount: 0,
+							postsCount: { status: 0 }
 						}
 					});
 				});

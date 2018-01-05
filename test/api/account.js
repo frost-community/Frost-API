@@ -53,7 +53,10 @@ describe('Account API', () => {
 					user: {
 						screenName: 'hogehoge',
 						name: 'froster',
-						description: 'testhoge'
+						description: 'testhoge',
+						followersCount: 0,
+						followingsCount: 0,
+						postsCount: { status: 0 }
 					}
 				});
 			});
