@@ -85,7 +85,8 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 
 		// イベントのエラー返却メソッド
 		const error = (eventName, message) => {
-			connection.send(eventName, { success: false, message });
+			if (connection.connected)
+				connection.send(eventName, { success: false, message });
 		};
 
 		connection.on('close', (reasonCode, description) => {
@@ -179,7 +180,8 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 					response = (apiContext.data != null) ? apiContext.data : {};
 				}
 
-				return connection.send('rest', { success: true, statusCode: apiContext.statusCode, request: { method, endpoint, query, headers, body }, response });
+				if (connection.connected)
+					return connection.send('rest', { success: true, statusCode: apiContext.statusCode, request: { method, endpoint, query, headers, body }, response });
 			}
 			catch (err) {
 				console.log(err);
