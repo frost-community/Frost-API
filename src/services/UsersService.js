@@ -105,7 +105,7 @@ class UsersService {
 		return hash == buildHash(`${password}.${salt}`);
 	}
 
-	async serializeAsync(userDocument) {
+	async serialize(userDocument) {
 		const res = Object.assign({}, userDocument);
 
 		// createdAt

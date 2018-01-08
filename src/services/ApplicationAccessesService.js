@@ -35,7 +35,7 @@ class ApplicationAccessesService {
 		return { userId: MongoAdapter.buildId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3]) };
 	}
 
-	async verifyKeyAsync(key) {
+	async verifyKey(key) {
 		if (key == null) {
 			throw new MissingArgumentsError();
 		}
@@ -59,7 +59,7 @@ class ApplicationAccessesService {
 		return isPassed;
 	}
 
-	async generateAccessKeyAsync(document) {
+	async generateAccessKey(document) {
 		let keyCode, isExist, tryCount = 0;
 
 		do {
