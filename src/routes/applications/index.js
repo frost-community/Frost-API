@@ -1,5 +1,5 @@
 const Application = require('../../documentModels/application');
-const { permissionTypes } = require('../../helpers/permission');
+const { permissionTypes } = require('../../modules/permission');
 const $ = require('cafy').default;
 
 module.exports.post = async (apiContext) => {

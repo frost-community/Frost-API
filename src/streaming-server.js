@@ -1,10 +1,10 @@
 const UserFollowing = require('./documentModels/userFollowing');
 const WebSocket = require('websocket');
 const events = require('websocket-events');
-const { checkRequest } = require('./helpers/StreamingHelpers');
-const { Stream, StreamUtil } = require('./helpers/stream');
+const { checkRequest } = require('./modules/StreamingHelpers');
+const { Stream, StreamUtil } = require('./modules/stream');
 const methods = require('methods');
-const ApiContext = require('./helpers/ApiContext');
+const ApiContext = require('./modules/ApiContext');
 
 /*
 # 各種変数の説明

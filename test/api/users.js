@@ -1,8 +1,8 @@
 const assert = require('assert');
-const config = require('../../src/helpers/loadConfig')();
-const DbProvider = require('../../src/helpers/dbProvider');
-const Db = require('../../src/helpers/db');
-const ApiContext = require('../../src/helpers/ApiContext');
+const config = require('../../src/modules/loadConfig')();
+const DbProvider = require('../../src/modules/dbProvider');
+const Db = require('../../src/modules/db');
+const ApiContext = require('../../src/modules/ApiContext');
 const route = require('../../src/routes/users');
 const routeId = require('../../src/routes/users/id');
 

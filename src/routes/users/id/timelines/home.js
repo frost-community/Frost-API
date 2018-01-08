@@ -1,6 +1,6 @@
 const User = require('../../../../documentModels/user');
 const UserFollowing = require('../../../../documentModels/userFollowing');
-const timelineAsync = require('../../../../helpers/timelineAsync');
+const timelineAsync = require('../../../../modules/timelineAsync');
 const v = require('validator');
 const $ = require('cafy').default;
 

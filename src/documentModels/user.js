@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const moment = require('moment');
-const objectSorter = require('../helpers/objectSorter');
-const { MissingArgumentsError } = require('../helpers/errors');
+const objectSorter = require('../modules/objectSorter');
+const { MissingArgumentsError } = require('../modules/errors');
 
 class User {
 	constructor(document, db, config) {

@@ -1,4 +1,4 @@
-const { StreamPublisher } = require('../../helpers/stream');
+const { StreamPublisher } = require('../../modules/stream');
 const $ = require('cafy').default;
 
 exports.post = async (apiContext) => {

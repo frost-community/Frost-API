@@ -1,10 +1,10 @@
-const randomRange = require('../helpers/randomRange');
-const objectSorter = require('../helpers/objectSorter');
-const permissionTypes = require('../helpers/permission').permissionTypes;
+const randomRange = require('../modules/randomRange');
+const objectSorter = require('../modules/objectSorter');
+const permissionTypes = require('../modules/permission').permissionTypes;
 const crypto = require('crypto');
 const mongo = require('mongodb');
 const moment = require('moment');
-const { MissingArgumentsError, InvalidArgumentError, InvalidOperationError } = require('../helpers/errors');
+const { MissingArgumentsError, InvalidArgumentError, InvalidOperationError } = require('../modules/errors');
 
 class Application {
 	constructor(document, db, config) {

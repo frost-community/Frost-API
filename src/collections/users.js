@@ -1,6 +1,6 @@
-const CollectionBase = require('../helpers/collectionBase');
+const CollectionBase = require('../modules/collectionBase');
 const crypto = require('crypto');
-const randomRange = require('../helpers/randomRange');
+const randomRange = require('../modules/randomRange');
 
 class Users extends CollectionBase {
 	constructor(db, config) {

@@ -1,6 +1,6 @@
 const assert = require('assert');
-const config = require('../src/helpers/loadConfig')();
-const Route = require('../src/helpers/route');
+const config = require('../src/modules/loadConfig')();
+const Route = require('../src/modules/route');
 
 describe('General Tests', () => {
 	describe('routes', () => {
@@ -36,7 +36,7 @@ describe('General Tests', () => {
 	});
 
 	describe('randomRange', () => {
-		const random = require('../src/helpers/randomRange');
+		const random = require('../src/modules/randomRange');
 
 		it('範囲を指定して生成した乱数の値はその範囲内にある', () => {
 			for (let i = 0; i < 1000; i++) {
@@ -47,7 +47,7 @@ describe('General Tests', () => {
 	});
 
 	describe('database', () => {
-		const DbProvider = require('../src/helpers/dbProvider');
+		const DbProvider = require('../src/modules/dbProvider');
 		let testDb;
 
 		it('DBに接続してそのインスタンスが取得できる', async () => {

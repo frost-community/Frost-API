@@ -1,12 +1,12 @@
 const assert = require('assert');
-const config = require('../../src/helpers/loadConfig')();
-const DbProvider = require('../../src/helpers/dbProvider');
-const Db = require('../../src/helpers/db');
+const config = require('../../src/modules/loadConfig')();
+const DbProvider = require('../../src/modules/dbProvider');
+const Db = require('../../src/modules/db');
 const path = require('path');
 const validator = require('validator');
 const AsyncLock = require('async-lock');
-const { getFileDataAsync } = require('../../src/helpers/fileSystemHelpers');
-const ApiContext = require('../../src/helpers/ApiContext');
+const { getFileDataAsync } = require('../../src/modules/fileSystemHelpers');
+const ApiContext = require('../../src/modules/ApiContext');
 const route = require('../../src/routes/users/id/storage');
 const routeFiles = require('../../src/routes/users/id/storage/files');
 const routeFileId = require('../../src/routes/users/id/storage/files/file_id');

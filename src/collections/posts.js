@@ -1,4 +1,4 @@
-const CollectionBase = require('../helpers/collectionBase');
+const CollectionBase = require('../modules/collectionBase');
 
 class Posts extends CollectionBase {
 	constructor(db, config) {

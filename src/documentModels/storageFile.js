@@ -1,6 +1,6 @@
-const objectSorter = require('../helpers/objectSorter');
+const objectSorter = require('../modules/objectSorter');
 const moment = require('moment');
-const { MissingArgumentsError } = require('../helpers/errors');
+const { MissingArgumentsError } = require('../modules/errors');
 
 class StorageFile {
 	constructor(document, db, config) {

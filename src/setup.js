@@ -1,9 +1,9 @@
 const fs = require('fs');
-const requestAsync = require('./helpers/requestAsync');
-const readLine = require('./helpers/readline');
-const loadConfig = require('./helpers/loadConfig');
-const DbProvider = require('./helpers/dbProvider');
-const Db = require('./helpers/db');
+const requestAsync = require('./modules/requestAsync');
+const readLine = require('./modules/readline');
+const loadConfig = require('./modules/loadConfig');
+const DbProvider = require('./modules/dbProvider');
+const Db = require('./modules/db');
 
 const urlConfigFile = 'https://raw.githubusercontent.com/Frost-Dev/Frost/master/config.json';
 const q = async str => (await readLine(str)).toLowerCase().indexOf('y') === 0;

@@ -1,5 +1,5 @@
-const CollectionBase = require('../helpers/collectionBase');
-const { MissingArgumentsError, InvalidArgumentError } = require('../helpers/errors');
+const CollectionBase = require('../modules/collectionBase');
+const { MissingArgumentsError, InvalidArgumentError } = require('../modules/errors');
 
 const accessRightLevels = [
 	'public',

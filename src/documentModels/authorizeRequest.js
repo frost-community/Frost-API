@@ -1,9 +1,9 @@
-const randomRange = require('../helpers/randomRange');
-const objectSorter = require('../helpers/objectSorter');
+const randomRange = require('../modules/randomRange');
+const objectSorter = require('../modules/objectSorter');
 const crypto = require('crypto');
 const mongo = require('mongodb');
 const moment = require('moment');
-const { MissingArgumentsError, InvalidArgumentError, InvalidOperationError } = require('../helpers/errors');
+const { MissingArgumentsError, InvalidArgumentError, InvalidOperationError } = require('../modules/errors');
 
 class AuthorizeRequest {
 	constructor(document, db, config) {

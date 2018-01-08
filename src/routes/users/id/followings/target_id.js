@@ -1,6 +1,6 @@
 const User = require('../../../../documentModels/user');
 const UserFollowing = require('../../../../documentModels/userFollowing');
-const { StreamUtil } = require('../../../../helpers/stream');
+const { StreamUtil } = require('../../../../modules/stream');
 // const $ = require('cafy').default;
 
 exports.get = async (apiContext) => {

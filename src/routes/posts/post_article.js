@@ -1,4 +1,4 @@
-const stringSize = require('../../helpers/stringSize');
+const stringSize = require('../../modules/stringSize');
 const $ = require('cafy').default;
 
 exports.post = async (apiContext) => {
