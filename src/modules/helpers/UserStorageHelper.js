@@ -1,4 +1,4 @@
-class UserStorageHelpers {
+class UserStorageHelper {
 	static async getUsedSpace(userId, db) {
 		let files;
 		try {
@@ -25,4 +25,4 @@ class UserStorageHelpers {
 		return usedSpace;
 	}
 }
-module.exports = UserStorageHelpers;
+module.exports = UserStorageHelper;

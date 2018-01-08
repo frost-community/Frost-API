@@ -1,5 +1,5 @@
 const User = require('../../../../documentModels/user');
-const { getUsedSpace } = require('../../../../modules/UserStorageHelpers');
+const { getUsedSpace } = require('../../../../modules/helpers/UserStorageHelper');
 // const $ = require('cafy').default;
 
 exports.get = async (apiContext) => {

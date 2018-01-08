@@ -1,7 +1,7 @@
-const Application = require('../documentModels/application');
-const ApplicationAccess = require('../documentModels/applicationAccess');
+const Application = require('../../documentModels/application');
+const ApplicationAccess = require('../../documentModels/applicationAccess');
 
-class StreamingHelpers {
+class StreamingHelper {
 	static async checkRequest(request, db, config) {
 		const query = request.resourceURL.query;
 		const applicationKey = query.application_key;
@@ -39,4 +39,4 @@ class StreamingHelpers {
 		};
 	}
 }
-module.exports = StreamingHelpers;
+module.exports = StreamingHelper;

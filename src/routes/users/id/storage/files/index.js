@@ -1,5 +1,5 @@
 const User = require('../../../../../documentModels/user');
-const { getUsedSpace } = require('../../../../../modules/UserStorageHelpers');
+const { getUsedSpace } = require('../../../../../modules/helpers/UserStorageHelper');
 const getFileType = require('file-type');
 const validator = require('validator');
 const $ = require('cafy').default;

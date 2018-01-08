@@ -1,7 +1,7 @@
 const UserFollowing = require('./documentModels/userFollowing');
 const WebSocket = require('websocket');
 const events = require('websocket-events');
-const { checkRequest } = require('./modules/StreamingHelpers');
+const { checkRequest } = require('./modules/helpers/StreamingHelper');
 const { Stream, StreamUtil } = require('./modules/stream');
 const methods = require('methods');
 const ApiContext = require('./modules/ApiContext');
