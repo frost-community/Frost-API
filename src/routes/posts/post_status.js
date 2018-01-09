@@ -1,6 +1,10 @@
 const { StreamPublisher } = require('../../modules/stream');
 const $ = require('cafy').default;
+const ApiContext = require('../../modules/ApiContext');
 
+/**
+ * @param {ApiContext} apiContext
+*/
 exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
@@ -17,12 +21,12 @@ exports.post = async (apiContext) => {
 		return apiContext.response(400, 'text is invalid format.');
 	}
 
-	let postStatus = await PostsService.createStatusPost(userId, text);
+	let postStatus = await apiContext.postsService.createStatusPost(userId, text);
 	if (postStatus == null) {
 		return apiContext.response(500, 'failed to create postStatus');
 	}
 
-	const serializedPostStatus = await postStatus.serializeAsync(true);
+	const serializedPostStatus = await apiContext.postsService.serialize(postStatus, true);
 
 	const publisher = new StreamPublisher();
 	publisher.publish('user-timeline-status', apiContext.user.document._id.toString(), serializedPostStatus);

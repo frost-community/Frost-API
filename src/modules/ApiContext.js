@@ -1,12 +1,13 @@
-const Application = require('../documentModels/application');
-const ApplicationAccess = require('../documentModels/applicationAccess');
+const ApplicationsService = require('../services/ApplicationsService');
+const ApplicationAccessesService = require('../services/ApplicationAccessesService');
+const PostsService = require('../services/PostsService');
 const { InvalidOperationError } = require('./errors');
 
 class ApiContext {
-	constructor(streams, lock, db, config, options) {
+	constructor(streams, lock, repository, config, options) {
 		this.lock = lock;
 		this.streams = streams;
-		this.db = db;
+		this.repository = repository;
 		this.config = config;
 		options = options || {};
 		this.params = options.params || {};
@@ -14,6 +15,9 @@ class ApiContext {
 		this.body = options.body || {};
 		this.user = options.user;
 		this.application = options.application;
+		this.applicationsService = new ApplicationsService(repository, config);
+		this.applicationAccessesService = new ApplicationAccessesService(repository, config);
+		this.postsService = new PostsService(repository, config);
 
 		this.headers = {};
 		// ヘッダーのキーを小文字に変換して格納
@@ -78,24 +82,24 @@ class ApiContext {
 				return this.response(400, 'x-access-key header is empty');
 			}
 
-			if (!await Application.verifyKeyAsync(applicationKey, this.db, this.config)) {
+			if (!await this.applicationsService.verifyKey(applicationKey)) {
 				return this.response(400, 'x-application-key header is invalid');
 			}
 
-			if (!await ApplicationAccess.verifyKeyAsync(accessKey, this.db, this.config)) {
+			if (!await this.applicationAccessesService.verifyKey(accessKey)) {
 				return this.response(400, 'x-access-key header is invalid');
 			}
 
 			this.applicationKey = applicationKey;
 			this.accessKey = accessKey;
 
-			const { userId } = ApplicationAccess.splitKey(this.accessKey, this.db, this.config);
-			const { applicationId } = Application.splitKey(this.applicationKey, this.db, this.config);
+			const { userId } = this.applicationAccessesService.splitKey(this.accessKey);
+			const { applicationId } = this.applicationsService.splitKey(this.applicationKey);
 
 			// fetch
 			[this.user, this.application] = await Promise.all([
-				this.db.users.findByIdAsync(userId),
-				this.db.applications.findByIdAsync(applicationId)
+				this.repository.findById('users', userId),
+				this.repository.findById('applications', applicationId)
 			]);
 		}
 
