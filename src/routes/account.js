@@ -21,27 +21,19 @@ exports.post = async (apiContext) => {
 	} = apiContext.body;
 
 	// screenName
-	if (!User.checkFormatScreenName(screenName)) {
+	if (!apiContext.usersService.validFormatScreenName(screenName)) {
 		return apiContext.response(400, 'screenName is invalid format');
 	}
-
-	// check validation
-	if (apiContext.config.api.invalidScreenNames.some(invalidScreenName => screenName == invalidScreenName)) {
-		return apiContext.response(400, 'screenName is invalid');
-	}
-
-	// check duplication
-	if (await User.findByScreenNameAsync(screenName, apiContext.db, apiContext.config) != null) {
+	if (!(await apiContext.usersService.nonDuplicatedScreenName(screenName))) {
 		return apiContext.response(400, 'this screenName is already exists');
 	}
 
 	// password
-	if (!User.checkFormatPassword(password)) {
+	if (!apiContext.usersService.checkFormatPassword(password)) {
 		return apiContext.response(400, 'password is invalid format');
 	}
 
-	let user = await apiContext.db.users.createAsync(screenName, password, name, description);
-
+	const user = await apiContext.usersService.create(screenName, password, name, description);
 	if (user == null) {
 		return apiContext.response(500, 'failed to create account');
 	}
