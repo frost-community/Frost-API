@@ -38,5 +38,5 @@ exports.post = async (apiContext) => {
 		return apiContext.response(500, 'failed to create account');
 	}
 
-	apiContext.response(200, { user: await user.serializeAsync() });
+	apiContext.response(200, { user: await apiContext.usersService.serialize(user) });
 };
