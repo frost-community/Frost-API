@@ -1,4 +1,4 @@
-const User = require('../../../../../documentModels/user');
+const ApiContext = require('../../../../../modules/ApiContext');
 const { getUsedSpace } = require('../../../../../modules/helpers/UserStorageHelper');
 const getFileType = require('file-type');
 const validator = require('validator');
@@ -11,6 +11,7 @@ const supportedMimeTypes = [
 ];
 
 // create a storage file
+/** @param {ApiContext} apiContext */
 exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
@@ -77,6 +78,7 @@ exports.post = async (apiContext) => {
 };
 
 // fetch a list of files
+/** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => { // TODO: フィルター指定、ページネーション、ファイル内容を含めるかどうか
 	await apiContext.proceed({
 		query: {},

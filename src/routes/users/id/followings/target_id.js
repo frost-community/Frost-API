@@ -1,8 +1,8 @@
-const User = require('../../../../documentModels/user');
-const UserFollowing = require('../../../../documentModels/userFollowing');
+const ApiContext = require('../../../../modules/ApiContext');
 const { StreamUtil } = require('../../../../modules/stream');
 // const $ = require('cafy').default;
 
+/** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		query: {},
@@ -34,6 +34,7 @@ exports.get = async (apiContext) => {
 	apiContext.response(204);
 };
 
+/** @param {ApiContext} apiContext */
 exports.put = async (apiContext) => {
 	await apiContext.proceed({
 		body: {},
@@ -105,6 +106,7 @@ exports.put = async (apiContext) => {
 	apiContext.response(204);
 };
 
+/** @param {ApiContext} apiContext */
 exports.delete = async (apiContext) => {
 	await apiContext.proceed({
 		query: {},

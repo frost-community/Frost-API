@@ -1,7 +1,8 @@
-const User = require('../../../../documentModels/user');
+const ApiContext = require('../../../../modules/ApiContext');
 const { getUsedSpace } = require('../../../../modules/helpers/UserStorageHelper');
 // const $ = require('cafy').default;
 
+/** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		permissions: ['storageRead']

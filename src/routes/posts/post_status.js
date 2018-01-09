@@ -1,10 +1,8 @@
+const ApiContext = require('../../modules/ApiContext');
 const { StreamPublisher } = require('../../modules/stream');
 const $ = require('cafy').default;
-const ApiContext = require('../../modules/ApiContext');
 
-/**
- * @param {ApiContext} apiContext
-*/
+/** @param {ApiContext} apiContext */
 exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {

@@ -1,9 +1,11 @@
+const ApiContext = require('../../modules/ApiContext');
 const timelineAsync = require('../../modules/timelineAsync');
 const v = require('validator');
 const $ = require('cafy').default;
 
 // TODO: 不完全な実装
 
+/** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		query: {

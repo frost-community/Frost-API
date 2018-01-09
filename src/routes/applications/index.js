@@ -1,7 +1,8 @@
-const Application = require('../../documentModels/application');
+const ApiContext = require('../../modules/ApiContext');
 const { permissionTypes } = require('../../modules/permission');
 const $ = require('cafy').default;
 
+/** @param {ApiContext} apiContext */
 module.exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
@@ -40,6 +41,7 @@ module.exports.post = async (apiContext) => {
 	apiContext.response(200, { application: application.serialize() });
 };
 
+/** @param {ApiContext} apiContext */
 module.exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		permissions: ['application']

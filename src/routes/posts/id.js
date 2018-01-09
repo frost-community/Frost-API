@@ -1,6 +1,7 @@
-const Post = require('../../documentModels/post');
+const ApiContext = require('../../modules/ApiContext');
 // const $ = require('cafy').default;
 
+/** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		query: {},

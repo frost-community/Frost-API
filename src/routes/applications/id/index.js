@@ -1,7 +1,8 @@
-const Application = require('../../../documentModels/application');
+const ApiContext = require('../../../modules/ApiContext');
 const mongo = require('mongodb');
 // const $ = require('cafy').default;
 
+/** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		permissions: ['application']

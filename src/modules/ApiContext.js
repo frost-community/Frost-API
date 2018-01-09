@@ -1,6 +1,10 @@
+const UsersService = require('../services/UsersService');
+const UserFollowingsService = require('../services/UserFollowingsService');
 const ApplicationsService = require('../services/ApplicationsService');
+const AuthorizeRequestsService = require('../services/AuthorizeRequestsService');
 const ApplicationAccessesService = require('../services/ApplicationAccessesService');
 const PostsService = require('../services/PostsService');
+const StorageFilesService = require('../services/StorageFilesService');
 const { InvalidOperationError } = require('./errors');
 
 class ApiContext {
@@ -15,9 +19,14 @@ class ApiContext {
 		this.body = options.body || {};
 		this.user = options.user;
 		this.application = options.application;
+		// service instances
+		this.usersService = new UsersService(repository, config);
+		this.userFollowingsService = new UserFollowingsService(repository, config);
 		this.applicationsService = new ApplicationsService(repository, config);
+		this.authorizeRequestsService = new AuthorizeRequestsService(repository, config);
 		this.applicationAccessesService = new ApplicationAccessesService(repository, config);
 		this.postsService = new PostsService(repository, config);
+		this.storageFilesService = new StorageFilesService(repository, config);
 
 		this.headers = {};
 		// ヘッダーのキーを小文字に変換して格納

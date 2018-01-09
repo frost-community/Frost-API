@@ -1,7 +1,11 @@
-const User = require('../../../../../documentModels/user');
+const ApiContext = require('../../../../../modules/ApiContext');
 // const $ = require('cafy').default;
 
-// 対象ファイルの取得
+/**
+ * 対象ファイルの取得
+ *
+ * @param {ApiContext} apiContext
+*/
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		permissions: ['storageRead']
@@ -56,7 +60,11 @@ exports.get = async (apiContext) => {
 	apiContext.response(200, { storageFile: file.serialize(true) });
 };
 
-// 対象ファイルの削除
+/**
+ * 対象ファイルの削除
+ *
+ * @param {ApiContext} apiContext
+*/
 exports.delete = async (apiContext) => {
 	await apiContext.proceed({
 		permissions: ['storageWrite']

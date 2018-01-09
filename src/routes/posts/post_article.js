@@ -1,6 +1,8 @@
-const stringSize = require('../../modules/stringSize');
+const ApiContext = require('../../modules/ApiContext');
+const { getStringSize } = require('../../modules/helpers/GeneralHelper');
 const $ = require('cafy').default;
 
+/** @param {ApiContext} apiContext */
 exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
@@ -13,11 +15,11 @@ exports.post = async (apiContext) => {
 
 	const { title, text } = apiContext.body;
 
-	if (/^\s*$/.test(title) || stringSize(text) > 64) {
+	if (/^\s*$/.test(title) || getStringSize(text) > 64) {
 		return apiContext.response(400, 'title is invalid format. max 64bytes');
 	}
 
-	if (/^\s*$/.test(text) || stringSize(text) > 10000) {
+	if (/^\s*$/.test(text) || getStringSize(text) > 10000) {
 		return apiContext.response(400, 'text is invalid format. max 10,000bytes');
 	}
 

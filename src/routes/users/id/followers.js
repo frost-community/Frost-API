@@ -1,11 +1,11 @@
+const ApiContext = require('../../../modules/ApiContext');
 const { ObjectId } = require('mongodb');
-const User = require('../../../documentModels/user');
-const UserFollowing = require('../../../documentModels/userFollowing');
 const v = require('validator');
 const $ = require('cafy').default;
 
 // TODO: カーソル送り
 
+/** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		query: {

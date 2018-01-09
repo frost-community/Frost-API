@@ -1,6 +1,7 @@
-const Application = require('../../../documentModels/application');
+const ApiContext = require('../../../modules/ApiContext');
 // const $ = require('cafy').default;
 
+/** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		permissions: ['applicationSpecial']
@@ -27,6 +28,7 @@ exports.get = async (apiContext) => {
 	apiContext.response(200, { applicationKey: key });
 };
 
+/** @param {ApiContext} apiContext */
 exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {},
