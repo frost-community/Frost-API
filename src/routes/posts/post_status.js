@@ -17,19 +17,7 @@ exports.post = async (apiContext) => {
 		return apiContext.response(400, 'text is invalid format.');
 	}
 
-	let postStatus;
-
-	try {
-		postStatus = await apiContext.db.posts.createAsync({ // TODO: move to document models
-			type: 'status',
-			userId: userId,
-			text: text
-		});
-	}
-	catch (err) {
-		console.log(err);
-	}
-
+	let postStatus = await PostsService.createStatusPost(userId, text);
 	if (postStatus == null) {
 		return apiContext.response(500, 'failed to create postStatus');
 	}

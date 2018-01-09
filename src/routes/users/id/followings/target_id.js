@@ -74,14 +74,7 @@ exports.put = async (apiContext) => {
 	// ドキュメント作成・更新
 	let resultUpsert;
 	try {
-		resultUpsert = await apiContext.db.userFollowings.upsertAsync({ // TODO: move to document models
-			source: sourceUserId,
-			target: targetUserId
-		}, {
-			source: sourceUserId,
-			target: targetUserId,
-			message: message
-		}, { renewal: true });
+		resultUpsert = await UserFollowingsService.create(sourceUserId, targetUserId, message);
 	}
 	catch (err) {
 		console.log(err);
@@ -138,7 +131,7 @@ exports.delete = async (apiContext) => {
 
 	// ドキュメントが存在すれば削除
 	if (userFollowing != null) {
-		await userFollowing.removeAsync();
+		await UserFollowingsService.remove();
 
 		// 対象ユーザーのストリームを購読解除
 		const stream = apiContext.streams.get(StreamUtil.buildStreamId('user-timeline-status', soruceUser.document._id.toString()));
