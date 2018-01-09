@@ -6,8 +6,12 @@ const ApplicationAccessesService = require('../services/ApplicationAccessesServi
 const PostsService = require('../services/PostsService');
 const StorageFilesService = require('../services/StorageFilesService');
 const { InvalidOperationError } = require('./errors');
+const MongoAdapter = require('./MongoAdapter');
 
 class ApiContext {
+	/**
+	 * @param {MongoAdapter} repository
+	*/
 	constructor(streams, lock, repository, config, options) {
 		this.lock = lock;
 		this.streams = streams;
