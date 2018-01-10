@@ -16,7 +16,7 @@ exports.post = async (apiContext) => {
 	const iceAuthKey = apiContext.headers['x-ice-auth-key'];
 	const { screenName, password } = apiContext.body;
 
-	const { generateAccessKey, getAccessKey } = apiContext.applicationAccessesService;
+	const { create, generateAccessKey, getAccessKey } = apiContext.applicationAccessesService;
 	const { verifyIceAuthKey, splitIceAuthKey } = apiContext.authorizeRequestsService;
 	const { validFormatScreenName, findByScreenName, checkFormatPassword, checkCorrectPassword } = apiContext.usersService;
 
@@ -56,7 +56,7 @@ exports.post = async (apiContext) => {
 
 	// まだapplicationAccessが生成されていない時
 	if (applicationAccess == null) {
-		applicationAccess = await apiContext.applicationAccessesService.create(applicationId, user._id);
+		applicationAccess = await create(applicationId, user._id);
 		if (applicationAccess == null) {
 			return apiContext.response(500, 'failed to create applicationAccess');
 		}

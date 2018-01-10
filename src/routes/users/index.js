@@ -11,6 +11,8 @@ exports.get = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
+	const { validFormatScreenName, findArrayByScreenNames, serialize } = apiContext.usersService;
+
 	let users;
 	if (apiContext.query.screen_names != '') {
 		const screenNames = apiContext.query.screen_names.split(',');
@@ -19,13 +21,13 @@ exports.get = async (apiContext) => {
 			return apiContext.response(400, 'screen_names query is limit over(100 items or less)');
 		}
 
-		if (screenNames.some(screenName => !apiContext.usersService.validFormatScreenName(screenName))) {
+		if (screenNames.some(screenName => !validFormatScreenName(screenName))) {
 			return apiContext.response(400, 'screen_names query is invalid');
 		}
 
 		// TODO: screenNamesの重複チェック
 
-		users = await apiContext.usersService.findArrayByScreenNames(screenNames);
+		users = await findArrayByScreenNames(screenNames);
 	}
 	else {
 		users = await apiContext.repository.findArray('users', {});
@@ -36,7 +38,7 @@ exports.get = async (apiContext) => {
 		return;
 	}
 
-	const promises = users.map(user => apiContext.usersService.serialize(user));
+	const promises = users.map(user => serialize(user));
 	const serializedUsers = await Promise.all(promises);
 
 	apiContext.response(200, { users: serializedUsers });
