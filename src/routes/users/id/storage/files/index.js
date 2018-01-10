@@ -54,17 +54,7 @@ exports.post = async (apiContext) => {
 		}
 
 		// create a document
-		try {
-			file = await apiContext.db.storageFiles.createAsync(
-				'user',
-				apiContext.user._id,
-				fileDataBuffer,
-				fileType.mime,
-				accessRightLevel);
-		}
-		catch (err) {
-			console.log(err);
-		}
+		file = await apiContext.storageFilesService.create('user', apiContext.user._id, fileDataBuffer, fileType.mime, accessRightLevel);
 	});
 	if (apiContext.responsed) {
 		return;
@@ -74,7 +64,7 @@ exports.post = async (apiContext) => {
 		return apiContext.response(500, 'failed to create storage file');
 	}
 
-	apiContext.response(200, { storageFile: file.serialize(true) });
+	apiContext.response(200, { storageFile: apiContext.storageFilesService.serialize(file, true) });
 };
 
 // fetch a list of files
@@ -98,20 +88,11 @@ exports.get = async (apiContext) => { // TODO: フィルター指定、ページ
 	}
 
 	// fetch document
-	let files;
-	try {
-		files = await apiContext.db.storageFiles.findByCreatorArrayAsync(
-			'user',
-			apiContext.user._id);
-	}
-	catch (err) {
-		console.log(err);
-	}
-
-	if (files == null || files.length == 0) {
+	const files = await apiContext.storageFilesService.findArrayByCreator('user', apiContext.user._id);
+	if (files.length == 0) {
 		apiContext.response(204);
 		return;
 	}
 
-	apiContext.response(200, { storageFiles: files.map(i => i.serialize(true)) });
+	apiContext.response(200, { storageFiles: files.map(i => apiContext.storageFilesService.serialize(i, true)) });
 };

@@ -21,7 +21,7 @@ exports.get = async (apiContext) => {
 	// file
 	let file;
 	try {
-		file = await apiContext.db.storageFiles.findByIdAsync(apiContext.params.file_id);
+		file = await apiContext.repository.findById('storageFiles', apiContext.params.file_id);
 	}
 	catch (err) {
 		console.log(err);
@@ -85,7 +85,7 @@ exports.delete = async (apiContext) => {
 	// file
 	let file;
 	try {
-		file = await apiContext.db.storageFiles.findByIdAsync(apiContext.params.file_id);
+		file = await apiContext.repository.findById('storageFiles', apiContext.params.file_id);
 	}
 	catch (err) {
 		console.log(err);
