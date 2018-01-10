@@ -14,17 +14,6 @@ class AuthorizeRequestsService {
 	}
 
 	/**
-	 * @param {ObjectId} applicationId
-	 * @returns {Promise<AuthorizeRequestDocument>}
-	*/
-	create(applicationId) {
-		if (applicationId == null)
-			throw new MissingArgumentsError();
-
-		return this._repository.create('authorizeRequests', { applicationId });
-	}
-
-	/**
 	 * @param {AuthorizeRequestDocument} document AuthorizeRequestドキュメント
 	*/
 	async generateVerificationCode(document) {
@@ -83,7 +72,7 @@ class AuthorizeRequestsService {
 			throw new MissingArgumentsError();
 		}
 
-		return this._repository.updateById('authorizeRequests', document._id, { targetUserId: new ObjectId(userId) });
+		return this._repository.updateById('authorizeRequests', document._id, { targetUserId: MongoAdapter.buildId(userId) });
 	}
 
 	/**
@@ -105,9 +94,20 @@ class AuthorizeRequestsService {
 		return sortObject(res);
 	}
 
-	// static
+	// helpers
 
-	splitKey(key) {
+	/**
+	 * @param {ObjectId} applicationId
+	 * @returns {Promise<AuthorizeRequestDocument>}
+	*/
+	create(applicationId) {
+		if (applicationId == null)
+			throw new MissingArgumentsError();
+
+		return this._repository.create('authorizeRequests', { applicationId });
+	}
+
+	splitIceAuthKey(key) {
 		if (key == null) {
 			throw new MissingArgumentsError();
 		}
@@ -118,10 +118,10 @@ class AuthorizeRequestsService {
 			throw new InvalidArgumentError('key');
 		}
 
-		return { authorizeRequestId: new ObjectId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3]) };
+		return { authorizeRequestId: MongoAdapter.buildId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3]) };
 	}
 
-	async verifyKeyAsync(key) {
+	async verifyIceAuthKey(key) {
 		if (key == null) {
 			throw new MissingArgumentsError();
 		}

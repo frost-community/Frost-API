@@ -12,81 +12,6 @@ class ApplicationsService {
 		this._config = config;
 	}
 
-	create(name, creator, description, permissions) {
-		return this._repository.create('applications', {
-			name: name,
-			creatorId: creator.document._id,
-			description: description,
-			permissions: permissions
-		});
-	}
-
-	findByName(name) {
-		if (name == null) {
-			throw new MissingArgumentsError();
-		}
-
-		return this._repository.find('applications', { name });
-	}
-
-	findArrayByCreatorId(creatorId) {
-		if (creatorId == null) {
-			throw new MissingArgumentsError();
-		}
-
-		return this._repository.findArray('applications', { creatorId });
-	}
-
-	splitKey(key) {
-		if (key == null) {
-			throw new MissingArgumentsError();
-		}
-
-		const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
-		if (reg == null) {
-			throw new InvalidArgumentError('key');
-		}
-
-		return {
-			applicationId: MongoAdapter.buildId(reg[1]),
-			hash: reg[2],
-			keyCode: parseInt(reg[3])
-		};
-	}
-
-	async verifyKey(key) {
-		if (key == null) {
-			throw new MissingArgumentsError();
-		}
-
-		let elements;
-		try {
-			elements = this.splitKey(key);
-		}
-		catch (err) {
-			return false;
-		}
-		const { applicationId, hash, keyCode } = elements;
-
-		const application = await this._repository.find('applications', { _id: applicationId, keyCode });
-		if (application == null) {
-			return false;
-		}
-
-		const correctHash = buildHash(`${this._config.api.secretToken.application}/${application.document.creatorId}/${applicationId}/${keyCode}`);
-		const isPassed = hash === correctHash && keyCode === application.document.keyCode;
-
-		return isPassed;
-	}
-
-	async nonDuplicatedName(name) {
-		return (await this.findByName(name)) != null;
-	}
-
-	validPermissions(permissions) {
-		return permissions.every(p => this._config.api.additionDisabledPermissions.indexOf(p) == -1);
-	}
-
 	hasPermission(applicationDocument, permissionName) {
 		if (applicationDocument == null || permissionName == null) {
 			throw new MissingArgumentsError();
@@ -141,6 +66,83 @@ class ApplicationsService {
 		res.keyCode = undefined;
 
 		return sortObject(res);
+	}
+
+	// helpers
+
+	create(name, creator, description, permissions) {
+		return this._repository.create('applications', {
+			name: name,
+			creatorId: creator.document._id,
+			description: description,
+			permissions: permissions
+		});
+	}
+
+	findByName(name) {
+		if (name == null) {
+			throw new MissingArgumentsError();
+		}
+
+		return this._repository.find('applications', { name });
+	}
+
+	findArrayByCreatorId(creatorId) {
+		if (creatorId == null) {
+			throw new MissingArgumentsError();
+		}
+
+		return this._repository.findArray('applications', { creatorId });
+	}
+
+	splitApplicationKey(key) {
+		if (key == null) {
+			throw new MissingArgumentsError();
+		}
+
+		const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
+		if (reg == null) {
+			throw new InvalidArgumentError('key');
+		}
+
+		return {
+			applicationId: MongoAdapter.buildId(reg[1]),
+			hash: reg[2],
+			keyCode: parseInt(reg[3])
+		};
+	}
+
+	async verifyApplicationKey(key) {
+		if (key == null) {
+			throw new MissingArgumentsError();
+		}
+
+		let elements;
+		try {
+			elements = this.splitKey(key);
+		}
+		catch (err) {
+			return false;
+		}
+		const { applicationId, hash, keyCode } = elements;
+
+		const application = await this._repository.find('applications', { _id: applicationId, keyCode });
+		if (application == null) {
+			return false;
+		}
+
+		const correctHash = buildHash(`${this._config.api.secretToken.application}/${application.document.creatorId}/${applicationId}/${keyCode}`);
+		const isPassed = hash === correctHash && keyCode === application.document.keyCode;
+
+		return isPassed;
+	}
+
+	async nonDuplicatedName(name) {
+		return (await this.findByName(name)) != null;
+	}
+
+	validPermissions(permissions) {
+		return permissions.every(p => this._config.api.additionDisabledPermissions.indexOf(p) == -1);
 	}
 }
 module.exports = ApplicationsService;

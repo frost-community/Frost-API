@@ -13,52 +13,6 @@ class ApplicationAccessesService {
 		this._config = config;
 	}
 
-	buildHash(applicationId, userId, keyCode) {
-		if (applicationId == null || userId == null || keyCode == null) {
-			throw new MissingArgumentsError();
-		}
-
-		return buildHash(`${this._config.api.secretToken.applicationAccess}/${applicationId}/${userId}/${keyCode}`);
-	}
-
-	splitKey(key) {
-		if (key == null) {
-			throw new MissingArgumentsError();
-		}
-
-		const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
-
-		if (reg == null) {
-			throw new InvalidArgumentError('key');
-		}
-
-		return { userId: MongoAdapter.buildId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3]) };
-	}
-
-	async verifyKey(key) {
-		if (key == null) {
-			throw new MissingArgumentsError();
-		}
-
-		let elements;
-		try {
-			elements = this.splitKey(key);
-		}
-		catch (err) {
-			return false;
-		}
-
-		const applicationAccess = await this._repository.find('applicationAccesses', { userId: elements.userId, keyCode: elements.keyCode });
-		if (applicationAccess == null) {
-			return false;
-		}
-
-		const correctHash = this.buildHash(applicationAccess.applicationId, elements.userId, elements.keyCode);
-		const isPassed = elements.hash === correctHash && elements.keyCode === applicationAccess.keyCode;
-
-		return isPassed;
-	}
-
 	async generateAccessKey(document) {
 		let keyCode, isExist, tryCount = 0;
 
@@ -84,14 +38,13 @@ class ApplicationAccessesService {
 			throw new InvalidOperationError('keyCode is empty');
 		}
 
-		const hash = this.buildHash(document.applicationId, document.userId, document.keyCode);
+		const hash = buildHash(`${this._config.api.secretToken.applicationAccess}/${document.applicationId}/${document.userId}/${document.keyCode}`);
 
 		return `${document.userId}-${hash}.${document.keyCode}`;
 	}
 
 	serialize(document) {
-		const res = {};
-		Object.assign(res, document);
+		const res = Object.assign({}, document);
 
 		// createdAt
 		res.createdAt = parseInt(moment(res._id.getTimestamp()).format('X'));
@@ -104,6 +57,63 @@ class ApplicationAccessesService {
 		res.keyCode = undefined;
 
 		return sortObject(res);
+	}
+
+	// helpers
+
+	create(applicationId, targetUserId) {
+		return this._repository.create('applicationAccesses', {
+			applicationId,
+			userId: targetUserId,
+			keyCode: null
+		});
+	}
+
+	buildHash(applicationId, userId, keyCode) {
+		if (applicationId == null || userId == null || keyCode == null) {
+			throw new MissingArgumentsError();
+		}
+
+		return buildHash(`${this._config.api.secretToken.applicationAccess}/${applicationId}/${userId}/${keyCode}`);
+	}
+
+	splitAccessKey(key) {
+		if (key == null) {
+			throw new MissingArgumentsError();
+		}
+
+		const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
+
+		if (reg == null) {
+			throw new InvalidArgumentError('key');
+		}
+
+		return { userId: MongoAdapter.buildId(reg[1]), hash: reg[2], keyCode: parseInt(reg[3]) };
+	}
+
+	async verifyAccessKey(key) {
+		if (key == null) {
+			throw new MissingArgumentsError();
+		}
+
+		let elements;
+		try {
+			elements = this.splitAccessKey(key);
+		}
+		catch (err) {
+			return false;
+		}
+		const { userId, hash, keyCode } = elements;
+
+		const applicationAccess = await this._repository.find('applicationAccesses', { userId, keyCode });
+		if (applicationAccess == null) {
+			return false;
+		}
+
+		const correctHash = buildHash(`${this._config.api.secretToken.applicationAccess}/${applicationAccess.applicationId}/${userId}/${keyCode}`);
+		const isPassed = (hash === correctHash && keyCode === applicationAccess.keyCode);
+
+		return isPassed;
 	}
 }
 module.exports = ApplicationAccessesService;

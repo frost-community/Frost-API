@@ -13,6 +13,46 @@ class UsersService {
 	}
 
 	/**
+	 * @param {String} password
+	 * @param {Object} userDocument
+	 * @returns {Boolean}
+	*/
+	checkCorrectPassword(userDocument, password) {
+		if (password == null || userDocument == null)
+			throw new MissingArgumentsError();
+
+		const [hash, salt] = userDocument.passwordHash.split('.');
+
+		return hash == buildHash(`${password}.${salt}`);
+	}
+
+	async serialize(userDocument) {
+		const res = Object.assign({}, userDocument);
+
+		// createdAt
+		res.createdAt = parseInt(moment(res._id.getTimestamp()).format('X'));
+
+		// id
+		res.id = res._id.toString();
+		res._id = undefined;
+
+		// passwordHash
+		res.passwordHash = undefined;
+
+		// followingsCount, followersCount, postsCount.status
+		res.postsCount = {};
+		[res.followingsCount, res.followersCount, res.postsCount.status] = await Promise.all([
+			this._repository.count('userFollowings', { source: userDocument._id }),
+			this._repository.count('userFollowings', { target: userDocument._id }),
+			this._repository.count('posts', { type: 'status', userId: userDocument._id })
+		]);
+
+		return sortObject(res);
+	}
+
+	// helpers
+
+	/**
 	 * @param {String} screenName
 	 * @param {String} password
 	 * @param {String} name
@@ -67,10 +107,10 @@ class UsersService {
 		if (screenName == null)
 			throw new MissingArgumentsError();
 
-		const isPassedformatTest = /^[a-zA-Z0-9_-]{4,15}$/.test(screenName) && !/^(.)\1{3,}$/.test(screenName);
+		const isPassedFormatTest = /^[a-zA-Z0-9_-]{4,15}$/.test(screenName) && !/^(.)\1{3,}$/.test(screenName);
 		const isNotInvalidScreenName = this._config.api.invalidScreenNames.every(invalidScreenName => screenName != invalidScreenName);
 
-		return isPassedformatTest && isNotInvalidScreenName;
+		return isPassedFormatTest && isNotInvalidScreenName;
 	}
 
 	async nonDuplicatedScreenName(screenName) {
@@ -89,44 +129,6 @@ class UsersService {
 			throw new MissingArgumentsError();
 
 		return /^[!-~]{6,}$/.test(password);
-	}
-
-	/**
-	 * @param {String} password
-	 * @param {Object} userDocument
-	 * @returns {Boolean}
-	*/
-	checkCorrectPassword(password, userDocument) {
-		if (password == null || userDocument == null)
-			throw new MissingArgumentsError();
-
-		const [hash, salt] = userDocument.passwordHash.split('.');
-
-		return hash == buildHash(`${password}.${salt}`);
-	}
-
-	async serialize(userDocument) {
-		const res = Object.assign({}, userDocument);
-
-		// createdAt
-		res.createdAt = parseInt(moment(res._id.getTimestamp()).format('X'));
-
-		// id
-		res.id = res._id.toString();
-		res._id = undefined;
-
-		// passwordHash
-		res.passwordHash = undefined;
-
-		// followingsCount, followersCount, postsCount.status
-		res.postsCount = {};
-		[res.followingsCount, res.followersCount, res.postsCount.status] = await Promise.all([
-			this._repository.count('userFollowings', { source: userDocument._id }),
-			this._repository.count('userFollowings', { target: userDocument._id }),
-			this._repository.count('posts', { type: 'status', userId: userDocument._id })
-		]);
-
-		return sortObject(res);
 	}
 }
 module.exports = UsersService;

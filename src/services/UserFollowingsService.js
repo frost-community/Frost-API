@@ -12,9 +12,23 @@ class UserFollowingsService {
 		this._config = config;
 	}
 
+	serialize(document) {
+		const res = Object.assign({}, document);
+
+		// createdAt
+		res.createdAt = parseInt(moment(res._id.getTimestamp()).format('X'));
+
+		// id
+		res.id = res._id.toString();
+		res._id = undefined;
+
+		return sortObject(res);
+	}
+
+	// helpers
+
 	async create(sourceUserId, targetUserId, message) {
 		let resultUpsert;
-
 		try {
 			resultUpsert = await this._repository.upsert('userFollowings', { source: sourceUserId, target: targetUserId },
 				{ source: sourceUserId, target: targetUserId, message }
@@ -34,21 +48,6 @@ class UserFollowingsService {
 			console.log(err);
 		}
 	}
-
-	serialize(document) {
-		const res = Object.assign({}, document);
-
-		// createdAt
-		res.createdAt = parseInt(moment(res._id.getTimestamp()).format('X'));
-
-		// id
-		res.id = res._id.toString();
-		res._id = undefined;
-
-		return sortObject(res);
-	}
-
-	// helpers
 
 	async findBySrcDestIdAsync(sourceUserId, targetUserId) {
 		if (sourceUserId == null || targetUserId == null) {

@@ -17,6 +17,35 @@ class StorageFilesService {
 		this._repository = repository;
 	}
 
+	serialize(document, includeFileData) {
+		const res = Object.assign({}, document);
+
+		// createdAt
+		res.createdAt = parseInt(moment(res._id.getTimestamp()).format('X'));
+
+		// id
+		res.id = res._id.toString();
+		res._id = undefined;
+
+		// creator.id
+		res.creator.id = res.creator.id.toString();
+
+		// size
+		res.size = res.fileData.length();
+
+		// fileData
+		res.fileData = res.fileData.toString('base64');
+
+		// exclude fileData
+		if (!includeFileData) {
+			res.fileData = undefined;
+		}
+
+		return sortObject(res);
+	}
+
+	// helpers
+
 	create(creatorType, creatorId, fileDataBuffer, mimeType, accessRightLevel, accessRightTargets) {
 		if (creatorType == null || creatorId == null || fileDataBuffer == null || mimeType == null) {
 			throw new MissingArgumentsError();
@@ -57,33 +86,6 @@ class StorageFilesService {
 		};
 
 		return this._repository.findArray('storageFiles', query, sortOption, limit);
-	}
-
-	serialize(document, includeFileData) {
-		const res = Object.assign({}, document);
-
-		// createdAt
-		res.createdAt = parseInt(moment(res._id.getTimestamp()).format('X'));
-
-		// id
-		res.id = res._id.toString();
-		res._id = undefined;
-
-		// creator.id
-		res.creator.id = res.creator.id.toString();
-
-		// size
-		res.size = res.fileData.length();
-
-		// fileData
-		res.fileData = res.fileData.toString('base64');
-
-		// exclude fileData
-		if (!includeFileData) {
-			res.fileData = undefined;
-		}
-
-		return sortObject(res);
 	}
 }
 module.exports = StorageFilesService;
