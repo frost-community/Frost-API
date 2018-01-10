@@ -50,7 +50,7 @@ exports.post = async (apiContext) => {
 
 	await apiContext.lock.acquire(user._id.toString(), async () => {
 		// calculate available space
-		const usedSpace = await getUsedSpace(user._id, apiContext.db);
+		const usedSpace = await getUsedSpace(user._id, apiContext.repository);
 		if (apiContext.config.api.storage.spaceSize - usedSpace - fileDataBuffer.length < 0) {
 			return apiContext.response(400, 'storage space is full');
 		}

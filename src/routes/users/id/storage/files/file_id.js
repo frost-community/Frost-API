@@ -48,8 +48,8 @@ exports.get = async (apiContext) => {
 	else if (level == 'specific') {
 		const users = file.accessRight.users;
 
-		// アクセスを許可していないユーザー
-		if (!isOwnerAccess && (users == null || !users.some(i => i == requestUserId))) {
+		const isNotAllowedUser = !isOwnerAccess && (users == null || !users.some(i => i == requestUserId));
+		if (isNotAllowedUser) {
 			return apiContext.response(403, 'this operation is not permitted');
 		}
 	}

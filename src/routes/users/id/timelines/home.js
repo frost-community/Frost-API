@@ -16,7 +16,9 @@ exports.get = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	// convert query value
-	apiContext.query.limit = v.toInt(apiContext.query.limit);
+	const limit = v.toInt(apiContext.query.limit);
+
+	const { findTargets } = apiContext.userFollowingsService;
 
 	try {
 		// user
@@ -26,11 +28,11 @@ exports.get = async (apiContext) => {
 		}
 
 		// ids
-		const followings = await UserFollowing.findTargetsAsync(user._id, null);
-		const ids = (followings != null) ? followings.map(i => i.target) : [];
+		const followings = await findTargets(user._id, null);
+		const ids = followings.map(i => i.target);
 		ids.push(user._id); // ソースユーザーを追加
 
-		return await timelineAsync(apiContext, 'status', ids, apiContext.query.limit);
+		return await timelineAsync(apiContext, 'status', ids, limit);
 	}
 	catch (err) {
 		console.log(err);

@@ -16,7 +16,7 @@ exports.get = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	// convert query value
-	apiContext.query.limit = v.toInt(apiContext.query.limit);
+	const limit = v.toInt(apiContext.query.limit);
 
 	try {
 		// user
@@ -25,7 +25,7 @@ exports.get = async (apiContext) => {
 			return apiContext.response(404, 'user as premise not found');
 		}
 
-		return await timelineAsync(apiContext, 'status', [user._id], apiContext.query.limit);
+		return await timelineAsync(apiContext, 'status', [user._id], limit);
 	}
 	catch (err) {
 		console.log(err);

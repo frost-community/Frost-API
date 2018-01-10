@@ -20,7 +20,7 @@ exports.get = async (apiContext) => {
 		return apiContext.response(403, 'this operation is not permitted');
 	}
 
-	const usedSpace = await getUsedSpace(user._id, apiContext.db);
+	const usedSpace = await getUsedSpace(user._id, apiContext.repository);
 	const availableSpace = apiContext.config.api.storage.spaceSize - usedSpace;
 
 	apiContext.response(200, {

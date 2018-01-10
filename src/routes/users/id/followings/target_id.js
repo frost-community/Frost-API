@@ -10,6 +10,8 @@ exports.get = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
+	const { findBySrcDestId } = apiContext.userFollowingsService;
+
 	// source user
 	const sourceUser = await apiContext.repository.findById('users', apiContext.params.id);
 	if (sourceUser == null) {
@@ -26,7 +28,7 @@ exports.get = async (apiContext) => {
 		return apiContext.response(400, 'source user and target user is same');
 	}
 
-	const userFollowing = await UserFollowing.findBySrcDestIdAsync(sourceUser._id, targetUser._id);
+	const userFollowing = await findBySrcDestId(sourceUser._id, targetUser._id);
 	if (userFollowing == null) {
 		return apiContext.response(404, 'not following', false);
 	}
@@ -42,7 +44,7 @@ exports.put = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	apiContext.body = apiContext.body || {};
+	const { create, findBySrcDestId } = apiContext.userFollowingsService;
 
 	// source user
 	const sourceUser = await apiContext.repository.findById('users', apiContext.params.id);
@@ -75,7 +77,7 @@ exports.put = async (apiContext) => {
 	// ドキュメント作成・更新
 	let resultUpsert;
 	try {
-		resultUpsert = await UserFollowingsService.create(sourceUserId, targetUserId, message);
+		resultUpsert = await create(sourceUserId, targetUserId, message);
 	}
 	catch (err) {
 		console.log(err);
@@ -87,7 +89,7 @@ exports.put = async (apiContext) => {
 
 	let userFollowing;
 	try {
-		userFollowing = await UserFollowing.findBySrcDestIdAsync(sourceUserId, targetUserId);
+		userFollowing = await findBySrcDestId(sourceUserId, targetUserId);
 	}
 	catch (err) {
 		console.log(err);
@@ -114,6 +116,8 @@ exports.delete = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
+	const { removeBySrcDestId } = apiContext.userFollowingsService;
+
 	// source user
 	const soruceUser = await apiContext.repository.findById('users', apiContext.params.id);
 	if (soruceUser == null) {
@@ -129,17 +133,17 @@ exports.delete = async (apiContext) => {
 		return apiContext.response(404, 'target user as premise not found');
 	}
 
-	const userFollowing = await UserFollowing.findBySrcDestIdAsync(soruceUser._id, targetUser._id);
+	try {
+		await removeBySrcDestId(soruceUser._id, targetUser._id);
+	}
+	catch (err) {
+		// ignore
+	}
 
-	// ドキュメントが存在すれば削除
-	if (userFollowing != null) {
-		await UserFollowingsService.remove();
-
-		// 対象ユーザーのストリームを購読解除
-		const stream = apiContext.streams.get(StreamUtil.buildStreamId('user-timeline-status', soruceUser._id.toString()));
-		if (stream != null) {
-			stream.removeSource(targetUser._id.toString());
-		}
+	// 対象ユーザーのストリームを購読解除
+	const stream = apiContext.streams.get(StreamUtil.buildStreamId('user-timeline-status', soruceUser._id.toString()));
+	if (stream != null) {
+		stream.removeSource(targetUser._id.toString());
 	}
 
 	apiContext.response(204);
