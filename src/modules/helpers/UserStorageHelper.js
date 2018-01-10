@@ -19,7 +19,7 @@ class UserStorageHelper {
 
 		let usedSpace = 0;
 		for (const file of files) {
-			usedSpace += file.document.fileData.length();
+			usedSpace += file.fileData.length();
 		}
 
 		return usedSpace;

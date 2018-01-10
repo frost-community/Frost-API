@@ -61,5 +61,30 @@ class PostsService {
 		}
 		return document;
 	}
+
+	/**
+	 * @param {String | ObjectId} userId
+	 * @param {String} text
+	 * @param {String} title
+	 * @returns {PostDocument}
+	*/
+	async createArticlePost(userId, text, title) {
+		if (userId == null || text == null || title == null)
+			throw new MissingArgumentsError();
+
+		let document;
+		try {
+			document = await this._repository.create('posts', {
+				type: 'article',
+				userId,
+				title,
+				text
+			});
+		}
+		catch (err) {
+			console.log(err);
+		}
+		return document;
+	}
 }
 module.exports = PostsService;

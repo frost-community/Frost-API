@@ -28,16 +28,16 @@ exports.get = async (apiContext) => {
 	}
 
 	// 存在しない もしくは creatorの不一致がある
-	if (file == null || file.document.creator.type != 'user' || !file.document.creator.id.equals(user.document._id)) {
+	if (file == null || file.creator.type != 'user' || !file.creator.id.equals(user._id)) {
 		apiContext.response(204);
 		return;
 	}
 
 	// level
-	let level = file.document.accessRight.level;
+	let level = file.accessRight.level;
 
-	const requestUserId = apiContext.user.document._id;
-	const isOwnerAccess = file.document.creator.id.equals(requestUserId);
+	const requestUserId = apiContext.user._id;
+	const isOwnerAccess = file.creator.id.equals(requestUserId);
 
 	if (level == 'private') {
 		// 所有者以外のユーザー
@@ -46,7 +46,7 @@ exports.get = async (apiContext) => {
 		}
 	}
 	else if (level == 'specific') {
-		const users = file.document.accessRight.users;
+		const users = file.accessRight.users;
 
 		// アクセスを許可していないユーザー
 		if (!isOwnerAccess && (users == null || !users.some(i => i == requestUserId))) {
@@ -77,7 +77,7 @@ exports.delete = async (apiContext) => {
 		return apiContext.response(404, 'user as premise not found');
 	}
 
-	const isOwnerAccess = user.document._id.equals(apiContext.user.document._id);
+	const isOwnerAccess = user._id.equals(apiContext.user._id);
 	if (!isOwnerAccess) {
 		return apiContext.response(403, 'this operation is not permitted');
 	}
@@ -96,7 +96,7 @@ exports.delete = async (apiContext) => {
 	}
 
 	// 所有していないリソース
-	if (file.document.creator.type != 'user' || !file.document.creator.id.equals(user.document._id)) {
+	if (file.creator.type != 'user' || !file.creator.id.equals(user._id)) {
 		return apiContext.response(403);
 	}
 

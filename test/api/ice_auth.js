@@ -34,7 +34,7 @@ describe('IceAuth API', () => {
 			app = await db.applications.createAsync('generalapp', user, 'this is generalapp.', ['iceAuthHost']);
 
 			authorizeRequest = await db.authorizeRequests.createAsync({
-				applicationId: app.document._id
+				applicationId: app._id
 			});
 		});
 
@@ -106,7 +106,7 @@ describe('IceAuth API', () => {
 					context = new ApiContext(null, null, db, config, {
 						body: {
 							iceAuthKey: context.data.iceAuthKey,
-							userId: user.document._id.toString()
+							userId: user._id.toString()
 						},
 						headers: { 'X-Ice-Auth-Key': context.data.iceAuthKey, 'X-Api-Version': 1 },
 						user,
@@ -141,7 +141,7 @@ describe('IceAuth API', () => {
 					// targetUser
 					context = new ApiContext(null, null, db, config, {
 						body: {
-							userId: user.document._id.toString()
+							userId: user._id.toString()
 						},
 						headers: { 'X-Ice-Auth-Key': iceAuthKey, 'X-Api-Version': 1 },
 						user,
@@ -153,7 +153,7 @@ describe('IceAuth API', () => {
 					// authorize
 					context = new ApiContext(null, null, db, config, {
 						body: {
-							verificationCode: authorizeRequest.document.verificationCode
+							verificationCode: authorizeRequest.verificationCode
 						},
 						headers: { 'X-Ice-Auth-Key': iceAuthKey, 'X-Api-Version': 1 },
 						user,
@@ -182,7 +182,7 @@ describe('IceAuth API', () => {
 
 					context = new ApiContext(null, null, db, config, {
 						body: {
-							screenName: user.document.screenName,
+							screenName: user.screenName,
 							password: password
 						},
 						headers: { 'X-Ice-Auth-Key': iceAuthKey, 'X-Api-Version': 1 },

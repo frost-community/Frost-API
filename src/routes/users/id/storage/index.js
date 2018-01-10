@@ -15,12 +15,12 @@ exports.get = async (apiContext) => {
 		return apiContext.response(404, 'user as premise not found');
 	}
 
-	const isOwned = user.document._id.equals(apiContext.user.document._id);
+	const isOwned = user._id.equals(apiContext.user._id);
 	if (!isOwned) {
 		return apiContext.response(403, 'this operation is not permitted');
 	}
 
-	const usedSpace = await getUsedSpace(user.document._id, apiContext.db);
+	const usedSpace = await getUsedSpace(user._id, apiContext.db);
 	const availableSpace = apiContext.config.api.storage.spaceSize - usedSpace;
 
 	apiContext.response(200, {

@@ -73,7 +73,7 @@ class ApplicationsService {
 	create(name, creator, description, permissions) {
 		return this._repository.create('applications', {
 			name: name,
-			creatorId: creator.document._id,
+			creatorId: creator._id,
 			description: description,
 			permissions: permissions
 		});
@@ -131,8 +131,8 @@ class ApplicationsService {
 			return false;
 		}
 
-		const correctHash = buildHash(`${this._config.api.secretToken.application}/${application.document.creatorId}/${applicationId}/${keyCode}`);
-		const isPassed = hash === correctHash && keyCode === application.document.keyCode;
+		const correctHash = buildHash(`${this._config.api.secretToken.application}/${application.creatorId}/${applicationId}/${keyCode}`);
+		const isPassed = hash === correctHash && keyCode === application.keyCode;
 
 		return isPassed;
 	}

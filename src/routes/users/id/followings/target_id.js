@@ -22,11 +22,11 @@ exports.get = async (apiContext) => {
 		return apiContext.response(404, 'target user as premise not found');
 	}
 
-	if (sourceUser.document._id.equals(targetUser.document._id)) {
+	if (sourceUser._id.equals(targetUser._id)) {
 		return apiContext.response(400, 'source user and target user is same');
 	}
 
-	const userFollowing = await UserFollowing.findBySrcDestIdAsync(sourceUser.document._id, targetUser.document._id);
+	const userFollowing = await UserFollowing.findBySrcDestIdAsync(sourceUser._id, targetUser._id);
 	if (userFollowing == null) {
 		return apiContext.response(404, 'not following', false);
 	}
@@ -49,9 +49,9 @@ exports.put = async (apiContext) => {
 	if (sourceUser == null) {
 		return apiContext.response(404, 'user as premise not found');
 	}
-	const sourceUserId = sourceUser.document._id;
+	const sourceUserId = sourceUser._id;
 
-	if (!sourceUserId.equals(apiContext.user.document._id)) {
+	if (!sourceUserId.equals(apiContext.user._id)) {
 		return apiContext.response(403, 'this operation is not permitted');
 	}
 
@@ -60,7 +60,7 @@ exports.put = async (apiContext) => {
 	if (targetUser == null) {
 		return apiContext.response(404, 'target user as premise not found');
 	}
-	const targetUserId = targetUser.document._id;
+	const targetUserId = targetUser._id;
 
 	if (targetUserId.equals(sourceUserId)) {
 		return apiContext.response(400, 'source user and target user is same');
@@ -119,7 +119,7 @@ exports.delete = async (apiContext) => {
 	if (soruceUser == null) {
 		return apiContext.response(404, 'user as premise not found');
 	}
-	if (!soruceUser.document._id.equals(apiContext.user.document._id)) {
+	if (!soruceUser._id.equals(apiContext.user._id)) {
 		return apiContext.response(403, 'this operation is not permitted');
 	}
 
@@ -129,16 +129,16 @@ exports.delete = async (apiContext) => {
 		return apiContext.response(404, 'target user as premise not found');
 	}
 
-	const userFollowing = await UserFollowing.findBySrcDestIdAsync(soruceUser.document._id, targetUser.document._id);
+	const userFollowing = await UserFollowing.findBySrcDestIdAsync(soruceUser._id, targetUser._id);
 
 	// ドキュメントが存在すれば削除
 	if (userFollowing != null) {
 		await UserFollowingsService.remove();
 
 		// 対象ユーザーのストリームを購読解除
-		const stream = apiContext.streams.get(StreamUtil.buildStreamId('user-timeline-status', soruceUser.document._id.toString()));
+		const stream = apiContext.streams.get(StreamUtil.buildStreamId('user-timeline-status', soruceUser._id.toString()));
 		if (stream != null) {
-			stream.removeSource(targetUser.document._id.toString());
+			stream.removeSource(targetUser._id.toString());
 		}
 	}
 

@@ -239,7 +239,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 						stream.addSource(StreamUtil.buildStreamId('user-timeline-status', meId));
 						const followings = await UserFollowing.findTargetsAsync(meId, null, db, config); // TODO: (全て or ユーザーの購読設定によっては選択的に)
 						for (const following of followings || []) {
-							const followingUserId = following.document.target.toString();
+							const followingUserId = following.target.toString();
 							stream.addSource(StreamUtil.buildStreamId('user-timeline-status', followingUserId));
 						}
 						streams.set(streamId, stream);

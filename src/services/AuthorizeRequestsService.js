@@ -61,7 +61,7 @@ class AuthorizeRequestsService {
 	}
 
 	/**
-	 * 認可の対象とするユーザーを設定します
+	 * 認可の対象とするユーザーを設定し、更新したドキュメントを返します
 	 *
 	 * @param {AuthorizeRequestDocument} document AuthorizeRequestドキュメント
 	 * @param {String | ObjectId} userId 対象とするUserドキュメントのId

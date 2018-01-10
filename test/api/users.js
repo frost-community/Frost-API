@@ -37,8 +37,8 @@ describe('Users API', () => {
 		describe('[GET]', () => {
 			it('正しくリクエストされた場合は成功する', async () => {
 				const context = new ApiContext(null, null, db, config, {
-					params: { id: user.document._id },
-					query: { 'screen_names': user.document.screenName },
+					params: { id: user._id },
+					query: { 'screen_names': user.screenName },
 					headers: { 'X-Api-Version': 1 },
 					user,
 					application: app
@@ -51,9 +51,9 @@ describe('Users API', () => {
 				delete context.data.users[0].createdAt;
 				assert.deepEqual(context.data, {
 					users: [{
-						screenName: user.document.screenName,
-						name: user.document.name,
-						description: user.document.description,
+						screenName: user.screenName,
+						name: user.name,
+						description: user.description,
 						followersCount: 0,
 						followingsCount: 0,
 						postsCount: { status: 0 }
@@ -66,7 +66,7 @@ describe('Users API', () => {
 			describe('[GET]', () => {
 				it('正しくリクエストされた場合は成功する', async () => {
 					const context = new ApiContext(null, null, db, config, {
-						params: { id: user.document._id },
+						params: { id: user._id },
 						headers: { 'X-Api-Version': 1 },
 						user,
 						application: app
@@ -79,9 +79,9 @@ describe('Users API', () => {
 					delete context.data.user.createdAt;
 					assert.deepEqual(context.data, {
 						user: {
-							screenName: user.document.screenName,
-							name: user.document.name,
-							description: user.document.description,
+							screenName: user.screenName,
+							name: user.name,
+							description: user.description,
 							followersCount: 0,
 							followingsCount: 0,
 							postsCount: { status: 0 }

@@ -15,6 +15,8 @@ exports.post = async (apiContext) => {
 
 	const { title, text } = apiContext.body;
 
+	const { createArticlePost, serialize } = apiContext.postsService;
+
 	if (/^\s*$/.test(title) || getStringSize(text) > 64) {
 		return apiContext.response(400, 'title is invalid format. max 64bytes');
 	}
@@ -23,23 +25,10 @@ exports.post = async (apiContext) => {
 		return apiContext.response(400, 'text is invalid format. max 10,000bytes');
 	}
 
-	let postArticle;
-
-	try {
-		postArticle = await apiContext.db.posts.createAsync({ // TODO: move to document models
-			type: 'article',
-			userId: apiContext.user.document._id,
-			title: title,
-			text: text
-		});
-	}
-	catch (err) {
-		console.log(err);
-	}
-
+	const postArticle = await createArticlePost(apiContext.user._id, text, title);
 	if (postArticle == null) {
 		return apiContext.response(500, 'failed to create postArticle');
 	}
 
-	apiContext.response(200, { postArticle: await postArticle.serializeAsync(true) });
+	apiContext.response(200, { postArticle: await serialize(postArticle, true) });
 };

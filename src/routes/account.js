@@ -20,6 +20,8 @@ exports.post = async (apiContext) => {
 		description
 	} = apiContext.body;
 
+	const { serialize } = apiContext.usersService;
+
 	// screenName
 	if (!apiContext.usersService.validFormatScreenName(screenName)) {
 		return apiContext.response(400, 'screenName is invalid format');
@@ -38,5 +40,5 @@ exports.post = async (apiContext) => {
 		return apiContext.response(500, 'failed to create account');
 	}
 
-	apiContext.response(200, { user: await apiContext.usersService.serialize(user) });
+	apiContext.response(200, { user: await serialize(user) });
 };

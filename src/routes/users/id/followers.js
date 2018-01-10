@@ -27,7 +27,7 @@ exports.get = async (apiContext) => {
 	}
 
 	// このユーザーがフォロー元であるフォロー関係をすべて取得
-	const userFollowings = await UserFollowing.findSourcesAsync(user.document._id, limit);
+	const userFollowings = await UserFollowing.findSourcesAsync(user._id, limit);
 	if (userFollowings == null || userFollowings.length == 0) {
 		apiContext.response(204);
 		return;
@@ -35,9 +35,9 @@ exports.get = async (apiContext) => {
 
 	// fetch and serialize users
 	const promises = userFollowings.map(async following => {
-		const user = await apiContext.repository.findById('users', following.document.source);
+		const user = await apiContext.repository.findById('users', following.source);
 		if (user == null) {
-			console.log(`notfound following source userId: ${following.document.source.toString()}`);
+			console.log(`notfound following source userId: ${following.source.toString()}`);
 			return;
 		}
 		return await user.serializeAsync();
@@ -45,7 +45,7 @@ exports.get = async (apiContext) => {
 	const pureSerializedUsers = await Promise.all(promises);
 
 	// sort in original order
-	const serializedUsers = userFollowings.map(following => pureSerializedUsers.find(u => u.id == following.document.source));
+	const serializedUsers = userFollowings.map(following => pureSerializedUsers.find(u => u.id == following.source));
 
 	apiContext.response(200, { users: serializedUsers });
 };

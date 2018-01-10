@@ -1,8 +1,15 @@
-const Post = require('../documentModels/post');
+const ApiContext = require('./ApiContext');
 
+/**
+ * @param {ApiContext} apiContext
+ * @param {String} type
+ * @param {[]} ids
+ * @param {Number} limit
+*/
 module.exports = async (apiContext, type, ids, limit) => {
-	let query = { type };
+	const { serialize } = apiContext.postsService;
 
+	let query = { type };
 	if (ids != null) {
 		query = {
 			$and: [
@@ -12,17 +19,15 @@ module.exports = async (apiContext, type, ids, limit) => {
 		};
 	}
 
-	const posts = await Post.findArrayAsync(query, false, limit);
+	const posts = await apiContext.repository.findArray('posts', query, false, limit);
 
 	if (posts == null || posts.length == 0) {
 		apiContext.response(204);
 		return;
 	}
 
-	const serializedPosts = [];
-	for (const post of posts) {
-		serializedPosts.push(await post.serializeAsync(true));
-	}
+	const promises = posts.map(p => serialize(p, true));
+	const serializedPosts = await Promise.all(promises);
 
 	apiContext.response(200, { posts: serializedPosts });
 };

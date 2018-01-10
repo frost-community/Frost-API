@@ -28,7 +28,7 @@ exports.post = async (apiContext) => {
 		return apiContext.response(404, 'user as premise not found');
 	}
 
-	const isOwnerAccess = user.document._id.equals(apiContext.user.document._id);
+	const isOwnerAccess = user._id.equals(apiContext.user._id);
 	if (!isOwnerAccess) {
 		return apiContext.response(403, 'this operation is not permitted');
 	}
@@ -46,9 +46,9 @@ exports.post = async (apiContext) => {
 
 	let file;
 
-	await apiContext.lock.acquire(user.document._id.toString(), async () => {
+	await apiContext.lock.acquire(user._id.toString(), async () => {
 		// calculate available space
-		const usedSpace = await getUsedSpace(user.document._id, apiContext.db);
+		const usedSpace = await getUsedSpace(user._id, apiContext.db);
 		if (apiContext.config.api.storage.spaceSize - usedSpace - fileDataBuffer.length < 0) {
 			return apiContext.response(400, 'storage space is full');
 		}
@@ -57,7 +57,7 @@ exports.post = async (apiContext) => {
 		try {
 			file = await apiContext.db.storageFiles.createAsync(
 				'user',
-				apiContext.user.document._id,
+				apiContext.user._id,
 				fileDataBuffer,
 				fileType.mime,
 				accessRightLevel);
@@ -92,7 +92,7 @@ exports.get = async (apiContext) => { // TODO: フィルター指定、ページ
 		return apiContext.response(404, 'user as premise not found');
 	}
 
-	const isOwnerAccess = user.document._id.equals(apiContext.user.document._id);
+	const isOwnerAccess = user._id.equals(apiContext.user._id);
 	if (!isOwnerAccess) {
 		return apiContext.response(403, 'this operation is not permitted');
 	}
@@ -102,7 +102,7 @@ exports.get = async (apiContext) => { // TODO: フィルター指定、ページ
 	try {
 		files = await apiContext.db.storageFiles.findByCreatorArrayAsync(
 			'user',
-			apiContext.user.document._id);
+			apiContext.user._id);
 	}
 	catch (err) {
 		console.log(err);

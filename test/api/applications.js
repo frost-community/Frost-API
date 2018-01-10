@@ -59,7 +59,7 @@ describe('Applications API', () => {
 				assert.deepEqual(context.data, {
 					application: {
 						name: 'temp',
-						creatorId: userA.document._id.toString(),
+						creatorId: userA._id.toString(),
 						description: 'hogehoge',
 						permissions: []
 					}
@@ -125,10 +125,10 @@ describe('Applications API', () => {
 				delete context.data.applications[0].createdAt;
 				assert.deepEqual(context.data, {
 					applications: [{
-						creatorId: userA.document._id.toString(),
-						name: appA.document.name,
-						description: appA.document.description,
-						permissions: appA.document.permissions
+						creatorId: userA._id.toString(),
+						name: appA.name,
+						description: appA.description,
+						permissions: appA.permissions
 					}]
 				});
 			});
@@ -138,7 +138,7 @@ describe('Applications API', () => {
 			describe('[GET]', () => {
 				it('正しくリクエストされた場合は成功する', async () => {
 					const context = new ApiContext(null, null, db, config, {
-						params: { id: appA.document._id.toString() },
+						params: { id: appA._id.toString() },
 						headers: { 'X-Api-Version': 1 },
 						user: userA,
 						application: appA
@@ -151,17 +151,17 @@ describe('Applications API', () => {
 					delete context.data.application.createdAt;
 					assert.deepEqual(context.data, {
 						application: {
-							creatorId: userA.document._id.toString(),
-							name: appA.document.name,
-							description: appA.document.description,
-							permissions: appA.document.permissions
+							creatorId: userA._id.toString(),
+							name: appA.name,
+							description: appA.description,
+							permissions: appA.permissions
 						}
 					});
 				});
 
 				it('所有していないアプリケーションを指定された場合でも成功する', async () => {
 					const context = new ApiContext(null, null, db, config, {
-						params: { id: appB.document._id.toString() },
+						params: { id: appB._id.toString() },
 						headers: { 'X-Api-Version': 1 },
 						user: userA,
 						application: appA
@@ -186,7 +186,7 @@ describe('Applications API', () => {
 				describe('[POST]', () => {
 					it('正しくリクエストされた場合は成功する', async () => {
 						const context = new ApiContext(null, null, db, config, {
-							params: { id: appA.document._id.toString() },
+							params: { id: appA._id.toString() },
 							headers: { 'X-Api-Version': 1 },
 							user: userA,
 							application: appA
@@ -203,7 +203,7 @@ describe('Applications API', () => {
 
 					it('所有していないアプリケーションを指定された場合は失敗する', async () => {
 						const context = new ApiContext(null, null, db, config, {
-							params: { id: appA.document._id.toString() },
+							params: { id: appA._id.toString() },
 							headers: { 'X-Api-Version': 1 },
 							user: userB,
 							application: appB
@@ -218,7 +218,7 @@ describe('Applications API', () => {
 						const key = await appA.generateApplicationKeyAsync();
 
 						const context = new ApiContext(null, null, db, config, {
-							params: { id: appA.document._id.toString() },
+							params: { id: appA._id.toString() },
 							headers: { 'X-Api-Version': 1 },
 							user: userA,
 							application: appA
@@ -236,7 +236,7 @@ describe('Applications API', () => {
 						await appB.generateApplicationKeyAsync();
 
 						const context = new ApiContext(null, null, db, config, {
-							params: { id: appB.document._id.toString() },
+							params: { id: appB._id.toString() },
 							headers: { 'X-Api-Version': 1 },
 							user: userA,
 							application: appA

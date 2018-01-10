@@ -26,9 +26,9 @@ exports.get = async (apiContext) => {
 		}
 
 		// ids
-		const followings = await UserFollowing.findTargetsAsync(user.document._id, null);
-		const ids = (followings != null) ? followings.map(i => i.document.target) : [];
-		ids.push(user.document._id); // ソースユーザーを追加
+		const followings = await UserFollowing.findTargetsAsync(user._id, null);
+		const ids = (followings != null) ? followings.map(i => i.target) : [];
+		ids.push(user._id); // ソースユーザーを追加
 
 		return await timelineAsync(apiContext, 'status', ids, apiContext.query.limit);
 	}

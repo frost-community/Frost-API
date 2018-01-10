@@ -21,13 +21,13 @@ exports.post = async (apiContext) => {
 		return apiContext.response(400, 'x-ice-auth-key header is invalid');
 	}
 
-	if ((await apiContext.db.users.findByIdAsync(userId)) == null) { //TODO: move to document models
+	if ((await apiContext.repository.findById('users', userId)) == null) {
 		return apiContext.response(400, 'userId is invalid');
 	}
 
-	const authorizeRequestId = splitIceAuthKey(iceAuthKey).authorizeRequestId;
-	const authorizeRequest = await apiContext.repository.findById('authorizeRequests', authorizeRequestId);
-	await setTargetUserId(authorizeRequest, userId);
+	const { authorizeRequestId } = splitIceAuthKey(iceAuthKey);
+	let authorizeRequest = await apiContext.repository.findById('authorizeRequests', authorizeRequestId);
+	authorizeRequest = await setTargetUserId(authorizeRequest, userId);
 
 	apiContext.response(200, { targetUserId: authorizeRequest.targetUserId });
 };

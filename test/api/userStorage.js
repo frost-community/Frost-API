@@ -53,7 +53,7 @@ describe('User Storage API', () => {
 				const promises = [];
 				for (let i = 0; i < 4; i++) {
 					context = new ApiContext(null, lock, db, config, {
-						params: { id: user.document._id.toString() },
+						params: { id: user._id.toString() },
 						body: { fileData: testData64 },
 						headers: { 'X-Api-Version': 1 },
 						testMode: true
@@ -66,7 +66,7 @@ describe('User Storage API', () => {
 				await Promise.all(promises);
 
 				context = new ApiContext(null, lock, db, config, {
-					params: { id: user.document._id.toString() },
+					params: { id: user._id.toString() },
 					headers: { 'X-Api-Version': 1 },
 					testMode: true
 				});
@@ -86,7 +86,7 @@ describe('User Storage API', () => {
 			describe('[POST]', () => {
 				it('正しくリクエストされた場合は成功する(1件、public)', async () => {
 					const context = new ApiContext(null, lock, db, config, {
-						params: { id: user.document._id.toString() },
+						params: { id: user._id.toString() },
 						body: { fileData: testData64 },
 						headers: { 'X-Api-Version': 1 },
 						testMode: true
@@ -106,7 +106,7 @@ describe('User Storage API', () => {
 					assert.deepEqual({
 						storageFile: {
 							accessRight: { level: 'public' },
-							creator: { type: 'user', id: user.document._id.toString() },
+							creator: { type: 'user', id: user._id.toString() },
 							mimeType: 'image/png',
 							type: 'image',
 							size: testData64Size
@@ -120,7 +120,7 @@ describe('User Storage API', () => {
 					const count = parseInt(config.api.storage.spaceSize / testData64Size) + 1; // parseInt(500KB / 53.8KB) + 1 = 10 items, 10 * 53.8KB > 500KB
 					for (let i = 0; i < count; i++) {
 						const context = new ApiContext(null, lock, db, config, {
-							params: { id: user.document._id.toString() },
+							params: { id: user._id.toString() },
 							body: { fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
 							user,
@@ -142,7 +142,7 @@ describe('User Storage API', () => {
 							assert.deepEqual({
 								storageFile: {
 									accessRight: { level: 'public' },
-									creator: { type: 'user', id: user.document._id.toString() },
+									creator: { type: 'user', id: user._id.toString() },
 									mimeType: 'image/png',
 									type: 'image',
 									size: testData64Size
@@ -158,7 +158,7 @@ describe('User Storage API', () => {
 
 				it('fileDataが空のときは失敗する', async () => {
 					const context = new ApiContext(null, lock, db, config, {
-						params: { id: user.document._id.toString() },
+						params: { id: user._id.toString() },
 						body: { fileData: '' },
 						headers: { 'X-Api-Version': 1 },
 						user,
@@ -176,7 +176,7 @@ describe('User Storage API', () => {
 					const contexts = [];
 					for (let i = 0; i < 4; i++) {
 						context = new ApiContext(null, lock, db, config, {
-							params: { id: user.document._id.toString() },
+							params: { id: user._id.toString() },
 							body: { fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
 							user,
@@ -187,7 +187,7 @@ describe('User Storage API', () => {
 					await Promise.all(contexts.map(c => routeFiles.post(c)));
 
 					context = new ApiContext(null, lock, db, config, {
-						params: { id: user.document._id.toString() },
+						params: { id: user._id.toString() },
 						headers: { 'X-Api-Version': 1 },
 						user,
 						application: app
@@ -206,7 +206,7 @@ describe('User Storage API', () => {
 						delete storageFile.createdAt;
 						assert.deepEqual({
 							accessRight: { level: 'public' },
-							creator: { type: 'user', id: user.document._id.toString() },
+							creator: { type: 'user', id: user._id.toString() },
 							mimeType: 'image/png',
 							type: 'image',
 							size: testData64Size
@@ -219,7 +219,7 @@ describe('User Storage API', () => {
 				describe('[GET]', () => {
 					it('正しくリクエストされた場合は成功する', async () => {
 						const contextFile = new ApiContext(null, lock, db, config, {
-							params: { id: user.document._id.toString() },
+							params: { id: user._id.toString() },
 							body: { fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
 							user,
@@ -231,7 +231,7 @@ describe('User Storage API', () => {
 
 						const context = new ApiContext(null, lock, db, config, {
 							params: {
-								id: user.document._id.toString(),
+								id: user._id.toString(),
 								'file_id': contextFile.data.storageFile.id
 							},
 							headers: { 'X-Api-Version': 1 },
@@ -249,7 +249,7 @@ describe('User Storage API', () => {
 						assert.deepEqual({
 							storageFile: {
 								accessRight: { level: 'public' },
-								creator: { type: 'user', id: user.document._id.toString() },
+								creator: { type: 'user', id: user._id.toString() },
 								mimeType: 'image/png',
 								type: 'image',
 								size: testData64Size
