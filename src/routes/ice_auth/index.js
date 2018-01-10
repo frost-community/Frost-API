@@ -12,28 +12,22 @@ exports.post = async (apiContext) => {
 
 	const applicationKey = apiContext.body.applicationKey;
 
-	if (!await Application.verifyKeyAsync(applicationKey, apiContext.db, apiContext.config)) {
+	const { create, generateIceAuthKey, generateVerificationCode } = apiContext.authorizeRequestsService;
+	const { verifyApplicationKey, splitApplicationKey } = apiContext.applicationsService;
+
+	if (!await verifyApplicationKey(applicationKey)) {
 		return apiContext.response(400, 'applicationKey is invalid');
 	}
 
-	const applicationId = Application.splitKey(applicationKey, apiContext.db, apiContext.config).applicationId;
+	const { applicationId } = splitApplicationKey(applicationKey);
 
-	let authorizeRequest;
-	try {
-		authorizeRequest = await apiContext.db.authorizeRequests.createAsync({ // TODO: move to document models
-			applicationId: applicationId
-		});
-	}
-	catch (err) {
-		console.log(err);
-	}
-
+	const authorizeRequest = await create(applicationId);
 	if (authorizeRequest == null) {
 		return apiContext.response(500, 'failed to create authorizeRequest');
 	}
 
-	const iceAuthKey = await authorizeRequest.generateIceAuthKeyAsync();
-	await authorizeRequest.generateVerificationCodeAsync();
+	const iceAuthKey = await generateIceAuthKey(authorizeRequest);
+	await generateVerificationCode(authorizeRequest);
 
-	apiContext.response(200, { iceAuthKey: iceAuthKey });
+	apiContext.response(200, { iceAuthKey });
 };
