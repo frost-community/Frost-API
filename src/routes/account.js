@@ -32,7 +32,7 @@ exports.post = async (apiContext) => {
 	if (!validFormatScreenName(screenName)) {
 		return apiContext.response(400, 'screenName is invalid format');
 	}
-	if (!(await nonDuplicatedScreenName(screenName))) {
+	if (!await nonDuplicatedScreenName(screenName)) {
 		return apiContext.response(400, 'this screenName is already exists');
 	}
 
