@@ -21,7 +21,7 @@ module.exports = async (apiContext, type, ids, limit) => {
 
 	const posts = await apiContext.repository.findArray('posts', query, false, limit);
 
-	if (posts == null || posts.length == 0) {
+	if (posts.length == 0) {
 		apiContext.response(204);
 		return;
 	}

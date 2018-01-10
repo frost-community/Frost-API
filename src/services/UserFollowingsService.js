@@ -40,7 +40,7 @@ class UserFollowingsService {
 		return resultUpsert;
 	}
 
-	async remove(sourceUserId, targetUserId) {
+	async removeBySrcDestId(sourceUserId, targetUserId) {
 		try {
 			await this._repository.remove('userFollowings', { source: sourceUserId, target: targetUserId });
 		}
@@ -49,7 +49,7 @@ class UserFollowingsService {
 		}
 	}
 
-	async findBySrcDestIdAsync(sourceUserId, targetUserId) {
+	async findBySrcDestId(sourceUserId, targetUserId) {
 		if (sourceUserId == null || targetUserId == null) {
 			throw new MissingArgumentsError();
 		}
@@ -57,7 +57,7 @@ class UserFollowingsService {
 		return this._repository.find('userFollowings', { source: sourceUserId, target: targetUserId });
 	}
 
-	async findTargetsAsync(sourceUserId, limit) {
+	async findTargets(sourceUserId, limit) {
 		if (sourceUserId == null) {
 			throw new MissingArgumentsError();
 		}
@@ -65,7 +65,7 @@ class UserFollowingsService {
 		return this._repository.findArray('userFollowings', { source: sourceUserId }, false, limit);
 	}
 
-	async findSourcesAsync(targetUserId, limit) {
+	async findSources(targetUserId, limit) {
 		if (targetUserId == null) {
 			throw new MissingArgumentsError();
 		}
