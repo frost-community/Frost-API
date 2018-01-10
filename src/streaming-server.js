@@ -1,10 +1,12 @@
-const UserFollowing = require('./documentModels/userFollowing');
 const WebSocket = require('websocket');
 const events = require('websocket-events');
 const { checkRequest } = require('./modules/helpers/StreamingHelper');
 const { Stream, StreamUtil } = require('./modules/stream');
 const methods = require('methods');
 const ApiContext = require('./modules/ApiContext');
+const ApplicationsService = require('./services/ApplicationsService');
+const ApplicationAccessesService = require('./services/ApplicationAccessesService');
+const UserFollowingsService = require('./services/UserFollowingsService');
 
 /*
 # 各種変数の説明
@@ -19,7 +21,7 @@ general-timeline-status:general generalに向けて流されたポストを受�
 home-timeline-status:(userId) そのユーザーのホームTLに向けて流されたポストを受信可能なStreamです
 */
 
-module.exports = (http, directoryRouter, streams, db, config) => {
+module.exports = (http, directoryRouter, streams, repository, config) => {
 	const server = new WebSocket.server({ httpServer: http });
 
 	// generate stream for general timeline (global)
@@ -29,11 +31,15 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 	generalTimelineStream.addSource(generalTimelineStreamId);
 	streams.set(generalTimelineStreamId, generalTimelineStream);
 
+	const applicationsService = new ApplicationsService(repository, config);
+	const applicationAccessesService = new ApplicationAccessesService(repository, config);
+	const userFollowingsService = new UserFollowingsService(repository, config);
+
 	server.on('request', async request => {
 		// verification
 		let verification;
 		try {
-			verification = await checkRequest(request, db, config);
+			verification = await checkRequest(request, applicationsService, applicationAccessesService);
 		}
 		catch (err) {
 			console.log('streaming verification error:', err);
@@ -154,7 +160,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				}
 
 				// ApiContextを構築
-				const apiContext = new ApiContext(streams, null, db, config, {
+				const apiContext = new ApiContext(streams, null, repository, config, {
 					params,
 					query,
 					body,
@@ -237,7 +243,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 						// ストリームを生成
 						stream = new Stream();
 						stream.addSource(StreamUtil.buildStreamId('user-timeline-status', meId));
-						const followings = await UserFollowing.findTargetsAsync(meId, null, db, config); // TODO: (全て or ユーザーの購読設定によっては選択的に)
+						const followings = await userFollowingsService.findTargets(meId, null); // TODO: (全て or ユーザーの購読設定によっては選択的に)
 						for (const following of followings || []) {
 							const followingUserId = following.target.toString();
 							stream.addSource(StreamUtil.buildStreamId('user-timeline-status', followingUserId));

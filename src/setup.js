@@ -1,9 +1,8 @@
 const fs = require('fs');
 const requestAsync = require('./modules/requestAsync');
 const readLine = require('./modules/readline');
-const loadConfig = require('./modules/loadConfig');
-const DbProvider = require('./modules/dbProvider');
-const Db = require('./modules/db');
+const { loadConfig } = require('./modules/helpers/GeneralHelper');
+const MongoAdapter = require('./modules/MongoAdapter');
 
 const urlConfigFile = 'https://raw.githubusercontent.com/Frost-Dev/Frost/master/config.json';
 const q = async str => (await readLine(str)).toLowerCase().indexOf('y') === 0;
@@ -40,18 +39,18 @@ module.exports = async () => {
 		let config = loadConfig();
 
 		if (config != null) {
-			const dbProvider = await DbProvider.connectApidbAsync(config);
-			const db = new Db(config, dbProvider);
+			const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
+			const repository = await MongoAdapter.connect(config.api.database.host, config.api.database.database, authenticate);
 
 			if (await q('remove all db collections? (y/n) > ')) {
 				if (await q('(!) Do you really do remove all document on db collections? (y/n) > ')) {
-					await db.applicationAccesses.removeAsync({});
+					await repository.remove('applicationAccesses', {});
 					console.log('cleaned applicationAccesses collection.');
-					await db.authorizeRequests.removeAsync({});
+					await repository.remove('authorizeRequests', {});
 					console.log('cleaned authorizeRequests collection.');
-					await db.applications.removeAsync({});
+					await repository.remove('applications', {});
 					console.log('cleaned applications collection.');
-					await db.users.removeAsync({});
+					await repository.remove('users', {});
 					console.log('cleaned users collection.');
 				}
 			}
@@ -63,10 +62,10 @@ module.exports = async () => {
 					appName = 'Frost Web';
 				}
 
-				const user = await db.users.createAsync('frost', null, 'Frost公式', 'オープンソースSNS Frostです。');
+				const user = await db.users.create('frost', null, 'Frost公式', 'オープンソースSNS Frostです。');
 				console.log('user created.');
 
-				const application = db.applications.createAsync(appName, user, user.description, [
+				const application = db.applications.create(appName, user, user.description, [
 					'iceAuthHost',
 					'application',
 					'applicationSpecial',
@@ -78,19 +77,19 @@ module.exports = async () => {
 					'postRead',
 					'postWrite'
 				]);
-				console.log(`application created. ${application.document}`);
+				console.log('application created.', application);
 
-				const applicationKey = await application.generateApplicationKeyAsync();
+				const applicationKey = await applicationsService.generateApplicationKey();
 				console.log(`applicationKey generated. (key: ${applicationKey})`);
 
-				const applicationAccess = await db.applicationAccesses.createAsync({
+				const applicationAccess = await repository.create('applicationAccesses', {
 					applicationId: application._id,
 					userId: user._id,
 					keyCode: null
 				});
-				console.log(`applicationAccess created. ${applicationAccess.document}`);
+				console.log('applicationAccess created.', applicationAccess);
 
-				const accessKey = await applicationAccess.generateAccessKeyAsync();
+				const accessKey = await applicationAccessesService.generateAccessKey();
 				console.log(`accessKey generated. (key: ${accessKey})`);
 			}
 		}

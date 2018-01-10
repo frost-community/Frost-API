@@ -1,7 +1,7 @@
 const moment = require('moment');
 const { ObjectId } = require('mongodb');
 const MongoAdapter = require('../modules/MongoAdapter');
-const { buildHash, sortObject, randomRange } = require('../modules/helpers/GeneralHelper');
+const { sortObject } = require('../modules/helpers/GeneralHelper');
 const { MissingArgumentsError } = require('../modules/errors');
 const UsersService = require('./UsersService');
 

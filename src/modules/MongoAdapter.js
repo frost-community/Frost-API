@@ -207,18 +207,3 @@ class MongoAdapter {
 	}
 }
 module.exports = MongoAdapter;
-
-/*
-// collections
-applications
-applicationAccesses
-authorizeRequests
-posts
-users
-userFollowings
-storageFiles
-*/
-
-// connectApidbAsync()
-// const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
-// config.api.database.host, config.api.database.database, authenticate

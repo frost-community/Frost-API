@@ -3,10 +3,9 @@ const express = require('express');
 const httpClass = require('http');
 const bodyParser = require('body-parser');
 const compression = require('compression');
-const loadConfig = require('./modules/loadConfig');
+const { loadConfig } = require('./modules/helpers/GeneralHelper');
 const sanitize = require('mongo-sanitize');
-const DbProvider = require('./modules/dbProvider');
-const Db = require('./modules/db');
+const MongoAdapter = require('./modules/MongoAdapter');
 const Route = require('./modules/route');
 const DirectoryRouter = require('./modules/directoryRouter');
 const apiSend = require('./modules/middlewares/apiSend');
@@ -42,7 +41,9 @@ module.exports = async () => {
 
 		const directoryRouter = new DirectoryRouter(app);
 		const streams = new Map(); // memo: keyはChannelName
-		const db = new Db(config, await DbProvider.connectApidbAsync(config));
+
+		const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
+		const repository = await MongoAdapter.connect(config.api.database.host, config.api.database.database, authenticate);
 
 		app.use(compression({
 			threshold: 0,
@@ -58,7 +59,7 @@ module.exports = async () => {
 			// services
 			req.config = config;
 			req.streams = streams;
-			req.db = db;
+			req.repository = repository;
 			req.lock = new AsyncLock();
 
 			// sanitize
@@ -88,7 +89,7 @@ module.exports = async () => {
 			console.log(`listen on port: ${config.api.port}`);
 		});
 
-		require('./streaming-server')(http, directoryRouter, streams, db, config);
+		require('./streaming-server')(http, directoryRouter, streams, repository, config);
 	}
 	catch (err) {
 		console.log('Unprocessed Server Error:', err);

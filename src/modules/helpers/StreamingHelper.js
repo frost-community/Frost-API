@@ -1,8 +1,5 @@
-const Application = require('../../documentModels/application');
-const ApplicationAccess = require('../../documentModels/applicationAccess');
-
 class StreamingHelper {
-	static async checkRequest(request, db, config) {
+	static async checkRequest(request, applicationsService, applicationAccessesService) {
 		const query = request.resourceURL.query;
 		const applicationKey = query.application_key;
 		const accessKey = query.access_key;
@@ -19,13 +16,13 @@ class StreamingHelper {
 			throw new Error(message);
 		}
 
-		if (!await Application.verifyKeyAsync(applicationKey, db, config)) {
+		if (!await applicationsService.verifyApplicationKey(applicationKey)) {
 			const message = 'application_key parameter is invalid';
 			request.reject(400, message);
 			throw new Error(message);
 		}
 
-		if (!await ApplicationAccess.verifyKeyAsync(accessKey, db, config)) {
+		if (!await applicationAccessesService.verifyAccessKey(accessKey)) {
 			const message = 'access_key parameter is invalid';
 			request.reject(400, message);
 			throw new Error(message);
@@ -34,8 +31,8 @@ class StreamingHelper {
 		return {
 			applicationKey,
 			accessKey,
-			applicationId: Application.splitKey(applicationKey, db, config).applicationId,
-			meId: ApplicationAccess.splitKey(accessKey, db, config).userId
+			applicationId: applicationsService.splitApplicationKey(applicationKey).applicationId,
+			meId: applicationAccessesService.splitAccessKey(accessKey).userId
 		};
 	}
 }
