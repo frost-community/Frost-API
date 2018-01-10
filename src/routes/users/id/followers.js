@@ -1,5 +1,5 @@
 const ApiContext = require('../../../modules/ApiContext');
-const { ObjectId } = require('mongodb');
+const MongoAdapter = require('../../../modules/MongoAdapter');
 const v = require('validator');
 const $ = require('cafy').default;
 
@@ -10,7 +10,7 @@ exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		query: {
 			limit: { cafy: $().string().pipe(i => v.isInt(i, { min: 0, max: 100 })), default: '30' },
-			cursor: { cafy: $().string().pipe(i => ObjectId.isValid(i)), default: null }
+			cursor: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
 		},
 		permissions: ['userRead']
 	});
@@ -18,7 +18,7 @@ exports.get = async (apiContext) => {
 
 	// convert query value
 	const limit = v.toInt(apiContext.query.limit);
-	const cursor = new ObjectId(apiContext.query.cursor);
+	const cursor = MongoAdapter.buildId(apiContext.query.cursor);
 
 	// user
 	const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);

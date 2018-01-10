@@ -14,33 +14,32 @@ exports.post = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	const iceAuthKey = apiContext.headers['x-ice-auth-key'];
-	const screenName = apiContext.body.screenName;
-	const password = apiContext.body.password;
+	const { screenName, password } = apiContext.body;
 
-	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, apiContext.db, apiContext.config)) {
+	const { verifyKey, splitKey } = apiContext.authorizeRequestsService;
+
+	if (!await verifyKey(iceAuthKey, apiContext.db, apiContext.config)) {
 		return apiContext.response(400, 'x-ice-auth-key header is invalid');
 	}
 
-	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, apiContext.db, apiContext.config).authorizeRequestId;
-	const authorizeRequest = await AuthorizeRequest.findByIdAsync(authorizeRequestId, apiContext.db, apiContext.config);
-	const applicationId = authorizeRequest.document.applicationId;
-	await authorizeRequest.removeAsync();
+	const { authorizeRequestId } = splitKey(iceAuthKey);
+	const { applicationId } = await apiContext.repository.findById('authorizeRequests', authorizeRequestId);
+	await apiContext.repository.removeById('authorizeRequests', authorizeRequestId);
 
-	if (!User.checkFormatScreenName(screenName)) {
+	if (!apiContext.usersService.validFormatScreenName(screenName)) {
 		return apiContext.response(400, 'screenName is invalid format');
 	}
 
-	if (!User.checkFormatPassword(password)) {
+	if (!apiContext.usersService.checkFormatPassword(password)) {
 		return apiContext.response(400, 'password is invalid format');
 	}
 
-	const user = await User.findByScreenNameAsync(screenName, apiContext.db, apiContext.config);
-
+	const user = await apiContext.usersService.findByScreenName(screenName);
 	if (user == null) {
 		return apiContext.response(400, 'screenName is invalid');
 	}
 
-	if (!user.verifyPassword(password)) {
+	if (!apiContext.usersService.checkCorrectPassword(user, password)) {
 		return apiContext.response(400, 'password is invalid');
 	}
 
