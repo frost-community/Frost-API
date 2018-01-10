@@ -16,29 +16,23 @@ module.exports.post = async (apiContext) => {
 
 	const { name, description, permissions } = apiContext.body;
 
-	// check name duplication
-	if (await Application.findByNameAsync(name, apiContext.db, apiContext.config) != null) {
+	const { nonDuplicatedName, validPermissions, create, serialize } = apiContext.applicationsService;
+
+	if (! await nonDuplicatedName(name)) {
 		return apiContext.response(400, 'already exists name');
 	}
 
 	// check permissions(利用を禁止された権限をが含まれていないかどうか)
-	if (permissions.some(permission => apiContext.config.api.additionDisabledPermissions.indexOf(permission) != -1)) {
+	if (!validPermissions(permissions)) {
 		return apiContext.response(400, 'some permissions use are disabled');
 	}
 
-	let application;
-	try {
-		application = await apiContext.db.applications.createAsync(name, apiContext.user, description, permissions);
-	}
-	catch (err) {
-		console.log(err);
-	}
-
+	const application = await create(name, apiContext.user, description, permissions);
 	if (application == null) {
 		return apiContext.response(500, 'failed to create application');
 	}
 
-	apiContext.response(200, { application: application.serialize() });
+	apiContext.response(200, { application: serialize(application) });
 };
 
 /** @param {ApiContext} apiContext */
@@ -48,19 +42,13 @@ module.exports.get = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	let applications;
-	try {
-		applications = await Application.findArrayByCreatorIdAsync(apiContext.user.document._id, apiContext.db, apiContext.config);
-	}
-	catch (err) {
-		console.log(err);
-		applications = [];
-	}
+	const { findArrayByCreatorId, serialize } = apiContext.applicationsService;
 
-	if (applications == null || applications.length == 0) {
+	const applications = await findArrayByCreatorId(apiContext.user._id);
+	if (applications.length == 0) {
 		apiContext.response(204);
 		return;
 	}
 
-	apiContext.response(200, { applications: applications.map(i => i.serialize()) });
+	apiContext.response(200, { applications: applications.map(i => serialize(i)) });
 };

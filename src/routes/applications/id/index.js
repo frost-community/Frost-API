@@ -1,5 +1,5 @@
 const ApiContext = require('../../../modules/ApiContext');
-const mongo = require('mongodb');
+const StoreAdapter = require('../../../modules/MongoAdapter');
 // const $ = require('cafy').default;
 
 /** @param {ApiContext} apiContext */
@@ -9,18 +9,20 @@ exports.get = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
+	const { serialize } = apiContext.applicationsService;
+
 	let applicationId;
 	try {
-		applicationId = mongo.ObjectId(apiContext.params.id);
+		applicationId = StoreAdapter.buildId(apiContext.params.id);
 	}
 	catch (err) {
-		// noop
+		// ignore
 	}
 
 	let application;
 	if (applicationId) {
 		try {
-			application = await Application.findByIdAsync(applicationId, apiContext.db, apiContext.config);
+			application = await apiContext.repository.findById('applications', applicationId);
 		}
 		catch (err) {
 			console.log(err);
@@ -32,5 +34,5 @@ exports.get = async (apiContext) => {
 		return;
 	}
 
-	apiContext.response(200, { application: application.serialize() });
+	apiContext.response(200, { application: serialize(application) });
 };

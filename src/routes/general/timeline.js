@@ -16,10 +16,10 @@ exports.get = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	// convert query value
-	apiContext.query.limit = v.toInt(apiContext.query.limit);
+	const limit = v.toInt(apiContext.query.limit);
 
 	try {
-		return await timelineAsync(apiContext, 'status', null, apiContext.query.limit);
+		return await timelineAsync(apiContext, 'status', null, limit);
 	}
 	catch (err) {
 		console.log(err);

@@ -79,6 +79,14 @@ class ApplicationsService {
 		return isPassed;
 	}
 
+	async nonDuplicatedName(name) {
+		return (await this.findByName(name)) != null;
+	}
+
+	validPermissions(permissions) {
+		return permissions.every(p => this._config.api.additionDisabledPermissions.indexOf(p) == -1);
+	}
+
 	hasPermission(applicationDocument, permissionName) {
 		if (applicationDocument == null || permissionName == null) {
 			throw new MissingArgumentsError();

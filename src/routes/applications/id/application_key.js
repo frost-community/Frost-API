@@ -8,22 +8,23 @@ exports.get = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const application = await Application.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
+	const { getApplicationKey } = apiContext.applicationsService;
 
+	const application = await apiContext.repository.findById('applications', apiContext.params.id);
 	if (application == null) {
 		return apiContext.response(404, 'application as premise not found');
 	}
 
 	// 対象アプリケーションの所有者かどうか
-	if (!application.document.creatorId.equals(apiContext.user.document._id)) {
+	if (!application.creatorId.equals(apiContext.user._id)) {
 		return apiContext.response(403, 'this operation is not permitted');
 	}
 
-	if (application.document.keyCode == null) {
+	if (application.keyCode == null) {
 		return apiContext.response(400, 'applicationKey has not been generated yet');
 	}
 
-	const key = application.getApplicationKey();
+	const key = getApplicationKey(application);
 
 	apiContext.response(200, { applicationKey: key });
 };
@@ -36,18 +37,19 @@ exports.post = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const application = await Application.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
+	const { generateApplicationKey } = apiContext.applicationsService;
 
+	const application = await apiContext.repository.findById('applications', apiContext.params.id);
 	if (application == null) {
 		return apiContext.response(404, 'application as premise not found');
 	}
 
 	// 対象アプリケーションの所有者かどうか
-	if (!application.document.creatorId.equals(apiContext.user.document._id)) {
+	if (!application.creatorId.equals(apiContext.user._id)) {
 		return apiContext.response(403, 'this operation is not permitted');
 	}
 
-	const key = await application.generateApplicationKeyAsync();
+	const key = generateApplicationKey(application);
 
 	apiContext.response(200, { applicationKey: key });
 };
