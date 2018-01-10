@@ -11,13 +11,13 @@ exports.get = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	// source user
-	const sourceUser = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
+	const sourceUser = await apiContext.repository.findById('users', apiContext.params.id);
 	if (sourceUser == null) {
 		return apiContext.response(404, 'source user as premise not found');
 	}
 
 	// target user
-	const targetUser = await User.findByIdAsync(apiContext.params.target_id, apiContext.db, apiContext.config);
+	const targetUser = await apiContext.repository.findById('users', apiContext.params.target_id);
 	if (targetUser == null) {
 		return apiContext.response(404, 'target user as premise not found');
 	}
@@ -26,7 +26,7 @@ exports.get = async (apiContext) => {
 		return apiContext.response(400, 'source user and target user is same');
 	}
 
-	const userFollowing = await UserFollowing.findBySrcDestIdAsync(sourceUser.document._id, targetUser.document._id, apiContext.db, apiContext.config);
+	const userFollowing = await UserFollowing.findBySrcDestIdAsync(sourceUser.document._id, targetUser.document._id);
 	if (userFollowing == null) {
 		return apiContext.response(404, 'not following', false);
 	}
@@ -45,7 +45,7 @@ exports.put = async (apiContext) => {
 	apiContext.body = apiContext.body || {};
 
 	// source user
-	const sourceUser = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
+	const sourceUser = await apiContext.repository.findById('users', apiContext.params.id);
 	if (sourceUser == null) {
 		return apiContext.response(404, 'user as premise not found');
 	}
@@ -56,7 +56,7 @@ exports.put = async (apiContext) => {
 	}
 
 	// target user
-	const targetUser = await User.findByIdAsync(apiContext.params.target_id, apiContext.db, apiContext.config);
+	const targetUser = await apiContext.repository.findById('users', apiContext.params.target_id);
 	if (targetUser == null) {
 		return apiContext.response(404, 'target user as premise not found');
 	}
@@ -87,7 +87,7 @@ exports.put = async (apiContext) => {
 
 	let userFollowing;
 	try {
-		userFollowing = await UserFollowing.findBySrcDestIdAsync(sourceUserId, targetUserId, apiContext.db, apiContext.config);
+		userFollowing = await UserFollowing.findBySrcDestIdAsync(sourceUserId, targetUserId);
 	}
 	catch (err) {
 		console.log(err);
@@ -115,7 +115,7 @@ exports.delete = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	// source user
-	const soruceUser = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
+	const soruceUser = await apiContext.repository.findById('users', apiContext.params.id);
 	if (soruceUser == null) {
 		return apiContext.response(404, 'user as premise not found');
 	}
@@ -124,12 +124,12 @@ exports.delete = async (apiContext) => {
 	}
 
 	// target user
-	const targetUser = await User.findByIdAsync(apiContext.params.target_id, apiContext.db, apiContext.config);
+	const targetUser = await apiContext.repository.findById('users', apiContext.params.target_id);
 	if (targetUser == null) {
 		return apiContext.response(404, 'target user as premise not found');
 	}
 
-	const userFollowing = await UserFollowing.findBySrcDestIdAsync(soruceUser.document._id, targetUser.document._id, apiContext.db, apiContext.config);
+	const userFollowing = await UserFollowing.findBySrcDestIdAsync(soruceUser.document._id, targetUser.document._id);
 
 	// ドキュメントが存在すれば削除
 	if (userFollowing != null) {

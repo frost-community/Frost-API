@@ -12,7 +12,7 @@ module.exports = async (apiContext, type, ids, limit) => {
 		};
 	}
 
-	const posts = await Post.findArrayAsync(query, false, limit, apiContext.db, apiContext.config);
+	const posts = await Post.findArrayAsync(query, false, limit);
 
 	if (posts == null || posts.length == 0) {
 		apiContext.response(204);

@@ -20,7 +20,7 @@ exports.get = async (apiContext) => {
 
 	try {
 		// user
-		const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
+		const user = await apiContext.repository.findById('users', apiContext.params.id);
 		if (user == null) {
 			return apiContext.response(404, 'user as premise not found');
 		}

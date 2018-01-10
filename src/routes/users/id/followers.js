@@ -21,13 +21,13 @@ exports.get = async (apiContext) => {
 	const cursor = MongoAdapter.buildId(apiContext.query.cursor);
 
 	// user
-	const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
+	const user = await apiContext.repository.findById('users', apiContext.params.id);
 	if (user == null) {
 		return apiContext.response(404, 'user as premise not found');
 	}
 
 	// このユーザーがフォロー元であるフォロー関係をすべて取得
-	const userFollowings = await UserFollowing.findSourcesAsync(user.document._id, limit, apiContext.db, apiContext.config);
+	const userFollowings = await UserFollowing.findSourcesAsync(user.document._id, limit);
 	if (userFollowings == null || userFollowings.length == 0) {
 		apiContext.response(204);
 		return;
@@ -35,7 +35,7 @@ exports.get = async (apiContext) => {
 
 	// fetch and serialize users
 	const promises = userFollowings.map(async following => {
-		const user = await User.findByIdAsync(following.document.source, apiContext.db, apiContext.config);
+		const user = await apiContext.repository.findById('users', following.document.source);
 		if (user == null) {
 			console.log(`notfound following source userId: ${following.document.source.toString()}`);
 			return;

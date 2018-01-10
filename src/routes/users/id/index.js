@@ -9,7 +9,7 @@ exports.get = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
+	const user = await apiContext.repository.findById('users', apiContext.params.id);
 	if (user == null) {
 		apiContext.response(204);
 		return;

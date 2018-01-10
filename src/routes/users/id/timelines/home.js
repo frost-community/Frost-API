@@ -20,13 +20,13 @@ exports.get = async (apiContext) => {
 
 	try {
 		// user
-		const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
+		const user = await apiContext.repository.findById('users', apiContext.params.id);
 		if (user == null) {
 			return apiContext.response(404, 'user as premise not found');
 		}
 
 		// ids
-		const followings = await UserFollowing.findTargetsAsync(user.document._id, null, apiContext.db, apiContext.config);
+		const followings = await UserFollowing.findTargetsAsync(user.document._id, null);
 		const ids = (followings != null) ? followings.map(i => i.document.target) : [];
 		ids.push(user.document._id); // ソースユーザーを追加
 
