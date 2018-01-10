@@ -16,14 +16,12 @@ module.exports.post = async (apiContext) => {
 
 	const { name, description, permissions } = apiContext.body;
 
-	const { nonDuplicatedName, validPermissions, create, serialize } = apiContext.applicationsService;
+	const { nonDuplicatedName, availablePermissions, create, serialize } = apiContext.applicationsService;
 
-	if (! await nonDuplicatedName(name)) {
+	if (!await nonDuplicatedName(name)) {
 		return apiContext.response(400, 'already exists name');
 	}
-
-	// check permissions(利用を禁止された権限をが含まれていないかどうか)
-	if (!validPermissions(permissions)) {
+	if (!availablePermissions(permissions)) {
 		return apiContext.response(400, 'some permissions use are disabled');
 	}
 

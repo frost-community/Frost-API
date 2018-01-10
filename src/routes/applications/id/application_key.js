@@ -24,9 +24,9 @@ exports.get = async (apiContext) => {
 		return apiContext.response(400, 'applicationKey has not been generated yet');
 	}
 
-	const key = getApplicationKey(application);
+	const applicationKey = getApplicationKey(application);
 
-	apiContext.response(200, { applicationKey: key });
+	apiContext.response(200, { applicationKey });
 };
 
 /** @param {ApiContext} apiContext */
@@ -49,7 +49,7 @@ exports.post = async (apiContext) => {
 		return apiContext.response(403, 'this operation is not permitted');
 	}
 
-	const key = generateApplicationKey(application);
+	const applicationKey = generateApplicationKey(application);
 
-	apiContext.response(200, { applicationKey: key });
+	apiContext.response(200, { applicationKey });
 };

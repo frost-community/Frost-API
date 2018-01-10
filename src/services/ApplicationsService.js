@@ -141,7 +141,7 @@ class ApplicationsService {
 		return (await this.findByName(name)) != null;
 	}
 
-	validPermissions(permissions) {
+	availablePermissions(permissions) {
 		return permissions.every(p => this._config.api.additionDisabledPermissions.indexOf(p) == -1);
 	}
 }

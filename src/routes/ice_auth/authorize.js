@@ -14,14 +14,16 @@ exports.post = async (apiContext) => {
 	const iceAuthKey = apiContext.headers['x-ice-auth-key'];
 	const verificationCode = apiContext.body.verificationCode;
 
-	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, apiContext.db, apiContext.config)) {
+	const { generateAccessKey, getAccessKey } = apiContext.applicationAccessesService;
+	const { verifyIceAuthKey, splitIceAuthKey } = apiContext.authorizeRequestsService;
+
+	if (!await verifyIceAuthKey(iceAuthKey)) {
 		return apiContext.response(400, 'x-ice-auth-key header is invalid');
 	}
 
-	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, apiContext.db, apiContext.config).authorizeRequestId;
-	const authorizeRequest = await AuthorizeRequest.findByIdAsync(authorizeRequestId, apiContext.db, apiContext.config);
-	const document = authorizeRequest.document;
-	await authorizeRequest.removeAsync();
+	const { authorizeRequestId } = splitIceAuthKey(iceAuthKey);
+	const document = await apiContext.repository.findById('authorizeRequests', authorizeRequestId);
+	await apiContext.repository.removeById('authorizeRequests', authorizeRequestId);
 
 	if (document.targetUserId == null) {
 		return apiContext.response(400, 'authorization has not been done yet');
@@ -33,31 +35,22 @@ exports.post = async (apiContext) => {
 
 	// TODO: refactoring(duplication)
 
-	let applicationAccess = await apiContext.db.applicationAccesses.findAsync({
+	let applicationAccess = await apiContext.repository.find('applicationAccesses', {
 		applicationId: document.applicationId,
 		userId: document.targetUserId
 	});
 
 	let accessKey;
 
+	// まだapplicationAccessが生成されていない時
 	if (applicationAccess == null) {
-		try {
-			applicationAccess = await apiContext.db.applicationAccesses.createAsync({ // TODO: move to document models
-				applicationId: document.applicationId,
-				userId: document.targetUserId,
-				keyCode: null
-			});
-		}
-		catch (err) {
-			console.log(err);
-		}
-
+		applicationAccess = await apiContext.applicationAccessesService.create(document.applicationId, document.targetUserId);
 		if (applicationAccess == null) {
 			return apiContext.response(500, 'failed to create applicationAccess');
 		}
 
 		try {
-			accessKey = await applicationAccess.generateAccessKeyAsync();
+			accessKey = await generateAccessKey(applicationAccess);
 		}
 		catch (err) {
 			console.log(err);
@@ -67,18 +60,19 @@ exports.post = async (apiContext) => {
 			return apiContext.response(500, 'failed to generate accessKey');
 		}
 	}
+	// 既にapplicationAccessが生成済みの時
 	else {
 		try {
-			accessKey = applicationAccess.getAccessKey();
+			accessKey = getAccessKey(applicationAccess);
 		}
 		catch (err) {
 			console.log(err);
 		}
 
 		if (accessKey == null) {
-			return apiContext.response(500, 'failed to build accessKey');
+			return apiContext.response(500, 'failed to get accessKey');
 		}
 	}
 
-	apiContext.response(200, { accessKey: accessKey });
+	apiContext.response(200, { accessKey });
 };
