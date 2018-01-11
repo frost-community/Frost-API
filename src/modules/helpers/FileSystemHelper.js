@@ -1,31 +1,18 @@
 const fs = require('fs');
+const { promisify } = require('util');
 
-const isFileAsync = (path) => new Promise((resolve, reject) => {
-	fs.stat(path, (err, stats) => {
-		if (err) {
-			reject(err);
-		}
-		resolve(stats.isFile());
-	});
-});
+const isFileAsync = async (path) => {
+	const stats = await promisify(fs.stat)(path);
+	return stats.isFile();
+};
 
-const getFileNamesAsync = (dirPath) => new Promise((resolve, reject) => {
-	fs.readdir(dirPath, (err, files) => {
-		if (err) {
-			reject(err);
-		}
-		resolve(files);
-	});
-});
+const getFileNamesAsync = (dirPath) => {
+	return promisify(fs.readdir)(dirPath);
+};
 
-const getFileDataAsync = (path, options) => new Promise((resolve, reject) => {
-	fs.readFile(path, options || {}, (err, data) => {
-		if (err) {
-			reject(err);
-		}
-		resolve(data);
-	});
-});
+const getFileDataAsync = (path, options) => {
+	return promisify(fs.readFile)(path, options || {});
+};
 
 module.exports = {
 	getFileNamesAsync,

@@ -24,14 +24,8 @@ module.exports = async () => {
 
 		let config = loadConfig();
 		if (config == null) {
-			if (await q('config file is not found. display setting mode now? (y/n) ')) {
-				await setup();
-				config = loadConfig();
-			}
-
-			if (config == null) {
-				return;
-			}
+			console.log('config file not found. please create in setup mode. (command: npm run setup)');
+			return;
 		}
 
 		const app = express();

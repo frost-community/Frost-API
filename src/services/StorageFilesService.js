@@ -77,7 +77,7 @@ class StorageFilesService {
 		return this._repository.create('storageFiles', data);
 	}
 
-	findArrayByCreator(creatorType, creatorId, sortOption, limit) {
+	findArrayByCreator(creatorType, creatorId, isAscending, limit) {
 		const query = {
 			creator: {
 				type: creatorType,
@@ -85,7 +85,7 @@ class StorageFilesService {
 			}
 		};
 
-		return this._repository.findArray('storageFiles', query, sortOption, limit);
+		return this._repository.findArray('storageFiles', query, isAscending, limit);
 	}
 }
 module.exports = StorageFilesService;

@@ -1,13 +1,15 @@
+const { ObjectId } = require('mongodb');
+const StorageFilesService = require('../../services/StorageFilesService');
+
 class UserStorageHelper {
-	static async getUsedSpace(userId, db) {
+	/**
+	 * @param {String | ObjectId} userId
+	 * @param {StorageFilesService} storageFilesService
+	*/
+	static async getUsedSpace(userId, storageFilesService) {
 		let files;
 		try {
-			files = await db.storageFiles.findArrayAsync({
-				creator: {
-					type: 'user',
-					id: userId
-				}
-			});
+			files = await storageFilesService.findArrayByCreator('user', userId);
 		}
 		catch (err) {
 			console.log(err);

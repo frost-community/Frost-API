@@ -1,27 +1,30 @@
 const fs = require('fs');
+const { promisify } = require('util');
 const requestAsync = require('./modules/requestAsync');
 const readLine = require('./modules/readline');
 const { loadConfig } = require('./modules/helpers/GeneralHelper');
 const MongoAdapter = require('./modules/MongoAdapter');
 
+const UsersService = require('./services/UsersService');
+const ApplicationsService = require('./services/ApplicationsService');
+const ApplicationAccessesService = require('./services/ApplicationAccessesService');
+
 const urlConfigFile = 'https://raw.githubusercontent.com/Frost-Dev/Frost/master/config.json';
 const q = async str => (await readLine(str)).toLowerCase().indexOf('y') === 0;
 
-const writeFile = (filePath, data) => new Promise((resolve, reject) => {
-	fs.writeFile(filePath, data, err => {
-		if (err) reject(err);
-		resolve();
-	});
-});
+const writeFile = promisify(fs.writeFile);
 
 module.exports = async () => {
-	console.log();
-	console.log('## Setup Mode');
-	console.log();
+	console.log('--------------');
+	console.log('  Setup Mode');
+	console.log('--------------');
 
 	try {
-		if (loadConfig() == null) {
-			if (await q('config file is not found. generate now? (y/n) > ')) {
+		console.log('loading config.json ...');
+		// config
+		const config = loadConfig();
+		if (config == null) {
+			if (await q('config.json does not exist. generate now? (y/n) > ')) {
 				let configPath;
 
 				if (await q('generate config.json in the parent directory of repository? (y/n) > ')) {
@@ -33,17 +36,32 @@ module.exports = async () => {
 
 				const configJson = (await requestAsync(urlConfigFile)).body;
 				await writeFile(configPath, configJson);
+
+				console.log('generated. please edit config.json and restart it.');
 			}
+			return;
 		}
+		console.log('loaded config.json');
 
-		let config = loadConfig();
+		console.log('connecting database ...');
+		const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
+		const repository = await MongoAdapter.connect(config.api.database.host, config.api.database.database, authenticate);
+		console.log('connected database');
 
-		if (config != null) {
-			const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
-			const repository = await MongoAdapter.connect(config.api.database.host, config.api.database.database, authenticate);
+		const usersService = new UsersService(repository, config);
+		const applicationsService = new ApplicationsService(repository, config);
+		const applicationAccessesService = new ApplicationAccessesService(repository, config);
 
-			if (await q('remove all db collections? (y/n) > ')) {
-				if (await q('(!) Do you really do remove all document on db collections? (y/n) > ')) {
+		let isExit = false;
+		while(!isExit) {
+			console.log('<Commands>');
+			console.log('1: remove all db collections');
+			console.log('2: generate an application and its key for authentication host (Frost-Web etc.)');
+			console.log('3: exit');
+			const number = parseInt(await readLine('> '));
+
+			if (number == 1) {
+				if (await q('(!) Do you really do remove all documents on db collections? (y/n) > ')) {
 					await repository.remove('applicationAccesses', {});
 					console.log('cleaned applicationAccesses collection.');
 					await repository.remove('authorizeRequests', {});
@@ -54,18 +72,17 @@ module.exports = async () => {
 					console.log('cleaned users collection.');
 				}
 			}
-
-			if (await q('generate an application and its key for authentication host (Frost-Web etc.)? (y/n) > ')) {
+			else if (number == 2) {
 				let appName = await readLine('application name[Frost Web]: > ');
 
 				if (appName == '') {
 					appName = 'Frost Web';
 				}
 
-				const user = await db.users.create('frost', null, 'Frost公式', 'オープンソースSNS Frostです。');
+				const user = await usersService.create('frost', null, 'Frost公式', 'オープンソースSNS Frostです。');
 				console.log('user created.');
 
-				const application = db.applications.create(appName, user, user.description, [
+				const application = applicationsService.create(appName, user, user.description, [
 					'iceAuthHost',
 					'application',
 					'applicationSpecial',
@@ -79,19 +96,19 @@ module.exports = async () => {
 				]);
 				console.log('application created.', application);
 
-				const applicationKey = await applicationsService.generateApplicationKey();
+				const applicationKey = await applicationsService.generateApplicationKey(application);
 				console.log(`applicationKey generated. (key: ${applicationKey})`);
 
-				const applicationAccess = await repository.create('applicationAccesses', {
-					applicationId: application._id,
-					userId: user._id,
-					keyCode: null
-				});
+				const applicationAccess = await applicationAccessesService.create(application._id, user._id);
 				console.log('applicationAccess created.', applicationAccess);
 
-				const accessKey = await applicationAccessesService.generateAccessKey();
+				const accessKey = await applicationAccessesService.generateAccessKey(applicationAccess);
 				console.log(`accessKey generated. (key: ${accessKey})`);
 			}
+			else if (number == 3) {
+				isExit = true;
+			}
+			console.log();
 		}
 	}
 	catch (err) {
