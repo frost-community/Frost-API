@@ -41,12 +41,12 @@ module.exports = async () => {
 			}
 			return;
 		}
-		console.log('loaded config.json');
+		console.log('loaded');
 
 		console.log('connecting database ...');
 		const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
 		const repository = await MongoAdapter.connect(config.api.database.host, config.api.database.database, authenticate);
-		console.log('connected database');
+		console.log('connected');
 
 		const usersService = new UsersService(repository, config);
 		const applicationsService = new ApplicationsService(repository, config);
@@ -110,6 +110,9 @@ module.exports = async () => {
 			}
 			console.log();
 		}
+		console.log('disconnecting database ...');
+		await repository.disconnect();
+		console.log('disconnected');
 	}
 	catch (err) {
 		console.log(`Unprocessed Setup Error: ${err}`);

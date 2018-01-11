@@ -167,6 +167,10 @@ class MongoAdapter {
 		await this._connection.collection(collectionName).remove(query, options);
 	}
 
+	disconnect() {
+		return this._connection.close();
+	}
+
 	removeById(collectionName, id, options) {
 		if (options == null)
 			options = {};
