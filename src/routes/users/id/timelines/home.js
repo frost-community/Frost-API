@@ -18,8 +18,6 @@ exports.get = async (apiContext) => {
 	// convert query value
 	const limit = v.toInt(apiContext.query.limit);
 
-	const { findTargets } = apiContext.userFollowingsService;
-
 	try {
 		// user
 		const user = await apiContext.repository.findById('users', apiContext.params.id);
@@ -28,7 +26,7 @@ exports.get = async (apiContext) => {
 		}
 
 		// ids
-		const followings = await findTargets(user._id, null);
+		const followings = await apiContext.userFollowingsService.findTargets(user._id, null);
 		const ids = followings.map(i => i.target);
 		ids.push(user._id); // ソースユーザーを追加
 

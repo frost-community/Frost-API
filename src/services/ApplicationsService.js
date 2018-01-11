@@ -21,7 +21,7 @@ class ApplicationsService {
 	}
 
 	async generateApplicationKey(applicationDocument) {
-		if (applicationDocument != null) {
+		if (applicationDocument == null) {
 			throw new MissingArgumentsError();
 		}
 
@@ -32,7 +32,7 @@ class ApplicationsService {
 	}
 
 	getApplicationKey(applicationDocument) {
-		if (applicationDocument != null) {
+		if (applicationDocument == null) {
 			throw new MissingArgumentsError();
 		}
 		if (applicationDocument.keyCode == null) {
@@ -46,7 +46,7 @@ class ApplicationsService {
 	}
 
 	serialize(applicationDocument) {
-		if (applicationDocument != null) {
+		if (applicationDocument == null) {
 			throw new MissingArgumentsError();
 		}
 
@@ -119,7 +119,7 @@ class ApplicationsService {
 
 		let elements;
 		try {
-			elements = this.splitKey(key);
+			elements = this.splitApplicationKey(key);
 		}
 		catch (err) {
 			return false;

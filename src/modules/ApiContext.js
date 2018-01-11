@@ -95,19 +95,19 @@ class ApiContext {
 				return this.response(400, 'x-access-key header is empty');
 			}
 
-			if (!await this.applicationsService.verifyKey(applicationKey)) {
+			if (!await this.applicationsService.verifyApplicationKey(applicationKey)) {
 				return this.response(400, 'x-application-key header is invalid');
 			}
 
-			if (!await this.applicationAccessesService.verifyKey(accessKey)) {
+			if (!await this.applicationAccessesService.verifyAccessKey(accessKey)) {
 				return this.response(400, 'x-access-key header is invalid');
 			}
 
 			this.applicationKey = applicationKey;
 			this.accessKey = accessKey;
 
-			const { userId } = this.applicationAccessesService.splitKey(this.accessKey);
-			const { applicationId } = this.applicationsService.splitKey(this.applicationKey);
+			const { userId } = this.applicationAccessesService.splitAccessKey(this.accessKey);
+			const { applicationId } = this.applicationsService.splitApplicationKey(this.applicationKey);
 
 			// fetch
 			[this.user, this.application] = await Promise.all([
@@ -118,7 +118,7 @@ class ApiContext {
 
 		// check permissions
 
-		const hasPermissions = rule.permissions.every(p => this.application.hasPermission(p));
+		const hasPermissions = rule.permissions.every(p => this.applicationsService.hasPermission(this.application, p));
 		if (!hasPermissions) {
 			return this.response(403, 'you do not have any permissions');
 		}

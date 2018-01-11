@@ -10,8 +10,6 @@ exports.get = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const { findBySrcDestId } = apiContext.userFollowingsService;
-
 	// source user
 	const sourceUser = await apiContext.repository.findById('users', apiContext.params.id);
 	if (sourceUser == null) {
@@ -28,7 +26,7 @@ exports.get = async (apiContext) => {
 		return apiContext.response(400, 'source user and target user is same');
 	}
 
-	const userFollowing = await findBySrcDestId(sourceUser._id, targetUser._id);
+	const userFollowing = await apiContext.userFollowingsService.findBySrcDestId(sourceUser._id, targetUser._id);
 	if (userFollowing == null) {
 		return apiContext.response(404, 'not following', false);
 	}
@@ -43,8 +41,6 @@ exports.put = async (apiContext) => {
 		permissions: ['userWrite']
 	});
 	if (apiContext.responsed) return;
-
-	const { create, findBySrcDestId } = apiContext.userFollowingsService;
 
 	// source user
 	const sourceUser = await apiContext.repository.findById('users', apiContext.params.id);
@@ -77,7 +73,7 @@ exports.put = async (apiContext) => {
 	// ドキュメント作成・更新
 	let resultUpsert;
 	try {
-		resultUpsert = await create(sourceUserId, targetUserId, message);
+		resultUpsert = await apiContext.userFollowingsService.create(sourceUserId, targetUserId, message);
 	}
 	catch (err) {
 		console.log(err);
@@ -89,7 +85,7 @@ exports.put = async (apiContext) => {
 
 	let userFollowing;
 	try {
-		userFollowing = await findBySrcDestId(sourceUserId, targetUserId);
+		userFollowing = await apiContext.userFollowingsService.findBySrcDestId(sourceUserId, targetUserId);
 	}
 	catch (err) {
 		console.log(err);
@@ -116,8 +112,6 @@ exports.delete = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const { removeBySrcDestId } = apiContext.userFollowingsService;
-
 	// source user
 	const soruceUser = await apiContext.repository.findById('users', apiContext.params.id);
 	if (soruceUser == null) {
@@ -134,7 +128,7 @@ exports.delete = async (apiContext) => {
 	}
 
 	try {
-		await removeBySrcDestId(soruceUser._id, targetUser._id);
+		await apiContext.userFollowingsService.removeBySrcDestId(soruceUser._id, targetUser._id);
 	}
 	catch (err) {
 		// ignore

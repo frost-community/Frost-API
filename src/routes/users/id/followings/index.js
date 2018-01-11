@@ -16,9 +16,6 @@ exports.get = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const { findTargets } = apiContext.userFollowingsService;
-	const { serialize } = apiContext.usersService;
-
 	// convert query value
 	const limit = v.toInt(apiContext.query.limit);
 	const cursor = MongoAdapter.buildId(apiContext.query.cursor);
@@ -30,7 +27,7 @@ exports.get = async (apiContext) => {
 	}
 
 	// このユーザーを対象とするフォロー関係をすべて取得
-	const userFollowings = await findTargets(user._id, limit);
+	const userFollowings = await apiContext.userFollowingsService.findTargets(user._id, limit);
 	if (userFollowings.length == 0) {
 		apiContext.response(204);
 		return;
@@ -43,7 +40,7 @@ exports.get = async (apiContext) => {
 			console.log(`notfound following target userId: ${following.target.toString()}`);
 			return;
 		}
-		return await serialize(user);
+		return await apiContext.usersService.serialize(user);
 	});
 	const serializedUsers = await Promise.all(promises);
 

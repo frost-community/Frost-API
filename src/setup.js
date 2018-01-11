@@ -15,9 +15,7 @@ const q = async str => (await readLine(str)).toLowerCase().indexOf('y') === 0;
 const writeFile = promisify(fs.writeFile);
 
 module.exports = async () => {
-	console.log('--------------');
-	console.log('  Setup Mode');
-	console.log('--------------');
+	console.log('## Setup Mode');
 
 	try {
 		console.log('loading config.json ...');
@@ -37,7 +35,7 @@ module.exports = async () => {
 				const configJson = (await requestAsync(urlConfigFile)).body;
 				await writeFile(configPath, configJson);
 
-				console.log('generated. please edit config.json and restart it.');
+				console.log('generated. please edit config.json and restart frost-api.');
 			}
 			return;
 		}

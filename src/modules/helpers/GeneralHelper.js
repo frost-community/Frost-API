@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { MissingArgumentsError } = require('../errors');
 
 class GeneralHelper {

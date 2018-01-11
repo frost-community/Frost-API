@@ -9,13 +9,11 @@ exports.get = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const { serialize } = apiContext.usersService;
-
 	const user = await apiContext.repository.findById('users', apiContext.params.id);
 	if (user == null) {
 		apiContext.response(204);
 		return;
 	}
 
-	apiContext.response(200, { user: await serialize(user) });
+	apiContext.response(200, { user: await apiContext.usersService.serialize(user) });
 };

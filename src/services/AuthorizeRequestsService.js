@@ -128,7 +128,7 @@ class AuthorizeRequestsService {
 
 		let elements;
 		try {
-			elements = this.splitKey(key);
+			elements = this.splitIceAuthKey(key);
 		}
 		catch (err) {
 			return false;
