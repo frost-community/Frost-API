@@ -12,13 +12,11 @@ exports.get = async (apiContext) => {
 
 	const iceAuthKey = apiContext.headers['x-ice-auth-key'];
 
-	const { verifyIceAuthKey, splitIceAuthKey } = apiContext.authorizeRequestsService;
-
-	if (!await verifyIceAuthKey(iceAuthKey)) {
+	if (!await apiContext.authorizeRequestsService.verifyIceAuthKey(iceAuthKey)) {
 		return apiContext.response(400, 'x-ice-auth-key header is invalid');
 	}
 
-	const { authorizeRequestId } = splitIceAuthKey(iceAuthKey);
+	const { authorizeRequestId } = apiContext.authorizeRequestsService.splitIceAuthKey(iceAuthKey);
 
 	const { verificationCode } = await apiContext.repository.findById('authorizeRequests', authorizeRequestId);
 	if (verificationCode == null) {

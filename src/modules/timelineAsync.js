@@ -7,7 +7,6 @@ const ApiContext = require('./ApiContext');
  * @param {Number} limit
 */
 module.exports = async (apiContext, type, ids, limit) => {
-	const { serialize } = apiContext.postsService;
 
 	let query = { type };
 	if (ids != null) {
@@ -26,7 +25,7 @@ module.exports = async (apiContext, type, ids, limit) => {
 		return;
 	}
 
-	const promises = posts.map(p => serialize(p, true));
+	const promises = posts.map(p => apiContext.postsService.serialize(p, true));
 	const serializedPosts = await Promise.all(promises);
 
 	apiContext.response(200, { posts: serializedPosts });

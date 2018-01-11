@@ -14,14 +14,11 @@ exports.post = async (apiContext) => {
 	const iceAuthKey = apiContext.headers['x-ice-auth-key'];
 	const verificationCode = apiContext.body.verificationCode;
 
-	const { create, generateAccessKey, getAccessKey } = apiContext.applicationAccessesService;
-	const { verifyIceAuthKey, splitIceAuthKey } = apiContext.authorizeRequestsService;
-
-	if (!await verifyIceAuthKey(iceAuthKey)) {
+	if (!await apiContext.authorizeRequestsService.verifyIceAuthKey(iceAuthKey)) {
 		return apiContext.response(400, 'x-ice-auth-key header is invalid');
 	}
 
-	const { authorizeRequestId } = splitIceAuthKey(iceAuthKey);
+	const { authorizeRequestId } = apiContext.authorizeRequestsService.splitIceAuthKey(iceAuthKey);
 	const document = await apiContext.repository.findById('authorizeRequests', authorizeRequestId);
 	await apiContext.repository.removeById('authorizeRequests', authorizeRequestId);
 
@@ -44,13 +41,13 @@ exports.post = async (apiContext) => {
 
 	// まだapplicationAccessが生成されていない時
 	if (applicationAccess == null) {
-		applicationAccess = await create(document.applicationId, document.targetUserId);
+		applicationAccess = await apiContext.applicationAccessesService.create(document.applicationId, document.targetUserId);
 		if (applicationAccess == null) {
 			return apiContext.response(500, 'failed to create applicationAccess');
 		}
 
 		try {
-			accessKey = await generateAccessKey(applicationAccess);
+			accessKey = await apiContext.applicationAccessesService.generateAccessKey(applicationAccess);
 		}
 		catch (err) {
 			console.log(err);
@@ -63,7 +60,7 @@ exports.post = async (apiContext) => {
 	// 既にapplicationAccessが生成済みの時
 	else {
 		try {
-			accessKey = getAccessKey(applicationAccess);
+			accessKey = apiContext.applicationAccessesService.getAccessKey(applicationAccess);
 		}
 		catch (err) {
 			console.log(err);

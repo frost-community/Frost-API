@@ -15,9 +15,7 @@ exports.post = async (apiContext) => {
 	const iceAuthKey = apiContext.headers['x-ice-auth-key'];
 	const userId = apiContext.body.userId;
 
-	const { verifyIceAuthKey, splitIceAuthKey, setTargetUserId } = apiContext.authorizeRequestsService;
-
-	if (!await verifyIceAuthKey(iceAuthKey)) {
+	if (!await apiContext.authorizeRequestsService.verifyIceAuthKey(iceAuthKey)) {
 		return apiContext.response(400, 'x-ice-auth-key header is invalid');
 	}
 
@@ -25,9 +23,9 @@ exports.post = async (apiContext) => {
 		return apiContext.response(400, 'userId is invalid');
 	}
 
-	const { authorizeRequestId } = splitIceAuthKey(iceAuthKey);
+	const { authorizeRequestId } = apiContext.authorizeRequestsService.splitIceAuthKey(iceAuthKey);
 	let authorizeRequest = await apiContext.repository.findById('authorizeRequests', authorizeRequestId);
-	authorizeRequest = await setTargetUserId(authorizeRequest, userId);
+	authorizeRequest = await apiContext.authorizeRequestsService.setTargetUserId(authorizeRequest, userId);
 
 	apiContext.response(200, { targetUserId: authorizeRequest.targetUserId });
 };

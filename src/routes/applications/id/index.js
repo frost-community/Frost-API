@@ -9,8 +9,6 @@ exports.get = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const { serialize } = apiContext.applicationsService;
-
 	let applicationId;
 	try {
 		applicationId = StoreAdapter.buildId(apiContext.params.id);
@@ -34,5 +32,5 @@ exports.get = async (apiContext) => {
 		return;
 	}
 
-	apiContext.response(200, { application: serialize(application) });
+	apiContext.response(200, { application: apiContext.applicationsService.serialize(application) });
 };
