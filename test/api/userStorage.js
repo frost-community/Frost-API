@@ -1,7 +1,9 @@
 const assert = require('assert');
-const config = require('../../src/modules/loadConfig')();
-const DbProvider = require('../../src/modules/dbProvider');
-const Db = require('../../src/modules/db');
+const { loadConfig } = require('../../src/modules/helpers/GeneralHelper');
+const config = loadConfig();
+const MongoAdapter = require('../../src/modules/MongoAdapter');
+const UsersService = require('../../src/services/UsersService');
+const ApplicationsService = require('../../src/services/ApplicationsService');
 const path = require('path');
 const validator = require('validator');
 const AsyncLock = require('async-lock');
@@ -14,15 +16,19 @@ const routeFileId = require('../../src/routes/users/id/storage/files/file_id');
 describe('User Storage API', () => {
 	describe('/users/:id/storage', () => {
 		// load collections
-		let db, lock, testData64, testData64Size;
+		let db, usersService, applicationsService, lock, testData64, testData64Size;
 		before(async () => {
 			config.api.database = config.api.testDatabase;
 
-			const dbProvider = await DbProvider.connectApidbAsync(config);
-			db = new Db(config, dbProvider);
+			const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
+			db = await MongoAdapter.connect(config.api.database.host, config.api.database.database, authenticate);
 
-			await db.users.removeAsync({});
-			await db.applications.removeAsync({});
+			await db.remove('users', {});
+			await db.remove('applications', {});
+			await db.remove('storageFiles', {});
+
+			usersService = new UsersService(db, config);
+			applicationsService = new ApplicationsService(db, config);
 
 			lock = new AsyncLock();
 
@@ -35,15 +41,15 @@ describe('User Storage API', () => {
 		// add general user, general application
 		let user, app;
 		beforeEach(async () => {
-			user = await db.users.createAsync('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
-			app = await db.applications.createAsync('generalapp', user, 'this is generalapp.', ['storageRead', 'storageWrite']);
+			user = await usersService.create('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
+			app = await applicationsService.create('generalapp', user, 'this is generalapp.', ['storageRead', 'storageWrite']);
 		});
 
 		// remove all users, all applications
 		afterEach(async () => {
-			await db.users.removeAsync({});
-			await db.applications.removeAsync({});
-			await db.storageFiles.removeAsync({});
+			await db.remove('users', {});
+			await db.remove('applications', {});
+			await db.remove('storageFiles', {});
 		});
 
 		describe('[GET]', () => {

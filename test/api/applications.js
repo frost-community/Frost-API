@@ -54,10 +54,7 @@ describe('Applications API', () => {
 					application: appA
 				});
 				await routeApp.post(context);
-
-				assert(typeof context.data != 'string', `api error: ${context.data}`);
-
-				assert(context.data.application != null, `application is null. ${context.data}`);
+				assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
 				delete context.data.application.id;
 				delete context.data.application.createdAt;
 				assert.deepEqual(context.data, {
@@ -122,9 +119,7 @@ describe('Applications API', () => {
 					application: appA
 				});
 				await routeApp.get(context);
-
-				assert(typeof context.data != 'string', `api error: ${context.data}`);
-
+				assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
 				delete context.data.applications[0].id;
 				delete context.data.applications[0].createdAt;
 				assert.deepEqual(context.data, {
@@ -148,10 +143,7 @@ describe('Applications API', () => {
 						application: appA
 					});
 					await routeAppId.get(context);
-
-					assert(context.data != null, 'data is null');
-					assert(typeof context.data != 'string', `api error: ${context.data}`);
-
+					assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
 					delete context.data.application.id;
 					delete context.data.application.createdAt;
 					assert.deepEqual(context.data, {
@@ -175,7 +167,7 @@ describe('Applications API', () => {
 					assert.equal(context.statusCode, 200);
 				});
 
-				it('存在しないアプリケーションを指定した場合は204を返す', async () => {
+				it('存在しないアプリケーションを指定した場合は404を返す', async () => {
 					const context = new ApiContext(null, null, db, config, {
 						params: { id: 'abcdefg1234' },
 						headers: { 'X-Api-Version': 1 },
@@ -183,7 +175,7 @@ describe('Applications API', () => {
 						application: appA
 					});
 					await routeAppId.get(context);
-					assert.equal(context.statusCode, 204);
+					assert.equal(context.statusCode, 404);
 				});
 			});
 
@@ -197,8 +189,7 @@ describe('Applications API', () => {
 							application: appA
 						});
 						await routeAppIdApplicationKey.post(context);
-
-						assert(typeof context.data != 'string', `api error: ${context.data}`);
+						assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
 
 						appA = await db.findById('applications', appA._id);
 						assert.deepEqual(context.data, {
@@ -229,9 +220,7 @@ describe('Applications API', () => {
 							application: appA
 						});
 						await routeAppIdApplicationKey.get(context);
-
-						assert(typeof context.data != 'string', `api error: ${context.data}`);
-
+						assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
 						assert.deepEqual(context.data, {
 							applicationKey: key
 						});
@@ -247,7 +236,6 @@ describe('Applications API', () => {
 							application: appA
 						});
 						await routeAppIdApplicationKey.get(context);
-
 						assert.equal(context.data, 'this operation is not permitted');
 					});
 				});

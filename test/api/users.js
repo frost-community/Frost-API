@@ -20,6 +20,8 @@ describe('Users API', () => {
 
 			await db.remove('users', {});
 			await db.remove('applications', {});
+			await db.remove('authorizeRequests', {});
+			await db.remove('applicationAccesses', {});
 
 			usersService = new UsersService(db, config);
 			applicationsService = new ApplicationsService(db, config);
@@ -50,9 +52,7 @@ describe('Users API', () => {
 					application: app
 				});
 				await route.get(context);
-
-				assert(typeof context.data != 'string', `api error: ${context.data}`);
-
+				assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
 				delete context.data.users[0].id;
 				delete context.data.users[0].createdAt;
 				assert.deepEqual(context.data, {
@@ -78,9 +78,7 @@ describe('Users API', () => {
 						application: app
 					});
 					await routeId.get(context);
-
-					assert(typeof context.data != 'string', `api error: ${context.data}`);
-
+					assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
 					delete context.data.user.id;
 					delete context.data.user.createdAt;
 					assert.deepEqual(context.data, {

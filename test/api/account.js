@@ -49,8 +49,7 @@ describe('Account API', () => {
 					application
 				});
 				await route.post(context);
-
-				assert(typeof context.data != 'string', `api error: ${context.data}`);
+				assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
 
 				delete context.data.user.id;
 				delete context.data.user.createdAt;
@@ -78,7 +77,6 @@ describe('Account API', () => {
 					user,
 					application
 				});
-
 				await route.post(context);
 				assert.equal(context.statusCode, 400);
 
@@ -93,7 +91,6 @@ describe('Account API', () => {
 					user,
 					application
 				});
-
 				await route.post(context);
 				assert.equal(context.statusCode, 400);
 			});
@@ -110,7 +107,6 @@ describe('Account API', () => {
 					user,
 					application
 				});
-
 				await route.post(context);
 				assert.equal(context.statusCode, 400);
 			});
@@ -127,7 +123,6 @@ describe('Account API', () => {
 					user,
 					application
 				});
-
 				await route.post(context);
 				assert.equal(context.statusCode, 400);
 			});
@@ -144,7 +139,6 @@ describe('Account API', () => {
 					user,
 					application
 				});
-
 				await route.post(context);
 				assert.equal(context.statusCode, 400);
 			});
