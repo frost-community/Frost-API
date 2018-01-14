@@ -35,7 +35,7 @@ exports.get = async (apiContext) => {
 		return;
 	}
 
-	apiContext.response(204);
+	apiContext.response(200, 'following');
 };
 
 /** @param {ApiContext} apiContext */
