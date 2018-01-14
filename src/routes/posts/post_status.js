@@ -32,7 +32,7 @@ exports.post = async (apiContext) => {
 	const publisher = new StreamPublisher();
 	publisher.publish('user-timeline-status', apiContext.user._id.toString(), serializedPostStatus);
 	publisher.publish('general-timeline-status', 'general', serializedPostStatus);
-	await publisher.quitAsync();
+	await publisher.quit();
 
 	apiContext.response(200, { postStatus: serializedPostStatus });
 };

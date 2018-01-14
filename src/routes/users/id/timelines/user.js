@@ -1,5 +1,5 @@
 const ApiContext = require('../../../../modules/ApiContext');
-const timelineAsync = require('../../../../modules/timelineAsync');
+const timeline = require('../../../../modules/timeline');
 const v = require('validator');
 const $ = require('cafy').default;
 
@@ -26,7 +26,7 @@ exports.get = async (apiContext) => {
 			return;
 		}
 
-		return await timelineAsync(apiContext, 'status', [user._id], limit);
+		return await timeline(apiContext, 'status', [user._id], limit);
 	}
 	catch (err) {
 		console.log(err);

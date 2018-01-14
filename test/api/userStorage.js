@@ -7,7 +7,7 @@ const ApplicationsService = require('../../src/services/ApplicationsService');
 const path = require('path');
 const validator = require('validator');
 const AsyncLock = require('async-lock');
-const { getFileDataAsync } = require('../../src/modules/helpers/FileSystemHelper');
+const { getFileData } = require('../../src/modules/helpers/FileSystemHelper');
 const ApiContext = require('../../src/modules/ApiContext');
 const route = require('../../src/routes/users/id/storage');
 const routeFiles = require('../../src/routes/users/id/storage/files');
@@ -34,7 +34,7 @@ describe('User Storage API', () => {
 
 			config.api.storage.spaceSize = 500 * 1024; // テスト用の容量(500KB)に設定
 
-			testData64 = await getFileDataAsync(path.resolve(__dirname, '../resources/squid.png'), 'base64');
+			testData64 = await getFileData(path.resolve(__dirname, '../resources/squid.png'), 'base64');
 			testData64Size = Buffer.from(testData64, 'base64').length;
 		});
 

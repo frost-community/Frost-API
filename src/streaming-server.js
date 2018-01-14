@@ -63,7 +63,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 		const connectedStreamHandlers = new Map();
 
 		// ストリームの購読解除メソッド
-		const disconnectStreamAsync = async (streamId) => {
+		const disconnectStream = async (streamId) => {
 			const removeIndex = connectedStreamIds.indexOf(streamId);
 			connectedStreamIds.splice(removeIndex, 1);
 
@@ -83,7 +83,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 
 				// リスナが1つもなければストリーム自体を解放
 				if (stream.listenerCount() == 0) {
-					await stream.quitAsync();
+					await stream.quit();
 					streams.delete(streamId);
 				}
 			}
@@ -98,7 +98,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 		connection.on('close', (reasonCode, description) => {
 			// 全ての接続済みストリームを購読解除
 			for (const streamId of connectedStreamIds) {
-				disconnectStreamAsync(streamId);
+				disconnectStream(streamId);
 			}
 			console.log(`disconnected streaming. user: ${meId}`);
 		});
@@ -136,13 +136,13 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				}
 
 				// 対象Routeのモジュールを取得
-				let routeFuncAsync;
+				let routeFunc;
 				let params = [];
 
 				try {
 					const route = directoryRouter.findRoute(method, endpoint);
 					if (route != null) {
-						routeFuncAsync = (require(route.getModulePath()))[method];
+						routeFunc = (require(route.getModulePath()))[method];
 						params = route.getParams(endpoint);
 					}
 				}
@@ -150,7 +150,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 					console.log('error: failed to parse route info.', 'reason:', err);
 				}
 
-				if (routeFuncAsync == null) {
+				if (routeFunc == null) {
 					return error('rest', '"endpoint" parameter is invalid');
 				}
 
@@ -170,7 +170,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				apiContext.headers['x-access-key'] = accessKey;
 
 				// 対象のRouteモジュールを実行
-				await routeFuncAsync(apiContext);
+				await routeFunc(apiContext);
 
 				if (!apiContext.responsed) {
 					return apiContext.response(500, 'not responsed');
@@ -299,7 +299,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 					return error('timeline-disconnect', `timeline type "${timelineType}" is invalid`);
 				}
 
-				await disconnectStreamAsync(streamId);
+				await disconnectStream(streamId);
 				console.log('streaming/timeline-disconnect:', streamId);
 				connection.send('timeline-disconnect', { success: true, message: `disconnected ${timelineType} timeline` });
 			}

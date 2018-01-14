@@ -1,6 +1,6 @@
 const fs = require('fs');
 const { promisify } = require('util');
-const requestAsync = require('./modules/requestAsync');
+const request = promisify(require('request'));
 const readLine = require('./modules/readline');
 const { loadConfig } = require('./modules/helpers/GeneralHelper');
 const MongoAdapter = require('./modules/MongoAdapter');
@@ -32,7 +32,7 @@ module.exports = async () => {
 					configPath = `${process.cwd()}/config.json`;
 				}
 
-				const configJson = (await requestAsync(urlConfigFile)).body;
+				const configJson = (await request(urlConfigFile)).body;
 				await writeFile(configPath, configJson);
 
 				console.log('generated. please edit config.json and restart frost-api.');

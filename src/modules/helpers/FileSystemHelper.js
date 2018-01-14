@@ -1,21 +1,21 @@
 const fs = require('fs');
 const { promisify } = require('util');
 
-const isFileAsync = async (path) => {
+const isFile = async (path) => {
 	const stats = await promisify(fs.stat)(path);
 	return stats.isFile();
 };
 
-const getFileNamesAsync = (dirPath) => {
+const getFileNames = (dirPath) => {
 	return promisify(fs.readdir)(dirPath);
 };
 
-const getFileDataAsync = (path, options) => {
+const getFileData = (path, options) => {
 	return promisify(fs.readFile)(path, options || {});
 };
 
 module.exports = {
-	getFileNamesAsync,
-	isFileAsync,
-	getFileDataAsync
+	getFileNames,
+	isFile,
+	getFileData
 };
