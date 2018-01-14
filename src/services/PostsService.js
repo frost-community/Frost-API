@@ -32,6 +32,9 @@ class PostsService {
 		res.id = res._id.toString();
 		delete res._id;
 
+		// userId
+		res.userId = res.userId.toString();
+
 		if (includeEntity) {
 			// user
 			const user = await this._repository.findById('users', res.userId);
