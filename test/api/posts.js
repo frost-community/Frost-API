@@ -1,62 +1,37 @@
 const assert = require('assert');
-const config = require('../../src/modules/loadConfig')();
-const DbProvider = require('../../src/modules/dbProvider');
-const Db = require('../../src/modules/db');
+const { loadConfig } = require('../../src/modules/helpers/GeneralHelper');
+const config = loadConfig();
+const MongoAdapter = require('../../src/modules/MongoAdapter');
+const UsersService = require('../../src/services/UsersService');
+const ApplicationsService = require('../../src/services/ApplicationsService');
 const ApiContext = require('../../src/modules/ApiContext');
 
 describe('Posts API', () => {
 	describe('/posts', () => {
-		// load collections
-		let db;
-		before(done => {
-			(async () => {
-				try {
-					config.api.database = config.api.testDatabase;
-					const dbProvider = await DbProvider.connectApidbAsync(config);
-					db = new Db(config, dbProvider);
+		let db, usersService, applicationsService;
+		before(async () => {
+			config.api.database = config.api.testDatabase;
 
-					await db.users.removeAsync({});
-					await db.applications.removeAsync({});
+			const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
+			db = await MongoAdapter.connect(config.api.database.host, config.api.database.database, authenticate);
 
-					done();
-				}
-				catch(e) {
-					done(e);
-				}
-			})();
+			await db.remove('users', {});
+			await db.remove('applications', {});
 		});
 
 		// add general user, general application
 		let user, app;
-		beforeEach(done => {
-			(async () => {
-				try {
-					user = await db.users.createAsync('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
-					app = await db.applications.createAsync('generalapp', user, 'this is generalapp.', []);
-
-					done();
-				}
-				catch(e) {
-					done(e);
-				}
-			})();
+		beforeEach(async () => {
+			user = await usersService.create('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
+			app = await applicationsService.create('generalapp', user, 'this is generalapp.', []);
 		});
 
 		// remove all users, all applications
-		afterEach(done => {
-			(async () => {
-				try {
-					await db.users.removeAsync({});
-					await db.applications.removeAsync({});
-					await db.authorizeRequests.removeAsync({});
-					await db.applicationAccesses.removeAsync({});
-
-					done();
-				}
-				catch(e) {
-					done(e);
-				}
-			})();
+		afterEach(async () => {
+			await db.remove('users', {});
+			await db.remove('applications', {});
+			await db.remove('authorizeRequests', {});
+			await db.remove('applicationAccesses', {});
 		});
 
 		describe('/:id', () => {
