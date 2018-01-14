@@ -136,11 +136,7 @@ class MongoAdapter {
 			throw new MissingArgumentsError();
 		}
 
-		let parsedId = id;
-		if (typeof id == 'string')
-			parsedId = MongoAdapter.buildId(parsedId);
-
-		return this.update(collectionName, { _id: parsedId }, data, options);
+		return this.update(collectionName, { _id: MongoAdapter.buildId(id) }, data, options);
 	}
 
 	upsert(collectionName, query, data, options) {
@@ -176,11 +172,7 @@ class MongoAdapter {
 		if (options == null)
 			options = {};
 
-		let parsedId = id;
-		if (typeof id == 'string')
-			parsedId = MongoAdapter.buildId(parsedId);
-
-		return this.remove(collectionName, { _id: parsedId }, options);
+		return this.remove(collectionName, { _id: MongoAdapter.buildId(id) }, options);
 	}
 
 	/**

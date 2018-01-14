@@ -77,10 +77,10 @@ class ApplicationsService {
 			throw new MissingArgumentsError();
 
 		return this._repository.create('applications', {
-			name: name,
+			name,
 			creatorId: creator._id,
-			description: description,
-			permissions: permissions
+			description,
+			permissions
 		});
 	}
 

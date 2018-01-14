@@ -9,22 +9,12 @@ exports.get = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	let applicationId;
+	let application;
 	try {
-		applicationId = StoreAdapter.buildId(apiContext.params.id);
+		application = await apiContext.repository.findById('applications', apiContext.params.id);
 	}
 	catch (err) {
-		// ignore
-	}
-
-	let application;
-	if (applicationId) {
-		try {
-			application = await apiContext.repository.findById('applications', applicationId);
-		}
-		catch (err) {
-			console.log(err);
-		}
+		console.log(err);
 	}
 
 	if (application == null) {
