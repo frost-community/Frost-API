@@ -11,9 +11,10 @@
     "start": "node --use_strict ./",
     "setup": "node --use_strict ./ --setup",
     "test:lint": "eslint ./src/**/*.js",
-    "test:mocha": "mocha",
+    "test:mocha": "mocha -A",
     "test:mocha-watch": "mocha -w",
-    "test": "npm run test:lint && npm run test:mocha"
+    "test": "npm run test:lint && npm run test:mocha",
+    "versions": "echo mocha && mocha --version && echo eslint && eslint -v"
   },
   "author": "team FrostDevelop",
   "license": "MIT",
@@ -39,12 +40,12 @@
     "websocket-events": "^0.0.4"
   },
   "devDependencies": {
-    "eslint": "^3.18.0",
-    "eslint-config-standard": "^7.1.0",
-    "eslint-plugin-node": "^4.2.1",
-    "eslint-plugin-promise": "^3.5.0",
-    "eslint-plugin-standard": "^2.1.1",
-    "mocha": "^3.4.2"
+    "eslint": "^4.15.0",
+    "eslint-config-standard": "^11.0.0-beta.0",
+    "eslint-plugin-node": "^5.2.0",
+    "eslint-plugin-promise": "^3.6.0",
+    "eslint-plugin-standard": "^3.0.0",
+    "mocha": "^3.5.0"
   },
   "files": [
     "*"

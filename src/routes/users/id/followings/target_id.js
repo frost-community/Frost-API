@@ -80,29 +80,16 @@ exports.put = async (apiContext) => {
 	}
 
 	// ドキュメント作成・更新
-	let resultUpsert;
-	try {
-		resultUpsert = await apiContext.userFollowingsService.create(sourceUserId, targetUserId, message);
-	}
-	catch (err) {
-		console.log(err);
-	}
-
-	if (resultUpsert.ok != 1) {
-		apiContext.response(500, 'failed to create or update userFollowing');
-		return;
-	}
-
 	let userFollowing;
 	try {
-		userFollowing = await apiContext.userFollowingsService.findBySrcDestId(sourceUserId, targetUserId);
+		userFollowing = await apiContext.userFollowingsService.create(sourceUserId, targetUserId, message);
 	}
 	catch (err) {
 		console.log(err);
 	}
 
 	if (userFollowing == null) {
-		apiContext.response(500, 'failed to fetch userFollowing');
+		apiContext.response(500, 'failed to create or update userFollowing');
 		return;
 	}
 
@@ -112,7 +99,7 @@ exports.put = async (apiContext) => {
 		stream.addSource(targetUserId.toString()); // この操作は冪等
 	}
 
-	apiContext.response(204);
+	apiContext.response(200, 'following');
 };
 
 /** @param {ApiContext} apiContext */
@@ -154,5 +141,5 @@ exports.delete = async (apiContext) => {
 		stream.removeSource(targetUser._id.toString());
 	}
 
-	apiContext.response(204);
+	apiContext.response(404, 'not following', false);
 };

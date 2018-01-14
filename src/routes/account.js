@@ -25,6 +25,10 @@ exports.post = async (apiContext) => {
 		apiContext.response(400, 'screenName is invalid format');
 		return;
 	}
+	if (!apiContext.usersService.availableScreenName(screenName)) {
+		apiContext.response(400, 'screenName is invalid');
+		return;
+	}
 	if (!await apiContext.usersService.nonDuplicatedScreenName(screenName)) {
 		apiContext.response(400, 'this screenName is already exists');
 		return;

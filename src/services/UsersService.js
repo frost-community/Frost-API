@@ -113,10 +113,20 @@ class UsersService {
 		if (screenName == null)
 			throw new MissingArgumentsError();
 
-		const isPassedFormatTest = /^[a-zA-Z0-9_-]{4,15}$/.test(screenName) && !/^(.)\1{3,}$/.test(screenName);
+		return /^[a-zA-Z0-9_-]{4,15}$/.test(screenName) && !/^(.)\1{3,}$/.test(screenName);
+	}
+
+	/**
+	 * @param {String} screenName
+	 * @returns {Boolean}
+	*/
+	availableScreenName(screenName) {
+		if (screenName == null)
+			throw new MissingArgumentsError();
+
 		const isNotInvalidScreenName = this._config.api.invalidScreenNames.every(invalidScreenName => screenName != invalidScreenName);
 
-		return isPassedFormatTest && isNotInvalidScreenName;
+		return this.validFormatScreenName(screenName) && isNotInvalidScreenName;
 	}
 
 	async nonDuplicatedScreenName(screenName) {

@@ -7,14 +7,14 @@ describe('General Tests', () => {
 	describe('routes', () => {
 		const routeList = require('../src/routeList');
 
-		it('存在するHTTPメソッドを利用している', () => {
+		it('存在するHTTPメソッドを利用している', async () => {
 			for (const route of routeList) {
 				let method = route[0];
 				assert(require('methods').indexOf(method) > -1);
 			}
 		});
 
-		it('すべての対象ルートのモジュールが存在している', () => {
+		it('すべての対象ルートのモジュールが存在している', async () => {
 			let errorCount = 0;
 			for (const route of routeList) {
 				const routeInstance = new Route(route[0], route[1]);
@@ -39,7 +39,7 @@ describe('General Tests', () => {
 	describe('randomRange', () => {
 		const { randomRange } = require('../src/modules/helpers/GeneralHelper');
 
-		it('範囲を指定して生成した乱数の値はその範囲内にある', () => {
+		it('範囲を指定して生成した乱数の値はその範囲内にある', async () => {
 			for (let i = 0; i < 1000; i++) {
 				const value = randomRange(64, 1024);
 				assert(value >= 64 && value <= 1024);
