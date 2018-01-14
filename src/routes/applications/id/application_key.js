@@ -10,16 +10,19 @@ exports.get = async (apiContext) => {
 
 	const application = await apiContext.repository.findById('applications', apiContext.params.id);
 	if (application == null) {
-		return apiContext.response(404, 'application as premise not found');
+		apiContext.response(404, 'application as premise not found');
+		return;
 	}
 
 	// 対象アプリケーションの所有者かどうか
 	if (!application.creatorId.equals(apiContext.user._id)) {
-		return apiContext.response(403, 'this operation is not permitted');
+		apiContext.response(403, 'this operation is not permitted');
+		return;
 	}
 
 	if (application.keyCode == null) {
-		return apiContext.response(400, 'applicationKey has not been generated yet');
+		apiContext.response(400, 'applicationKey has not been generated yet');
+		return;
 	}
 
 	const applicationKey = apiContext.applicationsService.getApplicationKey(application);
@@ -37,12 +40,14 @@ exports.post = async (apiContext) => {
 
 	const application = await apiContext.repository.findById('applications', apiContext.params.id);
 	if (application == null) {
-		return apiContext.response(404, 'application as premise not found');
+		apiContext.response(404, 'application as premise not found');
+		return;
 	}
 
 	// 対象アプリケーションの所有者かどうか
 	if (!application.creatorId.equals(apiContext.user._id)) {
-		return apiContext.response(403, 'this operation is not permitted');
+		apiContext.response(403, 'this operation is not permitted');
+		return;
 	}
 
 	const applicationKey = await apiContext.applicationsService.generateApplicationKey(application);

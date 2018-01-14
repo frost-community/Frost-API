@@ -9,5 +9,5 @@ exports.post = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	return apiContext.response(501, 'not implemented yet');
+	apiContext.response(501, 'not implemented yet');
 };

@@ -12,12 +12,14 @@ exports.get = async (apiContext) => {
 	// user
 	const user = await apiContext.repository.findById('users', apiContext.params.id);
 	if (user == null) {
-		return apiContext.response(404, 'user as premise not found');
+		apiContext.response(404, 'user as premise not found');
+		return;
 	}
 
 	const isOwned = user._id.equals(apiContext.user._id);
 	if (!isOwned) {
-		return apiContext.response(403, 'this operation is not permitted');
+		apiContext.response(403, 'this operation is not permitted');
+		return;
 	}
 
 	const usedSpace = await getUsedSpace(user._id, apiContext.storageFilesService);

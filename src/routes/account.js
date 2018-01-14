@@ -22,20 +22,24 @@ exports.post = async (apiContext) => {
 
 	// screenName
 	if (!apiContext.usersService.validFormatScreenName(screenName)) {
-		return apiContext.response(400, 'screenName is invalid format');
+		apiContext.response(400, 'screenName is invalid format');
+		return;
 	}
 	if (!await apiContext.usersService.nonDuplicatedScreenName(screenName)) {
-		return apiContext.response(400, 'this screenName is already exists');
+		apiContext.response(400, 'this screenName is already exists');
+		return;
 	}
 
 	// password
 	if (!apiContext.usersService.checkFormatPassword(password)) {
-		return apiContext.response(400, 'password is invalid format');
+		apiContext.response(400, 'password is invalid format');
+		return;
 	}
 
 	const user = await apiContext.usersService.create(screenName, password, name, description);
 	if (user == null) {
-		return apiContext.response(500, 'failed to create account');
+		apiContext.response(500, 'failed to create account');
+		return;
 	}
 
 	apiContext.response(200, { user: await apiContext.usersService.serialize(user) });

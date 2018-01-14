@@ -17,15 +17,18 @@ module.exports.post = async (apiContext) => {
 	const { name, description, permissions } = apiContext.body;
 
 	if (!await apiContext.applicationsService.nonDuplicatedName(name)) {
-		return apiContext.response(400, 'already exists name');
+		apiContext.response(400, 'already exists name');
+		return;
 	}
 	if (!apiContext.applicationsService.availablePermissions(permissions)) {
-		return apiContext.response(400, 'some permissions use are disabled');
+		apiContext.response(400, 'some permissions use are disabled');
+		return;
 	}
 
 	const application = await apiContext.applicationsService.create(name, apiContext.user, description, permissions);
 	if (application == null) {
-		return apiContext.response(500, 'failed to create application');
+		apiContext.response(500, 'failed to create application');
+		return;
 	}
 
 	apiContext.response(200, { application: apiContext.applicationsService.serialize(application) });

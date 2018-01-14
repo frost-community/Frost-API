@@ -16,12 +16,14 @@ exports.post = async (apiContext) => {
 	const text = apiContext.body.text;
 
 	if (/^\s*$/.test(text) || /^[\s\S]{1,256}$/.test(text) == false) {
-		return apiContext.response(400, 'text is invalid format.');
+		apiContext.response(400, 'text is invalid format.');
+		return;
 	}
 
 	let postStatus = await apiContext.postsService.createStatusPost(userId, text);
 	if (postStatus == null) {
-		return apiContext.response(500, 'failed to create postStatus');
+		apiContext.response(500, 'failed to create postStatus');
+		return;
 	}
 
 	const serializedPostStatus = await apiContext.postsService.serialize(postStatus, true);

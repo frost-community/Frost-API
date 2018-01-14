@@ -22,7 +22,8 @@ exports.get = async (apiContext) => {
 		// user
 		const user = await apiContext.repository.findById('users', apiContext.params.id);
 		if (user == null) {
-			return apiContext.response(404, 'user as premise not found');
+			apiContext.response(404, 'user as premise not found');
+			return;
 		}
 
 		return await timelineAsync(apiContext, 'status', [user._id], limit);

@@ -13,22 +13,26 @@ exports.get = async (apiContext) => {
 	// source user
 	const sourceUser = await apiContext.repository.findById('users', apiContext.params.id);
 	if (sourceUser == null) {
-		return apiContext.response(404, 'source user as premise not found');
+		apiContext.response(404, 'source user as premise not found');
+		return;
 	}
 
 	// target user
 	const targetUser = await apiContext.repository.findById('users', apiContext.params.target_id);
 	if (targetUser == null) {
-		return apiContext.response(404, 'target user as premise not found');
+		apiContext.response(404, 'target user as premise not found');
+		return;
 	}
 
 	if (sourceUser._id.equals(targetUser._id)) {
-		return apiContext.response(400, 'source user and target user is same');
+		apiContext.response(400, 'source user and target user is same');
+		return;
 	}
 
 	const userFollowing = await apiContext.userFollowingsService.findBySrcDestId(sourceUser._id, targetUser._id);
 	if (userFollowing == null) {
-		return apiContext.response(404, 'not following', false);
+		apiContext.response(404, 'not following', false);
+		return;
 	}
 
 	apiContext.response(204);
@@ -45,29 +49,34 @@ exports.put = async (apiContext) => {
 	// source user
 	const sourceUser = await apiContext.repository.findById('users', apiContext.params.id);
 	if (sourceUser == null) {
-		return apiContext.response(404, 'user as premise not found');
+		apiContext.response(404, 'user as premise not found');
+		return;
 	}
 	const sourceUserId = sourceUser._id;
 
 	if (!sourceUserId.equals(apiContext.user._id)) {
-		return apiContext.response(403, 'this operation is not permitted');
+		apiContext.response(403, 'this operation is not permitted');
+		return;
 	}
 
 	// target user
 	const targetUser = await apiContext.repository.findById('users', apiContext.params.target_id);
 	if (targetUser == null) {
-		return apiContext.response(404, 'target user as premise not found');
+		apiContext.response(404, 'target user as premise not found');
+		return;
 	}
 	const targetUserId = targetUser._id;
 
 	if (targetUserId.equals(sourceUserId)) {
-		return apiContext.response(400, 'source user and target user is same');
+		apiContext.response(400, 'source user and target user is same');
+		return;
 	}
 
 	// message
 	const message = apiContext.body.message;
 	if (message != null && (/^\s*$/.test(message) || /^[\s\S]{1,64}$/.test(message) == false)) {
-		return apiContext.response(400, 'message is invalid format.');
+		apiContext.response(400, 'message is invalid format.');
+		return;
 	}
 
 	// ドキュメント作成・更新
@@ -80,7 +89,8 @@ exports.put = async (apiContext) => {
 	}
 
 	if (resultUpsert.ok != 1) {
-		return apiContext.response(500, 'failed to create or update userFollowing');
+		apiContext.response(500, 'failed to create or update userFollowing');
+		return;
 	}
 
 	let userFollowing;
@@ -92,7 +102,8 @@ exports.put = async (apiContext) => {
 	}
 
 	if (userFollowing == null) {
-		return apiContext.response(500, 'failed to fetch userFollowing');
+		apiContext.response(500, 'failed to fetch userFollowing');
+		return;
 	}
 
 	// 対象ユーザーのストリームを購読
@@ -115,16 +126,19 @@ exports.delete = async (apiContext) => {
 	// source user
 	const soruceUser = await apiContext.repository.findById('users', apiContext.params.id);
 	if (soruceUser == null) {
-		return apiContext.response(404, 'user as premise not found');
+		apiContext.response(404, 'user as premise not found');
+		return;
 	}
 	if (!soruceUser._id.equals(apiContext.user._id)) {
-		return apiContext.response(403, 'this operation is not permitted');
+		apiContext.response(403, 'this operation is not permitted');
+		return;
 	}
 
 	// target user
 	const targetUser = await apiContext.repository.findById('users', apiContext.params.target_id);
 	if (targetUser == null) {
-		return apiContext.response(404, 'target user as premise not found');
+		apiContext.response(404, 'target user as premise not found');
+		return;
 	}
 
 	try {

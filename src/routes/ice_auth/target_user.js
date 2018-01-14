@@ -16,11 +16,13 @@ exports.post = async (apiContext) => {
 	const userId = apiContext.body.userId;
 
 	if (!await apiContext.authorizeRequestsService.verifyIceAuthKey(iceAuthKey)) {
-		return apiContext.response(400, 'x-ice-auth-key header is invalid');
+		apiContext.response(400, 'x-ice-auth-key header is invalid');
+		return;
 	}
 
 	if ((await apiContext.repository.findById('users', userId)) == null) {
-		return apiContext.response(400, 'userId is invalid');
+		apiContext.response(400, 'userId is invalid');
+		return;
 	}
 
 	const { authorizeRequestId } = apiContext.authorizeRequestsService.splitIceAuthKey(iceAuthKey);

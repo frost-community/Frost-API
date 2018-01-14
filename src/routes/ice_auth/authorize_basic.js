@@ -17,7 +17,8 @@ exports.post = async (apiContext) => {
 	const { screenName, password } = apiContext.body;
 
 	if (!await apiContext.authorizeRequestsService.verifyIceAuthKey(iceAuthKey)) {
-		return apiContext.response(400, 'x-ice-auth-key header is invalid');
+		apiContext.response(400, 'x-ice-auth-key header is invalid');
+		return;
 	}
 
 	const { authorizeRequestId } = apiContext.authorizeRequestsService.splitIceAuthKey(iceAuthKey);
@@ -26,19 +27,23 @@ exports.post = async (apiContext) => {
 
 	// screenName
 	if (!apiContext.usersService.validFormatScreenName(screenName)) {
-		return apiContext.response(400, 'screenName is invalid format');
+		apiContext.response(400, 'screenName is invalid format');
+		return;
 	}
 	const user = await apiContext.usersService.findByScreenName(screenName);
 	if (user == null) {
-		return apiContext.response(400, 'screenName is invalid');
+		apiContext.response(400, 'screenName is invalid');
+		return;
 	}
 
 	// password
 	if (!apiContext.usersService.checkFormatPassword(password)) {
-		return apiContext.response(400, 'password is invalid format');
+		apiContext.response(400, 'password is invalid format');
+		return;
 	}
 	if (!apiContext.usersService.checkCorrectPassword(user, password)) {
-		return apiContext.response(400, 'password is invalid');
+		apiContext.response(400, 'password is invalid');
+		return;
 	}
 
 	// TODO: refactoring(duplication)
@@ -54,7 +59,8 @@ exports.post = async (apiContext) => {
 	if (applicationAccess == null) {
 		applicationAccess = await apiContext.applicationAccessesService.create(applicationId, user._id);
 		if (applicationAccess == null) {
-			return apiContext.response(500, 'failed to create applicationAccess');
+			apiContext.response(500, 'failed to create applicationAccess');
+			return;
 		}
 
 		try {
@@ -65,7 +71,8 @@ exports.post = async (apiContext) => {
 		}
 
 		if (accessKey == null) {
-			return apiContext.response(500, 'failed to generate accessKey');
+			apiContext.response(500, 'failed to generate accessKey');
+			return;
 		}
 	}
 	// 既にapplicationAccessが生成済みの時
@@ -78,7 +85,8 @@ exports.post = async (apiContext) => {
 		}
 
 		if (accessKey == null) {
-			return apiContext.response(500, 'failed to get accessKey');
+			apiContext.response(500, 'failed to get accessKey');
+			return;
 		}
 	}
 

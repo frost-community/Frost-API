@@ -16,16 +16,19 @@ exports.post = async (apiContext) => {
 	const { title, text } = apiContext.body;
 
 	if (/^\s*$/.test(title) || getStringSize(text) > 64) {
-		return apiContext.response(400, 'title is invalid format. max 64bytes');
+		apiContext.response(400, 'title is invalid format. max 64bytes');
+		return;
 	}
 
 	if (/^\s*$/.test(text) || getStringSize(text) > 10000) {
-		return apiContext.response(400, 'text is invalid format. max 10,000bytes');
+		apiContext.response(400, 'text is invalid format. max 10,000bytes');
+		return;
 	}
 
 	const postArticle = await apiContext.postsService.createArticlePost(apiContext.user._id, text, title);
 	if (postArticle == null) {
-		return apiContext.response(500, 'failed to create postArticle');
+		apiContext.response(500, 'failed to create postArticle');
+		return;
 	}
 
 	apiContext.response(200, { postArticle: await apiContext.postsService.serialize(postArticle, true) });

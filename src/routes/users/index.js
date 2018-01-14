@@ -16,11 +16,13 @@ exports.get = async (apiContext) => {
 		const screenNames = apiContext.query.screen_names.split(',');
 
 		if (screenNames.lenth > 100) {
-			return apiContext.response(400, 'screen_names query is limit over(100 items or less)');
+			apiContext.response(400, 'screen_names query is limit over(100 items or less)');
+			return;
 		}
 
 		if (screenNames.some(screenName => !apiContext.usersService.validFormatScreenName(screenName))) {
-			return apiContext.response(400, 'screen_names query is invalid');
+			apiContext.response(400, 'screen_names query is invalid');
+			return;
 		}
 
 		// TODO: screenNamesの重複チェック

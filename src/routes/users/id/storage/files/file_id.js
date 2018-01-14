@@ -15,7 +15,8 @@ exports.get = async (apiContext) => {
 	// user
 	const user = await apiContext.repository.findById('users', apiContext.params.id);
 	if (user == null) {
-		return apiContext.response(404, 'user as premise not found');
+		apiContext.response(404, 'user as premise not found');
+		return;
 	}
 
 	// file
@@ -42,7 +43,8 @@ exports.get = async (apiContext) => {
 	if (level == 'private') {
 		// 所有者以外のユーザー
 		if (!isOwnerAccess) {
-			return apiContext.response(403, 'this operation is not permitted');
+			apiContext.response(403, 'this operation is not permitted');
+			return;
 		}
 	}
 	else if (level == 'specific') {
@@ -50,11 +52,13 @@ exports.get = async (apiContext) => {
 
 		const isNotAllowedUser = !isOwnerAccess && (users == null || !users.some(i => i == requestUserId));
 		if (isNotAllowedUser) {
-			return apiContext.response(403, 'this operation is not permitted');
+			apiContext.response(403, 'this operation is not permitted');
+			return;
 		}
 	}
 	else if (level != 'public') {
-		return apiContext.response(500, 'unknown access-right level');
+		apiContext.response(500, 'unknown access-right level');
+		return;
 	}
 
 	apiContext.response(200, { storageFile: apiContext.storageFilesService.serialize(file, true) });
@@ -74,12 +78,14 @@ exports.delete = async (apiContext) => {
 	// user
 	const user = await apiContext.repository.findById('users', apiContext.params.id);
 	if (user == null) {
-		return apiContext.response(404, 'user as premise not found');
+		apiContext.response(404, 'user as premise not found');
+		return;
 	}
 
 	const isOwnerAccess = user._id.equals(apiContext.user._id);
 	if (!isOwnerAccess) {
-		return apiContext.response(403, 'this operation is not permitted');
+		apiContext.response(403, 'this operation is not permitted');
+		return;
 	}
 
 	// file
@@ -92,14 +98,16 @@ exports.delete = async (apiContext) => {
 	}
 
 	if (file == null) {
-		return apiContext.response(404);
+		apiContext.response(404);
+		return;
 	}
 
 	// 所有していないリソース
 	if (file.creator.type != 'user' || !file.creator.id.equals(user._id)) {
-		return apiContext.response(403);
+		apiContext.response(403);
+		return;
 	}
 
 	// TODO
-	return apiContext.response(501, 'not implemented yet');
+	apiContext.response(501, 'not implemented yet');
 };
