@@ -110,15 +110,7 @@ class ApplicationAccessesService {
 			throw new MissingArgumentsError();
 		}
 
-		let elements;
-		try {
-			elements = this.splitAccessKey(key);
-		}
-		catch (err) {
-			return false;
-		}
-		const { userId, hash, keyCode } = elements;
-
+		const { userId, hash, keyCode } = this.splitAccessKey(key);
 		const applicationAccess = await this._repository.find('applicationAccesses', { userId, keyCode });
 		if (applicationAccess == null) {
 			return false;

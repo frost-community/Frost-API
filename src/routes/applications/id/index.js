@@ -1,5 +1,4 @@
 const ApiContext = require('../../../modules/ApiContext');
-const StoreAdapter = require('../../../modules/MongoAdapter');
 // const $ = require('cafy').default;
 
 /** @param {ApiContext} apiContext */
@@ -18,7 +17,7 @@ exports.get = async (apiContext) => {
 	}
 
 	if (application == null) {
-		apiContext.response(204);
+		apiContext.response(404, 'application not found');
 		return;
 	}
 

@@ -141,17 +141,10 @@ class AuthorizeRequestsService {
 			throw new MissingArgumentsError();
 		}
 
-		let elements;
-		try {
-			elements = this.splitIceAuthKey(key);
-		}
-		catch (err) {
-			return false;
-		}
-		const { authorizeRequestId, hash, keyCode } = elements;
-
+		const { authorizeRequestId, hash, keyCode } = this.splitIceAuthKey(key);
 		const authorizeRequest = await this._repository.findById('authorizeRequests', authorizeRequestId);
 		if (authorizeRequest == null) {
+			console.log('authorizeRequest is not exists.');
 			return false;
 		}
 
