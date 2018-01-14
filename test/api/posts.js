@@ -5,6 +5,7 @@ const MongoAdapter = require('../../src/modules/MongoAdapter');
 const UsersService = require('../../src/services/UsersService');
 const ApplicationsService = require('../../src/services/ApplicationsService');
 const ApiContext = require('../../src/modules/ApiContext');
+const routeStatus = require('../../src/routes/posts/post_status');
 
 describe('Posts API', () => {
 	describe('/posts', () => {
@@ -17,13 +18,16 @@ describe('Posts API', () => {
 
 			await db.remove('users', {});
 			await db.remove('applications', {});
+
+			usersService = new UsersService(db, config);
+			applicationsService = new ApplicationsService(db, config);
 		});
 
 		// add general user, general application
 		let user, app;
 		beforeEach(async () => {
 			user = await usersService.create('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
-			app = await applicationsService.create('generalapp', user, 'this is generalapp.', []);
+			app = await applicationsService.create('generalapp', user, 'this is generalapp.', ['postWrite']);
 		});
 
 		// remove all users, all applications
@@ -41,7 +45,26 @@ describe('Posts API', () => {
 		});
 		describe('/post_status', () => {
 			describe('[POST]', () => {
-				it('正しくリクエストされた場合は成功する');
+				it('正しくリクエストされた場合は成功する', async () => {
+					const context = new ApiContext(null, null, db, config, {
+						body: { text: 'hogehoge' },
+						headers: { 'X-Api-Version': 1 },
+						user,
+						application: app
+					});
+					await routeStatus.post(context);
+					assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
+					delete context.data.postStatus.id;
+					delete context.data.postStatus.createdAt;
+					delete context.data.postStatus.user;
+					assert.deepEqual(context.data, {
+						postStatus: {
+							text: 'hogehoge',
+							type: 'status',
+							userId: user._id.toString()
+						}
+					});
+				});
 			});
 		});
 		describe('/post_article', () => {
