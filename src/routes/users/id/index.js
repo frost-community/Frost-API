@@ -11,7 +11,7 @@ exports.get = async (apiContext) => {
 
 	const user = await apiContext.repository.findById('users', apiContext.params.id);
 	if (user == null) {
-		apiContext.response(204);
+		apiContext.response(404, 'user not found');
 		return;
 	}
 
