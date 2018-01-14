@@ -92,6 +92,16 @@ describe('Users API', () => {
 						}
 					});
 				});
+				it('存在しないユーザーを指定した場合は404を返す', async () => {
+					const context = new ApiContext(null, null, db, config, {
+						params: { id: 'abcdefg1234' },
+						headers: { 'X-Api-Version': 1 },
+						user,
+						application: app
+					});
+					await routeId.get(context);
+					assert.equal(context.statusCode, 404);
+				});
 			});
 			describe('/timelines/user', () => {
 				describe('[GET]', () => {
