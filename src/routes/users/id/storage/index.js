@@ -1,7 +1,8 @@
-const User = require('../../../../documentModels/user');
-const { getUsedSpace } = require('../../../../helpers/UserStorageHelpers');
+const ApiContext = require('../../../../modules/ApiContext');
+const { getUsedSpace } = require('../../../../modules/helpers/UserStorageHelper');
 // const $ = require('cafy').default;
 
+/** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		permissions: ['storageRead']
@@ -9,17 +10,19 @@ exports.get = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	// user
-	const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
+	const user = await apiContext.repository.findById('users', apiContext.params.id);
 	if (user == null) {
-		return apiContext.response(404, 'user as premise not found');
+		apiContext.response(404, 'user as premise not found');
+		return;
 	}
 
-	const isOwned = user.document._id.equals(apiContext.user.document._id);
+	const isOwned = user._id.equals(apiContext.user._id);
 	if (!isOwned) {
-		return apiContext.response(403, 'this operation is not permitted');
+		apiContext.response(403, 'this operation is not permitted');
+		return;
 	}
 
-	const usedSpace = await getUsedSpace(user.document._id, apiContext.db);
+	const usedSpace = await getUsedSpace(user._id, apiContext.storageFilesService);
 	const availableSpace = apiContext.config.api.storage.spaceSize - usedSpace;
 
 	apiContext.response(200, {

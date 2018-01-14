@@ -1,17 +1,16 @@
-const readLine = require('./helpers/readline');
+const readLine = require('./modules/readline');
 const express = require('express');
 const httpClass = require('http');
 const bodyParser = require('body-parser');
 const compression = require('compression');
-const loadConfig = require('./helpers/loadConfig');
+const { loadConfig } = require('./modules/helpers/GeneralHelper');
 const sanitize = require('mongo-sanitize');
-const DbProvider = require('./helpers/dbProvider');
-const Db = require('./helpers/db');
-const Route = require('./helpers/route');
-const DirectoryRouter = require('./helpers/directoryRouter');
-const apiSend = require('./helpers/middlewares/apiSend');
+const MongoAdapter = require('./modules/MongoAdapter');
+const Route = require('./modules/route');
+const DirectoryRouter = require('./modules/directoryRouter');
+const apiSend = require('./modules/middlewares/apiSend');
 const AsyncLock = require('async-lock');
-const ApiContext = require('./helpers/ApiContext');
+const ApiContext = require('./modules/ApiContext');
 const routeList = require('./routeList');
 const setup = require('./setup');
 
@@ -25,14 +24,8 @@ module.exports = async () => {
 
 		let config = loadConfig();
 		if (config == null) {
-			if (await q('config file is not found. display setting mode now? (y/n) ')) {
-				await setup();
-				config = loadConfig();
-			}
-
-			if (config == null) {
-				return;
-			}
+			console.log('config file not found. please create in setup mode. (command: npm run setup)');
+			return;
 		}
 
 		const app = express();
@@ -42,7 +35,9 @@ module.exports = async () => {
 
 		const directoryRouter = new DirectoryRouter(app);
 		const streams = new Map(); // memo: keyはChannelName
-		const db = new Db(config, await DbProvider.connectApidbAsync(config));
+
+		const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
+		const repository = await MongoAdapter.connect(config.api.database.host, config.api.database.database, authenticate);
 
 		app.use(compression({
 			threshold: 0,
@@ -58,7 +53,7 @@ module.exports = async () => {
 			// services
 			req.config = config;
 			req.streams = streams;
-			req.db = db;
+			req.repository = repository;
 			req.lock = new AsyncLock();
 
 			// sanitize
@@ -79,7 +74,7 @@ module.exports = async () => {
 
 		// not found
 		app.use((req, res) => {
-			const apiContext = new ApiContext();
+			const apiContext = new ApiContext(null, null, repository, config);
 			apiContext.response(404, 'endpoint not found, or method is not supported');
 			res.apiSend(apiContext);
 		});
@@ -88,7 +83,7 @@ module.exports = async () => {
 			console.log(`listen on port: ${config.api.port}`);
 		});
 
-		require('./streaming-server')(http, directoryRouter, streams, db, config);
+		require('./streaming-server')(http, directoryRouter, streams, repository, config);
 	}
 	catch (err) {
 		console.log('Unprocessed Server Error:', err);

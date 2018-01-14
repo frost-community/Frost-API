@@ -1,6 +1,7 @@
-const AuthorizeRequest = require('../../documentModels/authorizeRequest');
+const ApiContext = require('../../modules/ApiContext');
 // const $ = require('cafy').default;
 
+/** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		query: {},
@@ -11,16 +12,18 @@ exports.get = async (apiContext) => {
 
 	const iceAuthKey = apiContext.headers['x-ice-auth-key'];
 
-	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, apiContext.db, apiContext.config)) {
-		return apiContext.response(400, 'x-ice-auth-key header is invalid');
+	if (!await apiContext.authorizeRequestsService.verifyIceAuthKey(iceAuthKey)) {
+		apiContext.response(400, 'x-ice-auth-key header is invalid');
+		return;
 	}
 
-	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, apiContext.db, apiContext.config).authorizeRequestId;
-	const authorizeRequest = await apiContext.db.authorizeRequests.findByIdAsync(authorizeRequestId); //TODO: move to document models
+	const { authorizeRequestId } = apiContext.authorizeRequestsService.splitIceAuthKey(iceAuthKey);
 
-	if (authorizeRequest.document.verificationCode == null) {
-		return apiContext.response(500, 'verificationCode is empty');
+	const { verificationCode } = await apiContext.repository.findById('authorizeRequests', authorizeRequestId);
+	if (verificationCode == null) {
+		apiContext.response(500, 'verificationCode is empty');
+		return;
 	}
 
-	apiContext.response(200, { verificationCode: authorizeRequest.document.verificationCode });
+	apiContext.response(200, { verificationCode });
 };

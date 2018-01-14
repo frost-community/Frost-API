@@ -1,6 +1,7 @@
-const Application = require('../../documentModels/application');
+const ApiContext = require('../../modules/ApiContext');
 const $ = require('cafy').default;
 
+/** @param {ApiContext} apiContext */
 exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
@@ -11,28 +12,21 @@ exports.post = async (apiContext) => {
 
 	const applicationKey = apiContext.body.applicationKey;
 
-	if (!await Application.verifyKeyAsync(applicationKey, apiContext.db, apiContext.config)) {
-		return apiContext.response(400, 'applicationKey is invalid');
+	if (!await apiContext.applicationsService.verifyApplicationKey(applicationKey)) {
+		apiContext.response(400, 'applicationKey is invalid');
+		return;
 	}
 
-	const applicationId = Application.splitKey(applicationKey, apiContext.db, apiContext.config).applicationId;
+	const { applicationId } = apiContext.applicationsService.splitApplicationKey(applicationKey);
 
-	let authorizeRequest;
-	try {
-		authorizeRequest = await apiContext.db.authorizeRequests.createAsync({ // TODO: move to document models
-			applicationId: applicationId
-		});
-	}
-	catch (err) {
-		console.log(err);
-	}
-
+	const authorizeRequest = await apiContext.authorizeRequestsService.create(applicationId);
 	if (authorizeRequest == null) {
-		return apiContext.response(500, 'failed to create authorizeRequest');
+		apiContext.response(500, 'failed to create authorizeRequest');
+		return;
 	}
 
-	const iceAuthKey = await authorizeRequest.generateIceAuthKeyAsync();
-	await authorizeRequest.generateVerificationCodeAsync();
+	const iceAuthKey = await apiContext.authorizeRequestsService.generateIceAuthKey(authorizeRequest);
+	await apiContext.authorizeRequestsService.generateVerificationCode(authorizeRequest);
 
-	apiContext.response(200, { iceAuthKey: iceAuthKey });
+	apiContext.response(200, { iceAuthKey });
 };

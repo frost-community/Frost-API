@@ -32,25 +32,25 @@ class DirectoryRouter {
 			(async () => {
 				let apiContext;
 				try {
-					let routeFuncAsync;
+					let routeFunc;
 					try {
-						routeFuncAsync = require(route.getModulePath())[route.method];
+						routeFunc = require(route.getModulePath())[route.method];
 					}
 					catch (err) {
 						console.log(err);
 					}
 
-					if (routeFuncAsync == null) {
+					if (routeFunc == null) {
 						throw new Error(`route function is not found\ntarget: ${route.method} ${route.path}`);
 					}
 
-					apiContext = new ApiContext(request.streams, request.lock, request.db, request.config, {
+					apiContext = new ApiContext(request.streams, request.lock, request.repository, request.config, {
 						params: request.params,
 						query: request.query,
 						body: request.body,
 						headers: request.headers
 					});
-					await routeFuncAsync(apiContext);
+					await routeFunc(apiContext);
 
 					console.log(`rest: ${route.method.toUpperCase()} ${route.path}, status=${apiContext.statusCode}`);
 					response.apiSend(apiContext);

@@ -1,5 +1,5 @@
-const User = require('../../../../../documentModels/user');
-const { getUsedSpace } = require('../../../../../helpers/UserStorageHelpers');
+const ApiContext = require('../../../../../modules/ApiContext');
+const { getUsedSpace } = require('../../../../../modules/helpers/UserStorageHelper');
 const getFileType = require('file-type');
 const validator = require('validator');
 const $ = require('cafy').default;
@@ -11,6 +11,7 @@ const supportedMimeTypes = [
 ];
 
 // create a storage file
+/** @param {ApiContext} apiContext */
 exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
@@ -22,14 +23,16 @@ exports.post = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	// user
-	const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
+	const user = await apiContext.repository.findById('users', apiContext.params.id);
 	if (user == null) {
-		return apiContext.response(404, 'user as premise not found');
+		apiContext.response(404, 'user as premise not found');
+		return;
 	}
 
-	const isOwnerAccess = user.document._id.equals(apiContext.user.document._id);
+	const isOwnerAccess = user._id.equals(apiContext.user._id);
 	if (!isOwnerAccess) {
-		return apiContext.response(403, 'this operation is not permitted');
+		apiContext.response(403, 'this operation is not permitted');
+		return;
 	}
 
 	let accessRightLevel = 'public'; // TODO: public 以外のアクセス権タイプのサポート
@@ -40,43 +43,36 @@ exports.post = async (apiContext) => {
 	// file type
 	const fileType = getFileType(fileDataBuffer);
 	if (fileType == null || !supportedMimeTypes.some(i => i == fileType.mime)) {
-		return apiContext.response(400, 'file is not supported format');
+		apiContext.response(400, 'file is not supported format');
+		return;
 	}
 
 	let file;
-
-	await apiContext.lock.acquire(user.document._id.toString(), async () => {
+	await apiContext.lock.acquire(user._id.toString(), async () => {
 		// calculate available space
-		const usedSpace = await getUsedSpace(user.document._id, apiContext.db);
+		const usedSpace = await getUsedSpace(user._id, apiContext.storageFilesService);
 		if (apiContext.config.api.storage.spaceSize - usedSpace - fileDataBuffer.length < 0) {
-			return apiContext.response(400, 'storage space is full');
+			apiContext.response(400, 'storage space is full');
+			return;
 		}
 
 		// create a document
-		try {
-			file = await apiContext.db.storageFiles.createAsync(
-				'user',
-				apiContext.user.document._id,
-				fileDataBuffer,
-				fileType.mime,
-				accessRightLevel);
-		}
-		catch (err) {
-			console.log(err);
-		}
+		file = await apiContext.storageFilesService.create('user', apiContext.user._id, fileDataBuffer, fileType.mime, accessRightLevel);
 	});
 	if (apiContext.responsed) {
 		return;
 	}
 
 	if (file == null) {
-		return apiContext.response(500, 'failed to create storage file');
+		apiContext.response(500, 'failed to create storage file');
+		return;
 	}
 
-	apiContext.response(200, { storageFile: file.serialize(true) });
+	apiContext.response(200, { storageFile: apiContext.storageFilesService.serialize(file, true) });
 };
 
 // fetch a list of files
+/** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => { // TODO: フィルター指定、ページネーション、ファイル内容を含めるかどうか
 	await apiContext.proceed({
 		query: {},
@@ -85,31 +81,24 @@ exports.get = async (apiContext) => { // TODO: フィルター指定、ページ
 	if (apiContext.responsed) return;
 
 	// user
-	const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
+	const user = await apiContext.repository.findById('users', apiContext.params.id);
 	if (user == null) {
-		return apiContext.response(404, 'user as premise not found');
+		apiContext.response(404, 'user as premise not found');
+		return;
 	}
 
-	const isOwnerAccess = user.document._id.equals(apiContext.user.document._id);
+	const isOwnerAccess = user._id.equals(apiContext.user._id);
 	if (!isOwnerAccess) {
-		return apiContext.response(403, 'this operation is not permitted');
+		apiContext.response(403, 'this operation is not permitted');
+		return;
 	}
 
 	// fetch document
-	let files;
-	try {
-		files = await apiContext.db.storageFiles.findByCreatorArrayAsync(
-			'user',
-			apiContext.user.document._id);
-	}
-	catch (err) {
-		console.log(err);
-	}
-
-	if (files == null || files.length == 0) {
+	const files = await apiContext.storageFilesService.findArrayByCreator('user', apiContext.user._id);
+	if (files.length == 0) {
 		apiContext.response(204);
 		return;
 	}
 
-	apiContext.response(200, { storageFiles: files.map(i => i.serialize(true)) });
+	apiContext.response(200, { storageFiles: files.map(i => apiContext.storageFilesService.serialize(i, true)) });
 };

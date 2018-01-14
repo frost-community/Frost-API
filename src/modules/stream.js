@@ -28,7 +28,7 @@ class StreamPublisher {
 		let strData = (data instanceof String) ? data : JSON.stringify(data);
 		this.redisClient.publish(StreamUtil.buildStreamId(type, publisherId), strData);
 	}
-	quitAsync() {
+	quit() {
 		return new Promise((resolve, reject) => {
 			if (this.redisClient.connected) {
 				this.redisClient.quit((err) => {
@@ -90,7 +90,7 @@ class Stream {
 	listenerCount() {
 		return this.emitter.listenerCount('data');
 	}
-	quitAsync() {
+	quit() {
 		return new Promise((resolve, reject) => {
 			if (this.redisClient.connected) {
 				this.redisClient.quit((err) => {

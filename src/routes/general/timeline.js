@@ -1,9 +1,11 @@
-const timelineAsync = require('../../helpers/timelineAsync');
+const ApiContext = require('../../modules/ApiContext');
+const timeline = require('../../modules/timeline');
 const v = require('validator');
 const $ = require('cafy').default;
 
 // TODO: 不完全な実装
 
+/** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		query: {
@@ -14,10 +16,10 @@ exports.get = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	// convert query value
-	apiContext.query.limit = v.toInt(apiContext.query.limit);
+	const limit = v.toInt(apiContext.query.limit);
 
 	try {
-		return await timelineAsync(apiContext, 'status', null, apiContext.query.limit);
+		return await timeline(apiContext, 'status', null, limit);
 	}
 	catch (err) {
 		console.log(err);

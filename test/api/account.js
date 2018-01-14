@@ -1,33 +1,38 @@
 const assert = require('assert');
-const config = require('../../src/helpers/loadConfig')();
-const DbProvider = require('../../src/helpers/dbProvider');
-const Db = require('../../src/helpers/db');
-const ApiContext = require('../../src/helpers/ApiContext');
+const { loadConfig } = require('../../src/modules/helpers/GeneralHelper');
+const config = loadConfig();
+const MongoAdapter = require('../../src/modules/MongoAdapter');
+const UsersService = require('../../src/services/UsersService');
+const ApplicationsService = require('../../src/services/ApplicationsService');
+const ApiContext = require('../../src/modules/ApiContext');
 const route = require('../../src/routes/account');
 
 describe('Account API', () => {
 	describe('/account', () => {
-		let db;
+		let db, usersService, applicationsService;
 		before(async () => {
 			config.api.database = config.api.testDatabase;
 
-			const dbProvider = await DbProvider.connectApidbAsync(config);
-			db = new Db(config, dbProvider);
+			const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
+			db = await MongoAdapter.connect(config.api.database.host, config.api.database.database, authenticate);
 
-			await db.users.removeAsync({});
-			await db.applications.removeAsync({});
+			await db.remove('users', {});
+			await db.remove('applications', {});
+
+			usersService = new UsersService(db, config);
+			applicationsService = new ApplicationsService(db, config);
 		});
 
 		// add general user, general application
 		let user, application;
 		beforeEach(async () => {
-			user = await db.users.createAsync('generaluser_a', 'abcdefg', 'froster', 'this is generaluser.');
-			application = await db.applications.createAsync('generalapp_a', user, 'this is generalapp.', ['accountSpecial']);
+			user = await usersService.create('generaluser_a', 'abcdefg', 'froster', 'this is generaluser.');
+			application = await applicationsService.create('generalapp_a', user, 'this is generalapp.', ['accountSpecial']);
 		});
 
 		afterEach(async () => {
-			await db.users.removeAsync({});
-			await db.applications.removeAsync({});
+			await db.remove('users', {});
+			await db.remove('applications', {});
 		});
 
 		describe('[POST]', () => {
@@ -44,8 +49,7 @@ describe('Account API', () => {
 					application
 				});
 				await route.post(context);
-
-				assert(typeof context.data != 'string', `api error: ${context.data}`);
+				assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
 
 				delete context.data.user.id;
 				delete context.data.user.createdAt;
@@ -73,7 +77,6 @@ describe('Account API', () => {
 					user,
 					application
 				});
-
 				await route.post(context);
 				assert.equal(context.statusCode, 400);
 
@@ -88,7 +91,6 @@ describe('Account API', () => {
 					user,
 					application
 				});
-
 				await route.post(context);
 				assert.equal(context.statusCode, 400);
 			});
@@ -105,7 +107,6 @@ describe('Account API', () => {
 					user,
 					application
 				});
-
 				await route.post(context);
 				assert.equal(context.statusCode, 400);
 			});
@@ -122,7 +123,6 @@ describe('Account API', () => {
 					user,
 					application
 				});
-
 				await route.post(context);
 				assert.equal(context.statusCode, 400);
 			});
@@ -139,7 +139,6 @@ describe('Account API', () => {
 					user,
 					application
 				});
-
 				await route.post(context);
 				assert.equal(context.statusCode, 400);
 			});

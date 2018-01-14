@@ -1,32 +1,36 @@
-const Application = require('../../../documentModels/application');
+const ApiContext = require('../../../modules/ApiContext');
 // const $ = require('cafy').default;
 
+/** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		permissions: ['applicationSpecial']
 	});
 	if (apiContext.responsed) return;
 
-	const application = await Application.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
-
+	const application = await apiContext.repository.findById('applications', apiContext.params.id);
 	if (application == null) {
-		return apiContext.response(404, 'application as premise not found');
+		apiContext.response(404, 'application as premise not found');
+		return;
 	}
 
 	// 対象アプリケーションの所有者かどうか
-	if (!application.document.creatorId.equals(apiContext.user.document._id)) {
-		return apiContext.response(403, 'this operation is not permitted');
+	if (!application.creatorId.equals(apiContext.user._id)) {
+		apiContext.response(403, 'this operation is not permitted');
+		return;
 	}
 
-	if (application.document.keyCode == null) {
-		return apiContext.response(400, 'applicationKey has not been generated yet');
+	if (application.keyCode == null) {
+		apiContext.response(400, 'applicationKey has not been generated yet');
+		return;
 	}
 
-	const key = application.getApplicationKey();
+	const applicationKey = apiContext.applicationsService.getApplicationKey(application);
 
-	apiContext.response(200, { applicationKey: key });
+	apiContext.response(200, { applicationKey });
 };
 
+/** @param {ApiContext} apiContext */
 exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {},
@@ -34,18 +38,19 @@ exports.post = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const application = await Application.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
-
+	const application = await apiContext.repository.findById('applications', apiContext.params.id);
 	if (application == null) {
-		return apiContext.response(404, 'application as premise not found');
+		apiContext.response(404, 'application as premise not found');
+		return;
 	}
 
 	// 対象アプリケーションの所有者かどうか
-	if (!application.document.creatorId.equals(apiContext.user.document._id)) {
-		return apiContext.response(403, 'this operation is not permitted');
+	if (!application.creatorId.equals(apiContext.user._id)) {
+		apiContext.response(403, 'this operation is not permitted');
+		return;
 	}
 
-	const key = await application.generateApplicationKeyAsync();
+	const applicationKey = await apiContext.applicationsService.generateApplicationKey(application);
 
-	apiContext.response(200, { applicationKey: key });
+	apiContext.response(200, { applicationKey });
 };

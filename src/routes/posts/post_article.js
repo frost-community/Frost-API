@@ -1,6 +1,8 @@
-const stringSize = require('../../helpers/stringSize');
+const ApiContext = require('../../modules/ApiContext');
+const { getStringSize } = require('../../modules/helpers/GeneralHelper');
 const $ = require('cafy').default;
 
+/** @param {ApiContext} apiContext */
 exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
@@ -13,31 +15,21 @@ exports.post = async (apiContext) => {
 
 	const { title, text } = apiContext.body;
 
-	if (/^\s*$/.test(title) || stringSize(text) > 64) {
-		return apiContext.response(400, 'title is invalid format. max 64bytes');
+	if (/^\s*$/.test(title) || getStringSize(text) > 64) {
+		apiContext.response(400, 'title is invalid format. max 64bytes');
+		return;
 	}
 
-	if (/^\s*$/.test(text) || stringSize(text) > 10000) {
-		return apiContext.response(400, 'text is invalid format. max 10,000bytes');
+	if (/^\s*$/.test(text) || getStringSize(text) > 10000) {
+		apiContext.response(400, 'text is invalid format. max 10,000bytes');
+		return;
 	}
 
-	let postArticle;
-
-	try {
-		postArticle = await apiContext.db.posts.createAsync({ // TODO: move to document models
-			type: 'article',
-			userId: apiContext.user.document._id,
-			title: title,
-			text: text
-		});
-	}
-	catch (err) {
-		console.log(err);
-	}
-
+	const postArticle = await apiContext.postsService.createArticlePost(apiContext.user._id, text, title);
 	if (postArticle == null) {
-		return apiContext.response(500, 'failed to create postArticle');
+		apiContext.response(500, 'failed to create postArticle');
+		return;
 	}
 
-	apiContext.response(200, { postArticle: await postArticle.serializeAsync(true) });
+	apiContext.response(200, { postArticle: await apiContext.postsService.serialize(postArticle, true) });
 };
