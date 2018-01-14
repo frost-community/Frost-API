@@ -43,9 +43,7 @@ class MongoAdapter {
 			throw new MissingArgumentsError();
 		}
 
-		const document = await this._connection.collection(collectionName).findOne(query, options);
-
-		return document;
+		return this._connection.collection(collectionName).findOne(query, options);
 	}
 
 	/**
@@ -59,11 +57,7 @@ class MongoAdapter {
 		if (id == null)
 			throw new MissingArgumentsError();
 
-		let builtId = id;
-		if (typeof id == 'string')
-			builtId = MongoAdapter.buildId(id);
-
-		return this.find(collectionName, { _id: builtId }, options);
+		return this.find(collectionName, { _id: MongoAdapter.buildId(id) }, options);
 	}
 
 	/**
@@ -206,7 +200,7 @@ class MongoAdapter {
 	}
 
 	static buildId(idSource) {
-		if (MongoAdapter.validateId(idSource))
+		if (!MongoAdapter.validateId(idSource))
 			return null;
 
 		return new ObjectId(idSource);
