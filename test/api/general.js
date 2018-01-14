@@ -1,7 +1,9 @@
 const assert = require('assert');
-const config = require('../../src/modules/loadConfig')();
-const DbProvider = require('../../src/modules/dbProvider');
-const Db = require('../../src/modules/db');
+const { loadConfig } = require('../../src/modules/helpers/GeneralHelper');
+const config = loadConfig();
+const MongoAdapter = require('../../src/modules/MongoAdapter');
+const UsersService = require('../../src/services/UsersService');
+const ApplicationsService = require('../../src/services/ApplicationsService');
 const routeTimeline = require('../../src/routes/general/timeline');
 
 describe('General API', () => {
