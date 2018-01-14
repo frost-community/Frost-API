@@ -8,11 +8,17 @@ class UserFollowingsService {
 	 * @param {MongoAdapter} repository
 	*/
 	constructor(repository, config) {
+		if (repository == null || config == null)
+			throw new MissingArgumentsError();
+
 		this._repository = repository;
 		this._config = config;
 	}
 
 	serialize(document) {
+		if (document == null)
+			throw new MissingArgumentsError();
+
 		const res = Object.assign({}, document);
 
 		// createdAt
@@ -20,7 +26,7 @@ class UserFollowingsService {
 
 		// id
 		res.id = res._id.toString();
-		res._id = undefined;
+		delete res._id;
 
 		return sortObject(res);
 	}
@@ -28,6 +34,9 @@ class UserFollowingsService {
 	// helpers
 
 	async create(sourceUserId, targetUserId, message) {
+		if (sourceUserId == null || targetUserId == null)
+			throw new MissingArgumentsError();
+
 		let resultUpsert;
 		try {
 			resultUpsert = await this._repository.upsert('userFollowings', { source: sourceUserId, target: targetUserId },
@@ -41,6 +50,9 @@ class UserFollowingsService {
 	}
 
 	async removeBySrcDestId(sourceUserId, targetUserId) {
+		if (sourceUserId == null || targetUserId == null)
+			throw new MissingArgumentsError();
+
 		try {
 			await this._repository.remove('userFollowings', { source: sourceUserId, target: targetUserId });
 		}

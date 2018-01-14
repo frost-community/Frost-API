@@ -40,7 +40,7 @@ exports.get = async (apiContext) => {
 			console.log(`notfound following source userId: ${following.source.toString()}`);
 			return;
 		}
-		return await apiContext.usersService.serialize(user);
+		return apiContext.usersService.serialize(user);
 	});
 	const serializedUsers = await Promise.all(promises);
 

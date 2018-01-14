@@ -29,7 +29,7 @@ class ApiContext {
 		this.applicationsService = new ApplicationsService(repository, config);
 		this.authorizeRequestsService = new AuthorizeRequestsService(repository, config);
 		this.applicationAccessesService = new ApplicationAccessesService(repository, config);
-		this.postsService = new PostsService(repository, config);
+		this.postsService = new PostsService(repository, config, this.userFollowingsService);
 		this.storageFilesService = new StorageFilesService(repository, config);
 
 		this.headers = {};

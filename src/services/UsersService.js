@@ -8,6 +8,9 @@ class UsersService {
 	 * @param {MongoAdapter} repository
 	*/
 	constructor(repository, config) {
+		if (repository == null || config == null)
+			throw new MissingArgumentsError();
+
 		this._repository = repository;
 		this._config = config;
 	}
@@ -27,6 +30,9 @@ class UsersService {
 	}
 
 	async serialize(userDocument) {
+		if (userDocument == null)
+			throw new MissingArgumentsError();
+
 		const res = Object.assign({}, userDocument);
 
 		// createdAt
@@ -34,10 +40,10 @@ class UsersService {
 
 		// id
 		res.id = res._id.toString();
-		res._id = undefined;
+		delete res._id;
 
 		// passwordHash
-		res.passwordHash = undefined;
+		delete res.passwordHash;
 
 		// followingsCount, followersCount, postsCount.status
 		res.postsCount = {};

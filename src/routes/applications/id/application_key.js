@@ -45,7 +45,7 @@ exports.post = async (apiContext) => {
 		return apiContext.response(403, 'this operation is not permitted');
 	}
 
-	const applicationKey = apiContext.applicationsService.generateApplicationKey(application);
+	const applicationKey = await apiContext.applicationsService.generateApplicationKey(application);
 
 	apiContext.response(200, { applicationKey });
 };

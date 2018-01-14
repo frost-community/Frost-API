@@ -57,7 +57,7 @@ exports.get = async (apiContext) => {
 		return apiContext.response(500, 'unknown access-right level');
 	}
 
-	apiContext.response(200, { storageFile: file.serialize(true) });
+	apiContext.response(200, { storageFile: apiContext.storageFilesService.serialize(file, true) });
 };
 
 /**

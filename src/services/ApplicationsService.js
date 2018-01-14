@@ -8,6 +8,9 @@ class ApplicationsService {
 	 * @param {MongoAdapter} repository
 	*/
 	constructor(repository, config) {
+		if (repository == null || config == null)
+			throw new MissingArgumentsError();
+
 		this._repository = repository;
 		this._config = config;
 	}
@@ -39,16 +42,15 @@ class ApplicationsService {
 			throw new InvalidOperationError('keyCode is empty');
 		}
 
-		const hash = buildHash(`${this.config.api.secretToken.application}/${applicationDocument.creatorId}/${applicationDocument._id}/${applicationDocument.keyCode}`);
+		const hash = buildHash(`${this._config.api.secretToken.application}/${applicationDocument.creatorId}/${applicationDocument._id}/${applicationDocument.keyCode}`);
 		const key = `${applicationDocument._id}-${hash}.${applicationDocument.keyCode}`;
 
 		return key;
 	}
 
 	serialize(applicationDocument) {
-		if (applicationDocument == null) {
+		if (applicationDocument == null)
 			throw new MissingArgumentsError();
-		}
 
 		const res = Object.assign({}, applicationDocument);
 
@@ -57,13 +59,13 @@ class ApplicationsService {
 
 		// id
 		res.id = res._id.toString();
-		res._id = undefined;
+		delete res._id;
 
 		// creatorId
 		res.creatorId = res.creatorId.toString();
 
 		// keyCode
-		res.keyCode = undefined;
+		delete res.keyCode;
 
 		return sortObject(res);
 	}
@@ -71,6 +73,9 @@ class ApplicationsService {
 	// helpers
 
 	create(name, creator, description, permissions) {
+		if (name == null || creator == null || description == null || permissions == null)
+			throw new MissingArgumentsError();
+
 		return this._repository.create('applications', {
 			name: name,
 			creatorId: creator._id,
@@ -138,10 +143,16 @@ class ApplicationsService {
 	}
 
 	async nonDuplicatedName(name) {
-		return (await this.findByName(name)) != null;
+		if (name == null)
+			throw new MissingArgumentsError();
+
+		return (await this.findByName(name)) == null;
 	}
 
 	availablePermissions(permissions) {
+		if (permissions == null)
+			throw new MissingArgumentsError();
+
 		return permissions.every(p => this._config.api.additionDisabledPermissions.indexOf(p) == -1);
 	}
 }

@@ -9,11 +9,17 @@ class ApplicationAccessesService {
 	 * @param {Object} config
 	*/
 	constructor(repository, config) {
+		if (repository == null || config == null)
+			throw new MissingArgumentsError();
+
 		this._repository = repository;
 		this._config = config;
 	}
 
 	async generateAccessKey(document) {
+		if (document == null)
+			throw new MissingArgumentsError();
+
 		let keyCode, isExist, tryCount = 0;
 
 		do {
@@ -34,9 +40,11 @@ class ApplicationAccessesService {
 	}
 
 	getAccessKey(document) {
-		if (document.keyCode == null) {
+		if (document == null)
+			throw new MissingArgumentsError();
+
+		if (document.keyCode == null)
 			throw new InvalidOperationError('keyCode is empty');
-		}
 
 		const hash = buildHash(`${this._config.api.secretToken.applicationAccess}/${document.applicationId}/${document.userId}/${document.keyCode}`);
 
@@ -44,6 +52,9 @@ class ApplicationAccessesService {
 	}
 
 	serialize(document) {
+		if (document == null)
+			throw new MissingArgumentsError();
+
 		const res = Object.assign({}, document);
 
 		// createdAt
@@ -51,10 +62,10 @@ class ApplicationAccessesService {
 
 		// id
 		res.id = res._id.toString();
-		res._id = undefined;
+		delete res._id;
 
 		// keyCode
-		res.keyCode = undefined;
+		delete res.keyCode;
 
 		return sortObject(res);
 	}
@@ -62,6 +73,9 @@ class ApplicationAccessesService {
 	// helpers
 
 	create(applicationId, targetUserId) {
+		if (applicationId == null || targetUserId == null)
+			throw new MissingArgumentsError();
+
 		return this._repository.create('applicationAccesses', {
 			applicationId,
 			userId: targetUserId,

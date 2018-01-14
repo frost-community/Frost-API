@@ -8,15 +8,21 @@ const UsersService = require('./UsersService');
 class PostsService {
 	/**
 	 * @param {MongoAdapter} repository
+	 * @param {UsersService} usersService
 	*/
-	constructor(repository, config) {
+	constructor(repository, config, usersService) {
+		if (repository == null || config == null|| usersService == null)
+			throw new MissingArgumentsError();
+
 		this._repository = repository;
 		this._config = config;
-
-		this._Users = new UsersService(repository, config);
+		this._usersService = usersService;
 	}
 
 	async serialize(document, includeEntity) {
+		if (document == null || includeEntity == null)
+			throw new MissingArgumentsError();
+
 		const res = Object.assign({}, document);
 
 		// createdAt
@@ -24,13 +30,13 @@ class PostsService {
 
 		// id
 		res.id = res._id.toString();
-		res._id = undefined;
+		delete res._id;
 
-		if (includeEntity === true) {
+		if (includeEntity) {
 			// user
 			const user = await this._repository.findById('users', res.userId);
 			if (user != null) {
-				res.user = await this._Users.serialize(user);
+				res.user = await this._usersService.serialize(user);
 			}
 		}
 

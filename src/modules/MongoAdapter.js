@@ -124,8 +124,15 @@ class MongoAdapter {
 			throw new MissingArgumentsError();
 		}
 
-		const result = await this._connection.collection(collectionName).update(query, options.renewal ? data : { $set: data }, options);
-		const document = await this.find(collectionName, { _id: result.ops[0]._id });
+		if (options == null) options = {};
+
+		const result = await this._connection.collection(collectionName).updateOne(query, options.renewal ? data : { $set: data }, options);
+
+		if (result.result.ok != 1) {
+			throw new Error('failed to update a database document');
+		}
+
+		const document = await this.find(collectionName, query);
 
 		return document;
 	}
@@ -199,6 +206,9 @@ class MongoAdapter {
 	}
 
 	static buildId(idSource) {
+		if (MongoAdapter.validateId(idSource))
+			return null;
+
 		return new ObjectId(idSource);
 	}
 

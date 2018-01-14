@@ -14,10 +14,16 @@ class StorageFilesService {
 	 * @param {MongoAdapter} repository
 	*/
 	constructor(repository) {
+		if (repository == null)
+			throw new MissingArgumentsError();
+
 		this._repository = repository;
 	}
 
 	serialize(document, includeFileData) {
+		if (document == null || includeFileData == null)
+			throw new MissingArgumentsError();
+
 		const res = Object.assign({}, document);
 
 		// createdAt
@@ -25,7 +31,7 @@ class StorageFilesService {
 
 		// id
 		res.id = res._id.toString();
-		res._id = undefined;
+		delete res._id;
 
 		// creator.id
 		res.creator.id = res.creator.id.toString();
@@ -38,7 +44,7 @@ class StorageFilesService {
 
 		// exclude fileData
 		if (!includeFileData) {
-			res.fileData = undefined;
+			delete res.fileData;
 		}
 
 		return sortObject(res);
@@ -78,6 +84,9 @@ class StorageFilesService {
 	}
 
 	findArrayByCreator(creatorType, creatorId, isAscending, limit) {
+		if (creatorType == null || creatorId == null)
+			throw new MissingArgumentsError();
+
 		const query = {
 			creator: {
 				type: creatorType,
