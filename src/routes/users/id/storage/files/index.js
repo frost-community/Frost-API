@@ -104,5 +104,5 @@ exports.get = async (apiContext) => { // TODO: フィルター指定、ページ
 		return;
 	}
 
-	apiContext.response(200, { storageFiles: files.map(i => apiContext.storageFilesService.serialize(i, true)) });
+	apiContext.response(200, { storageFiles: files.map(i => apiContext.storageFilesService.serialize(i, false)) });
 };
