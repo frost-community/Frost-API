@@ -28,18 +28,15 @@ exports.get = async (apiContext) => {
 		console.log(err);
 	}
 
-	// 存在しない もしくは creatorの不一致がある
+	// ファイルが存在しているかどうか、指定ユーザーが所有するリソースであるかどうか
 	if (file == null || file.creator.type != 'user' || !file.creator.id.equals(user._id)) {
-		apiContext.response(204);
+		apiContext.response(404);
 		return;
 	}
 
 	// level
+	const isOwnerAccess = file.creator.id.equals(apiContext.user._id);
 	let level = file.accessRight.level;
-
-	const requestUserId = apiContext.user._id;
-	const isOwnerAccess = file.creator.id.equals(requestUserId);
-
 	if (level == 'private') {
 		// 所有者以外のユーザー
 		if (!isOwnerAccess) {
@@ -48,15 +45,18 @@ exports.get = async (apiContext) => {
 		}
 	}
 	else if (level == 'specific') {
-		const users = file.accessRight.users;
+		const accessableUsers = file.accessRight.users;
 
-		const isNotAllowedUser = !isOwnerAccess && (users == null || !users.some(i => i == requestUserId));
-		if (isNotAllowedUser) {
+		const isAllowedUser = isOwnerAccess || (accessableUsers != null && accessableUsers.indexOf(apiContext.user._id) != -1);
+		if (!isAllowedUser) {
 			apiContext.response(403, 'this operation is not permitted');
 			return;
 		}
 	}
-	else if (level != 'public') {
+	else if (level == 'public') {
+		// noop
+	}
+	else {
 		apiContext.response(500, 'unknown access-right level');
 		return;
 	}
@@ -97,17 +97,12 @@ exports.delete = async (apiContext) => {
 		console.log(err);
 	}
 
-	if (file == null) {
+	// ファイルが存在しているかどうか、指定ユーザーが所有するリソースであるかどうか
+	if (file == null || file.creator.type != 'user' || !file.creator.id.equals(user._id)) {
 		apiContext.response(404);
 		return;
 	}
 
-	// 所有していないリソース
-	if (file.creator.type != 'user' || !file.creator.id.equals(user._id)) {
-		apiContext.response(403);
-		return;
-	}
-
-	// TODO
-	apiContext.response(501, 'not implemented yet');
+	// not supported yet
+	apiContext.response(501, 'deletion of storage files is not supported yet');
 };

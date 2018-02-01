@@ -10,8 +10,10 @@ const supportedMimeTypes = [
 	'image/gif'
 ];
 
-// create a storage file
-/** @param {ApiContext} apiContext */
+/**
+ * create a storage file
+ *
+ * @param {ApiContext} apiContext */
 exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
@@ -48,7 +50,7 @@ exports.post = async (apiContext) => {
 	}
 
 	let file;
-	await apiContext.lock.acquire(user._id.toString(), async () => {
+	await apiContext.lock.acquire(`storageFiles/${user._id.toString()}`, async () => {
 		// calculate available space
 		const usedSpace = await getUsedSpace(user._id, apiContext.storageFilesService);
 		if (apiContext.config.api.storage.spaceSize - usedSpace - fileDataBuffer.length < 0) {
@@ -71,8 +73,10 @@ exports.post = async (apiContext) => {
 	apiContext.response(200, { storageFile: apiContext.storageFilesService.serialize(file, true) });
 };
 
-// fetch a list of files
-/** @param {ApiContext} apiContext */
+/**
+ * fetch a list of files
+ *
+ * @param {ApiContext} apiContext */
 exports.get = async (apiContext) => { // TODO: フィルター指定、ページネーション、ファイル内容を含めるかどうか
 	await apiContext.proceed({
 		query: {},
