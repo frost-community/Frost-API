@@ -40,10 +40,10 @@ class StorageFilesService {
 		res.size = res.fileData.length();
 
 		// fileData
-		res.fileData = res.fileData.toString('base64');
-
-		// exclude fileData
-		if (!includeFileData) {
+		if (includeFileData) {
+			res.fileData = res.fileData.toString('base64');
+		}
+		else {
 			delete res.fileData;
 		}
 
