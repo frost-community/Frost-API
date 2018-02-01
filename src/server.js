@@ -45,7 +45,7 @@ module.exports = async () => {
 			memLevel: 9
 		}));
 
-		app.use(bodyParser.json());
+		app.use(bodyParser.json({ limit: '1mb' }));
 
 		app.use(apiSend);
 
