@@ -22,9 +22,9 @@ module.exports = (request, response, next) => {
 			sendData = apiContext.data;
 		}
 
-		if (apiContext.needStatusCode) {
+		/*if (apiContext.needStatusCode) {
 			sendData.statusCode = apiContext.statusCode;
-		}
+		}*/
 
 		if (Object.keys(sendData).length == 0) {
 			sendData = null;
