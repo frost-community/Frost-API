@@ -41,8 +41,8 @@ exports.post = async (apiContext) => {
 		return;
 	}
 
-	const accessRightLevel = apiContext.body.level;
-	const accessRightUsers = accessRightLevel == 'private' ? apiContext.body.users : undefined;
+	const accessRightLevel = apiContext.body.accessRight.level;
+	const accessRightUsers = accessRightLevel == 'private' ? apiContext.body.accessRight.users : undefined;
 
 	// file data
 	const fileDataBuffer = Buffer.from(apiContext.body.fileData, 'base64');
