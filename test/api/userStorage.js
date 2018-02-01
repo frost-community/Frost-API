@@ -60,7 +60,7 @@ describe('User Storage API', () => {
 				for (let i = 0; i < 4; i++) {
 					context = new ApiContext(null, lock, db, config, {
 						params: { id: user._id.toString() },
-						body: { fileData: testData64 },
+						body: { accessRight: { level: 'public' }, fileData: testData64 },
 						headers: { 'X-Api-Version': 1 },
 						testMode: true
 					});
@@ -93,7 +93,7 @@ describe('User Storage API', () => {
 				it('正しくリクエストされた場合は成功する(1件、public)', async () => {
 					const context = new ApiContext(null, lock, db, config, {
 						params: { id: user._id.toString() },
-						body: { fileData: testData64 },
+						body: { accessRight: { level: 'public' }, fileData: testData64 },
 						headers: { 'X-Api-Version': 1 },
 						testMode: true
 					});
@@ -127,7 +127,7 @@ describe('User Storage API', () => {
 					for (let i = 0; i < count; i++) {
 						const context = new ApiContext(null, lock, db, config, {
 							params: { id: user._id.toString() },
-							body: { fileData: testData64 },
+							body: { accessRight: { level: 'public' }, fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
 							user,
 							application: app
@@ -165,7 +165,7 @@ describe('User Storage API', () => {
 				it('fileDataが空のときは失敗する', async () => {
 					const context = new ApiContext(null, lock, db, config, {
 						params: { id: user._id.toString() },
-						body: { fileData: '' },
+						body: { accessRight: { level: 'public' }, fileData: '' },
 						headers: { 'X-Api-Version': 1 },
 						user,
 						application: app
@@ -183,7 +183,7 @@ describe('User Storage API', () => {
 					for (let i = 0; i < 4; i++) {
 						context = new ApiContext(null, lock, db, config, {
 							params: { id: user._id.toString() },
-							body: { fileData: testData64 },
+							body: { accessRight: { level: 'public' }, fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
 							user,
 							application: app
@@ -224,7 +224,7 @@ describe('User Storage API', () => {
 					it('正しくリクエストされた場合は成功する', async () => {
 						const contextFile = new ApiContext(null, lock, db, config, {
 							params: { id: user._id.toString() },
-							body: { fileData: testData64 },
+							body: { accessRight: { level: 'public' }, fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
 							user,
 							application: app
