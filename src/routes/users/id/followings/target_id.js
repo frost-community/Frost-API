@@ -31,7 +31,7 @@ exports.get = async (apiContext) => {
 
 	const userFollowing = await apiContext.userFollowingsService.findBySrcDestId(sourceUser._id, targetUser._id);
 	if (userFollowing == null) {
-		apiContext.response(404, 'not following', false);
+		apiContext.response(404, 'not following');
 		return;
 	}
 
@@ -141,5 +141,5 @@ exports.delete = async (apiContext) => {
 		stream.removeSource(targetUser._id.toString());
 	}
 
-	apiContext.response(404, 'not following', false);
+	apiContext.response(404, 'not following');
 };
