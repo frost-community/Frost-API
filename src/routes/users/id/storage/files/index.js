@@ -17,8 +17,12 @@ const supportedMimeTypes = [
 exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
-			fileData: { cafy: $().string().pipe(i => validator.isBase64(i)) }
-			// accessRight.level
+			fileData: { cafy: $().string().pipe(i => validator.isBase64(i)) },
+			accessRight: {
+				cafy: $().object()
+					.have('level', $().string().or('public|private'))
+					.prop('users', $().array('string').unique())
+			}
 		},
 		permissions: ['storageWrite']
 	});
@@ -37,7 +41,8 @@ exports.post = async (apiContext) => {
 		return;
 	}
 
-	let accessRightLevel = 'public'; // TODO: public 以外のアクセス権タイプのサポート
+	const accessRightLevel = apiContext.body.level;
+	const accessRightUsers = accessRightLevel == 'private' ? apiContext.body.users : undefined;
 
 	// file data
 	const fileDataBuffer = Buffer.from(apiContext.body.fileData, 'base64');
@@ -59,7 +64,7 @@ exports.post = async (apiContext) => {
 		}
 
 		// create a document
-		file = await apiContext.storageFilesService.create('user', apiContext.user._id, fileDataBuffer, fileType.mime, accessRightLevel);
+		file = await apiContext.storageFilesService.create('user', apiContext.user._id, fileDataBuffer, fileType.mime, accessRightLevel, accessRightUsers);
 	});
 	if (apiContext.responsed) {
 		return;

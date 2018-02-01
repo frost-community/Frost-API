@@ -5,7 +5,6 @@ const { MissingArgumentsError, InvalidArgumentError } = require('../modules/erro
 
 const accessRightLevels = [
 	'public',
-	'specific',
 	'private'
 ];
 
@@ -76,7 +75,7 @@ class StorageFilesService {
 			}
 		};
 
-		if (accessRightTargets != null && accessRightLevel == 'specific') {
+		if (accessRightTargets != null && accessRightLevel == 'private') {
 			data.targets = accessRightTargets;
 		}
 

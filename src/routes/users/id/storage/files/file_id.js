@@ -38,15 +38,8 @@ exports.get = async (apiContext) => {
 	const isOwnerAccess = file.creator.id.equals(apiContext.user._id);
 	let level = file.accessRight.level;
 	if (level == 'private') {
-		// 所有者以外のユーザー
-		if (!isOwnerAccess) {
-			apiContext.response(403, 'this operation is not permitted');
-			return;
-		}
-	}
-	else if (level == 'specific') {
+		// 所有者か許可したユーザー
 		const accessableUsers = file.accessRight.users;
-
 		const isAllowedUser = isOwnerAccess || (accessableUsers != null && accessableUsers.indexOf(apiContext.user._id) != -1);
 		if (!isAllowedUser) {
 			apiContext.response(403, 'this operation is not permitted');
