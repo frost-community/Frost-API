@@ -51,14 +51,12 @@ class StorageFilesService {
 
 	// helpers
 
-	create(creatorType, creatorId, fileDataBuffer, mimeType, accessRightLevel, accessRightTargets) {
-		if (creatorType == null || creatorId == null || fileDataBuffer == null || mimeType == null) {
+	create(creatorType, creatorId, fileDataBuffer, mimeType, accessRight) {
+		if (creatorType == null || creatorId == null || fileDataBuffer == null || mimeType == null || accessRight == null) {
 			throw new MissingArgumentsError();
 		}
 
-		accessRightLevel = (accessRightLevel != null) ? accessRightLevel : 'public';
-
-		if (!accessRightLevels.some(level => level == accessRightLevel)) {
+		if (accessRightLevels.indexOf(accessRight.level) == -1) {
 			throw new InvalidArgumentError('accessRightLevel');
 		}
 
@@ -71,12 +69,14 @@ class StorageFilesService {
 			type: mimeType.split('/')[0],
 			mimeType: mimeType,
 			accessRight: {
-				level: accessRightLevel
+				level: accessRight.level
 			}
 		};
 
-		if (accessRightTargets != null && accessRightLevel == 'private') {
-			data.targets = accessRightTargets;
+		if (accessRight.level == 'private') {
+			if (accessRight.users != null) {
+				data.accessRight.users = accessRight.users;
+			}
 		}
 
 		return this._repository.create('storageFiles', data);

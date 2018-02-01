@@ -21,7 +21,7 @@ exports.post = async (apiContext) => {
 			accessRight: {
 				cafy: $().object()
 					.have('level', $().string().or('public|private'))
-					.prop('users', $().array('string').unique())
+					.prop('users', $().array('string').unique()), default: { level: 'public' }
 			}
 		},
 		permissions: ['storageWrite']
@@ -41,8 +41,7 @@ exports.post = async (apiContext) => {
 		return;
 	}
 
-	const accessRightLevel = apiContext.body.accessRight.level;
-	const accessRightUsers = accessRightLevel == 'private' ? apiContext.body.accessRight.users : undefined;
+	const accessRight = apiContext.body.accessRight;
 
 	// file data
 	const fileDataBuffer = Buffer.from(apiContext.body.fileData, 'base64');
@@ -64,7 +63,7 @@ exports.post = async (apiContext) => {
 		}
 
 		// create a document
-		file = await apiContext.storageFilesService.create('user', apiContext.user._id, fileDataBuffer, fileType.mime, accessRightLevel, accessRightUsers);
+		file = await apiContext.storageFilesService.create('user', apiContext.user._id, fileDataBuffer, fileType.mime, accessRight);
 	});
 	if (apiContext.responsed) {
 		return;
