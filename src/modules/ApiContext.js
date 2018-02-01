@@ -6,10 +6,12 @@ const ApplicationAccessesService = require('../services/ApplicationAccessesServi
 const PostsService = require('../services/PostsService');
 const StorageFilesService = require('../services/StorageFilesService');
 const { InvalidOperationError } = require('./errors');
+const AsyncLock = require('async-lock');
 const MongoAdapter = require('./MongoAdapter');
 
 class ApiContext {
 	/**
+	 * @param {AsyncLock} lock
 	 * @param {MongoAdapter} repository
 	*/
 	constructor(streams, lock, repository, config, options) {
