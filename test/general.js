@@ -66,7 +66,7 @@ describe('General Tests', () => {
 		it('DBのコレクションからドキュメントを取り出すことができる', async () => {
 			assert(testDb != null);
 			const document = await testDb.find('hoges', { piyo: 'fuga' });
-			assert('nyao' in document && document.nyao === 'nya');
+			assert(document != null && document.nyao === 'nya');
 		});
 
 		it('DBのコレクションからドキュメントを削除することができる', async () => {
