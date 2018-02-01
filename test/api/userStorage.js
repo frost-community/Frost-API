@@ -206,8 +206,6 @@ describe('User Storage API', () => {
 					assert.equal(context.data.storageFiles.length, contexts.length, 'invalid response length');
 
 					for (const storageFile of context.data.storageFiles) {
-						assert(validator.isBase64(storageFile.fileData), 'returned fileData is not base64');
-						delete storageFile.fileData;
 						delete storageFile.id;
 						delete storageFile.createdAt;
 						assert.deepEqual({
