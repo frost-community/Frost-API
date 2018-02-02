@@ -1,5 +1,6 @@
 const ApiContext = require('../../../../../modules/ApiContext');
 const { getUsedSpace } = require('../../../../../modules/helpers/UserStorageHelper');
+const { ApiError } = require('../../../../../modules/errors');
 const getFileType = require('file-type');
 const validator = require('validator');
 const $ = require('cafy').default;
@@ -63,7 +64,16 @@ exports.post = async (apiContext) => {
 		}
 
 		// create a document
-		file = await apiContext.storageFilesService.create('user', apiContext.user._id, fileDataBuffer, fileType.mime, accessRight);
+		try {
+			file = await apiContext.storageFilesService.create('user', apiContext.user._id, fileDataBuffer, fileType.mime, accessRight);
+		}
+		catch (err) {
+			if (err instanceof ApiError) {
+				apiContext.response(400, err.message);
+				return;
+			}
+			throw err;
+		}
 	});
 	if (apiContext.responsed) {
 		return;

@@ -1,7 +1,7 @@
 const moment = require('moment');
 const MongoAdapter = require('../modules/MongoAdapter');
 const { sortObject } = require('../modules/helpers/GeneralHelper');
-const { MissingArgumentsError, InvalidArgumentError, InvalidOperationError } = require('../modules/errors');
+const { MissingArgumentsError, InvalidArgumentError, ApiError } = require('../modules/errors');
 
 const accessRightLevels = [
 	'public',
@@ -84,15 +84,15 @@ class StorageFilesService {
 			if (accessRight.users != null) {
 				// check format ObjectId source
 				if (!accessRight.users.every(userId => MongoAdapter.validateId(userId))) {
-					throw new InvalidArgumentError('some accessRight.users are invalid format');
+					throw new ApiError('some accessRight.users are invalid format');
 				}
 				// build ObjectId
 				const userIds = accessRight.users.map(userId => MongoAdapter.buildId(userId));
 
 				// check existing all users
 				const userCount = await this._repository.count('users', { _id: { $in: userIds } });
-				if (userCount != data.accessRight.users.length) {
-					throw new InvalidArgumentError('some accessRight.users are invalid value');
+				if (userCount != userIds.length) {
+					throw new ApiError('some accessRight.users are invalid value');
 				}
 
 				data.accessRight.users = userIds;

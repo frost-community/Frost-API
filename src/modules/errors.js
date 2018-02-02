@@ -19,9 +19,16 @@ class InvalidOperationError extends Error {
 
 class DataBaseAccessError extends Error { }
 
+class ApiError extends Error {
+	constructor(message) {
+		super(message);
+	}
+}
+
 module.exports = {
 	MissingArgumentsError,
 	InvalidArgumentError,
 	InvalidOperationError,
-	DataBaseAccessError
+	DataBaseAccessError,
+	ApiError
 };
