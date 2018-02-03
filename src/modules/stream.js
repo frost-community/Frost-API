@@ -21,7 +21,7 @@ class StreamPublisher {
 			throw new TypeError('argument "redisClient" is not a RedisClient');
 		}
 		this.redisClient.on('error', (err) => {
-			throw new Error(`${this.type} stream publisher: ${String(err)}`);
+			throw new Error(`stream publisher: ${String(err)}`);
 		});
 	}
 	publish(type, publisherId, data) {
@@ -57,7 +57,7 @@ class Stream {
 			this.emitter.emit('data', (message instanceof String) ? message : JSON.parse(message));
 		});
 		this.redisClient.on('error', (err) => {
-			throw new Error(`${this.type} stream: ${String(err)}`);
+			throw new Error(`stream: ${String(err)}`);
 		});
 	}
 	getSources() {
