@@ -74,7 +74,7 @@ class UserFollowingsService {
 			throw new MissingArgumentsError();
 		}
 
-		return this._repository.findArray('userFollowings', { source: sourceUserId }, false, limit);
+		return this._repository.findArray('userFollowings', { source: sourceUserId }, { isAscending: false, limit });
 	}
 
 	async findSources(targetUserId, limit) {
@@ -82,7 +82,7 @@ class UserFollowingsService {
 			throw new MissingArgumentsError();
 		}
 
-		return this._repository.findArray('userFollowings', { target: targetUserId }, false, limit);
+		return this._repository.findArray('userFollowings', { target: targetUserId }, { isAscending: false, limit });
 	}
 }
 module.exports = UserFollowingsService;

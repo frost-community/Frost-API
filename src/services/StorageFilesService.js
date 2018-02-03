@@ -113,7 +113,7 @@ class StorageFilesService {
 			}
 		};
 
-		return this._repository.findArray('storageFiles', query, isAscending, limit);
+		return this._repository.findArray('storageFiles', query, { isAscending, limit });
 	}
 }
 module.exports = StorageFilesService;

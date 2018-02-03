@@ -18,7 +18,7 @@ module.exports = async (apiContext, type, ids, limit) => {
 		};
 	}
 
-	const posts = await apiContext.repository.findArray('posts', query, false, limit);
+	const posts = await apiContext.repository.findArray('posts', query, { isAscending: false, limit });
 
 	if (posts.length == 0) {
 		apiContext.response(204);

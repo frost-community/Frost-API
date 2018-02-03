@@ -65,22 +65,29 @@ class MongoAdapter {
 	 *
 	 * @param {String} collectionName
 	 * @param {Object} query
-	 * @param {Object} sortOption
-	 * @param {Number} limit
+	 * @param {{isAscending: Boolean, limit: Number, since: ObjectId, until: ObjectId}} options
 	 * @return {Promise<any[]>}
 	*/
-	async findArray(collectionName, query, isAscending, limit) {
+	async findArray(collectionName, query, options) {
 		if (collectionName == null || query == null) {
 			throw new MissingArgumentsError();
 		}
 
+		if (options.since != null) {
+			Object.assign(query, { _id: { $gt: options.since } });
+		}
+
+		if (options.until != null) {
+			Object.assign(query, { _id: { $lt: options.until } });
+		}
+
 		let cursor = this._connection.collection(collectionName).find(query);
 
-		if (limit != null)
-			cursor = cursor.limit(limit);
+		if (options.limit != null)
+			cursor = cursor.limit(options.limit);
 
-		if (isAscending != null)
-			cursor = cursor.sort(MongoAdapter._buildSortOption(isAscending));
+		if (options.isAscending != null)
+			cursor = cursor.sort(MongoAdapter._buildSortOption(options.isAscending));
 
 		const documents = await cursor.toArray();
 

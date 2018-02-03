@@ -102,7 +102,7 @@ class UsersService {
 
 		const patterns = screenNames.map(screenName => new RegExp(`^${screenName}$`, 'i'));
 
-		return this._repository.findArray('users', { screenName: { $in: patterns } }, null, limit);
+		return this._repository.findArray('users', { screenName: { $in: patterns } }, { isAscending: false, limit });
 	}
 
 	/**
