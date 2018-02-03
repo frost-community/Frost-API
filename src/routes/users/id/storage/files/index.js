@@ -1,9 +1,10 @@
 const ApiContext = require('../../../../../modules/ApiContext');
+const MongoAdapter = require('../../../../../modules/MongoAdapter');
+const validator = require('validator');
+const $ = require('cafy').default;
 const { getUsedSpace } = require('../../../../../modules/helpers/UserStorageHelper');
 const { ApiError } = require('../../../../../modules/errors');
 const getFileType = require('file-type');
-const validator = require('validator');
-const $ = require('cafy').default;
 
 const supportedMimeTypes = [
 	'image/jpeg',
@@ -91,10 +92,12 @@ exports.post = async (apiContext) => {
  * fetch a list of files
  *
  * @param {ApiContext} apiContext */
-exports.get = async (apiContext) => { // TODO: フィルター指定、ページネーション
+exports.get = async (apiContext) => { // TODO: フィルター指定
 	await apiContext.proceed({
 		query: {
 			limit: { cafy: $().string().pipe(i => validator.isInt(i, { min: 0, max: 100 })), default: '30' },
+			since: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null },
+			until: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null },
 			includeFileData: { cafy: $().string().pipe(i => validator.isBoolean(i)), default: 'false' }
 		},
 		permissions: ['storageRead']
@@ -103,6 +106,8 @@ exports.get = async (apiContext) => { // TODO: フィルター指定、ページ
 
 	// convert query value
 	const limit = validator.toInt(apiContext.query.limit);
+	const since = apiContext.query.since != null ? MongoAdapter.buildId(apiContext.query.since) : null;
+	const until = apiContext.query.until != null ? MongoAdapter.buildId(apiContext.query.until) : null;
 	const includeFileData = validator.toBoolean(apiContext.query.includeFileData);
 
 	// user
@@ -119,7 +124,7 @@ exports.get = async (apiContext) => { // TODO: フィルター指定、ページ
 	}
 
 	// fetch document
-	const files = await apiContext.storageFilesService.findArrayByCreator('user', apiContext.user._id, { limit });
+	const files = await apiContext.storageFilesService.findArrayByCreator('user', apiContext.user._id, { limit, since, until });
 	if (files.length == 0) {
 		apiContext.response(204);
 		return;

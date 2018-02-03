@@ -3,14 +3,13 @@ const MongoAdapter = require('../../../../modules/MongoAdapter');
 const v = require('validator');
 const $ = require('cafy').default;
 
-// TODO: カーソル送り
-
 /** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		query: {
 			limit: { cafy: $().string().pipe(i => v.isInt(i, { min: 0, max: 100 })), default: '30' },
-			cursor: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
+			since: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null },
+			until: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
 		},
 		permissions: ['userRead']
 	});
@@ -18,7 +17,8 @@ exports.get = async (apiContext) => {
 
 	// convert query value
 	const limit = v.toInt(apiContext.query.limit);
-	const cursor = MongoAdapter.buildId(apiContext.query.cursor);
+	const since = apiContext.query.since != null ? MongoAdapter.buildId(apiContext.query.since) : null;
+	const until = apiContext.query.until != null ? MongoAdapter.buildId(apiContext.query.until) : null;
 
 	// user
 	const user = await apiContext.repository.findById('users', apiContext.params.id);
@@ -28,7 +28,7 @@ exports.get = async (apiContext) => {
 	}
 
 	// このユーザーを対象とするフォロー関係をすべて取得
-	const userFollowings = await apiContext.userFollowingsService.findTargets(user._id, { isAscending: false, limit });
+	const userFollowings = await apiContext.userFollowingsService.findTargets(user._id, { isAscending: false, limit, since, until });
 	if (userFollowings.length == 0) {
 		apiContext.response(204);
 		return;

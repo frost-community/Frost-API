@@ -93,7 +93,7 @@ class UsersService {
 	 * 複数のscreenNameからドキュメントモデルのインスタンスを取得します
 	 *
 	 * @param {String[]} screenNames
-	 * @param {Number} limit
+	 * @param {{isAscending: Boolean, limit: Number, since: ObjectId, until: ObjectId}} options
 	 * @returns {Promise<UserDocument>}
 	*/
 	async findArrayByScreenNames(screenNames, options) {
