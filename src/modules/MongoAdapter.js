@@ -73,6 +73,8 @@ class MongoAdapter {
 			throw new MissingArgumentsError();
 		}
 
+		options = options || {};
+
 		if (options.since != null) {
 			Object.assign(query, { _id: { $gt: options.since } });
 		}
