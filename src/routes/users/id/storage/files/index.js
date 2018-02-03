@@ -91,12 +91,19 @@ exports.post = async (apiContext) => {
  * fetch a list of files
  *
  * @param {ApiContext} apiContext */
-exports.get = async (apiContext) => { // TODO: フィルター指定、ページネーション、ファイル内容を含めるかどうか
+exports.get = async (apiContext) => { // TODO: フィルター指定、ページネーション
 	await apiContext.proceed({
-		query: {},
+		query: {
+			limit: { cafy: $().string().pipe(i => validator.isInt(i, { min: 0, max: 100 })), default: '30' },
+			includeFileData: { cafy: $().string().pipe(i => validator.isBoolean(i)), default: 'false' }
+		},
 		permissions: ['storageRead']
 	});
 	if (apiContext.responsed) return;
+
+	// convert query value
+	const limit = validator.toInt(apiContext.query.limit);
+	const includeFileData = validator.toBoolean(apiContext.query.includeFileData);
 
 	// user
 	const user = await apiContext.repository.findById('users', apiContext.params.id);
@@ -112,11 +119,11 @@ exports.get = async (apiContext) => { // TODO: フィルター指定、ページ
 	}
 
 	// fetch document
-	const files = await apiContext.storageFilesService.findArrayByCreator('user', apiContext.user._id);
+	const files = await apiContext.storageFilesService.findArrayByCreator('user', apiContext.user._id, null, limit);
 	if (files.length == 0) {
 		apiContext.response(204);
 		return;
 	}
 
-	apiContext.response(200, { storageFiles: files.map(i => apiContext.storageFilesService.serialize(i, false)) });
+	apiContext.response(200, { storageFiles: files.map(i => apiContext.storageFilesService.serialize(i, includeFileData)) });
 };
