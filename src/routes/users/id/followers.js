@@ -28,7 +28,7 @@ exports.get = async (apiContext) => {
 	}
 
 	// このユーザーがフォロー元であるフォロー関係をすべて取得
-	const userFollowings = await apiContext.userFollowingsService.findSources(user._id, limit);
+	const userFollowings = await apiContext.userFollowingsService.findSources(user._id, { isAscending: false, limit });
 	if (userFollowings.length == 0) {
 		apiContext.response(204);
 		return;

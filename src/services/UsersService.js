@@ -96,13 +96,13 @@ class UsersService {
 	 * @param {Number} limit
 	 * @returns {Promise<UserDocument>}
 	*/
-	async findArrayByScreenNames(screenNames, limit) {
+	async findArrayByScreenNames(screenNames, options) {
 		if (screenNames == null)
 			throw new MissingArgumentsError();
 
 		const patterns = screenNames.map(screenName => new RegExp(`^${screenName}$`, 'i'));
 
-		return this._repository.findArray('users', { screenName: { $in: patterns } }, { isAscending: false, limit });
+		return this._repository.findArray('users', { screenName: { $in: patterns } }, options);
 	}
 
 	/**

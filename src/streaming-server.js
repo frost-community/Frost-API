@@ -243,7 +243,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 						// ストリームを生成
 						stream = new Stream();
 						stream.addSource(StreamUtil.buildStreamId('user-timeline-status', meId));
-						const followings = await userFollowingsService.findTargets(meId, null); // TODO: (全て or ユーザーの購読設定によっては選択的に)
+						const followings = await userFollowingsService.findTargets(meId, { isAscending: false }); // TODO: (全て or ユーザーの購読設定によっては選択的に)
 						for (const following of followings || []) {
 							const followingUserId = following.target.toString();
 							stream.addSource(StreamUtil.buildStreamId('user-timeline-status', followingUserId));

@@ -4,9 +4,9 @@ const ApiContext = require('./ApiContext');
  * @param {ApiContext} apiContext
  * @param {String} type
  * @param {[]} ids
- * @param {Number} limit
+ * @param {{isAscending: Boolean, limit: Number, since: ObjectId, until: ObjectId}} findOptions
 */
-module.exports = async (apiContext, type, ids, limit) => {
+module.exports = async (apiContext, type, ids, findOptions) => {
 
 	let query = { type };
 	if (ids != null) {
@@ -18,7 +18,7 @@ module.exports = async (apiContext, type, ids, limit) => {
 		};
 	}
 
-	const posts = await apiContext.repository.findArray('posts', query, { isAscending: false, limit });
+	const posts = await apiContext.repository.findArray('posts', query, findOptions);
 
 	if (posts.length == 0) {
 		apiContext.response(204);

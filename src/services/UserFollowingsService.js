@@ -69,20 +69,26 @@ class UserFollowingsService {
 		return this._repository.find('userFollowings', { source: sourceUserId, target: targetUserId });
 	}
 
-	async findTargets(sourceUserId, limit) {
+	/**
+	 * @param {{isAscending: Boolean, limit: Number, since: ObjectId, until: ObjectId}} options
+	*/
+	async findTargets(sourceUserId, options) {
 		if (sourceUserId == null) {
 			throw new MissingArgumentsError();
 		}
 
-		return this._repository.findArray('userFollowings', { source: sourceUserId }, { isAscending: false, limit });
+		return this._repository.findArray('userFollowings', { source: sourceUserId }, options);
 	}
 
-	async findSources(targetUserId, limit) {
+	/**
+	 * @param {{isAscending: Boolean, limit: Number, since: ObjectId, until: ObjectId}} options
+	*/
+	async findSources(targetUserId, options) {
 		if (targetUserId == null) {
 			throw new MissingArgumentsError();
 		}
 
-		return this._repository.findArray('userFollowings', { target: targetUserId }, { isAscending: false, limit });
+		return this._repository.findArray('userFollowings', { target: targetUserId }, options);
 	}
 }
 module.exports = UserFollowingsService;

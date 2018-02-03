@@ -119,7 +119,7 @@ exports.get = async (apiContext) => { // TODO: フィルター指定、ページ
 	}
 
 	// fetch document
-	const files = await apiContext.storageFilesService.findArrayByCreator('user', apiContext.user._id, null, limit);
+	const files = await apiContext.storageFilesService.findArrayByCreator('user', apiContext.user._id, { limit });
 	if (files.length == 0) {
 		apiContext.response(204);
 		return;

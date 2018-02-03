@@ -19,7 +19,7 @@ exports.get = async (apiContext) => {
 	const limit = v.toInt(apiContext.query.limit);
 
 	try {
-		return await timeline(apiContext, 'status', null, limit);
+		return await timeline(apiContext, 'status', null, { limit });
 	}
 	catch (err) {
 		console.log(err);

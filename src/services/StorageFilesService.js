@@ -102,7 +102,10 @@ class StorageFilesService {
 		return this._repository.create('storageFiles', data);
 	}
 
-	findArrayByCreator(creatorType, creatorId, isAscending, limit) {
+	/**
+	 * @param {{isAscending: Boolean, limit: Number, since: ObjectId, until: ObjectId}} options
+	*/
+	findArrayByCreator(creatorType, creatorId, options) {
 		if (creatorType == null || creatorId == null)
 			throw new MissingArgumentsError();
 
@@ -113,7 +116,7 @@ class StorageFilesService {
 			}
 		};
 
-		return this._repository.findArray('storageFiles', query, { isAscending, limit });
+		return this._repository.findArray('storageFiles', query, options);
 	}
 }
 module.exports = StorageFilesService;

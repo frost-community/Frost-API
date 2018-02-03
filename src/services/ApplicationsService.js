@@ -92,12 +92,15 @@ class ApplicationsService {
 		return this._repository.find('applications', { name });
 	}
 
-	findArrayByCreatorId(creatorId) {
+	/**
+	 * @param {{isAscending: Boolean, limit: Number, since: ObjectId, until: ObjectId}} options
+	*/
+	findArrayByCreatorId(creatorId, options) {
 		if (creatorId == null) {
 			throw new MissingArgumentsError();
 		}
 
-		return this._repository.findArray('applications', { creatorId });
+		return this._repository.findArray('applications', { creatorId }, options);
 	}
 
 	splitApplicationKey(key) {

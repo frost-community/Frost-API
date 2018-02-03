@@ -27,11 +27,11 @@ exports.get = async (apiContext) => {
 		}
 
 		// ids
-		const followings = await apiContext.userFollowingsService.findTargets(user._id, null);
+		const followings = await apiContext.userFollowingsService.findTargets(user._id, { isAscending: false });
 		const ids = followings.map(i => i.target);
 		ids.push(user._id); // ソースユーザーを追加
 
-		return await timeline(apiContext, 'status', ids, limit);
+		return await timeline(apiContext, 'status', ids, { limit });
 	}
 	catch (err) {
 		console.log(err);

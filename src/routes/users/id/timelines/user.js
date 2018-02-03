@@ -26,7 +26,7 @@ exports.get = async (apiContext) => {
 			return;
 		}
 
-		return await timeline(apiContext, 'status', [user._id], limit);
+		return await timeline(apiContext, 'status', [user._id], { limit });
 	}
 	catch (err) {
 		console.log(err);
