@@ -19,7 +19,7 @@ class InvalidOperationError extends Error {
 
 class DataBaseAccessError extends Error { }
 
-class ApiError extends Error {
+class ApplicationError extends Error {
 	constructor(message) {
 		super(message);
 	}
@@ -30,5 +30,5 @@ module.exports = {
 	InvalidArgumentError,
 	InvalidOperationError,
 	DataBaseAccessError,
-	ApiError
+	ApplicationError
 };
