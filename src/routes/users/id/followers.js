@@ -8,8 +8,7 @@ exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		query: {
 			limit: { cafy: $().string().pipe(i => v.isInt(i, { min: 0, max: 100 })), default: '30' },
-			since: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null },
-			until: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
+			next: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
 		},
 		permissions: ['userRead']
 	});
@@ -17,8 +16,7 @@ exports.get = async (apiContext) => {
 
 	// convert query value
 	const limit = v.toInt(apiContext.query.limit);
-	const since = apiContext.query.since != null ? MongoAdapter.buildId(apiContext.query.since) : null;
-	const until = apiContext.query.until != null ? MongoAdapter.buildId(apiContext.query.until) : null;
+	const next = apiContext.query.next != null ? MongoAdapter.buildId(apiContext.query.next) : null;
 
 	// user
 	const user = await apiContext.repository.findById('users', apiContext.params.id);
@@ -28,7 +26,7 @@ exports.get = async (apiContext) => {
 	}
 
 	// このユーザーがフォロー元であるフォロー関係をすべて取得
-	const userFollowings = await apiContext.userFollowingsService.findSources(user._id, { isAscending: false, limit, since, until });
+	const userFollowings = await apiContext.userFollowingsService.findSources(user._id, { limit, since: next });
 	if (userFollowings.length == 0) {
 		apiContext.response(204);
 		return;
@@ -43,7 +41,9 @@ exports.get = async (apiContext) => {
 		}
 		return apiContext.usersService.serialize(user);
 	});
-	const serializedUsers = await Promise.all(promises);
 
-	apiContext.response(200, { users: serializedUsers });
+	apiContext.response(200, {
+		users: await Promise.all(promises),
+		next: userFollowings[userFollowings.length-1]._id
+	});
 };

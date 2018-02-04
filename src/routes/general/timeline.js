@@ -17,7 +17,7 @@ exports.get = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	// convert query value
-	const limit = v.toInt(apiContext.query.limit);
+	let limit = apiContext.query.limit != null ? v.toInt(apiContext.query.limit) : null;
 	const since = apiContext.query.since != null ? MongoAdapter.buildId(apiContext.query.since) : null;
 	const until = apiContext.query.until != null ? MongoAdapter.buildId(apiContext.query.until) : null;
 

@@ -96,8 +96,7 @@ exports.get = async (apiContext) => { // TODO: フィルター指定
 	await apiContext.proceed({
 		query: {
 			limit: { cafy: $().string().pipe(i => validator.isInt(i, { min: 0, max: 100 })), default: '30' },
-			since: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null },
-			until: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null },
+			next: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null },
 			includeFileData: { cafy: $().string().pipe(i => validator.isBoolean(i)), default: 'false' }
 		},
 		permissions: ['storageRead']
@@ -106,8 +105,7 @@ exports.get = async (apiContext) => { // TODO: フィルター指定
 
 	// convert query value
 	const limit = validator.toInt(apiContext.query.limit);
-	const since = apiContext.query.since != null ? MongoAdapter.buildId(apiContext.query.since) : null;
-	const until = apiContext.query.until != null ? MongoAdapter.buildId(apiContext.query.until) : null;
+	const next = apiContext.query.next != null ? MongoAdapter.buildId(apiContext.query.next) : null;
 	const includeFileData = validator.toBoolean(apiContext.query.includeFileData);
 
 	// user
@@ -124,11 +122,14 @@ exports.get = async (apiContext) => { // TODO: フィルター指定
 	}
 
 	// fetch document
-	const files = await apiContext.storageFilesService.findArrayByCreator('user', apiContext.user._id, { limit, since, until });
+	const files = await apiContext.storageFilesService.findArrayByCreator('user', apiContext.user._id, { limit, since: next });
 	if (files.length == 0) {
 		apiContext.response(204);
 		return;
 	}
 
-	apiContext.response(200, { storageFiles: files.map(i => apiContext.storageFilesService.serialize(i, includeFileData)) });
+	apiContext.response(200, {
+		storageFiles: files.map(i => apiContext.storageFilesService.serialize(i, includeFileData)),
+		next: files[files.length-1]._id
+	});
 };

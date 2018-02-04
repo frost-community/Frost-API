@@ -75,12 +75,14 @@ class MongoAdapter {
 
 		options = options || {};
 
-		if (options.since != null) {
-			Object.assign(query, { _id: { $gt: options.since } });
+		if (options.since != null || options.until != null) {
+			query._id = {};
 		}
-
+		if (options.since != null) {
+			query._id.$gt = options.since;
+		}
 		if (options.until != null) {
-			Object.assign(query, { _id: { $lt: options.until } });
+			query._id.$lt = options.until;
 		}
 
 		let cursor = this._connection.collection(collectionName).find(query);
