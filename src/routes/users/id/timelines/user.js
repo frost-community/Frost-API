@@ -9,17 +9,17 @@ exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		query: {
 			limit: { cafy: $().string().pipe(i => v.isInt(i, { min: 0, max: 100 })), default: '30' },
-			since: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null },
-			until: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
+			newer: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null },
+			older: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
 		},
 		permissions: ['postRead', 'userRead']
 	});
 	if (apiContext.responsed) return;
 
 	// convert query value
-	let limit = apiContext.query.limit != null ? v.toInt(apiContext.query.limit) : null;
-	const since = apiContext.query.since != null ? MongoAdapter.buildId(apiContext.query.since) : null;
-	const until = apiContext.query.until != null ? MongoAdapter.buildId(apiContext.query.until) : null;
+	const limit = apiContext.query.limit != null ? v.toInt(apiContext.query.limit) : null;
+	const newer = apiContext.query.newer != null ? MongoAdapter.buildId(apiContext.query.newer) : null;
+	const older = apiContext.query.older != null ? MongoAdapter.buildId(apiContext.query.older) : null;
 
 	try {
 		// user
@@ -29,7 +29,7 @@ exports.get = async (apiContext) => {
 			return;
 		}
 
-		return await timeline(apiContext, 'status', [user._id], { limit, since, until });
+		return await timeline(apiContext, 'status', [user._id], limit, { newer, older });
 	}
 	catch (err) {
 		console.log(err);
