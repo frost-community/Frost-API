@@ -1,13 +1,20 @@
-const commander = require('commander');
+const argv = require('argv');
 const setup = require('./setup');
 const server = require('./server');
 
-commander.option('-s, --setup', 'Display setup mode').parse(process.argv);
+argv.option({
+	name: 'setup',
+	short: 's',
+	type: 'boolean',
+	description: 'Display setup mode'
+});
+
+const { options } = argv.run();
 
 process.on('unhandledRejection', err => console.log(err));
 Error.stackTraceLimit = 20;
 
-if (commander.setup) {
+if (options.setup) {
 	setup();
 }
 else {

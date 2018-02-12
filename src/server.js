@@ -1,4 +1,3 @@
-const readLine = require('./modules/readline');
 const express = require('express');
 const httpClass = require('http');
 const bodyParser = require('body-parser');
@@ -12,9 +11,6 @@ const apiSend = require('./modules/middlewares/apiSend');
 const AsyncLock = require('async-lock');
 const ApiContext = require('./modules/ApiContext');
 const routeList = require('./routeList');
-const setup = require('./setup');
-
-const q = async str => (await readLine(str)).toLowerCase().indexOf('y') === 0;
 
 module.exports = async () => {
 	try {

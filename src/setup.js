@@ -90,7 +90,9 @@ module.exports = async () => {
 					'userRead',
 					'userWrite',
 					'postRead',
-					'postWrite'
+					'postWrite',
+					'storageRead',
+					'storageWrite'
 				]);
 				console.log('application created.', application);
 
@@ -113,7 +115,7 @@ module.exports = async () => {
 		console.log('disconnected');
 	}
 	catch (err) {
-		console.log(`Unprocessed Setup Error: ${err}`);
+		console.log('Unprocessed Setup Error:', err);
 	}
 
 	console.log('## End Setup Mode');

@@ -95,7 +95,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				connection.send(eventName, { success: false, message });
 		};
 
-		connection.on('close', (reasonCode, description) => {
+		connection.on('close', () => {
 			// 全ての接続済みストリームを購読解除
 			for (const streamId of connectedStreamIds) {
 				disconnectStream(streamId);
