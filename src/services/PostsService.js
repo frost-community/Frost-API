@@ -31,9 +31,6 @@ class PostsService {
 			if (user != null) {
 				res.user = await this._usersService.serialize(user);
 			}
-
-			res.attachmentIds.map(id => id.toString());
-			res.attachments = await this._repository.findArray('storageFiles', { _id: { $in: res.attachmentIds } });
 		}
 
 		// createdAt
@@ -47,7 +44,9 @@ class PostsService {
 		res.userId = res.userId.toString();
 
 		// attachmentIds
-		res.attachmentIds = res.attachmentIds.map(id => id.toString());
+		if (res.attachmentIds != null) {
+			res.attachmentIds = res.attachmentIds.map(id => id.toString());
+		}
 
 		return sortObject(res);
 	}
