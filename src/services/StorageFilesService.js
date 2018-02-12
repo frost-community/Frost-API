@@ -82,10 +82,6 @@ class StorageFilesService {
 
 		if (accessRight.level == 'private') {
 			if (accessRight.users != null) {
-				// check format ObjectId source
-				if (!accessRight.users.every(userId => MongoAdapter.validateId(userId))) {
-					throw new ApplicationError('some accessRight.users are invalid format');
-				}
 				// build ObjectId
 				const userIds = accessRight.users.map(userId => MongoAdapter.buildId(userId));
 
