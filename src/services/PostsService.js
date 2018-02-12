@@ -1,9 +1,9 @@
-const moment = require('moment');
 const { ObjectId } = require('mongodb');
+const moment = require('moment');
+const UsersService = require('./UsersService');
 const MongoAdapter = require('../modules/MongoAdapter');
 const { sortObject } = require('../modules/helpers/GeneralHelper');
 const { MissingArgumentsError } = require('../modules/errors');
-const UsersService = require('./UsersService');
 
 class PostsService {
 	/**
@@ -25,6 +25,17 @@ class PostsService {
 
 		const res = Object.assign({}, document);
 
+		if (includeEntity) {
+			// user
+			const user = await this._repository.findById('users', res.userId);
+			if (user != null) {
+				res.user = await this._usersService.serialize(user);
+			}
+
+			res.attachmentIds.map(id => id.toString());
+			res.attachments = await this._repository.findArray('storageFiles', { _id: { $in: res.attachmentIds } });
+		}
+
 		// createdAt
 		res.createdAt = parseInt(moment(res._id.getTimestamp()).format('X'));
 
@@ -35,13 +46,8 @@ class PostsService {
 		// userId
 		res.userId = res.userId.toString();
 
-		if (includeEntity) {
-			// user
-			const user = await this._repository.findById('users', res.userId);
-			if (user != null) {
-				res.user = await this._usersService.serialize(user);
-			}
-		}
+		// attachmentIds
+		res.attachmentIds = res.attachmentIds.map(id => id.toString());
 
 		return sortObject(res);
 	}
@@ -51,19 +57,26 @@ class PostsService {
 	/**
 	 * @param {String | ObjectId} userId
 	 * @param {String} text
+	 * @param {ObjectId[]} attachmentIds
 	 * @returns {PostDocument}
 	*/
-	async createStatusPost(userId, text) {
+	async createStatusPost(userId, text, attachmentIds) {
 		if (userId == null || text == null)
 			throw new MissingArgumentsError();
 
+		const data = {
+			type: 'status',
+			userId,
+			text
+		};
+
+		if (attachmentIds.length != 0) {
+			data.attachmentIds = attachmentIds;
+		}
+
 		let document;
 		try {
-			document = await this._repository.create('posts', {
-				type: 'status',
-				userId,
-				text
-			});
+			document = await this._repository.create('posts', data);
 		}
 		catch (err) {
 			console.log(err);
