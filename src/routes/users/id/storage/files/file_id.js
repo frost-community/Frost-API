@@ -40,7 +40,7 @@ exports.get = async (apiContext) => {
 	if (level == 'private') {
 		// 所有者か許可したユーザー
 		const accessableUsers = file.accessRight.users;
-		const isAllowedUser = isOwnerAccess || (accessableUsers != null && accessableUsers.indexOf(apiContext.user._id) != -1);
+		const isAllowedUser = isOwnerAccess || (accessableUsers != null && accessableUsers.some(i => i.equals(apiContext.user._id)));
 		if (!isAllowedUser) {
 			apiContext.response(403, 'this operation is not permitted');
 			return;

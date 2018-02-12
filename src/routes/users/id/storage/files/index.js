@@ -3,7 +3,7 @@ const MongoAdapter = require('../../../../../modules/MongoAdapter');
 const validator = require('validator');
 const $ = require('cafy').default;
 const { getUsedSpace } = require('../../../../../modules/helpers/UserStorageHelper');
-const { ApiError } = require('../../../../../modules/errors');
+const { ApplicationError } = require('../../../../../modules/errors');
 const getFileType = require('file-type');
 
 const supportedMimeTypes = [
@@ -23,7 +23,7 @@ exports.post = async (apiContext) => {
 			accessRight: {
 				cafy: $().object()
 					.have('level', $().string().or('public|private'))
-					.prop('users', $().array('string').unique()), default: { level: 'public' }
+					.prop('users', $().array('string').unique().each(i => MongoAdapter.validateId(i))), default: { level: 'public' }
 			}
 		},
 		permissions: ['storageWrite']
@@ -69,7 +69,7 @@ exports.post = async (apiContext) => {
 			file = await apiContext.storageFilesService.create('user', apiContext.user._id, fileDataBuffer, fileType.mime, accessRight);
 		}
 		catch (err) {
-			if (err instanceof ApiError) {
+			if (err instanceof ApplicationError) {
 				apiContext.response(400, err.message);
 				return;
 			}
