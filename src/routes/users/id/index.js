@@ -35,6 +35,12 @@ exports.patch = async (apiContext) => {
 	const { screenName, name, description, icon } = apiContext.body;
 	const data = { };
 
+	// アイコンを設定するときは、storageRead権限を要求する
+	if (icon != null && !apiContext.applicationsService.hasPermission(apiContext.application, 'storageRead')) {
+		apiContext.response(403, 'you do not have any permissions');
+		return;
+	}
+
 	const user = await apiContext.repository.findById('users', apiContext.params.id);
 	if (user == null) {
 		apiContext.response(404, 'user as premise not found');
