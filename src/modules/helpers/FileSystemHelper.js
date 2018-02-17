@@ -2,16 +2,16 @@ const fs = require('fs');
 const { promisify } = require('util');
 
 class FileSystemHelper {
-	async isFile(path) {
+	static async isFile(path) {
 		const stats = await promisify(fs.stat)(path);
 		return stats.isFile();
 	}
 
-	getFileNames(dirPath) {
+	static getFileNames(dirPath) {
 		return promisify(fs.readdir)(dirPath);
 	}
 
-	getFileData(path, options) {
+	static getFileData(path, options) {
 		return promisify(fs.readFile)(path, options || {});
 	}
 }
