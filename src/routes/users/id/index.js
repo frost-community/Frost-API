@@ -82,6 +82,11 @@ exports.patch = async (apiContext) => {
 	// iconFileId
 	if (iconFileId != null) {
 		const iconFile = await apiContext.repository.findById('storageFiles', iconFileId);
+		if (iconFile == null) {
+			apiContext.response(404, 'icon file not found');
+			return;
+		}
+
 		if (!iconFile.creator.id.equals(apiContext.user._id)) {
 			apiContext.response(400, 'icon file must be owned');
 			return;
