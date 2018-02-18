@@ -41,9 +41,9 @@ module.exports = async () => {
 			memLevel: 9
 		}));
 
-		app.use(bodyParser.json({ limit: '1mb' }));
-
 		app.use(apiSend);
+
+		app.use(bodyParser.json({ limit: '1mb' }));
 
 		app.use((req, res, next) => {
 			// services
@@ -72,6 +72,17 @@ module.exports = async () => {
 		app.use((req, res) => {
 			const apiContext = new ApiContext(null, null, repository, config);
 			apiContext.response(404, 'endpoint not found, or method is not supported');
+			res.apiSend(apiContext);
+		});
+
+		app.use((err, req, res, next) => {
+			const apiContext = new ApiContext(null, null, repository, config);
+			if (err instanceof SyntaxError && err.message.indexOf('JSON')) {
+				apiContext.response(400, 'invalid json format');
+			}
+			else {
+				apiContext.response(500, 'internal error');
+			}
 			res.apiSend(apiContext);
 		});
 
