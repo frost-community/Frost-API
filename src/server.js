@@ -7,7 +7,6 @@ const sanitize = require('mongo-sanitize');
 const MongoAdapter = require('./modules/MongoAdapter');
 const Route = require('./modules/route');
 const DirectoryRouter = require('./modules/directoryRouter');
-const apiSend = require('./modules/middlewares/apiSend');
 const AsyncLock = require('async-lock');
 const ApiContext = require('./modules/ApiContext');
 const routeList = require('./routeList');
@@ -41,7 +40,35 @@ module.exports = async () => {
 			memLevel: 9
 		}));
 
-		app.use(apiSend);
+		// memo: このミドルウェアはAPIレスポンスを返すときに必須なので早い段階で呼び出すほうが良い
+		app.use((req, res, next) => {
+			res.apiSend = (apiContext) => {
+				let sendData = {};
+
+				if (!apiContext.responsed) {
+					throw new Error('api has not responsed yet');
+				}
+
+				if (apiContext.statusCode == null) {
+					apiContext.statusCode = 200;
+				}
+
+				if (typeof apiContext.data == 'string') {
+					sendData.message = apiContext.data;
+				}
+				else if (apiContext.data != null) {
+					sendData = apiContext.data;
+				}
+
+				if (Object.keys(sendData).length == 0) {
+					sendData = null;
+				}
+
+				res.status(apiContext.statusCode).send(sendData);
+			};
+
+			next();
+		});
 
 		app.use(bodyParser.json({ limit: '1mb' }));
 
