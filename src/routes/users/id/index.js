@@ -37,7 +37,7 @@ exports.patch = async (apiContext) => {
 
 	// アイコンを設定するときは、storageRead権限を要求する
 	if (icon != null && !apiContext.applicationsService.hasPermission(apiContext.application, 'storageRead')) {
-		apiContext.response(403, 'you do not have any permissions');
+		apiContext.response(403, { message: 'you do not have any permissions', details: ['storageRead'] });
 		return;
 	}
 

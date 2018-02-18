@@ -120,9 +120,14 @@ class ApiContext {
 
 		// check permissions
 
-		const hasPermissions = rule.permissions.every(p => this.applicationsService.hasPermission(this.application, p));
-		if (!hasPermissions) {
-			return this.response(403, 'you do not have any permissions');
+		const missingPermissions = [];
+		for (const p of rule.permissions) {
+			if (!this.applicationsService.hasPermission(this.application, p)) {
+				missingPermissions.push(p);
+			}
+		}
+		if (missingPermissions.length != 0) {
+			return this.response(403, { message: 'you do not have any permissions', details: missingPermissions });
 		}
 
 		// body
