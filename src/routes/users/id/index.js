@@ -43,7 +43,7 @@ exports.patch = async (apiContext) => {
 
 	const user = await apiContext.repository.findById('users', apiContext.params.id);
 	if (user == null) {
-		apiContext.response(404, 'user as premise not found');
+		apiContext.response(404, 'user not found');
 		return;
 	}
 

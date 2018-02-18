@@ -30,7 +30,7 @@ exports.get = async (apiContext) => {
 
 	// ファイルが存在しているかどうか、指定ユーザーが所有するリソースであるかどうか
 	if (file == null || file.creator.type != 'user' || !file.creator.id.equals(user._id)) {
-		apiContext.response(404);
+		apiContext.response(404, 'file not found');
 		return;
 	}
 
@@ -92,7 +92,7 @@ exports.delete = async (apiContext) => {
 
 	// ファイルが存在しているかどうか、指定ユーザーが所有するリソースであるかどうか
 	if (file == null || file.creator.type != 'user' || !file.creator.id.equals(user._id)) {
-		apiContext.response(404);
+		apiContext.response(404, 'file not found');
 		return;
 	}
 

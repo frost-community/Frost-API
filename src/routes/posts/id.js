@@ -11,7 +11,7 @@ exports.get = async (apiContext) => {
 
 	const post = await apiContext.repository.findById('posts', apiContext.params.id);
 	if (post == null) {
-		apiContext.response(204);
+		apiContext.response(404, 'post not found');
 		return;
 	}
 
