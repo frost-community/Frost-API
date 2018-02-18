@@ -26,17 +26,17 @@ exports.patch = async (apiContext) => {
 			screenName: { cafy: $().string(), default: null },
 			description: { cafy: $().string().range(0, 256), default: null },
 			name: { cafy: $().string().range(1, 32), default: null },
-			icon: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
+			iconFileId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
 		},
 		permissions: ['userWrite']
 	});
 	if (apiContext.responsed) return;
 
-	const { screenName, name, description, icon } = apiContext.body;
+	const { screenName, name, description, iconFileId } = apiContext.body;
 	const data = { };
 
 	// アイコンを設定するときは、storageRead権限を要求する
-	if (icon != null && !apiContext.applicationsService.hasPermission(apiContext.application, 'storageRead')) {
+	if (iconFileId != null && !apiContext.applicationsService.hasPermission(apiContext.application, 'storageRead')) {
 		apiContext.response(403, { message: 'you do not have any permissions', details: ['storageRead'] });
 		return;
 	}
@@ -79,20 +79,20 @@ exports.patch = async (apiContext) => {
 		data.description = description;
 	}
 
-	// icon
-	if (icon != null) {
-		const file = await apiContext.repository.findById('storageFiles', icon);
-		if (!file.creator.id.equals(apiContext.user._id)) {
+	// iconFileId
+	if (iconFileId != null) {
+		const iconFile = await apiContext.repository.findById('storageFiles', iconFileId);
+		if (!iconFile.creator.id.equals(apiContext.user._id)) {
 			apiContext.response(400, 'icon file must be owned');
 			return;
 		}
 
-		if (file.accessRight.level != 'public') {
+		if (iconFile.accessRight.level != 'public') {
 			apiContext.response(400, 'icon file must be public');
 			return;
 		}
 
-		data.icon = icon;
+		data.iconFileId = iconFileId;
 	}
 
 	if (Object.keys(data).length == 0) {
