@@ -1,21 +1,15 @@
-const readLine = require('./helpers/readline');
 const express = require('express');
 const httpClass = require('http');
 const bodyParser = require('body-parser');
 const compression = require('compression');
-const loadConfig = require('./helpers/loadConfig');
+const { loadConfig } = require('./modules/helpers/GeneralHelper');
 const sanitize = require('mongo-sanitize');
-const DbProvider = require('./helpers/dbProvider');
-const Db = require('./helpers/db');
-const Route = require('./helpers/route');
-const DirectoryRouter = require('./helpers/directoryRouter');
-const apiSend = require('./helpers/middlewares/apiSend');
+const MongoAdapter = require('./modules/MongoAdapter');
+const Route = require('./modules/route');
+const DirectoryRouter = require('./modules/directoryRouter');
 const AsyncLock = require('async-lock');
-const ApiContext = require('./helpers/ApiContext');
+const ApiContext = require('./modules/ApiContext');
 const routeList = require('./routeList');
-const setup = require('./setup');
-
-const q = async str => (await readLine(str)).toLowerCase().indexOf('y') === 0;
 
 module.exports = async () => {
 	try {
@@ -25,14 +19,8 @@ module.exports = async () => {
 
 		let config = loadConfig();
 		if (config == null) {
-			if (await q('config file is not found. display setting mode now? (y/n) ')) {
-				await setup();
-				config = loadConfig();
-			}
-
-			if (config == null) {
-				return;
-			}
+			console.log('config file not found. please create in setup mode. (command: npm run setup)');
+			return;
 		}
 
 		const app = express();
@@ -42,7 +30,9 @@ module.exports = async () => {
 
 		const directoryRouter = new DirectoryRouter(app);
 		const streams = new Map(); // memo: keyはChannelName
-		const db = new Db(config, await DbProvider.connectApidbAsync(config));
+
+		const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
+		const repository = await MongoAdapter.connect(config.api.database.host, config.api.database.database, authenticate);
 
 		app.use(compression({
 			threshold: 0,
@@ -50,15 +40,43 @@ module.exports = async () => {
 			memLevel: 9
 		}));
 
-		app.use(bodyParser.json());
+		// memo: このミドルウェアはAPIレスポンスを返すときに必須なので早い段階で呼び出すほうが良い
+		app.use((req, res, next) => {
+			res.apiSend = (apiContext) => {
+				let sendData = {};
 
-		app.use(apiSend);
+				if (!apiContext.responsed) {
+					throw new Error('api has not responsed yet');
+				}
+
+				if (apiContext.statusCode == null) {
+					apiContext.statusCode = 200;
+				}
+
+				if (typeof apiContext.data == 'string') {
+					sendData.message = apiContext.data;
+				}
+				else if (apiContext.data != null) {
+					sendData = apiContext.data;
+				}
+
+				if (Object.keys(sendData).length == 0) {
+					sendData = null;
+				}
+
+				res.status(apiContext.statusCode).send(sendData);
+			};
+
+			next();
+		});
+
+		app.use(bodyParser.json({ limit: '1mb' }));
 
 		app.use((req, res, next) => {
 			// services
 			req.config = config;
 			req.streams = streams;
-			req.db = db;
+			req.repository = repository;
 			req.lock = new AsyncLock();
 
 			// sanitize
@@ -79,8 +97,19 @@ module.exports = async () => {
 
 		// not found
 		app.use((req, res) => {
-			const apiContext = new ApiContext();
+			const apiContext = new ApiContext(null, null, repository, config);
 			apiContext.response(404, 'endpoint not found, or method is not supported');
+			res.apiSend(apiContext);
+		});
+
+		app.use((err, req, res, next) => {
+			const apiContext = new ApiContext(null, null, repository, config);
+			if (err instanceof SyntaxError && err.message.indexOf('JSON')) {
+				apiContext.response(400, 'invalid json format');
+			}
+			else {
+				apiContext.response(500, 'internal error');
+			}
 			res.apiSend(apiContext);
 		});
 
@@ -88,7 +117,7 @@ module.exports = async () => {
 			console.log(`listen on port: ${config.api.port}`);
 		});
 
-		require('./streaming-server')(http, directoryRouter, streams, db, config);
+		require('./streaming-server')(http, directoryRouter, streams, repository, config);
 	}
 	catch (err) {
 		console.log('Unprocessed Server Error:', err);

@@ -1,6 +1,7 @@
-const AuthorizeRequest = require('../../documentModels/authorizeRequest');
+const ApiContext = require('../../modules/ApiContext');
 const $ = require('cafy').default;
 
+/** @param {ApiContext} apiContext */
 exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
@@ -14,17 +15,19 @@ exports.post = async (apiContext) => {
 	const iceAuthKey = apiContext.headers['x-ice-auth-key'];
 	const userId = apiContext.body.userId;
 
-	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, apiContext.db, apiContext.config)) {
-		return apiContext.response(400, 'x-ice-auth-key header is invalid');
+	if (!await apiContext.authorizeRequestsService.verifyIceAuthKey(iceAuthKey)) {
+		apiContext.response(400, 'x-ice-auth-key header is invalid');
+		return;
 	}
 
-	if ((await apiContext.db.users.findByIdAsync(userId)) == null) { //TODO: move to document models
-		return apiContext.response(400, 'userId is invalid');
+	if ((await apiContext.repository.findById('users', userId)) == null) {
+		apiContext.response(400, 'userId is invalid');
+		return;
 	}
 
-	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, apiContext.db, apiContext.config).authorizeRequestId;
-	const authorizeRequest = await AuthorizeRequest.findByIdAsync(authorizeRequestId, apiContext.db, apiContext.config);
-	await authorizeRequest.setTargetUserIdAsync(userId);
+	const { authorizeRequestId } = apiContext.authorizeRequestsService.splitIceAuthKey(iceAuthKey);
+	let authorizeRequest = await apiContext.repository.findById('authorizeRequests', authorizeRequestId);
+	authorizeRequest = await apiContext.authorizeRequestsService.setTargetUserId(authorizeRequest, userId);
 
-	apiContext.response(200, { 'targetUserId': authorizeRequest.document.targetUserId });
+	apiContext.response(200, { targetUserId: authorizeRequest.targetUserId });
 };

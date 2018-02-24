@@ -1,6 +1,7 @@
-const Post = require('../../documentModels/post');
+const ApiContext = require('../../modules/ApiContext');
 // const $ = require('cafy').default;
 
+/** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		query: {},
@@ -8,12 +9,11 @@ exports.get = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const post = await Post.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
-
+	const post = await apiContext.repository.findById('posts', apiContext.params.id);
 	if (post == null) {
-		apiContext.response(204);
+		apiContext.response(404, 'post not found');
 		return;
 	}
 
-	apiContext.response(200, { post: await post.serializeAsync(true) });
+	apiContext.response(200, { post: await apiContext.postsService.serialize(post, true) });
 };

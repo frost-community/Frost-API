@@ -21,14 +21,14 @@ class StreamPublisher {
 			throw new TypeError('argument "redisClient" is not a RedisClient');
 		}
 		this.redisClient.on('error', (err) => {
-			throw new Error(`${this.type} stream publisher: ${String(err)}`);
+			throw new Error(`stream publisher: ${String(err)}`);
 		});
 	}
 	publish(type, publisherId, data) {
 		let strData = (data instanceof String) ? data : JSON.stringify(data);
 		this.redisClient.publish(StreamUtil.buildStreamId(type, publisherId), strData);
 	}
-	quitAsync() {
+	quit() {
 		return new Promise((resolve, reject) => {
 			if (this.redisClient.connected) {
 				this.redisClient.quit((err) => {
@@ -57,7 +57,7 @@ class Stream {
 			this.emitter.emit('data', (message instanceof String) ? message : JSON.parse(message));
 		});
 		this.redisClient.on('error', (err) => {
-			throw new Error(`${this.type} stream: ${String(err)}`);
+			throw new Error(`stream: ${String(err)}`);
 		});
 	}
 	getSources() {
@@ -90,7 +90,7 @@ class Stream {
 	listenerCount() {
 		return this.emitter.listenerCount('data');
 	}
-	quitAsync() {
+	quit() {
 		return new Promise((resolve, reject) => {
 			if (this.redisClient.connected) {
 				this.redisClient.quit((err) => {

@@ -1,45 +1,43 @@
-const { StreamPublisher } = require('../../helpers/stream');
+const ApiContext = require('../../modules/ApiContext');
+const { StreamPublisher } = require('../../modules/stream');
 const $ = require('cafy').default;
+const MongoAdapter = require('../../modules/MongoAdapter');
 
+/** @param {ApiContext} apiContext */
 exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
-			text: { cafy: $().string() }
+			text: { cafy: $().string().range(1, 256).pipe(i => !/^\s*$/.test(i)) },
+			attachments: { cafy: $().array('string').unique().max(4).each(i => MongoAdapter.validateId(i)), default: [] }
 		},
 		permissions: ['postWrite']
 	});
 	if (apiContext.responsed) return;
 
-	const userId = apiContext.user.document._id;
+	const userId = apiContext.user._id;
 	const text = apiContext.body.text;
+	const attachmentIds = apiContext.body.attachments.map(i => MongoAdapter.buildId(i));
 
-	if (/^\s*$/.test(text) || /^[\s\S]{1,256}$/.test(text) == false) {
-		return apiContext.response(400, 'text is invalid format.');
+	// check existing files
+	const fileCount = await apiContext.repository.count('storageFiles', { _id: { $in: attachmentIds } });
+	if (fileCount != attachmentIds.length) {
+		apiContext.response(400, 'some attachmentIds are invalid value');
+		return;
 	}
 
-	let postStatus;
-
-	try {
-		postStatus = await apiContext.db.posts.createAsync({ // TODO: move to document models
-			type: 'status',
-			userId: userId,
-			text: text
-		});
-	}
-	catch (err) {
-		console.log(err);
-	}
-
+	let postStatus = await apiContext.postsService.createStatusPost(userId, text, attachmentIds);
 	if (postStatus == null) {
-		return apiContext.response(500, 'failed to create postStatus');
+		apiContext.response(500, 'failed to create postStatus');
+		return;
 	}
 
-	const serializedPostStatus = await postStatus.serializeAsync(true);
+	const serializedPostStatus = await apiContext.postsService.serialize(postStatus, true);
 
+	// 各種ストリームに発行
 	const publisher = new StreamPublisher();
-	publisher.publish('user-timeline-status', apiContext.user.document._id.toString(), serializedPostStatus);
+	publisher.publish('user-timeline-status', apiContext.user._id.toString(), serializedPostStatus);
 	publisher.publish('general-timeline-status', 'general', serializedPostStatus);
-	await publisher.quitAsync();
+	await publisher.quit();
 
 	apiContext.response(200, { postStatus: serializedPostStatus });
 };

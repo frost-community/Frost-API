@@ -1,30 +1,35 @@
-const User = require('../../../../documentModels/user');
-const timelineAsync = require('../../../../helpers/timelineAsync');
+const ApiContext = require('../../../../modules/ApiContext');
+const MongoAdapter = require('../../../../modules/MongoAdapter');
 const v = require('validator');
 const $ = require('cafy').default;
+const timeline = require('../../../../modules/timeline');
 
-// TODO: 不完全な実装
-
+/** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		query: {
-			limit: { cafy: $().string().pipe(i => v.isInt(i, { min: 0, max: 100 })), default: '30' }
+			limit: { cafy: $().string().pipe(i => v.isInt(i, { min: 0, max: 100 })), default: '30' },
+			newer: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null },
+			older: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
 		},
 		permissions: ['postRead', 'userRead']
 	});
 	if (apiContext.responsed) return;
 
 	// convert query value
-	apiContext.query.limit = v.toInt(apiContext.query.limit);
+	const limit = apiContext.query.limit != null ? v.toInt(apiContext.query.limit) : null;
+	const newer = apiContext.query.newer != null ? MongoAdapter.buildId(apiContext.query.newer) : null;
+	const older = apiContext.query.older != null ? MongoAdapter.buildId(apiContext.query.older) : null;
 
 	try {
 		// user
-		const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
+		const user = await apiContext.repository.findById('users', apiContext.params.id);
 		if (user == null) {
-			return apiContext.response(404, 'user as premise not found');
+			apiContext.response(404, 'user as premise not found');
+			return;
 		}
 
-		return await timelineAsync(apiContext, 'status', [user.document._id], apiContext.query.limit);
+		return await timeline(apiContext, 'status', [user._id], limit, { newer, older });
 	}
 	catch (err) {
 		console.log(err);

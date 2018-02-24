@@ -7,6 +7,7 @@ const permissionTypes = [
 	'accountSpecial',     // アカウント情報の特殊操作
 	'userRead',           // ユーザー情報の取得
 	'userWrite',          // ユーザーのフォロー等のアクション
+	'userSpecial',        // ユーザー情報の特殊操作
 	'postRead',           // 投稿やリアクションの取得
 	'postWrite',          // 投稿やリアクションの作成・削除等のアクション
 	'storageRead',        // ストレージへの読み取り操作

@@ -1,10 +1,12 @@
-const UserFollowing = require('./documentModels/userFollowing');
 const WebSocket = require('websocket');
 const events = require('websocket-events');
-const { checkRequest } = require('./helpers/StreamingHelpers');
-const { Stream, StreamUtil } = require('./helpers/stream');
+const { checkRequest } = require('./modules/helpers/StreamingHelper');
+const { Stream, StreamUtil } = require('./modules/stream');
 const methods = require('methods');
-const ApiContext = require('./helpers/ApiContext');
+const ApiContext = require('./modules/ApiContext');
+const ApplicationsService = require('./services/ApplicationsService');
+const ApplicationAccessesService = require('./services/ApplicationAccessesService');
+const UserFollowingsService = require('./services/UserFollowingsService');
 
 /*
 # 各種変数の説明
@@ -19,7 +21,7 @@ general-timeline-status:general generalに向けて流されたポストを受�
 home-timeline-status:(userId) そのユーザーのホームTLに向けて流されたポストを受信可能なStreamです
 */
 
-module.exports = (http, directoryRouter, streams, db, config) => {
+module.exports = (http, directoryRouter, streams, repository, config) => {
 	const server = new WebSocket.server({ httpServer: http });
 
 	// generate stream for general timeline (global)
@@ -29,11 +31,15 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 	generalTimelineStream.addSource(generalTimelineStreamId);
 	streams.set(generalTimelineStreamId, generalTimelineStream);
 
+	const applicationsService = new ApplicationsService(repository, config);
+	const applicationAccessesService = new ApplicationAccessesService(repository, config);
+	const userFollowingsService = new UserFollowingsService(repository, config);
+
 	server.on('request', async request => {
 		// verification
 		let verification;
 		try {
-			verification = await checkRequest(request, db, config);
+			verification = await checkRequest(request, applicationsService, applicationAccessesService);
 		}
 		catch (err) {
 			console.log('streaming verification error:', err);
@@ -57,7 +63,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 		const connectedStreamHandlers = new Map();
 
 		// ストリームの購読解除メソッド
-		const disconnectStreamAsync = async (streamId) => {
+		const disconnectStream = async (streamId) => {
 			const removeIndex = connectedStreamIds.indexOf(streamId);
 			connectedStreamIds.splice(removeIndex, 1);
 
@@ -77,7 +83,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 
 				// リスナが1つもなければストリーム自体を解放
 				if (stream.listenerCount() == 0) {
-					await stream.quitAsync();
+					await stream.quit();
 					streams.delete(streamId);
 				}
 			}
@@ -89,10 +95,10 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				connection.send(eventName, { success: false, message });
 		};
 
-		connection.on('close', (reasonCode, description) => {
+		connection.on('close', () => {
 			// 全ての接続済みストリームを購読解除
 			for (const streamId of connectedStreamIds) {
-				disconnectStreamAsync(streamId);
+				disconnectStream(streamId);
 			}
 			console.log(`disconnected streaming. user: ${meId}`);
 		});
@@ -130,13 +136,13 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				}
 
 				// 対象Routeのモジュールを取得
-				let routeFuncAsync;
+				let routeFunc;
 				let params = [];
 
 				try {
 					const route = directoryRouter.findRoute(method, endpoint);
 					if (route != null) {
-						routeFuncAsync = (require(route.getModulePath()))[method];
+						routeFunc = (require(route.getModulePath()))[method];
 						params = route.getParams(endpoint);
 					}
 				}
@@ -144,7 +150,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 					console.log('error: failed to parse route info.', 'reason:', err);
 				}
 
-				if (routeFuncAsync == null) {
+				if (routeFunc == null) {
 					return error('rest', '"endpoint" parameter is invalid');
 				}
 
@@ -154,7 +160,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				}
 
 				// ApiContextを構築
-				const apiContext = new ApiContext(streams, null, db, config, {
+				const apiContext = new ApiContext(streams, null, repository, config, {
 					params,
 					query,
 					body,
@@ -164,7 +170,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 				apiContext.headers['x-access-key'] = accessKey;
 
 				// 対象のRouteモジュールを実行
-				await routeFuncAsync(apiContext);
+				await routeFunc(apiContext);
 
 				if (!apiContext.responsed) {
 					return apiContext.response(500, 'not responsed');
@@ -237,9 +243,9 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 						// ストリームを生成
 						stream = new Stream();
 						stream.addSource(StreamUtil.buildStreamId('user-timeline-status', meId));
-						const followings = await UserFollowing.findTargetsAsync(meId, null, db, config); // TODO: (全て or ユーザーの購読設定によっては選択的に)
+						const followings = await userFollowingsService.findTargets(meId, { isAscending: false }); // TODO: (全て or ユーザーの購読設定によっては選択的に)
 						for (const following of followings || []) {
-							const followingUserId = following.document.target.toString();
+							const followingUserId = following.target.toString();
 							stream.addSource(StreamUtil.buildStreamId('user-timeline-status', followingUserId));
 						}
 						streams.set(streamId, stream);
@@ -293,7 +299,7 @@ module.exports = (http, directoryRouter, streams, db, config) => {
 					return error('timeline-disconnect', `timeline type "${timelineType}" is invalid`);
 				}
 
-				await disconnectStreamAsync(streamId);
+				await disconnectStream(streamId);
 				console.log('streaming/timeline-disconnect:', streamId);
 				connection.send('timeline-disconnect', { success: true, message: `disconnected ${timelineType} timeline` });
 			}

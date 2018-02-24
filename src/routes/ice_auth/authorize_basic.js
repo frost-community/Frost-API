@@ -1,7 +1,7 @@
-const AuthorizeRequest = require('../../documentModels/authorizeRequest');
-const User = require('../../documentModels/user');
+const ApiContext = require('../../modules/ApiContext');
 const $ = require('cafy').default;
 
+/** @param {ApiContext} apiContext */
 exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
@@ -14,84 +14,81 @@ exports.post = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	const iceAuthKey = apiContext.headers['x-ice-auth-key'];
-	const screenName = apiContext.body.screenName;
-	const password = apiContext.body.password;
+	const { screenName, password } = apiContext.body;
 
-	if (!await AuthorizeRequest.verifyKeyAsync(iceAuthKey, apiContext.db, apiContext.config)) {
-		return apiContext.response(400, 'x-ice-auth-key header is invalid');
+	if (!await apiContext.authorizeRequestsService.verifyIceAuthKey(iceAuthKey)) {
+		apiContext.response(400, 'x-ice-auth-key header is invalid');
+		return;
 	}
 
-	const authorizeRequestId = AuthorizeRequest.splitKey(iceAuthKey, apiContext.db, apiContext.config).authorizeRequestId;
-	const authorizeRequest = await AuthorizeRequest.findByIdAsync(authorizeRequestId, apiContext.db, apiContext.config);
-	const applicationId = authorizeRequest.document.applicationId;
-	await authorizeRequest.removeAsync();
+	const { authorizeRequestId } = apiContext.authorizeRequestsService.splitIceAuthKey(iceAuthKey);
+	const { applicationId } = await apiContext.repository.findById('authorizeRequests', authorizeRequestId);
+	await apiContext.repository.removeById('authorizeRequests', authorizeRequestId);
 
-	if (!User.checkFormatScreenName(screenName)) {
-		return apiContext.response(400, 'screenName is invalid format');
+	// screenName
+	if (!apiContext.usersService.validFormatScreenName(screenName)) {
+		apiContext.response(400, 'screenName is invalid format');
+		return;
 	}
-
-	if (!User.checkFormatPassword(password)) {
-		return apiContext.response(400, 'password is invalid format');
-	}
-
-	const user = await User.findByScreenNameAsync(screenName, apiContext.db, apiContext.config);
-
+	const user = await apiContext.usersService.findByScreenName(screenName);
 	if (user == null) {
-		return apiContext.response(400, 'screenName is invalid');
+		apiContext.response(400, 'screenName is invalid');
+		return;
 	}
 
-	if (!user.verifyPassword(password)) {
-		return apiContext.response(400, 'password is invalid');
+	// password
+	if (!apiContext.usersService.checkFormatPassword(password)) {
+		apiContext.response(400, 'password is invalid format');
+		return;
+	}
+	if (!apiContext.usersService.checkCorrectPassword(user, password)) {
+		apiContext.response(400, 'password is invalid');
+		return;
 	}
 
 	// TODO: refactoring(duplication)
 
-	let applicationAccess = await apiContext.db.applicationAccesses.findAsync({
+	let applicationAccess = await apiContext.repository.find('applicationAccesses', {
 		applicationId: applicationId,
-		userId: user.document._id
+		userId: user._id
 	});
 
 	let accessKey;
 
+	// まだapplicationAccessが生成されていない時
 	if (applicationAccess == null) {
-		try {
-			applicationAccess = await apiContext.db.applicationAccesses.createAsync({ // TODO: move to document models
-				applicationId: applicationId,
-				userId: user.document._id,
-				keyCode: null
-			});
-		}
-		catch (err) {
-			console.log(err);
-		}
-
+		applicationAccess = await apiContext.applicationAccessesService.create(applicationId, user._id);
 		if (applicationAccess == null) {
-			return apiContext.response(500, 'failed to create applicationAccess');
+			apiContext.response(500, 'failed to create applicationAccess');
+			return;
 		}
 
 		try {
-			accessKey = await applicationAccess.generateAccessKeyAsync();
+			accessKey = await apiContext.applicationAccessesService.generateAccessKey(applicationAccess);
 		}
 		catch (err) {
 			console.log(err);
 		}
 
 		if (accessKey == null) {
-			return apiContext.response(500, 'failed to generate accessKey');
+			apiContext.response(500, 'failed to generate accessKey');
+			return;
 		}
 	}
+	// 既にapplicationAccessが生成済みの時
 	else {
 		try {
-			accessKey = applicationAccess.getAccessKey();
+			accessKey = apiContext.applicationAccessesService.getAccessKey(applicationAccess);
 		}
 		catch (err) {
 			console.log(err);
 		}
 
 		if (accessKey == null) {
-			return apiContext.response(500, 'failed to build accessKey');
+			apiContext.response(500, 'failed to get accessKey');
+			return;
 		}
 	}
 
-	apiContext.response(200, { accessKey: accessKey });
+	apiContext.response(200, { accessKey });
 };

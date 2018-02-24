@@ -1,12 +1,14 @@
 const assert = require('assert');
-const config = require('../../src/helpers/loadConfig')();
-const DbProvider = require('../../src/helpers/dbProvider');
-const Db = require('../../src/helpers/db');
+const { loadConfig } = require('../../src/modules/helpers/GeneralHelper');
+const config = loadConfig();
+const MongoAdapter = require('../../src/modules/MongoAdapter');
+const UsersService = require('../../src/services/UsersService');
+const ApplicationsService = require('../../src/services/ApplicationsService');
 const path = require('path');
 const validator = require('validator');
 const AsyncLock = require('async-lock');
-const { getFileDataAsync } = require('../../src/helpers/fileSystemHelpers');
-const ApiContext = require('../../src/helpers/ApiContext');
+const { getFileData } = require('../../src/modules/helpers/FileSystemHelper');
+const ApiContext = require('../../src/modules/ApiContext');
 const route = require('../../src/routes/users/id/storage');
 const routeFiles = require('../../src/routes/users/id/storage/files');
 const routeFileId = require('../../src/routes/users/id/storage/files/file_id');
@@ -14,36 +16,40 @@ const routeFileId = require('../../src/routes/users/id/storage/files/file_id');
 describe('User Storage API', () => {
 	describe('/users/:id/storage', () => {
 		// load collections
-		let db, lock, testData64, testData64Size;
+		let db, usersService, applicationsService, lock, testData64, testData64Size;
 		before(async () => {
 			config.api.database = config.api.testDatabase;
 
-			const dbProvider = await DbProvider.connectApidbAsync(config);
-			db = new Db(config, dbProvider);
+			const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
+			db = await MongoAdapter.connect(config.api.database.host, config.api.database.database, authenticate);
 
-			await db.users.removeAsync({});
-			await db.applications.removeAsync({});
+			await db.remove('users', {});
+			await db.remove('applications', {});
+			await db.remove('storageFiles', {});
+
+			usersService = new UsersService(db, config);
+			applicationsService = new ApplicationsService(db, config);
 
 			lock = new AsyncLock();
 
 			config.api.storage.spaceSize = 500 * 1024; // テスト用の容量(500KB)に設定
 
-			testData64 = await getFileDataAsync(path.resolve(__dirname, '../resources/squid.png'), 'base64');
+			testData64 = await getFileData(path.resolve(__dirname, '../resources/squid.png'), 'base64');
 			testData64Size = Buffer.from(testData64, 'base64').length;
 		});
 
 		// add general user, general application
 		let user, app;
 		beforeEach(async () => {
-			user = await db.users.createAsync('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
-			app = await db.applications.createAsync('generalapp', user, 'this is generalapp.', ['storageRead', 'storageWrite']);
+			user = await usersService.create('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
+			app = await applicationsService.create('generalapp', user, 'this is generalapp.', ['storageRead', 'storageWrite']);
 		});
 
 		// remove all users, all applications
 		afterEach(async () => {
-			await db.users.removeAsync({});
-			await db.applications.removeAsync({});
-			await db.storageFiles.removeAsync({});
+			await db.remove('users', {});
+			await db.remove('applications', {});
+			await db.remove('storageFiles', {});
 		});
 
 		describe('[GET]', () => {
@@ -53,8 +59,8 @@ describe('User Storage API', () => {
 				const promises = [];
 				for (let i = 0; i < 4; i++) {
 					context = new ApiContext(null, lock, db, config, {
-						params: { id: user.document._id.toString() },
-						body: { fileData: testData64 },
+						params: { id: user._id.toString() },
+						body: { accessRight: { level: 'public' }, fileData: testData64 },
 						headers: { 'X-Api-Version': 1 },
 						testMode: true
 					});
@@ -66,7 +72,7 @@ describe('User Storage API', () => {
 				await Promise.all(promises);
 
 				context = new ApiContext(null, lock, db, config, {
-					params: { id: user.document._id.toString() },
+					params: { id: user._id.toString() },
 					headers: { 'X-Api-Version': 1 },
 					testMode: true
 				});
@@ -86,8 +92,8 @@ describe('User Storage API', () => {
 			describe('[POST]', () => {
 				it('正しくリクエストされた場合は成功する(1件、public)', async () => {
 					const context = new ApiContext(null, lock, db, config, {
-						params: { id: user.document._id.toString() },
-						body: { fileData: testData64 },
+						params: { id: user._id.toString() },
+						body: { accessRight: { level: 'public' }, fileData: testData64 },
 						headers: { 'X-Api-Version': 1 },
 						testMode: true
 					});
@@ -106,7 +112,7 @@ describe('User Storage API', () => {
 					assert.deepEqual({
 						storageFile: {
 							accessRight: { level: 'public' },
-							creator: { type: 'user', id: user.document._id.toString() },
+							creator: { type: 'user', id: user._id.toString() },
 							mimeType: 'image/png',
 							type: 'image',
 							size: testData64Size
@@ -120,8 +126,8 @@ describe('User Storage API', () => {
 					const count = parseInt(config.api.storage.spaceSize / testData64Size) + 1; // parseInt(500KB / 53.8KB) + 1 = 10 items, 10 * 53.8KB > 500KB
 					for (let i = 0; i < count; i++) {
 						const context = new ApiContext(null, lock, db, config, {
-							params: { id: user.document._id.toString() },
-							body: { fileData: testData64 },
+							params: { id: user._id.toString() },
+							body: { accessRight: { level: 'public' }, fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
 							user,
 							application: app
@@ -142,7 +148,7 @@ describe('User Storage API', () => {
 							assert.deepEqual({
 								storageFile: {
 									accessRight: { level: 'public' },
-									creator: { type: 'user', id: user.document._id.toString() },
+									creator: { type: 'user', id: user._id.toString() },
 									mimeType: 'image/png',
 									type: 'image',
 									size: testData64Size
@@ -158,8 +164,8 @@ describe('User Storage API', () => {
 
 				it('fileDataが空のときは失敗する', async () => {
 					const context = new ApiContext(null, lock, db, config, {
-						params: { id: user.document._id.toString() },
-						body: { fileData: '' },
+						params: { id: user._id.toString() },
+						body: { accessRight: { level: 'public' }, fileData: '' },
 						headers: { 'X-Api-Version': 1 },
 						user,
 						application: app
@@ -176,8 +182,8 @@ describe('User Storage API', () => {
 					const contexts = [];
 					for (let i = 0; i < 4; i++) {
 						context = new ApiContext(null, lock, db, config, {
-							params: { id: user.document._id.toString() },
-							body: { fileData: testData64 },
+							params: { id: user._id.toString() },
+							body: { accessRight: { level: 'public' }, fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
 							user,
 							application: app
@@ -187,7 +193,7 @@ describe('User Storage API', () => {
 					await Promise.all(contexts.map(c => routeFiles.post(c)));
 
 					context = new ApiContext(null, lock, db, config, {
-						params: { id: user.document._id.toString() },
+						params: { id: user._id.toString() },
 						headers: { 'X-Api-Version': 1 },
 						user,
 						application: app
@@ -200,13 +206,11 @@ describe('User Storage API', () => {
 					assert.equal(context.data.storageFiles.length, contexts.length, 'invalid response length');
 
 					for (const storageFile of context.data.storageFiles) {
-						assert(validator.isBase64(storageFile.fileData), 'returned fileData is not base64');
-						delete storageFile.fileData;
 						delete storageFile.id;
 						delete storageFile.createdAt;
 						assert.deepEqual({
 							accessRight: { level: 'public' },
-							creator: { type: 'user', id: user.document._id.toString() },
+							creator: { type: 'user', id: user._id.toString() },
 							mimeType: 'image/png',
 							type: 'image',
 							size: testData64Size
@@ -219,8 +223,8 @@ describe('User Storage API', () => {
 				describe('[GET]', () => {
 					it('正しくリクエストされた場合は成功する', async () => {
 						const contextFile = new ApiContext(null, lock, db, config, {
-							params: { id: user.document._id.toString() },
-							body: { fileData: testData64 },
+							params: { id: user._id.toString() },
+							body: { accessRight: { level: 'public' }, fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
 							user,
 							application: app
@@ -231,7 +235,7 @@ describe('User Storage API', () => {
 
 						const context = new ApiContext(null, lock, db, config, {
 							params: {
-								id: user.document._id.toString(),
+								id: user._id.toString(),
 								'file_id': contextFile.data.storageFile.id
 							},
 							headers: { 'X-Api-Version': 1 },
@@ -249,7 +253,7 @@ describe('User Storage API', () => {
 						assert.deepEqual({
 							storageFile: {
 								accessRight: { level: 'public' },
-								creator: { type: 'user', id: user.document._id.toString() },
+								creator: { type: 'user', id: user._id.toString() },
 								mimeType: 'image/png',
 								type: 'image',
 								size: testData64Size

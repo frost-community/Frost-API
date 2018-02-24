@@ -1,45 +1,49 @@
-const { ObjectId } = require('mongodb');
-const User = require('../../../documentModels/user');
-const UserFollowing = require('../../../documentModels/userFollowing');
+const ApiContext = require('../../../modules/ApiContext');
+const MongoAdapter = require('../../../modules/MongoAdapter');
 const v = require('validator');
 const $ = require('cafy').default;
 
-// TODO: limit指定、カーソル送り等
-
+/** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		query: {
-			limit: { cafy: $().string().pipe(i => v.isInt(i, { min: 0, max: 100 })), default: '30' }
+			limit: { cafy: $().string().pipe(i => v.isInt(i, { min: 0, max: 100 })), default: '30' },
+			next: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
 		},
 		permissions: ['userRead']
 	});
 	if (apiContext.responsed) return;
 
 	// convert query value
-	apiContext.query.limit = v.toInt(apiContext.query.limit);
+	const limit = v.toInt(apiContext.query.limit);
+	const next = apiContext.query.next != null ? MongoAdapter.buildId(apiContext.query.next) : null;
 
 	// user
-	const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
+	const user = await apiContext.repository.findById('users', apiContext.params.id);
 	if (user == null) {
-		return apiContext.response(404, 'user as premise not found');
+		apiContext.response(404, 'user as premise not found');
+		return;
 	}
 
 	// このユーザーがフォロー元であるフォロー関係をすべて取得
-	const userFollowings = await UserFollowing.findSourcesAsync(user.document._id, apiContext.query.limit, apiContext.db, apiContext.config);
-	if (userFollowings == null || userFollowings.length == 0) {
+	const userFollowings = await apiContext.userFollowingsService.findSources(user._id, { limit, since: next });
+	if (userFollowings.length == 0) {
 		apiContext.response(204);
 		return;
 	}
 
 	// fetch and serialize users
 	const promises = userFollowings.map(async following => {
-		const user = await User.findByIdAsync(following.document.source, apiContext.db, apiContext.config);
-		return await user.serializeAsync();
+		const user = await apiContext.repository.findById('users', following.source);
+		if (user == null) {
+			console.log(`notfound following source userId: ${following.source.toString()}`);
+			return;
+		}
+		return apiContext.usersService.serialize(user);
 	});
-	const pureSerializedUsers = await Promise.all(promises);
 
-	// sort in original order
-	const serializedUsers = userFollowings.map(following => pureSerializedUsers.find(u => u.id == following.document.source));
-
-	apiContext.response(200, { users: serializedUsers });
+	apiContext.response(200, {
+		users: await Promise.all(promises),
+		next: userFollowings[userFollowings.length-1]._id
+	});
 };

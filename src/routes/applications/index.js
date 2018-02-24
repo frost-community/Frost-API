@@ -1,7 +1,8 @@
-const Application = require('../../documentModels/application');
-const { permissionTypes } = require('../../helpers/permission');
+const ApiContext = require('../../modules/ApiContext');
+const { permissionTypes } = require('../../modules/permission');
 const $ = require('cafy').default;
 
+/** @param {ApiContext} apiContext */
 module.exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
@@ -15,50 +16,36 @@ module.exports.post = async (apiContext) => {
 
 	const { name, description, permissions } = apiContext.body;
 
-	// check name duplication
-	if (await Application.findByNameAsync(name, apiContext.db, apiContext.config) != null) {
-		return apiContext.response(400, 'already exists name');
+	if (!await apiContext.applicationsService.nonDuplicatedName(name)) {
+		apiContext.response(400, 'already exists name');
+		return;
+	}
+	if (!apiContext.applicationsService.availablePermissions(permissions)) {
+		apiContext.response(400, 'some permissions use are disabled');
+		return;
 	}
 
-	// check permissions(利用を禁止された権限をが含まれていないかどうか)
-	if (permissions.some(permission => apiContext.config.api.additionDisabledPermissions.indexOf(permission) != -1)) {
-		return apiContext.response(400, 'some permissions use are disabled');
-	}
-
-	let application;
-	try {
-		application = await apiContext.db.applications.createAsync(name, apiContext.user, description, permissions);
-	}
-	catch (err) {
-		console.log(err);
-	}
-
+	const application = await apiContext.applicationsService.create(name, apiContext.user, description, permissions);
 	if (application == null) {
-		return apiContext.response(500, 'failed to create application');
+		apiContext.response(500, 'failed to create application');
+		return;
 	}
 
-	apiContext.response(200, { application: application.serialize() });
+	apiContext.response(200, { application: apiContext.applicationsService.serialize(application) });
 };
 
+/** @param {ApiContext} apiContext */
 module.exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		permissions: ['application']
 	});
 	if (apiContext.responsed) return;
 
-	let applications;
-	try {
-		applications = await Application.findArrayByCreatorIdAsync(apiContext.user.document._id, apiContext.db, apiContext.config);
-	}
-	catch (err) {
-		console.log(err);
-		applications = [];
-	}
-
-	if (applications == null || applications.length == 0) {
+	const applications = await apiContext.applicationsService.findArrayByCreatorId(apiContext.user._id);
+	if (applications.length == 0) {
 		apiContext.response(204);
 		return;
 	}
 
-	apiContext.response(200, { applications: applications.map(i => i.serialize()) });
+	apiContext.response(200, { applications: applications.map(i => apiContext.applicationsService.serialize(i)) });
 };

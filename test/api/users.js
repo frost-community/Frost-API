@@ -1,61 +1,179 @@
 const assert = require('assert');
-const config = require('../../src/helpers/loadConfig')();
-const DbProvider = require('../../src/helpers/dbProvider');
-const Db = require('../../src/helpers/db');
-const ApiContext = require('../../src/helpers/ApiContext');
+const { loadConfig } = require('../../src/modules/helpers/GeneralHelper');
+const config = loadConfig();
+const MongoAdapter = require('../../src/modules/MongoAdapter');
+const UsersService = require('../../src/services/UsersService');
+const ApplicationsService = require('../../src/services/ApplicationsService');
+const ApiContext = require('../../src/modules/ApiContext');
 const route = require('../../src/routes/users');
 const routeId = require('../../src/routes/users/id');
 
 describe('Users API', () => {
 	describe('/users', () => {
 		// load collections
-		let db;
+		let db, usersService, applicationsService;
 		before(async () => {
 			config.api.database = config.api.testDatabase;
-			const dbProvider = await DbProvider.connectApidbAsync(config);
-			db = new Db(config, dbProvider);
 
-			await db.users.removeAsync({});
-			await db.applications.removeAsync({});
+			const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
+			db = await MongoAdapter.connect(config.api.database.host, config.api.database.database, authenticate);
+
+			await db.remove('users', {});
+			await db.remove('applications', {});
+			await db.remove('authorizeRequests', {});
+			await db.remove('applicationAccesses', {});
+
+			usersService = new UsersService(db, config);
+			applicationsService = new ApplicationsService(db, config);
 		});
 
 		// add general user, general application
-		let user, app;
+		let user, application;
 		beforeEach(async () => {
-			user = await db.users.createAsync('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
-			app = await db.applications.createAsync('generalapp', user, 'this is generalapp.', ['userRead']);
+			user = await usersService.create('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
+			application = await applicationsService.create('generalapp', user, 'this is generalapp.', ['userRead', 'userSpecial']);
 		});
 
 		// remove all users, all applications
 		afterEach(async () => {
-			await db.users.removeAsync({});
-			await db.applications.removeAsync({});
-			await db.authorizeRequests.removeAsync({});
-			await db.applicationAccesses.removeAsync({});
+			await db.remove('users', {});
+			await db.remove('applications', {});
+			await db.remove('authorizeRequests', {});
+			await db.remove('applicationAccesses', {});
 		});
 
 		describe('[GET]', () => {
 			it('正しくリクエストされた場合は成功する', async () => {
 				const context = new ApiContext(null, null, db, config, {
-					params: { id: user.document._id },
-					query: { 'screen_names': user.document.screenName },
+					params: { id: user._id },
+					query: { 'screen_names': user.screenName },
 					headers: { 'X-Api-Version': 1 },
 					user,
-					application: app
+					application
 				});
 				await route.get(context);
-
-				assert(typeof context.data != 'string', `api error: ${context.data}`);
-
+				assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
 				delete context.data.users[0].id;
 				delete context.data.users[0].createdAt;
 				assert.deepEqual(context.data, {
 					users: [{
-						screenName: user.document.screenName,
-						name: user.document.name,
-						description: user.document.description
+						screenName: user.screenName,
+						name: user.name,
+						description: user.description,
+						followersCount: 0,
+						followingsCount: 0,
+						postsCount: { status: 0 }
 					}]
 				});
+			});
+		});
+
+		describe('[POST]', () => {
+			it('正しくリクエストされた場合は成功する', async () => {
+				const context = new ApiContext(null, null, db, config, {
+					body: {
+						screenName: 'hogehoge',
+						password: 'a1b2c3d4e5f6g',
+						name: 'froster',
+						description: 'testhoge'
+					},
+					headers: { 'X-Api-Version': 1 },
+					user,
+					application
+				});
+				await route.post(context);
+				assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
+
+				delete context.data.user.id;
+				delete context.data.user.createdAt;
+				assert.deepEqual(context.data, {
+					user: {
+						screenName: 'hogehoge',
+						name: 'froster',
+						description: 'testhoge',
+						followersCount: 0,
+						followingsCount: 0,
+						postsCount: { status: 0 }
+					}
+				});
+			});
+
+			it('screenNameが4文字未満もしくは16文字以上のとき失敗する', async () => {
+				let context = new ApiContext(null, null, db, config, {
+					body: {
+						screenName: 'abc',
+						password: 'a1b2c3d4e5f6g',
+						name: 'froster',
+						description: 'testhoge'
+					},
+					headers: { 'X-Api-Version': 1 },
+					user,
+					application
+				});
+				await route.post(context);
+				assert.equal(context.statusCode, 400);
+
+				context = new ApiContext(null, null, db, config, {
+					body: {
+						screenName: 'abcdefghijklmnop',
+						password: 'a1b2c3d4e5f6g',
+						name: 'froster',
+						description: 'testhoge'
+					},
+					headers: { 'X-Api-Version': 1 },
+					user,
+					application
+				});
+				await route.post(context);
+				assert.equal(context.statusCode, 400);
+			});
+
+			it('passwordが6文字未満のときは失敗する', async () => {
+				const context = new ApiContext(null, null, db, config, {
+					body: {
+						screenName: 'hogehoge',
+						password: 'a1b2c',
+						name: 'froster',
+						description: 'testhoge'
+					},
+					headers: { 'X-Api-Version': 1 },
+					user,
+					application
+				});
+				await route.post(context);
+				assert.equal(context.statusCode, 400);
+			});
+
+			it('nameが33文字以上のときは失敗する', async () => {
+				const context = new ApiContext(null, null, db, config, {
+					body: {
+						screenName: 'hogehoge',
+						password: 'a1b2c3d4e5f6g',
+						name: 'superFrostersuperFrostersuperFros',
+						description: 'testhoge'
+					},
+					headers: { 'X-Api-Version': 1 },
+					user,
+					application
+				});
+				await route.post(context);
+				assert.equal(context.statusCode, 400);
+			});
+
+			it('descriptionが257文字以上のときは失敗する', async () => {
+				const context = new ApiContext(null, null, db, config, {
+					body: {
+						screenName: 'hogehoge',
+						password: 'a1b2c3d4e5f6g',
+						name: '',
+						description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget'
+					},
+					headers: { 'X-Api-Version': 1 },
+					user,
+					application
+				});
+				await route.post(context);
+				assert.equal(context.statusCode, 400);
 			});
 		});
 
@@ -63,24 +181,35 @@ describe('Users API', () => {
 			describe('[GET]', () => {
 				it('正しくリクエストされた場合は成功する', async () => {
 					const context = new ApiContext(null, null, db, config, {
-						params: { id: user.document._id },
+						params: { id: user._id },
 						headers: { 'X-Api-Version': 1 },
 						user,
-						application: app
+						application
 					});
 					await routeId.get(context);
-
-					assert(typeof context.data != 'string', `api error: ${context.data}`);
-
+					assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
 					delete context.data.user.id;
 					delete context.data.user.createdAt;
 					assert.deepEqual(context.data, {
 						user: {
-							screenName: user.document.screenName,
-							name: user.document.name,
-							description: user.document.description
+							screenName: user.screenName,
+							name: user.name,
+							description: user.description,
+							followersCount: 0,
+							followingsCount: 0,
+							postsCount: { status: 0 }
 						}
 					});
+				});
+				it('存在しないユーザーを指定した場合は404を返す', async () => {
+					const context = new ApiContext(null, null, db, config, {
+						params: { id: 'abcdefg1234' },
+						headers: { 'X-Api-Version': 1 },
+						user,
+						application
+					});
+					await routeId.get(context);
+					assert.equal(context.statusCode, 404);
 				});
 			});
 			describe('/timelines/user', () => {

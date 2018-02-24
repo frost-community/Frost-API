@@ -1,7 +1,11 @@
-const User = require('../../../../../documentModels/user');
+const ApiContext = require('../../../../../modules/ApiContext');
 // const $ = require('cafy').default;
 
-// 対象ファイルの取得
+/**
+ * 対象ファイルの取得
+ *
+ * @param {ApiContext} apiContext
+*/
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		permissions: ['storageRead']
@@ -9,54 +13,55 @@ exports.get = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	// user
-	const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
+	const user = await apiContext.repository.findById('users', apiContext.params.id);
 	if (user == null) {
-		return apiContext.response(404, 'user as premise not found');
+		apiContext.response(404, 'user as premise not found');
+		return;
 	}
 
 	// file
 	let file;
 	try {
-		file = await apiContext.db.storageFiles.findByIdAsync(apiContext.params.file_id);
+		file = await apiContext.repository.findById('storageFiles', apiContext.params.file_id);
 	}
 	catch (err) {
 		console.log(err);
 	}
 
-	// 存在しない もしくは creatorの不一致がある
-	if (file == null || file.document.creator.type != 'user' || !file.document.creator.id.equals(user.document._id)) {
-		apiContext.response(204);
+	// ファイルが存在しているかどうか、指定ユーザーが所有するリソースであるかどうか
+	if (file == null || file.creator.type != 'user' || !file.creator.id.equals(user._id)) {
+		apiContext.response(404, 'file not found');
 		return;
 	}
 
 	// level
-	let level = file.document.accessRight.level;
-
-	const requestUserId = apiContext.user.document._id;
-	const isOwnerAccess = file.document.creator.id.equals(requestUserId);
-
+	const isOwnerAccess = file.creator.id.equals(apiContext.user._id);
+	let level = file.accessRight.level;
 	if (level == 'private') {
-		// 所有者以外のユーザー
-		if (!isOwnerAccess) {
-			return apiContext.response(403, 'this operation is not permitted');
+		// 所有者か許可したユーザー
+		const accessableUsers = file.accessRight.users;
+		const isAllowedUser = isOwnerAccess || (accessableUsers != null && accessableUsers.some(i => i.equals(apiContext.user._id)));
+		if (!isAllowedUser) {
+			apiContext.response(403, 'this operation is not permitted');
+			return;
 		}
 	}
-	else if (level == 'specific') {
-		const users = file.document.accessRight.users;
-
-		// アクセスを許可していないユーザー
-		if (!isOwnerAccess && (users == null || !users.some(i => i == requestUserId))) {
-			return apiContext.response(403, 'this operation is not permitted');
-		}
+	else if (level == 'public') {
+		// noop
 	}
-	else if (level != 'public') {
-		return apiContext.response(500, 'unknown access-right level');
+	else {
+		apiContext.response(500, 'unknown access-right level');
+		return;
 	}
 
-	apiContext.response(200, { storageFile: file.serialize(true) });
+	apiContext.response(200, { storageFile: apiContext.storageFilesService.serialize(file, true) });
 };
 
-// 対象ファイルの削除
+/**
+ * 対象ファイルの削除
+ *
+ * @param {ApiContext} apiContext
+*/
 exports.delete = async (apiContext) => {
 	await apiContext.proceed({
 		permissions: ['storageWrite']
@@ -64,34 +69,33 @@ exports.delete = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	// user
-	const user = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
+	const user = await apiContext.repository.findById('users', apiContext.params.id);
 	if (user == null) {
-		return apiContext.response(404, 'user as premise not found');
+		apiContext.response(404, 'user as premise not found');
+		return;
 	}
 
-	const isOwnerAccess = user.document._id.equals(apiContext.user.document._id);
+	const isOwnerAccess = user._id.equals(apiContext.user._id);
 	if (!isOwnerAccess) {
-		return apiContext.response(403, 'this operation is not permitted');
+		apiContext.response(403, 'this operation is not permitted');
+		return;
 	}
 
 	// file
 	let file;
 	try {
-		file = await apiContext.db.storageFiles.findByIdAsync(apiContext.params.file_id);
+		file = await apiContext.repository.findById('storageFiles', apiContext.params.file_id);
 	}
 	catch (err) {
 		console.log(err);
 	}
 
-	if (file == null) {
-		return apiContext.response(404);
+	// ファイルが存在しているかどうか、指定ユーザーが所有するリソースであるかどうか
+	if (file == null || file.creator.type != 'user' || !file.creator.id.equals(user._id)) {
+		apiContext.response(404, 'file not found');
+		return;
 	}
 
-	// 所有していないリソース
-	if (file.document.creator.type != 'user' || !file.document.creator.id.equals(user.document._id)) {
-		return apiContext.response(403);
-	}
-
-	// TODO
-	return apiContext.response(501, 'not implemented yet');
+	// not supported yet
+	apiContext.response(501, 'deletion of storage files is not supported yet');
 };

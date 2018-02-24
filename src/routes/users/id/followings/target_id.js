@@ -1,8 +1,8 @@
-const User = require('../../../../documentModels/user');
-const UserFollowing = require('../../../../documentModels/userFollowing');
-const { StreamUtil } = require('../../../../helpers/stream');
+const ApiContext = require('../../../../modules/ApiContext');
+const { StreamUtil } = require('../../../../modules/stream');
 // const $ = require('cafy').default;
 
+/** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		query: {},
@@ -11,29 +11,29 @@ exports.get = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	// source user
-	const sourceUser = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
+	const sourceUser = await apiContext.repository.findById('users', apiContext.params.id);
 	if (sourceUser == null) {
-		return apiContext.response(404, 'source user as premise not found');
+		apiContext.response(404, 'source user as premise not found');
+		return;
 	}
 
 	// target user
-	const targetUser = await User.findByIdAsync(apiContext.params.target_id, apiContext.db, apiContext.config);
+	const targetUser = await apiContext.repository.findById('users', apiContext.params.target_id);
 	if (targetUser == null) {
-		return apiContext.response(404, 'target user as premise not found');
+		apiContext.response(404, 'target user as premise not found');
+		return;
 	}
 
-	if (sourceUser.document._id.equals(targetUser.document._id)) {
-		return apiContext.response(400, 'source user and target user is same');
+	if (sourceUser._id.equals(targetUser._id)) {
+		apiContext.response(400, 'source user and target user is same');
+		return;
 	}
 
-	const userFollowing = await UserFollowing.findBySrcDestIdAsync(sourceUser.document._id, targetUser.document._id, apiContext.db, apiContext.config);
-	if (userFollowing == null) {
-		return apiContext.response(404, 'not following', false);
-	}
-
-	apiContext.response(204);
+	const userFollowing = await apiContext.userFollowingsService.findBySrcDestId(sourceUser._id, targetUser._id);
+	apiContext.response(200, { following: userFollowing != null });
 };
 
+/** @param {ApiContext} apiContext */
 exports.put = async (apiContext) => {
 	await apiContext.proceed({
 		body: {},
@@ -41,66 +41,51 @@ exports.put = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	apiContext.body = apiContext.body || {};
-
 	// source user
-	const sourceUser = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
+	const sourceUser = await apiContext.repository.findById('users', apiContext.params.id);
 	if (sourceUser == null) {
-		return apiContext.response(404, 'user as premise not found');
+		apiContext.response(404, 'user as premise not found');
+		return;
 	}
-	const sourceUserId = sourceUser.document._id;
+	const sourceUserId = sourceUser._id;
 
-	if (!sourceUserId.equals(apiContext.user.document._id)) {
-		return apiContext.response(403, 'this operation is not permitted');
+	if (!sourceUserId.equals(apiContext.user._id)) {
+		apiContext.response(403, 'this operation is not permitted');
+		return;
 	}
 
 	// target user
-	const targetUser = await User.findByIdAsync(apiContext.params.target_id, apiContext.db, apiContext.config);
+	const targetUser = await apiContext.repository.findById('users', apiContext.params.target_id);
 	if (targetUser == null) {
-		return apiContext.response(404, 'target user as premise not found');
+		apiContext.response(404, 'target user as premise not found');
+		return;
 	}
-	const targetUserId = targetUser.document._id;
+	const targetUserId = targetUser._id;
 
 	if (targetUserId.equals(sourceUserId)) {
-		return apiContext.response(400, 'source user and target user is same');
+		apiContext.response(400, 'source user and target user is same');
+		return;
 	}
 
 	// message
 	const message = apiContext.body.message;
 	if (message != null && (/^\s*$/.test(message) || /^[\s\S]{1,64}$/.test(message) == false)) {
-		return apiContext.response(400, 'message is invalid format.');
+		apiContext.response(400, 'message is invalid format.');
+		return;
 	}
 
 	// ドキュメント作成・更新
-	let resultUpsert;
-	try {
-		resultUpsert = await apiContext.db.userFollowings.upsertAsync({ // TODO: move to document models
-			source: sourceUserId,
-			target: targetUserId
-		}, {
-			source: sourceUserId,
-			target: targetUserId,
-			message: message
-		}, { renewal: true });
-	}
-	catch (err) {
-		console.log(err);
-	}
-
-	if (resultUpsert.ok != 1) {
-		return apiContext.response(500, 'failed to create or update userFollowing');
-	}
-
 	let userFollowing;
 	try {
-		userFollowing = await UserFollowing.findBySrcDestIdAsync(sourceUserId, targetUserId, apiContext.db, apiContext.config);
+		userFollowing = await apiContext.userFollowingsService.create(sourceUserId, targetUserId, message);
 	}
 	catch (err) {
 		console.log(err);
 	}
 
 	if (userFollowing == null) {
-		return apiContext.response(500, 'failed to fetch userFollowing');
+		apiContext.response(500, 'failed to create or update userFollowing');
+		return;
 	}
 
 	// 対象ユーザーのストリームを購読
@@ -109,9 +94,10 @@ exports.put = async (apiContext) => {
 		stream.addSource(targetUserId.toString()); // この操作は冪等
 	}
 
-	apiContext.response(204);
+	apiContext.response(200, 'following');
 };
 
+/** @param {ApiContext} apiContext */
 exports.delete = async (apiContext) => {
 	await apiContext.proceed({
 		query: {},
@@ -120,32 +106,35 @@ exports.delete = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	// source user
-	const soruceUser = await User.findByIdAsync(apiContext.params.id, apiContext.db, apiContext.config);
+	const soruceUser = await apiContext.repository.findById('users', apiContext.params.id);
 	if (soruceUser == null) {
-		return apiContext.response(404, 'user as premise not found');
+		apiContext.response(404, 'user as premise not found');
+		return;
 	}
-	if (!soruceUser.document._id.equals(apiContext.user.document._id)) {
-		return apiContext.response(403, 'this operation is not permitted');
+	if (!soruceUser._id.equals(apiContext.user._id)) {
+		apiContext.response(403, 'this operation is not permitted');
+		return;
 	}
 
 	// target user
-	const targetUser = await User.findByIdAsync(apiContext.params.target_id, apiContext.db, apiContext.config);
+	const targetUser = await apiContext.repository.findById('users', apiContext.params.target_id);
 	if (targetUser == null) {
-		return apiContext.response(404, 'target user as premise not found');
+		apiContext.response(404, 'target user as premise not found');
+		return;
 	}
 
-	const userFollowing = await UserFollowing.findBySrcDestIdAsync(soruceUser.document._id, targetUser.document._id, apiContext.db, apiContext.config);
-
-	// ドキュメントが存在すれば削除
-	if (userFollowing != null) {
-		await userFollowing.removeAsync();
-
-		// 対象ユーザーのストリームを購読解除
-		const stream = apiContext.streams.get(StreamUtil.buildStreamId('user-timeline-status', soruceUser.document._id.toString()));
-		if (stream != null) {
-			stream.removeSource(targetUser.document._id.toString());
-		}
+	try {
+		await apiContext.userFollowingsService.removeBySrcDestId(soruceUser._id, targetUser._id);
+	}
+	catch (err) {
+		// ignore
 	}
 
-	apiContext.response(204);
+	// 対象ユーザーのストリームを購読解除
+	const stream = apiContext.streams.get(StreamUtil.buildStreamId('user-timeline-status', soruceUser._id.toString()));
+	if (stream != null) {
+		stream.removeSource(targetUser._id.toString());
+	}
+
+	apiContext.response(200, { following: false });
 };

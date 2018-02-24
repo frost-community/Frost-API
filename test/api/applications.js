@@ -1,40 +1,44 @@
 const assert = require('assert');
-const config = require('../../src/helpers/loadConfig')();
-const DbProvider = require('../../src/helpers/dbProvider');
-const Db = require('../../src/helpers/db');
-const ApiContext = require('../../src/helpers/ApiContext');
+const { loadConfig } = require('../../src/modules/helpers/GeneralHelper');
+const config = loadConfig();
+const MongoAdapter = require('../../src/modules/MongoAdapter');
+const UsersService = require('../../src/services/UsersService');
+const ApplicationsService = require('../../src/services/ApplicationsService');
+const ApiContext = require('../../src/modules/ApiContext');
 const routeApp = require('../../src/routes/applications');
 const routeAppId = require('../../src/routes/applications/id');
 const routeAppIdApplicationKey = require('../../src/routes/applications/id/application_key');
 
 describe('Applications API', () => {
 	describe('/applications', () => {
-		// load collections
-		let db;
+		let db, usersService, applicationsService;
 		before(async () => {
 			config.api.database = config.api.testDatabase;
 
-			const dbProvider = await DbProvider.connectApidbAsync(config);
-			db = new Db(config, dbProvider);
+			const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
+			db = await MongoAdapter.connect(config.api.database.host, config.api.database.database, authenticate);
 
-			await db.users.removeAsync({});
-			await db.applications.removeAsync({});
+			await db.remove('users', {});
+			await db.remove('applications', {});
+
+			usersService = new UsersService(db, config);
+			applicationsService = new ApplicationsService(db, config);
 		});
 
 		// add general users, general applications
 		let userA, userB, appA, appB;
 		beforeEach(async () => {
-			userA = await db.users.createAsync('generaluser_a', 'abcdefg', 'froster', 'this is generaluser.');
-			userB = await db.users.createAsync('generaluser_b', 'abcdefg', 'froster', 'this is generaluser.');
+			userA = await usersService.create('generaluser_a', 'abcdefg', 'froster', 'this is generaluser.');
+			userB = await usersService.create('generaluser_b', 'abcdefg', 'froster', 'this is generaluser.');
 
-			appA = await db.applications.createAsync('generalapp_a', userA, 'this is generalapp.', ['application', 'applicationSpecial']);
-			appB = await db.applications.createAsync('generalapp_b', userB, 'this is generalapp.', ['application', 'applicationSpecial']);
+			appA = await applicationsService.create('generalapp_a', userA, 'this is generalapp.', ['application', 'applicationSpecial']);
+			appB = await applicationsService.create('generalapp_b', userB, 'this is generalapp.', ['application', 'applicationSpecial']);
 		});
 
 		// remove all users, all applications
 		afterEach(async () => {
-			await db.users.removeAsync({});
-			await db.applications.removeAsync({});
+			await db.remove('users', {});
+			await db.remove('applications', {});
 		});
 
 		describe('[POST]', () => {
@@ -50,16 +54,13 @@ describe('Applications API', () => {
 					application: appA
 				});
 				await routeApp.post(context);
-
-				assert(typeof context.data != 'string', `api error: ${context.data}`);
-
-				assert(context.data.application != null, `application is null. ${context.data}`);
+				assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
 				delete context.data.application.id;
 				delete context.data.application.createdAt;
 				assert.deepEqual(context.data, {
 					application: {
 						name: 'temp',
-						creatorId: userA.document._id.toString(),
+						creatorId: userA._id.toString(),
 						description: 'hogehoge',
 						permissions: []
 					}
@@ -118,17 +119,15 @@ describe('Applications API', () => {
 					application: appA
 				});
 				await routeApp.get(context);
-
-				assert(typeof context.data != 'string', `api error: ${context.data}`);
-
+				assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
 				delete context.data.applications[0].id;
 				delete context.data.applications[0].createdAt;
 				assert.deepEqual(context.data, {
 					applications: [{
-						creatorId: userA.document._id.toString(),
-						name: appA.document.name,
-						description: appA.document.description,
-						permissions: appA.document.permissions
+						creatorId: userA._id.toString(),
+						name: appA.name,
+						description: appA.description,
+						permissions: appA.permissions
 					}]
 				});
 			});
@@ -138,30 +137,28 @@ describe('Applications API', () => {
 			describe('[GET]', () => {
 				it('正しくリクエストされた場合は成功する', async () => {
 					const context = new ApiContext(null, null, db, config, {
-						params: { id: appA.document._id.toString() },
+						params: { id: appA._id.toString() },
 						headers: { 'X-Api-Version': 1 },
 						user: userA,
 						application: appA
 					});
 					await routeAppId.get(context);
-
-					assert(typeof context.data != 'string', `api error: ${context.data}`);
-
+					assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
 					delete context.data.application.id;
 					delete context.data.application.createdAt;
 					assert.deepEqual(context.data, {
 						application: {
-							creatorId: userA.document._id.toString(),
-							name: appA.document.name,
-							description: appA.document.description,
-							permissions: appA.document.permissions
+							creatorId: userA._id.toString(),
+							name: appA.name,
+							description: appA.description,
+							permissions: appA.permissions
 						}
 					});
 				});
 
 				it('所有していないアプリケーションを指定された場合でも成功する', async () => {
 					const context = new ApiContext(null, null, db, config, {
-						params: { id: appB.document._id.toString() },
+						params: { id: appB._id.toString() },
 						headers: { 'X-Api-Version': 1 },
 						user: userA,
 						application: appA
@@ -170,7 +167,7 @@ describe('Applications API', () => {
 					assert.equal(context.statusCode, 200);
 				});
 
-				it('存在しないアプリケーションを指定した場合は204を返す', async () => {
+				it('存在しないアプリケーションを指定した場合は404を返す', async () => {
 					const context = new ApiContext(null, null, db, config, {
 						params: { id: 'abcdefg1234' },
 						headers: { 'X-Api-Version': 1 },
@@ -178,7 +175,7 @@ describe('Applications API', () => {
 						application: appA
 					});
 					await routeAppId.get(context);
-					assert.equal(context.statusCode, 204);
+					assert.equal(context.statusCode, 404);
 				});
 			});
 
@@ -186,24 +183,23 @@ describe('Applications API', () => {
 				describe('[POST]', () => {
 					it('正しくリクエストされた場合は成功する', async () => {
 						const context = new ApiContext(null, null, db, config, {
-							params: { id: appA.document._id.toString() },
+							params: { id: appA._id.toString() },
 							headers: { 'X-Api-Version': 1 },
 							user: userA,
 							application: appA
 						});
 						await routeAppIdApplicationKey.post(context);
+						assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
 
-						assert(typeof context.data != 'string', `api error: ${context.data}`);
-
-						await appA.fetchAsync();
+						appA = await db.findById('applications', appA._id);
 						assert.deepEqual(context.data, {
-							applicationKey: appA.getApplicationKey()
+							applicationKey: applicationsService.getApplicationKey(appA)
 						});
 					});
 
 					it('所有していないアプリケーションを指定された場合は失敗する', async () => {
 						const context = new ApiContext(null, null, db, config, {
-							params: { id: appA.document._id.toString() },
+							params: { id: appA._id.toString() },
 							headers: { 'X-Api-Version': 1 },
 							user: userB,
 							application: appB
@@ -215,34 +211,31 @@ describe('Applications API', () => {
 
 				describe('[GET]', () => {
 					it('正しくリクエストされた場合は成功する', async () => {
-						const key = await appA.generateApplicationKeyAsync();
+						const key = await applicationsService.generateApplicationKey(appA);
 
 						const context = new ApiContext(null, null, db, config, {
-							params: { id: appA.document._id.toString() },
+							params: { id: appA._id.toString() },
 							headers: { 'X-Api-Version': 1 },
 							user: userA,
 							application: appA
 						});
 						await routeAppIdApplicationKey.get(context);
-
-						assert(typeof context.data != 'string', `api error: ${context.data}`);
-
+						assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
 						assert.deepEqual(context.data, {
 							applicationKey: key
 						});
 					});
 
 					it('持っていないアプリケーションを指定された場合は失敗する', async () => {
-						await appB.generateApplicationKeyAsync();
+						await applicationsService.generateApplicationKey(appB);
 
 						const context = new ApiContext(null, null, db, config, {
-							params: { id: appB.document._id.toString() },
+							params: { id: appB._id.toString() },
 							headers: { 'X-Api-Version': 1 },
 							user: userA,
 							application: appA
 						});
 						await routeAppIdApplicationKey.get(context);
-
 						assert.equal(context.data, 'this operation is not permitted');
 					});
 				});

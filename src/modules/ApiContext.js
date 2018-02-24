@@ -1,12 +1,23 @@
-const Application = require('../documentModels/application');
-const ApplicationAccess = require('../documentModels/applicationAccess');
+const UsersService = require('../services/UsersService');
+const UserFollowingsService = require('../services/UserFollowingsService');
+const ApplicationsService = require('../services/ApplicationsService');
+const AuthorizeRequestsService = require('../services/AuthorizeRequestsService');
+const ApplicationAccessesService = require('../services/ApplicationAccessesService');
+const PostsService = require('../services/PostsService');
+const StorageFilesService = require('../services/StorageFilesService');
 const { InvalidOperationError } = require('./errors');
+const AsyncLock = require('async-lock');
+const MongoAdapter = require('./MongoAdapter');
 
 class ApiContext {
-	constructor(streams, lock, db, config, options) {
+	/**
+	 * @param {AsyncLock} lock
+	 * @param {MongoAdapter} repository
+	*/
+	constructor(streams, lock, repository, config, options) {
 		this.lock = lock;
 		this.streams = streams;
-		this.db = db;
+		this.repository = repository;
 		this.config = config;
 		options = options || {};
 		this.params = options.params || {};
@@ -14,6 +25,14 @@ class ApiContext {
 		this.body = options.body || {};
 		this.user = options.user;
 		this.application = options.application;
+		// service instances
+		this.usersService = new UsersService(repository, config);
+		this.userFollowingsService = new UserFollowingsService(repository, config);
+		this.applicationsService = new ApplicationsService(repository, config);
+		this.authorizeRequestsService = new AuthorizeRequestsService(repository, config);
+		this.applicationAccessesService = new ApplicationAccessesService(repository, config);
+		this.postsService = new PostsService(repository, config, this.usersService);
+		this.storageFilesService = new StorageFilesService(repository, config);
 
 		this.headers = {};
 		// ヘッダーのキーを小文字に変換して格納
@@ -78,32 +97,37 @@ class ApiContext {
 				return this.response(400, 'x-access-key header is empty');
 			}
 
-			if (!await Application.verifyKeyAsync(applicationKey, this.db, this.config)) {
+			if (!await this.applicationsService.verifyApplicationKey(applicationKey)) {
 				return this.response(400, 'x-application-key header is invalid');
 			}
 
-			if (!await ApplicationAccess.verifyKeyAsync(accessKey, this.db, this.config)) {
+			if (!await this.applicationAccessesService.verifyAccessKey(accessKey)) {
 				return this.response(400, 'x-access-key header is invalid');
 			}
 
 			this.applicationKey = applicationKey;
 			this.accessKey = accessKey;
 
-			const { userId } = ApplicationAccess.splitKey(this.accessKey, this.db, this.config);
-			const { applicationId } = Application.splitKey(this.applicationKey, this.db, this.config);
+			const { userId } = this.applicationAccessesService.splitAccessKey(this.accessKey);
+			const { applicationId } = this.applicationsService.splitApplicationKey(this.applicationKey);
 
 			// fetch
 			[this.user, this.application] = await Promise.all([
-				this.db.users.findByIdAsync(userId),
-				this.db.applications.findByIdAsync(applicationId)
+				this.repository.findById('users', userId),
+				this.repository.findById('applications', applicationId)
 			]);
 		}
 
 		// check permissions
 
-		const hasPermissions = rule.permissions.every(p => this.application.hasPermission(p));
-		if (!hasPermissions) {
-			return this.response(403, 'you do not have any permissions');
+		const missingPermissions = [];
+		for (const p of rule.permissions) {
+			if (!this.applicationsService.hasPermission(this.application, p)) {
+				missingPermissions.push(p);
+			}
+		}
+		if (missingPermissions.length != 0) {
+			return this.response(403, { message: 'you do not have any permissions', details: missingPermissions });
 		}
 
 		// body
