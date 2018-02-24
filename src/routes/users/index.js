@@ -52,7 +52,7 @@ exports.post = async (apiContext) => {
 			password: { cafy: $().string() },
 			description: { cafy: $().string().range(0, 256), default: '' },
 			name: { cafy: $().string().range(1, 32), default: 'froster' }
-		}, permissions: ['accountSpecial']
+		}, permissions: ['userSpecial']
 	});
 	if (apiContext.responsed) return;
 

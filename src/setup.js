@@ -89,6 +89,7 @@ module.exports = async () => {
 					'accountSpecial',
 					'userRead',
 					'userWrite',
+					'userSpecial',
 					'postRead',
 					'postWrite',
 					'storageRead',
