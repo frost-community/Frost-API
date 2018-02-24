@@ -11,7 +11,7 @@
     "start": "node --use_strict ./",
     "setup": "node --use_strict ./ --setup",
     "test:lint": "eslint ./src/**/*.js",
-    "test:mocha": "mocha -A",
+    "test:mocha": "mocha -A --use_strict",
     "test:mocha-watch": "mocha -w",
     "test": "npm run test:lint && npm run test:mocha",
     "versions": "echo mocha && mocha --version && echo eslint && eslint -v"
