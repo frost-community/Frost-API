@@ -28,10 +28,10 @@ describe('Users API', () => {
 		});
 
 		// add general user, general application
-		let user, app;
+		let user, application;
 		beforeEach(async () => {
 			user = await usersService.create('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
-			app = await applicationsService.create('generalapp', user, 'this is generalapp.', ['userRead']);
+			application = await applicationsService.create('generalapp', user, 'this is generalapp.', ['userRead', 'userSpecial']);
 		});
 
 		// remove all users, all applications
@@ -49,7 +49,7 @@ describe('Users API', () => {
 					query: { 'screen_names': user.screenName },
 					headers: { 'X-Api-Version': 1 },
 					user,
-					application: app
+					application
 				});
 				await route.get(context);
 				assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
@@ -68,6 +68,115 @@ describe('Users API', () => {
 			});
 		});
 
+		describe('[POST]', () => {
+			it('正しくリクエストされた場合は成功する', async () => {
+				const context = new ApiContext(null, null, db, config, {
+					body: {
+						screenName: 'hogehoge',
+						password: 'a1b2c3d4e5f6g',
+						name: 'froster',
+						description: 'testhoge'
+					},
+					headers: { 'X-Api-Version': 1 },
+					user,
+					application
+				});
+				await route.post(context);
+				assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
+
+				delete context.data.user.id;
+				delete context.data.user.createdAt;
+				assert.deepEqual(context.data, {
+					user: {
+						screenName: 'hogehoge',
+						name: 'froster',
+						description: 'testhoge',
+						followersCount: 0,
+						followingsCount: 0,
+						postsCount: { status: 0 }
+					}
+				});
+			});
+
+			it('screenNameが4文字未満もしくは16文字以上のとき失敗する', async () => {
+				let context = new ApiContext(null, null, db, config, {
+					body: {
+						screenName: 'abc',
+						password: 'a1b2c3d4e5f6g',
+						name: 'froster',
+						description: 'testhoge'
+					},
+					headers: { 'X-Api-Version': 1 },
+					user,
+					application
+				});
+				await route.post(context);
+				assert.equal(context.statusCode, 400);
+
+				context = new ApiContext(null, null, db, config, {
+					body: {
+						screenName: 'abcdefghijklmnop',
+						password: 'a1b2c3d4e5f6g',
+						name: 'froster',
+						description: 'testhoge'
+					},
+					headers: { 'X-Api-Version': 1 },
+					user,
+					application
+				});
+				await route.post(context);
+				assert.equal(context.statusCode, 400);
+			});
+
+			it('passwordが6文字未満のときは失敗する', async () => {
+				const context = new ApiContext(null, null, db, config, {
+					body: {
+						screenName: 'hogehoge',
+						password: 'a1b2c',
+						name: 'froster',
+						description: 'testhoge'
+					},
+					headers: { 'X-Api-Version': 1 },
+					user,
+					application
+				});
+				await route.post(context);
+				assert.equal(context.statusCode, 400);
+			});
+
+			it('nameが33文字以上のときは失敗する', async () => {
+				const context = new ApiContext(null, null, db, config, {
+					body: {
+						screenName: 'hogehoge',
+						password: 'a1b2c3d4e5f6g',
+						name: 'superFrostersuperFrostersuperFros',
+						description: 'testhoge'
+					},
+					headers: { 'X-Api-Version': 1 },
+					user,
+					application
+				});
+				await route.post(context);
+				assert.equal(context.statusCode, 400);
+			});
+
+			it('descriptionが257文字以上のときは失敗する', async () => {
+				const context = new ApiContext(null, null, db, config, {
+					body: {
+						screenName: 'hogehoge',
+						password: 'a1b2c3d4e5f6g',
+						name: '',
+						description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget'
+					},
+					headers: { 'X-Api-Version': 1 },
+					user,
+					application
+				});
+				await route.post(context);
+				assert.equal(context.statusCode, 400);
+			});
+		});
+
 		describe('/:id', () => {
 			describe('[GET]', () => {
 				it('正しくリクエストされた場合は成功する', async () => {
@@ -75,7 +184,7 @@ describe('Users API', () => {
 						params: { id: user._id },
 						headers: { 'X-Api-Version': 1 },
 						user,
-						application: app
+						application
 					});
 					await routeId.get(context);
 					assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
@@ -97,7 +206,7 @@ describe('Users API', () => {
 						params: { id: 'abcdefg1234' },
 						headers: { 'X-Api-Version': 1 },
 						user,
-						application: app
+						application
 					});
 					await routeId.get(context);
 					assert.equal(context.statusCode, 404);
