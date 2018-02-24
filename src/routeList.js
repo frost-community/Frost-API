@@ -6,11 +6,6 @@ module.exports = [
 	// 全てのユーザーを対象とする、一般公開されたポストを時系列で複数取得
 	['get', '/general/timeline'],
 
-	// == Account ==
-
-	// アカウントを作成する
-	['post', '/account'],
-
 	// == IceAuth ==
 
 	// 認証リクエスト
@@ -30,31 +25,34 @@ module.exports = [
 
 	// == Applications ==
 
-	// アプリケーションを作成する
-	['post', '/applications'],
-
 	// ユーザーが作成したアプリケーション情報を一覧で取得する
 	['get', '/applications'],
+
+	// アプリケーションを作成する
+	['post', '/applications'],
 
 	// idを指定してアプリケーション情報を取得する
 	['get', '/applications/:id'],
 
-	// アプリケーションキーを生成する
-	['post', '/applications/:id/application_key'],
-
 	// idを指定してアプリケーションキーを取得する
 	['get', '/applications/:id/application_key'],
+
+	// アプリケーションキーを生成する
+	['post', '/applications/:id/application_key'],
 
 	// == Users ==
 
 	// 一つ以上のscreenNameを指定してユーザー情報を取得する
 	['get', '/users'],
 
-	// idを指定してユーザー情報を更新する
-	['patch', '/users/:id'],
+	// アカウントを作成する
+	['post', '/users'],
 
 	// ユーザー情報を取得する
 	['get', '/users/:id'],
+
+	// idを指定してユーザー情報を更新する
+	['patch', '/users/:id'],
 
 	// 対象のユーザーが投稿したポストを時系列で複数取得
 	['get', '/users/:id/timelines/user'],
@@ -79,9 +77,9 @@ module.exports = [
 
 	['get', '/users/:id/storage'],
 
-	['post', '/users/:id/storage/files'],
-
 	['get', '/users/:id/storage/files'],
+
+	['post', '/users/:id/storage/files'],
 
 	['get', '/users/:id/storage/files/:file_id'],
 
