@@ -1,3 +1,4 @@
+const path = require('path');
 const ApiContext = require('./ApiContext');
 const pathToRegexp = require('path-to-regexp');
 const { MissingArgumentsError } = require('./errors');
@@ -6,14 +7,14 @@ class DirectoryRouter {
 	/**
 	 * このモジュールを初期化します
 	 *
-	 * @param {e} app 対象のサーバアプリケーション
+	 * @param {e} router 対象のexpressルータまたはexpressサーバ
 	 */
-	constructor(app) {
-		if (app == null) {
+	constructor(router) {
+		if (router == null) {
 			throw new MissingArgumentsError();
 		}
 
-		this.app = app;
+		this.router = router;
 		this.routes = [];
 	}
 
@@ -28,7 +29,12 @@ class DirectoryRouter {
 			throw new MissingArgumentsError();
 		}
 
-		this.app[route.method](route.path, (request, response) => {
+		this.routes.push(route);
+		this.registerExpressRouter(route);
+	}
+
+	registerExpressRouter(route) {
+		this.router[route.method](route.path, (request, response) => {
 			(async () => {
 				let apiContext;
 				try {
@@ -69,8 +75,6 @@ class DirectoryRouter {
 				}
 			})();
 		});
-
-		this.routes.push(route);
 	}
 
 	/**
@@ -92,4 +96,52 @@ class DirectoryRouter {
 		return this.routes.find(i => i.method === method.toLowerCase() && pathToRegexp(i.path, []).test(endpoint));
 	}
 }
-module.exports = DirectoryRouter;
+
+class Route {
+	/**
+	 * @param {string} method
+	 * @param {string} path
+	 */
+	constructor(method, path) {
+		if (method == null || path == null) {
+			throw new MissingArgumentsError();
+		}
+
+		if (typeof method != 'string' || typeof path != 'string') {
+			throw new Error('invalid type');
+		}
+
+		this.method = method;
+		this.path = path;
+	}
+
+	getModulePath() {
+		let modulePath = path.join(__dirname, '../routes', this.path.replace(/:/g, ''));
+
+		if (/(\/$|^$)/.test(modulePath)) {
+			modulePath += 'index';
+		}
+
+		modulePath = modulePath.replace(/\//g, path.sep);
+
+		return modulePath;
+	}
+
+	getParams(endpoint) {
+		const keys = [];
+		const pathRegex = pathToRegexp(this.path, keys);
+		const values = pathRegex.exec(endpoint);
+
+		const params = [];
+		for (let i = 0; i < keys.length; i++) {
+			params[keys[i].name] = values[i + 1];
+		}
+
+		return params;
+	}
+}
+
+module.exports = {
+	DirectoryRouter,
+	Route
+};

@@ -1,7 +1,7 @@
 const assert = require('assert');
 const { loadConfig } = require('../src/modules/helpers/GeneralHelper');
 const config = loadConfig();
-const Route = require('../src/modules/route');
+const { Route } = require('../src/modules/directoryRouter');
 
 describe('General Tests', () => {
 	describe('routes', () => {
@@ -16,19 +16,19 @@ describe('General Tests', () => {
 
 		it('すべての対象ルートのモジュールが存在している', async () => {
 			let errorCount = 0;
-			for (const route of routeList) {
-				const routeInstance = new Route(route[0], route[1]);
-				let routeModule;
+			for (const routeInfo of routeList) {
+				const route = new Route(routeInfo[0], routeInfo[1]);
 
+				let routeModule;
 				try {
-					routeModule = require(routeInstance.getModulePath())[routeInstance.method];
+					routeModule = require(route.getModulePath())[route.method];
 				}
 				catch (e) {
 					routeModule = null;
 				}
 
 				if (routeModule == null) {
-					console.log('route module not found:', route[0], route[1]);
+					console.log('route module not found:', routeInfo[0], routeInfo[1]);
 					errorCount++;
 				}
 			}
