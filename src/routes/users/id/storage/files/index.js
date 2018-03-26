@@ -26,7 +26,7 @@ exports.post = async (apiContext) => {
 					.prop('users', $().array('string').unique().each(i => MongoAdapter.validateId(i))), default: { level: 'public' }
 			}
 		},
-		permissions: ['storageWrite']
+		scopes: ['storageWrite']
 	});
 	if (apiContext.responsed) return;
 
@@ -99,7 +99,7 @@ exports.get = async (apiContext) => { // TODO: フィルター指定
 			next: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null },
 			includeFileData: { cafy: $().string().pipe(i => validator.isBoolean(i)), default: 'false' }
 		},
-		permissions: ['storageRead']
+		scopes: ['storage.read']
 	});
 	if (apiContext.responsed) return;
 

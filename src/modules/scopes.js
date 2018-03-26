@@ -1,5 +1,5 @@
 module.exports = [
-	// 認可サーバのホスト権限
+	// 認可付与のホスト権限
 	{ name: 'auth.host', grantable: false },
 	// 連携アプリの読み取り操作
 	{ name: 'app.read', grantable: true },

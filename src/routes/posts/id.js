@@ -5,7 +5,7 @@ const ApiContext = require('../../modules/ApiContext');
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		query: {},
-		permissions: ['postRead']
+		scopes: ['post.read']
 	});
 	if (apiContext.responsed) return;
 

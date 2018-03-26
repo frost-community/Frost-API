@@ -5,7 +5,7 @@ const { getUsedSpace } = require('../../../../modules/helpers/UserStorageHelper'
 /** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
-		permissions: ['storageRead']
+		scopes: ['storage.read']
 	});
 	if (apiContext.responsed) return;
 

@@ -47,7 +47,7 @@ describe('Applications API', () => {
 					body: {
 						name: 'temp',
 						description: 'hogehoge',
-						permissions: []
+						scopes: []
 					},
 					headers: { 'X-Api-Version': 1 },
 					user: userA,
@@ -62,7 +62,7 @@ describe('Applications API', () => {
 						name: 'temp',
 						creatorId: userA._id.toString(),
 						description: 'hogehoge',
-						permissions: []
+						scopes: []
 					}
 				});
 			});
@@ -72,7 +72,7 @@ describe('Applications API', () => {
 					body: {
 						name: '',
 						description: 'hogehoge',
-						permissions: []
+						scopes: []
 					},
 					headers: { 'X-Api-Version': 1 },
 					user: userA,
@@ -85,7 +85,7 @@ describe('Applications API', () => {
 					body: {
 						name: 'superFrostersuperFrostersuperFros',
 						description: 'hogehoge',
-						permissions: []
+						scopes: []
 					},
 					headers: { 'X-Api-Version': 1 },
 					user: userA,
@@ -100,7 +100,7 @@ describe('Applications API', () => {
 					body: {
 						name: 'temp',
 						description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget',
-						permissions: []
+						scopes: []
 					},
 					headers: { 'X-Api-Version': 1 },
 					user: userA,
@@ -127,7 +127,7 @@ describe('Applications API', () => {
 						creatorId: userA._id.toString(),
 						name: appA.name,
 						description: appA.description,
-						permissions: appA.permissions
+						scopes: appA.scopes
 					}]
 				});
 			});
@@ -151,7 +151,7 @@ describe('Applications API', () => {
 							creatorId: userA._id.toString(),
 							name: appA.name,
 							description: appA.description,
-							permissions: appA.permissions
+							scopes: appA.scopes
 						}
 					});
 				});

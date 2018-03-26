@@ -4,7 +4,7 @@ const ApiContext = require('../../../modules/ApiContext');
 /** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
-		permissions: ['app.host']
+		scopes: ['app.host']
 	});
 	if (apiContext.responsed) return;
 
@@ -28,7 +28,7 @@ exports.get = async (apiContext) => {
 exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {},
-		permissions: ['app.host']
+		scopes: ['app.host']
 	});
 	if (apiContext.responsed) return;
 

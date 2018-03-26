@@ -9,7 +9,7 @@ module.exports.post = async (apiContext) => {
 			applicationId: { cafy: $().string() },
 			userId: { cafy: $().string() }
 		},
-		permissions: ['auth.host']
+		scopes: ['auth.host']
 	});
 	if (apiContext.responsed) return;
 
@@ -41,7 +41,7 @@ module.exports.get = async (apiContext) => {
 			applicationId: { cafy: $().string() },
 			userId: { cafy: $().string() }
 		},
-		permissions: ['auth.host']
+		scopes: ['auth.host']
 	});
 	if (apiContext.responsed) return;
 

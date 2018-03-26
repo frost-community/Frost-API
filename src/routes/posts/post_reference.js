@@ -5,7 +5,7 @@ const ApiContext = require('../../modules/ApiContext');
 exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {},
-		permissions: ['postWrite']
+		scopes: ['post.write']
 	});
 	if (apiContext.responsed) return;
 

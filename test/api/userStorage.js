@@ -42,7 +42,7 @@ describe('User Storage API', () => {
 		let user, app;
 		beforeEach(async () => {
 			user = await usersService.create('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
-			app = await applicationsService.create('generalapp', user, 'this is generalapp.', ['storageRead', 'storageWrite']);
+			app = await applicationsService.create('generalapp', user, 'this is generalapp.', ['storage.read', 'storage.write']);
 		});
 
 		// remove all users, all applications

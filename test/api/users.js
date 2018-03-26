@@ -31,7 +31,7 @@ describe('Users API', () => {
 		let user, application;
 		beforeEach(async () => {
 			user = await usersService.create('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
-			application = await applicationsService.create('generalapp', user, 'this is generalapp.', ['userRead', 'userSpecial']);
+			application = await applicationsService.create('generalapp', user, 'this is generalapp.', ['user.read', 'user.create']);
 		});
 
 		// remove all users, all applications

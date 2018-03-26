@@ -10,7 +10,7 @@ exports.post = async (apiContext) => {
 			text: { cafy: $().string().range(1, 256).pipe(i => !/^\s*$/.test(i)) },
 			attachments: { cafy: $().array('string').unique().max(4).each(i => MongoAdapter.validateId(i)), default: [] }
 		},
-		permissions: ['postWrite']
+		scopes: ['post.write']
 	});
 	if (apiContext.responsed) return;
 

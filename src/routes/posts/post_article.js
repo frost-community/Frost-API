@@ -9,7 +9,7 @@ exports.post = async (apiContext) => {
 			title: { cafy: $().string() },
 			text: { cafy: $().string() }
 		},
-		permissions: ['postWrite']
+		scopes: ['post.write']
 	});
 	if (apiContext.responsed) return;
 
