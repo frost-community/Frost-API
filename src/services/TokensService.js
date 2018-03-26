@@ -1,7 +1,7 @@
 const moment = require('moment');
 const MongoAdapter = require('../modules/MongoAdapter');
 const { sortObject } = require('../modules/helpers/GeneralHelper');
-const { MissingArgumentsError } = require('../modules/errors');
+const { MissingArgumentsError, InvalidArgumentError } = require('../modules/errors');
 const uid = require('uid2');
 
 class TokensService {
@@ -34,13 +34,13 @@ class TokensService {
 
 	// helpers
 
-	create(applicationId, userId, scopes) {
-		if (applicationId == null || userId == null || scopes == null)
+	create(application, user, scopes) {
+		if (application == null || user == null || scopes == null)
 			throw new MissingArgumentsError();
 
 		return this._repository.create('tokens', {
-			applicationId: applicationId,
-			userId: userId,
+			applicationId: application._id,
+			userId: user._id,
 			scopes: scopes,
 			accessToken: uid(128)
 		});

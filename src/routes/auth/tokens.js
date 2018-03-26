@@ -6,25 +6,34 @@ module.exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
 			applicationId: { cafy: $().string() },
-			userId: { cafy: $().string() }
+			userId: { cafy: $().string() },
+			scopes: { cafy: $().array('string') },
 		},
 		scopes: ['auth.host']
 	});
 	if (apiContext.responsed) return;
 
-	const { applicationId, userId } = apiContext.body;
+	const { applicationId, userId, scopes } = apiContext.body;
 
-	if ((await apiContext.repository.findById('applications', applicationId)) == null) {
+	const application = await apiContext.repository.findById('applications', applicationId);
+	if (application == null) {
 		apiContext.response(400, 'applicationId is invalid');
 		return;
 	}
 
-	if ((await apiContext.repository.findById('users', userId)) == null) {
+	const user = await apiContext.repository.findById('users', userId);
+	if (user == null) {
 		apiContext.response(400, 'userId is invalid');
 		return;
 	}
 
-	const token = await apiContext.tokensService.create(applicationId, userId);
+	const validScopes = scopes.every(s => apiContext.applicationsService.hasScope(application, s));
+	if (!validScopes) {
+		apiContext.response(400, 'scopes is invalid');
+		return;
+	}
+
+	const token = await apiContext.tokensService.create(application, user, []);
 
 	apiContext.response(200, { token: apiContext.tokensService.serialize(token) });
 };

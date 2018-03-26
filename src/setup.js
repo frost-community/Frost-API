@@ -92,7 +92,7 @@ module.exports = async () => {
 				//const applicationSecret = await applicationsService.generateApplicationSecret(application);
 				//console.log(`applicationSecret generated. (secret: ${applicationSecret})`);
 
-				const hostToken = await tokensService.create(application._id, user._id, ['auth.host', 'app.host', 'user.create', 'user.delete']);
+				const hostToken = await tokensService.create(application, user, ['auth.host', 'app.host', 'user.create', 'user.delete']);
 				console.log('host token created.', hostToken);
 			}
 			else if (number == 3) {
