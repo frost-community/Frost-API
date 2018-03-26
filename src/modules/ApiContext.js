@@ -1,10 +1,9 @@
 const UsersService = require('../services/UsersService');
 const UserFollowingsService = require('../services/UserFollowingsService');
-const ApplicationsService = require('../services/ApplicationsService');
-const AuthorizeRequestsService = require('../services/AuthorizeRequestsService');
-const ApplicationAccessesService = require('../services/ApplicationAccessesService');
 const PostsService = require('../services/PostsService');
 const StorageFilesService = require('../services/StorageFilesService');
+const ApplicationsService = require('../services/ApplicationsService');
+const AuthService = require('../services/AuthService');
 const { InvalidOperationError } = require('./errors');
 const AsyncLock = require('async-lock');
 const MongoAdapter = require('./MongoAdapter');
@@ -14,31 +13,26 @@ class ApiContext {
 	 * @param {AsyncLock} lock
 	 * @param {MongoAdapter} repository
 	*/
-	constructor(streams, lock, repository, config, options) {
-		this.lock = lock;
+	constructor(user, authInfo, targetVersion, streams, lock, repository, config, options) {
+		this.user = user;
+		this.authInfo = authInfo;
+		this.targetVersion = targetVersion;
 		this.streams = streams;
+		this.lock = lock;
 		this.repository = repository;
 		this.config = config;
 		options = options || {};
 		this.params = options.params || {};
 		this.query = options.query || {};
 		this.body = options.body || {};
-		this.user = options.user;
-		this.application = options.application;
+
 		// service instances
 		this.usersService = new UsersService(repository, config);
 		this.userFollowingsService = new UserFollowingsService(repository, config);
-		this.applicationsService = new ApplicationsService(repository, config);
-		this.authorizeRequestsService = new AuthorizeRequestsService(repository, config);
-		this.applicationAccessesService = new ApplicationAccessesService(repository, config);
 		this.postsService = new PostsService(repository, config, this.usersService);
 		this.storageFilesService = new StorageFilesService(repository, config);
-
-		this.headers = {};
-		// ヘッダーのキーを小文字に変換して格納
-		for (const headerKey of Object.keys(options.headers || {})) {
-			this.headers[headerKey.toLowerCase()] = options.headers[headerKey];
-		}
+		this.applicationsService = new ApplicationsService(repository, config);
+		this.authService = new AuthService(repository, config);
 
 		this.responsed = false;
 	}
@@ -48,86 +42,20 @@ class ApiContext {
 			rule = {};
 		}
 
-		// headers
+		// check scopes
 
-		if (rule.headers == null) {
-			rule.headers = [];
+		if (rule.scopes == null) {
+			rule.scopes = [];
 		}
 
-		if (this.headers == null) {
-			this.headers = {};
-		}
-
-		// ヘッダールールを小文字に変換
-		const headerRules = [];
-		for (const headerRule of rule.headers) {
-			headerRules.push(headerRule.toLowerCase());
-		}
-		rule.headers = headerRules;
-
-		// apiバージョンのヘッダールールがなければ追加
-		if (rule.headers.indexOf('x-api-version') == -1) {
-			rule.headers.push('x-api-version');
-		}
-
-		for (const header of rule.headers) {
-			if (header == null) {
-				throw new Error('headers rule is invalid');
-			}
-
-			if (this.headers[header] == null) {
-				return this.response(400, `${header} header is empty`);
+		const missingScopes = [];
+		for (const p of rule.scopes) {
+			if (this.authInfo.scopes.indexOf(p) == -1) {
+				missingScopes.push(p);
 			}
 		}
-
-		// 必要であればApplicationKey、AccessKeyを検証
-		if (rule.permissions == null) {
-			rule.permissions = [];
-		}
-
-		if (rule.permissions.length !== 0 && (this.user == null || this.application == null)) {
-			const applicationKey = this.headers['x-application-key'];
-			const accessKey = this.headers['x-access-key'];
-
-			if (applicationKey == null) {
-				return this.response(400, 'x-application-key header is empty');
-			}
-
-			if (accessKey == null) {
-				return this.response(400, 'x-access-key header is empty');
-			}
-
-			if (!await this.applicationsService.verifyApplicationKey(applicationKey)) {
-				return this.response(400, 'x-application-key header is invalid');
-			}
-
-			if (!await this.applicationAccessesService.verifyAccessKey(accessKey)) {
-				return this.response(400, 'x-access-key header is invalid');
-			}
-
-			this.applicationKey = applicationKey;
-			this.accessKey = accessKey;
-
-			const { userId } = this.applicationAccessesService.splitAccessKey(this.accessKey);
-			const { applicationId } = this.applicationsService.splitApplicationKey(this.applicationKey);
-
-			// fetch
-			[this.user, this.application] = await Promise.all([
-				this.repository.findById('users', userId),
-				this.repository.findById('applications', applicationId)
-			]);
-		}
-
-		// check permissions
-
-		const missingPermissions = [];
-		for (const p of rule.permissions) {
-			if (!this.applicationsService.hasPermission(this.application, p)) {
-				missingPermissions.push(p);
-			}
-		}
-		if (missingPermissions.length != 0) {
-			return this.response(403, { message: 'you do not have any permissions', details: missingPermissions });
+		if (missingScopes.length != 0) {
+			return this.response(403, { message: 'you do not have any scopes', details: missingScopes });
 		}
 
 		// body
