@@ -3,7 +3,7 @@ const UserFollowingsService = require('../services/UserFollowingsService');
 const PostsService = require('../services/PostsService');
 const StorageFilesService = require('../services/StorageFilesService');
 const ApplicationsService = require('../services/ApplicationsService');
-const AuthService = require('../services/AuthService');
+const TokensService = require('../services/TokensService');
 const { InvalidOperationError } = require('./errors');
 const AsyncLock = require('async-lock');
 const MongoAdapter = require('./MongoAdapter');
@@ -32,7 +32,7 @@ class ApiContext {
 		this.postsService = new PostsService(repository, config, this.usersService);
 		this.storageFilesService = new StorageFilesService(repository, config);
 		this.applicationsService = new ApplicationsService(repository, config);
-		this.authService = new AuthService(repository, config);
+		this.tokensService = new TokensService(repository, config);
 
 		this.responsed = false;
 	}

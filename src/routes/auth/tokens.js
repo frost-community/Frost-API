@@ -1,6 +1,5 @@
 const ApiContext = require('../../modules/ApiContext');
 const $ = require('cafy').default;
-const uid = require('uid2');
 
 /** @param {ApiContext} apiContext */
 module.exports.post = async (apiContext) => {
@@ -25,13 +24,9 @@ module.exports.post = async (apiContext) => {
 		return;
 	}
 
-	const token = await apiContext.repository.create('tokens', {
-		applicationId: applicationId,
-		userId: userId,
-		accessToken: uid(128)
-	});
+	const token = await apiContext.tokensService.create(applicationId, userId);
 
-	apiContext.response(200, { token });
+	apiContext.response(200, { token: apiContext.tokensService.serialize(token) });
 };
 
 /** @param {ApiContext} apiContext */
@@ -57,10 +52,7 @@ module.exports.get = async (apiContext) => {
 		return;
 	}
 
-	const token = await apiContext.repository.find('tokens', {
-		applicationId: applicationId,
-		userId: userId
-	});
+	const token = await apiContext.tokensService.findByAppAndUser(applicationId, userId);
 
 	if (token == null) {
 		apiContext.response(400, 'token has not been generated yet');
