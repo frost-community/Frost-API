@@ -114,7 +114,6 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 					method,
 					endpoint,
 					query,
-					headers,
 					body
 				} = data;
 
@@ -160,14 +159,11 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				}
 
 				// ApiContextを構築
-				const apiContext = new ApiContext(streams, null, repository, config, {
+				const apiContext = new ApiContext(null, null, null, streams, null, repository, config, {
 					params,
 					query,
-					body,
-					headers
+					body
 				});
-				apiContext.headers['x-application-key'] = applicationKey;
-				apiContext.headers['x-access-key'] = accessKey;
 
 				// 対象のRouteモジュールを実行
 				await routeFunc(apiContext);

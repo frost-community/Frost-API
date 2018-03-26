@@ -43,7 +43,7 @@ describe('Applications API', () => {
 
 		describe('[POST]', () => {
 			it('正しくリクエストされた場合は成功する', async () => {
-				const context = new ApiContext(null, null, db, config, {
+				const context = new ApiContext(null, null, null, null, null, db, config, {
 					body: {
 						name: 'temp',
 						description: 'hogehoge',
@@ -68,7 +68,7 @@ describe('Applications API', () => {
 			});
 
 			it('nameが空もしくは33文字以上の場合は失敗する', async () => {
-				let context = new ApiContext(null, null, db, config, {
+				let context = new ApiContext(null, null, null, null, null, db, config, {
 					body: {
 						name: '',
 						description: 'hogehoge',
@@ -81,7 +81,7 @@ describe('Applications API', () => {
 				await routeApp.post(context);
 				assert.equal(context.data, 'body parameter \'name\' is invalid');
 
-				context = new ApiContext(null, null, db, config, {
+				context = new ApiContext(null, null, null, null, null, db, config, {
 					body: {
 						name: 'superFrostersuperFrostersuperFros',
 						description: 'hogehoge',
@@ -96,7 +96,7 @@ describe('Applications API', () => {
 			});
 
 			it('descriptionが257文字以上のときは失敗する', async () => {
-				const context = new ApiContext(null, null, db, config, {
+				const context = new ApiContext(null, null, null, null, null, db, config, {
 					body: {
 						name: 'temp',
 						description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget',
@@ -113,7 +113,7 @@ describe('Applications API', () => {
 
 		describe('[GET]', () => {
 			it('正しくリクエストされた場合は成功する', async () => {
-				const context = new ApiContext(null, null, db, config, {
+				const context = new ApiContext(null, null, null, null, null, db, config, {
 					headers: { 'X-Api-Version': 1 },
 					user: userA,
 					application: appA
@@ -136,7 +136,7 @@ describe('Applications API', () => {
 		describe('/:id', () => {
 			describe('[GET]', () => {
 				it('正しくリクエストされた場合は成功する', async () => {
-					const context = new ApiContext(null, null, db, config, {
+					const context = new ApiContext(null, null, null, null, null, db, config, {
 						params: { id: appA._id.toString() },
 						headers: { 'X-Api-Version': 1 },
 						user: userA,
@@ -157,7 +157,7 @@ describe('Applications API', () => {
 				});
 
 				it('所有していないアプリケーションを指定された場合でも成功する', async () => {
-					const context = new ApiContext(null, null, db, config, {
+					const context = new ApiContext(null, null, null, null, null, db, config, {
 						params: { id: appB._id.toString() },
 						headers: { 'X-Api-Version': 1 },
 						user: userA,
@@ -168,7 +168,7 @@ describe('Applications API', () => {
 				});
 
 				it('存在しないアプリケーションを指定した場合は404を返す', async () => {
-					const context = new ApiContext(null, null, db, config, {
+					const context = new ApiContext(null, null, null, null, null, db, config, {
 						params: { id: 'abcdefg1234' },
 						headers: { 'X-Api-Version': 1 },
 						user: userA,
@@ -182,7 +182,7 @@ describe('Applications API', () => {
 			describe('/secret', () => {
 				describe('[POST]', () => {
 					it('正しくリクエストされた場合は成功する', async () => {
-						const context = new ApiContext(null, null, db, config, {
+						const context = new ApiContext(null, null, null, null, null, db, config, {
 							params: { id: appA._id.toString() },
 							headers: { 'X-Api-Version': 1 },
 							user: userA,
@@ -202,7 +202,7 @@ describe('Applications API', () => {
 					it('正しくリクエストされた場合は成功する', async () => {
 						const secret = await applicationsService.generateApplicationSecret(appA);
 
-						const context = new ApiContext(null, null, db, config, {
+						const context = new ApiContext(null, null, null, null, null, db, config, {
 							params: { id: appA._id.toString() },
 							headers: { 'X-Api-Version': 1 },
 							user: userA,
