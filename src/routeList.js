@@ -6,22 +6,13 @@ module.exports = [
 	// 全てのユーザーを対象とする、一般公開されたポストを時系列で複数取得
 	['get', '/general/timeline'],
 
-	// == IceAuth ==
+	// == Authorization ==
 
-	// 認証リクエスト
-	['post', '/ice_auth'],
+	// 認証ホスト向けのトークンデータを取得する
+	['get', '/auth/tokens'],
 
-	// verificationCode(PINコード)を取得 (認証ホスト専用)
-	['get', '/ice_auth/verification_code'],
-
-	// 認証の対象ユーザーを設定(認証ホスト専用)
-	['post', '/ice_auth/target_user'],
-
-	// 直接screenNameとpasswordを検証して、accessKeyを作成(認証ホスト専用)
-	['post', '/ice_auth/authorize_basic'],
-
-	// verificationCodeを検証して、accessKeyを作成
-	['post', '/ice_auth/authorize'],
+	// 認証ホスト向けのトークンデータを生成する
+	['post', '/auth/tokens'],
 
 	// == Applications ==
 
@@ -31,14 +22,14 @@ module.exports = [
 	// アプリケーションを作成する
 	['post', '/applications'],
 
-	// idを指定してアプリケーション情報を取得する
+	// applicationIdを指定してアプリケーション情報を取得する
 	['get', '/applications/:id'],
 
-	// idを指定してアプリケーションキーを取得する
-	['get', '/applications/:id/application_key'],
+	// applicationIdを指定してapplicationSecretを取得する
+	['get', '/applications/:id/secret'],
 
-	// アプリケーションキーを生成する
-	['post', '/applications/:id/application_key'],
+	// applicationIdを指定してapplicationSecretを生成する
+	['post', '/applications/:id/secret'],
 
 	// == Users ==
 
