@@ -7,7 +7,7 @@ const ApplicationsService = require('../../src/services/ApplicationsService');
 const ApiContext = require('../../src/modules/ApiContext');
 const routeApp = require('../../src/routes/applications');
 const routeAppId = require('../../src/routes/applications/id');
-const routeAppIdApplicationKey = require('../../src/routes/applications/id/application_key');
+const routeAppIdApplicationSecret = require('../../src/routes/applications/id/secret');
 
 describe('Applications API', () => {
 	describe('/applications', () => {
@@ -179,7 +179,7 @@ describe('Applications API', () => {
 				});
 			});
 
-			describe('/application_key', () => {
+			describe('/secret', () => {
 				describe('[POST]', () => {
 					it('正しくリクエストされた場合は成功する', async () => {
 						const context = new ApiContext(null, null, db, config, {
@@ -188,30 +188,19 @@ describe('Applications API', () => {
 							user: userA,
 							application: appA
 						});
-						await routeAppIdApplicationKey.post(context);
+						await routeAppIdApplicationSecret.post(context);
 						assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
 
 						appA = await db.findById('applications', appA._id);
 						assert.deepEqual(context.data, {
-							applicationKey: applicationsService.getApplicationKey(appA)
+							secret: applicationsService.getApplicationSecret(appA)
 						});
-					});
-
-					it('所有していないアプリケーションを指定された場合は失敗する', async () => {
-						const context = new ApiContext(null, null, db, config, {
-							params: { id: appA._id.toString() },
-							headers: { 'X-Api-Version': 1 },
-							user: userB,
-							application: appB
-						});
-						await routeAppIdApplicationKey.post(context);
-						assert.equal(context.data, 'this operation is not permitted');
 					});
 				});
 
 				describe('[GET]', () => {
 					it('正しくリクエストされた場合は成功する', async () => {
-						const key = await applicationsService.generateApplicationKey(appA);
+						const secret = await applicationsService.generateApplicationSecret(appA);
 
 						const context = new ApiContext(null, null, db, config, {
 							params: { id: appA._id.toString() },
@@ -219,24 +208,11 @@ describe('Applications API', () => {
 							user: userA,
 							application: appA
 						});
-						await routeAppIdApplicationKey.get(context);
+						await routeAppIdApplicationSecret.get(context);
 						assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
 						assert.deepEqual(context.data, {
-							applicationKey: key
+							secret
 						});
-					});
-
-					it('持っていないアプリケーションを指定された場合は失敗する', async () => {
-						await applicationsService.generateApplicationKey(appB);
-
-						const context = new ApiContext(null, null, db, config, {
-							params: { id: appB._id.toString() },
-							headers: { 'X-Api-Version': 1 },
-							user: userA,
-							application: appA
-						});
-						await routeAppIdApplicationKey.get(context);
-						assert.equal(context.data, 'this operation is not permitted');
 					});
 				});
 			});
