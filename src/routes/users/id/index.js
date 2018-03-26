@@ -6,7 +6,7 @@ const $ = require('cafy').default;
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		query: {},
-		permissions: ['userRead']
+		scopes: ['user.read']
 	});
 	if (apiContext.responsed) return;
 
@@ -28,16 +28,16 @@ exports.patch = async (apiContext) => {
 			name: { cafy: $().string().range(1, 32), default: null },
 			iconFileId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
 		},
-		permissions: ['userWrite']
+		scopes: ['user.write']
 	});
 	if (apiContext.responsed) return;
 
 	const { screenName, name, description, iconFileId } = apiContext.body;
 	const data = { };
 
-	// アイコンを設定するときは、storageRead権限を要求する
-	if (iconFileId != null && !apiContext.applicationsService.hasPermission(apiContext.application, 'storageRead')) {
-		apiContext.response(403, { message: 'you do not have any permissions', details: ['storageRead'] });
+	// アイコンを設定するときは、storage.readスコープを要求する
+	if (iconFileId != null && !apiContext.applicationsService.hasScope(apiContext.application, 'storage.read')) {
+		apiContext.response(403, { message: 'you do not have any scopes', details: ['storage.read'] });
 		return;
 	}
 

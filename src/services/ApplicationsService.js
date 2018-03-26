@@ -2,6 +2,7 @@ const moment = require('moment');
 const MongoAdapter = require('../modules/MongoAdapter');
 const { buildHash, sortObject, randomRange } = require('../modules/helpers/GeneralHelper');
 const { MissingArgumentsError, InvalidArgumentError, InvalidOperationError } = require('../modules/errors');
+const definedScopes = require('../modules/scopes');
 
 class ApplicationsService {
 	/**
@@ -15,44 +16,52 @@ class ApplicationsService {
 		this._config = config;
 	}
 
-	hasPermission(applicationDocument, permissionName) {
-		if (applicationDocument == null || permissionName == null) {
+	hasScope(document, scopeName) {
+		if (document == null || scopeName == null) {
 			throw new MissingArgumentsError();
 		}
 
-		return applicationDocument.permissions.indexOf(permissionName) != -1;
+		return document.scopes.indexOf(scopeName) != -1;
 	}
 
-	async generateApplicationKey(applicationDocument) {
-		if (applicationDocument == null) {
+	async generateApplicationSecret(document) {
+		if (document == null) {
 			throw new MissingArgumentsError();
 		}
 
-		const undatedDocument = await this._repository.updateById('applications', applicationDocument._id.toString(), { keyCode: randomRange(1, 99999) });
-		const key = this.getApplicationKey(undatedDocument);
+		const seed = randomRange(1, 99999);
+		const updatedDocument = await this._repository.updateById('applications', document._id.toString(), { seed });
+		const secret = this.getApplicationSecret(updatedDocument);
 
-		return key;
+		return secret;
 	}
 
-	getApplicationKey(applicationDocument) {
-		if (applicationDocument == null) {
+	getApplicationSecret(document) {
+		if (document == null) {
 			throw new MissingArgumentsError();
 		}
-		if (applicationDocument.keyCode == null) {
-			throw new InvalidOperationError('keyCode is empty');
+		if (!this.existApplicationSecret(document)) {
+			throw new InvalidOperationError('seed is empty');
 		}
 
-		const hash = buildHash(`${this._config.api.secretToken.application}/${applicationDocument.creatorId}/${applicationDocument._id}/${applicationDocument.keyCode}`);
-		const key = `${applicationDocument._id}-${hash}.${applicationDocument.keyCode}`;
+		const secret = buildHash(`${this._config.api.secretToken.application}/${document._id}/${document.seed}`);
 
-		return key;
+		return secret;
 	}
 
-	serialize(applicationDocument) {
-		if (applicationDocument == null)
+	existApplicationSecret(document) {
+		if (document == null) {
+			throw new MissingArgumentsError();
+		}
+
+		return document.seed != null;
+	}
+
+	serialize(document, includeSeed = false) {
+		if (document == null)
 			throw new MissingArgumentsError();
 
-		const res = Object.assign({}, applicationDocument);
+		const res = Object.assign({}, document);
 
 		// createdAt
 		res.createdAt = parseInt(moment(res._id.getTimestamp()).format('X'));
@@ -64,23 +73,25 @@ class ApplicationsService {
 		// creatorId
 		res.creatorId = res.creatorId.toString();
 
-		// keyCode
-		delete res.keyCode;
+		// seed
+		if (!includeSeed) {
+			delete res.seed;
+		}
 
 		return sortObject(res);
 	}
 
 	// helpers
 
-	create(name, creator, description, permissions) {
-		if (name == null || creator == null || description == null || permissions == null)
+	create(name, creator, description, scopes) {
+		if (name == null || creator == null || description == null || scopes == null)
 			throw new MissingArgumentsError();
 
 		return this._repository.create('applications', {
 			name,
 			creatorId: creator._id,
 			description,
-			permissions
+			scopes
 		});
 	}
 
@@ -103,46 +114,21 @@ class ApplicationsService {
 		return this._repository.findArray('applications', { creatorId }, options);
 	}
 
-	splitApplicationKey(key) {
-		if (key == null) {
+	async verifyApplicationSecret(applicationId, secret) {
+		if (applicationId == null || secret == null) {
 			throw new MissingArgumentsError();
 		}
 
-		const reg = /([^-]+)-([^-]{64}).([0-9]+)/.exec(key);
-		if (reg == null) {
-			throw new InvalidArgumentError('key');
-		}
-
-		return {
-			applicationId: MongoAdapter.buildId(reg[1]),
-			hash: reg[2],
-			keyCode: parseInt(reg[3])
-		};
-	}
-
-	async verifyApplicationKey(key) {
-		if (key == null) {
-			throw new MissingArgumentsError();
-		}
-
-		let elements;
-		try {
-			elements = this.splitApplicationKey(key);
-		}
-		catch (err) {
-			return false;
-		}
-		const { applicationId, hash, keyCode } = elements;
-
-		const application = await this._repository.find('applications', { _id: applicationId, keyCode });
+		const application = await this._repository.findById('applications', applicationId);
 		if (application == null) {
+			throw new InvalidArgumentError();
+		}
+
+		if (!this.existApplicationSecret(application)) {
 			return false;
 		}
 
-		const correctHash = buildHash(`${this._config.api.secretToken.application}/${application.creatorId}/${applicationId}/${keyCode}`);
-		const isPassed = hash === correctHash && keyCode === application.keyCode;
-
-		return isPassed;
+		return this.getApplicationSecret(application) == secret;
 	}
 
 	async nonDuplicatedName(name) {
@@ -152,11 +138,14 @@ class ApplicationsService {
 		return (await this.findByName(name)) == null;
 	}
 
-	availablePermissions(permissions) {
-		if (permissions == null)
+	availableScopes(scopeNames) {
+		if (scopeNames == null)
 			throw new MissingArgumentsError();
 
-		return permissions.every(p => this._config.api.additionDisabledPermissions.indexOf(p) == -1);
+		return scopeNames.every(scopeName => {
+			const scope = definedScopes.find(definedScope => definedScope.name == scopeName);
+			return scope != null && scope.grantable;
+		});
 	}
 }
 module.exports = ApplicationsService;
