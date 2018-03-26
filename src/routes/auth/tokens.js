@@ -25,7 +25,7 @@ module.exports.post = async (apiContext) => {
 		return;
 	}
 
-	const token = await apiContext.repository.create('oauth2.tokens', {
+	const token = await apiContext.repository.create('tokens', {
 		applicationId: applicationId,
 		userId: userId,
 		accessToken: uid(128)
@@ -57,7 +57,7 @@ module.exports.get = async (apiContext) => {
 		return;
 	}
 
-	const token = await apiContext.repository.find('oauth2.tokens', {
+	const token = await apiContext.repository.find('tokens', {
 		applicationId: applicationId,
 		userId: userId
 	});
