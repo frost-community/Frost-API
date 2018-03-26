@@ -34,13 +34,14 @@ class TokensService {
 
 	// helpers
 
-	create(applicationId, userId) {
-		if (applicationId == null || userId == null)
+	create(applicationId, userId, scopes) {
+		if (applicationId == null || userId == null || scopes == null)
 			throw new MissingArgumentsError();
 
 		return this._repository.create('tokens', {
 			applicationId: applicationId,
 			userId: userId,
+			scopes: scopes,
 			accessToken: uid(128)
 		});
 	}

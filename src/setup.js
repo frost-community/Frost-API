@@ -7,12 +7,14 @@ const MongoAdapter = require('./modules/MongoAdapter');
 
 const UsersService = require('./services/UsersService');
 const ApplicationsService = require('./services/ApplicationsService');
-const ApplicationAccessesService = require('./services/ApplicationAccessesService');
+const TokensService = require('./services/TokensService');
 
 const urlConfigFile = 'https://raw.githubusercontent.com/Frost-Dev/Frost/master/config.json';
 const q = async str => (await readLine(str)).toLowerCase().indexOf('y') === 0;
 
 const writeFile = promisify(fs.writeFile);
+
+const scopes = require('./modules/scopes');
 
 module.exports = async () => {
 	console.log('## Setup Mode');
@@ -48,26 +50,30 @@ module.exports = async () => {
 
 		const usersService = new UsersService(repository, config);
 		const applicationsService = new ApplicationsService(repository, config);
-		const applicationAccessesService = new ApplicationAccessesService(repository, config);
+		const tokensService = new TokensService(repository, config);
 
 		let isExit = false;
 		while(!isExit) {
 			console.log('<Commands>');
 			console.log('1: remove all db collections');
-			console.log('2: generate an application and its key for authentication host (Frost-Web etc.)');
+			console.log('2: generate an application and its key for authorization host (Frost-Web etc.)');
 			console.log('3: exit');
 			const number = parseInt(await readLine('> '));
 
 			if (number == 1) {
 				if (await q('(!) Do you really do remove all documents on db collections? (y/n) > ')) {
-					await repository.remove('applicationAccesses', {});
-					console.log('cleaned applicationAccesses collection.');
-					await repository.remove('authorizeRequests', {});
-					console.log('cleaned authorizeRequests collection.');
-					await repository.remove('applications', {});
-					console.log('cleaned applications collection.');
 					await repository.remove('users', {});
 					console.log('cleaned users collection.');
+					await repository.remove('userFollowings', {});
+					console.log('cleaned userFollowings collection.');
+					await repository.remove('posts', {});
+					console.log('cleaned posts collection.');
+					await repository.remove('storageFiles', {});
+					console.log('cleaned storageFiles collection.');
+					await repository.remove('applications', {});
+					console.log('cleaned applications collection.');
+					await repository.remove('tokens', {});
+					console.log('cleaned tokens collection.');
 				}
 			}
 			else if (number == 2) {
@@ -80,31 +86,14 @@ module.exports = async () => {
 				const user = await usersService.create('frost', null, 'Frost公式', 'オープンソースSNS Frostです。');
 				console.log('user created.');
 
-				const application = applicationsService.create(appName, user, user.description, [
-					'iceAuthHost',
-					'application',
-					'applicationSpecial',
-					'accountRead',
-					'accountWrite',
-					'accountSpecial',
-					'userRead',
-					'userWrite',
-					'userSpecial',
-					'postRead',
-					'postWrite',
-					'storageRead',
-					'storageWrite'
-				]);
+				const application = applicationsService.create(appName, user, user.description, scopes.map(s => s.name));
 				console.log('application created.', application);
 
-				const applicationKey = await applicationsService.generateApplicationKey(application);
-				console.log(`applicationKey generated. (key: ${applicationKey})`);
+				//const applicationSecret = await applicationsService.generateApplicationSecret(application);
+				//console.log(`applicationSecret generated. (secret: ${applicationSecret})`);
 
-				const applicationAccess = await applicationAccessesService.create(application._id, user._id);
-				console.log('applicationAccess created.', applicationAccess);
-
-				const accessKey = await applicationAccessesService.generateAccessKey(applicationAccess);
-				console.log(`accessKey generated. (key: ${accessKey})`);
+				const hostToken = await tokensService.create(application._id, user._id, ['auth.host', 'app.host', 'user.create', 'user.delete']);
+				console.log('host token created.', hostToken);
 			}
 			else if (number == 3) {
 				isExit = true;
