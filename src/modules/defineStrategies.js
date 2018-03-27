@@ -14,7 +14,12 @@ module.exports = (repository) => {
 				done(null, false);
 				return;
 			}
-			done(null, user);
+			const application = await repository.find('applications', { _id: token.applicationId });
+			if (application == null) {
+				done(null, false);
+				return;
+			}
+			done(null, user, { application: application, scopes: token.scopes });
 		}
 		catch (err) {
 			done(err);

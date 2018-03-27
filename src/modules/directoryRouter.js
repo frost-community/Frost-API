@@ -38,6 +38,8 @@ class DirectoryRouter {
 			(async () => {
 				const apiContext = request.apiContext;
 				try {
+					apiContext.authInfo = request.authInfo;
+
 					let routeFunc;
 					try {
 						routeFunc = require(route.getModulePath())[route.method];
@@ -58,7 +60,7 @@ class DirectoryRouter {
 				catch (err) {
 					if (err instanceof Error) {
 						console.log('Internal Error:', err);
-						apiContext.response(500, { message: 'internal error', details: err });
+						apiContext.response(500, { message: 'internal error', details: err.message });
 						response.apiSend(apiContext);
 					}
 					else {

@@ -19,7 +19,7 @@ class ApiContext {
 		this.config = config;
 		options = options || {};
 		this.user = options.user;
-		this.authInfo = options.authInfo;
+		this.authInfo = options.authInfo || {};
 		this.targetVersion = options.targetVersion;
 		this.streams = options.streams;
 		this.lock = options.lock;
@@ -48,6 +48,9 @@ class ApiContext {
 		if (rule.scopes == null) {
 			rule.scopes = [];
 		}
+		if (this.authInfo.scopes == null) {
+			this.authInfo.scopes = [];
+		}
 
 		const missingScopes = [];
 		for (const p of rule.scopes) {
@@ -56,7 +59,7 @@ class ApiContext {
 			}
 		}
 		if (missingScopes.length != 0) {
-			return this.response(403, { message: 'you do not have any scopes', details: missingScopes });
+			return this.response(403, { message: 'you do not have some scopes', details: missingScopes });
 		}
 
 		// body
