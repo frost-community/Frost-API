@@ -46,7 +46,7 @@ describe('Posts API', () => {
 		describe('/post_status', () => {
 			describe('[POST]', () => {
 				it('正しくリクエストされた場合は成功する', async () => {
-					const context = new ApiContext(null, null, null, null, null, db, config, {
+					const context = new ApiContext(db, config, {
 						body: { text: 'hogehoge' },
 						headers: { 'X-Api-Version': 1 },
 						user,

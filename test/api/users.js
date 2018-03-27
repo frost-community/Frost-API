@@ -44,7 +44,7 @@ describe('Users API', () => {
 
 		describe('[GET]', () => {
 			it('正しくリクエストされた場合は成功する', async () => {
-				const context = new ApiContext(null, null, null, null, null, db, config, {
+				const context = new ApiContext(db, config, {
 					params: { id: user._id },
 					query: { 'screen_names': user.screenName },
 					headers: { 'X-Api-Version': 1 },
@@ -70,7 +70,7 @@ describe('Users API', () => {
 
 		describe('[POST]', () => {
 			it('正しくリクエストされた場合は成功する', async () => {
-				const context = new ApiContext(null, null, null, null, null, db, config, {
+				const context = new ApiContext(db, config, {
 					body: {
 						screenName: 'hogehoge',
 						password: 'a1b2c3d4e5f6g',
@@ -99,7 +99,7 @@ describe('Users API', () => {
 			});
 
 			it('screenNameが4文字未満もしくは16文字以上のとき失敗する', async () => {
-				let context = new ApiContext(null, null, null, null, null, db, config, {
+				let context = new ApiContext(db, config, {
 					body: {
 						screenName: 'abc',
 						password: 'a1b2c3d4e5f6g',
@@ -113,7 +113,7 @@ describe('Users API', () => {
 				await route.post(context);
 				assert.equal(context.statusCode, 400);
 
-				context = new ApiContext(null, null, null, null, null, db, config, {
+				context = new ApiContext(db, config, {
 					body: {
 						screenName: 'abcdefghijklmnop',
 						password: 'a1b2c3d4e5f6g',
@@ -129,7 +129,7 @@ describe('Users API', () => {
 			});
 
 			it('passwordが6文字未満のときは失敗する', async () => {
-				const context = new ApiContext(null, null, null, null, null, db, config, {
+				const context = new ApiContext(db, config, {
 					body: {
 						screenName: 'hogehoge',
 						password: 'a1b2c',
@@ -145,7 +145,7 @@ describe('Users API', () => {
 			});
 
 			it('nameが33文字以上のときは失敗する', async () => {
-				const context = new ApiContext(null, null, null, null, null, db, config, {
+				const context = new ApiContext(db, config, {
 					body: {
 						screenName: 'hogehoge',
 						password: 'a1b2c3d4e5f6g',
@@ -161,7 +161,7 @@ describe('Users API', () => {
 			});
 
 			it('descriptionが257文字以上のときは失敗する', async () => {
-				const context = new ApiContext(null, null, null, null, null, db, config, {
+				const context = new ApiContext(db, config, {
 					body: {
 						screenName: 'hogehoge',
 						password: 'a1b2c3d4e5f6g',
@@ -180,7 +180,7 @@ describe('Users API', () => {
 		describe('/:id', () => {
 			describe('[GET]', () => {
 				it('正しくリクエストされた場合は成功する', async () => {
-					const context = new ApiContext(null, null, null, null, null, db, config, {
+					const context = new ApiContext(db, config, {
 						params: { id: user._id },
 						headers: { 'X-Api-Version': 1 },
 						user,
@@ -202,7 +202,7 @@ describe('Users API', () => {
 					});
 				});
 				it('存在しないユーザーを指定した場合は404を返す', async () => {
-					const context = new ApiContext(null, null, null, null, null, db, config, {
+					const context = new ApiContext(db, config, {
 						params: { id: 'abcdefg1234' },
 						headers: { 'X-Api-Version': 1 },
 						user,

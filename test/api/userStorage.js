@@ -58,7 +58,8 @@ describe('User Storage API', () => {
 				const fileApiContexts = [];
 				const promises = [];
 				for (let i = 0; i < 4; i++) {
-					context = new ApiContext(null, null, null, null, lock, db, config, {
+					context = new ApiContext(db, config, {
+						lock: lock,
 						params: { id: user._id.toString() },
 						body: { accessRight: { level: 'public' }, fileData: testData64 },
 						headers: { 'X-Api-Version': 1 },
@@ -71,7 +72,8 @@ describe('User Storage API', () => {
 				}
 				await Promise.all(promises);
 
-				context = new ApiContext(null, null, null, null, lock, db, config, {
+				context = new ApiContext(db, config, {
+					lock: lock,
 					params: { id: user._id.toString() },
 					headers: { 'X-Api-Version': 1 },
 					testMode: true
@@ -91,7 +93,8 @@ describe('User Storage API', () => {
 		describe('/files', () => {
 			describe('[POST]', () => {
 				it('正しくリクエストされた場合は成功する(1件、public)', async () => {
-					const context = new ApiContext(null, null, null, null, lock, db, config, {
+					const context = new ApiContext(db, config, {
+						lock: lock,
 						params: { id: user._id.toString() },
 						body: { accessRight: { level: 'public' }, fileData: testData64 },
 						headers: { 'X-Api-Version': 1 },
@@ -125,7 +128,8 @@ describe('User Storage API', () => {
 					const promises = [];
 					const count = parseInt(config.api.storage.spaceSize / testData64Size) + 1; // parseInt(500KB / 53.8KB) + 1 = 10 items, 10 * 53.8KB > 500KB
 					for (let i = 0; i < count; i++) {
-						const context = new ApiContext(null, null, null, null, lock, db, config, {
+						const context = new ApiContext(db, config, {
+							lock: lock,
 							params: { id: user._id.toString() },
 							body: { accessRight: { level: 'public' }, fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
@@ -163,7 +167,8 @@ describe('User Storage API', () => {
 				});
 
 				it('fileDataが空のときは失敗する', async () => {
-					const context = new ApiContext(null, null, null, null, lock, db, config, {
+					const context = new ApiContext(db, config, {
+						lock: lock,
 						params: { id: user._id.toString() },
 						body: { accessRight: { level: 'public' }, fileData: '' },
 						headers: { 'X-Api-Version': 1 },
@@ -181,7 +186,8 @@ describe('User Storage API', () => {
 					let context;
 					const contexts = [];
 					for (let i = 0; i < 4; i++) {
-						context = new ApiContext(null, null, null, null, lock, db, config, {
+						context = new ApiContext(db, config, {
+							lock: lock,
 							params: { id: user._id.toString() },
 							body: { accessRight: { level: 'public' }, fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
@@ -192,7 +198,8 @@ describe('User Storage API', () => {
 					}
 					await Promise.all(contexts.map(c => routeFiles.post(c)));
 
-					context = new ApiContext(null, null, null, null, lock, db, config, {
+					context = new ApiContext(db, config, {
+						lock: lock,
 						params: { id: user._id.toString() },
 						headers: { 'X-Api-Version': 1 },
 						user,
@@ -222,7 +229,8 @@ describe('User Storage API', () => {
 			describe('/:file_id', () => {
 				describe('[GET]', () => {
 					it('正しくリクエストされた場合は成功する', async () => {
-						const contextFile = new ApiContext(null, null, null, null, lock, db, config, {
+						const contextFile = new ApiContext(db, config, {
+							lock: lock,
 							params: { id: user._id.toString() },
 							body: { accessRight: { level: 'public' }, fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
@@ -233,7 +241,8 @@ describe('User Storage API', () => {
 
 						assert(typeof contextFile.data != 'string', `api error: ${contextFile.data}`);
 
-						const context = new ApiContext(null, null, null, null, lock, db, config, {
+						const context = new ApiContext(db, config, {
+							lock: lock,
 							params: {
 								id: user._id.toString(),
 								'file_id': contextFile.data.storageFile.id

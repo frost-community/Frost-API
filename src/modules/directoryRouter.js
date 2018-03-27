@@ -50,7 +50,9 @@ class DirectoryRouter {
 						throw new Error(`route function is not found\ntarget: ${route.method} ${route.path}`);
 					}
 
-					apiContext = new ApiContext(null, null, null, request.streams, request.lock, request.repository, request.config, {
+					apiContext = new ApiContext(request.repository, request.config, {
+						streams: request.streams,
+						lock: request.lock,
 						params: request.params,
 						query: request.query,
 						body: request.body

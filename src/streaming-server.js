@@ -165,7 +165,8 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				}
 
 				// ApiContextを構築
-				const apiContext = new ApiContext(null, null, null, streams, null, repository, config, {
+				const apiContext = new ApiContext(repository, config, {
+					streams,
 					params,
 					query,
 					body

@@ -96,13 +96,13 @@ module.exports = async () => {
 
 		// not found
 		app.use((req, res) => {
-			const apiContext = new ApiContext(null, null, null, null, null, repository, config);
+			const apiContext = new ApiContext(repository, config);
 			apiContext.response(404, 'endpoint not found, or method is not supported');
 			res.apiSend(apiContext);
 		});
 
 		app.use((err, req, res, next) => {
-			const apiContext = new ApiContext(null, null, null, null, null, repository, config);
+			const apiContext = new ApiContext(repository, config);
 			if (err instanceof SyntaxError && err.message.indexOf('JSON')) {
 				apiContext.response(400, 'invalid json format');
 			}

@@ -10,18 +10,19 @@ const MongoAdapter = require('./MongoAdapter');
 
 class ApiContext {
 	/**
-	 * @param {AsyncLock} lock
 	 * @param {MongoAdapter} repository
+	 * @param {} config
+	 * @param {{user, authInfo, targetVersion, streams, lock: AsyncLock, params, query, body}} options
 	*/
-	constructor(user, authInfo, targetVersion, streams, lock, repository, config, options) {
-		this.user = user;
-		this.authInfo = authInfo;
-		this.targetVersion = targetVersion;
-		this.streams = streams;
-		this.lock = lock;
+	constructor(repository, config, options) {
 		this.repository = repository;
 		this.config = config;
 		options = options || {};
+		this.user = options.user;
+		this.authInfo = options.authInfo;
+		this.targetVersion = options.targetVersion;
+		this.streams = options.streams;
+		this.lock = options.lock;
 		this.params = options.params || {};
 		this.query = options.query || {};
 		this.body = options.body || {};
