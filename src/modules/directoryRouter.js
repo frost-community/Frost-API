@@ -36,7 +36,7 @@ class DirectoryRouter {
 	registerExpressRouter(route) {
 		this.router[route.method](route.path, (request, response) => {
 			(async () => {
-				let apiContext;
+				const apiContext = request.apiContext;
 				try {
 					let routeFunc;
 					try {
@@ -50,13 +50,6 @@ class DirectoryRouter {
 						throw new Error(`route function is not found\ntarget: ${route.method} ${route.path}`);
 					}
 
-					apiContext = new ApiContext(request.repository, request.config, {
-						streams: request.streams,
-						lock: request.lock,
-						params: request.params,
-						query: request.query,
-						body: request.body
-					});
 					await routeFunc(apiContext);
 
 					console.log(`rest: ${route.method.toUpperCase()} ${route.path}, status=${apiContext.statusCode}`);
