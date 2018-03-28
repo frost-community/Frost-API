@@ -34,16 +34,24 @@ class TokensService {
 
 	// helpers
 
-	create(application, user, scopes) {
+	create(application, user, scopes, options) {
 		if (application == null || user == null || scopes == null)
 			throw new MissingArgumentsError();
 
-		return this._repository.create('tokens', {
+		options = options || {};
+
+		const data = {
 			applicationId: application._id,
 			userId: user._id,
 			scopes: scopes,
 			accessToken: uid(128)
-		});
+		};
+
+		if (options.host) {
+			data.host = true;
+		}
+
+		return this._repository.create('tokens', data);
 	}
 
 	findByAppAndUser(applicationId, userId) {

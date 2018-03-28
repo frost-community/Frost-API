@@ -65,15 +65,26 @@ class UsersService {
 	 * @param {String} description
 	 * @returns {UserDocument}
 	*/
-	create(screenName, password, name, description) {
-		if (screenName == null || password == null || name == null || description == null)
+	create(screenName, password, name, description, options) {
+		if (screenName == null || !options.root && password == null || name == null || description == null)
 			throw new MissingArgumentsError();
 
-		const salt = randomRange(1, 99999);
-		const hash = buildHash(`${password}.${salt}`);
-		const passwordHash = `${hash}.${salt}`;
+		options = options || {};
 
-		return this._repository.create('users', { screenName, passwordHash, name, description });
+		let passwordHash;
+		if (password != null) {
+			const salt = randomRange(1, 99999);
+			const hash = buildHash(`${password}.${salt}`);
+			passwordHash = `${hash}.${salt}`;
+		}
+
+		const data = { screenName, passwordHash, name, description };
+
+		if (options.root) {
+			data.root = true;
+		}
+
+		return this._repository.create('users', data);
 	}
 
 	/**
