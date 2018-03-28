@@ -175,6 +175,14 @@ class MongoAdapter {
 		await this._connection.collection(collectionName).remove(query, options);
 	}
 
+	async drop(collectionName, options) {
+		if (collectionName == null) {
+			throw new MissingArgumentsError();
+		}
+
+		await this._connection.collection(collectionName).drop(options);
+	}
+
 	disconnect() {
 		return this._connection.close();
 	}
