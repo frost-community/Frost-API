@@ -37,6 +37,7 @@
     "redis": "^2.7.0",
     "request": "^2.81.0",
     "rimraf": "^2.6.1",
+    "semver": "^5.5.0",
     "uid2": "0.0.3",
     "validator": "^9.0.0",
     "websocket": "^1.0.24",
