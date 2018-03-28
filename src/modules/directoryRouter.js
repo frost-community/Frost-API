@@ -38,6 +38,7 @@ class DirectoryRouter {
 			(async () => {
 				const apiContext = request.apiContext;
 				try {
+					apiContext.user = request.user;
 					apiContext.authInfo = request.authInfo;
 
 					let routeFunc;
