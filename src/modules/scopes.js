@@ -11,11 +11,13 @@ module.exports = [
 	{ name: 'user.create', grantable: false },
 	// ユーザー情報の取得
 	{ name: 'user.read', grantable: true },
+	// ユーザー情報の書き換え
+	{ name: 'user.write', grantable: true },
 	// ユーザー情報の削除
 	{ name: 'user.delete', grantable: false },
-	// アカウント情報の取得
+	// アカウントの非公開情報等の取得
 	{ name: 'user.account.read', grantable: true },
-	// アカウント情報の変更
+	// アカウントの非公開情報等の書き換え
 	{ name: 'user.account.write', grantable: true },
 	// 投稿やリアクションの取得
 	{ name: 'post.read', grantable: true },

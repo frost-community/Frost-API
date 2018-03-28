@@ -83,16 +83,24 @@ class ApplicationsService {
 
 	// helpers
 
-	create(name, creator, description, scopes) {
+	create(name, creator, description, scopes, options) {
 		if (name == null || creator == null || description == null || scopes == null)
 			throw new MissingArgumentsError();
 
-		return this._repository.create('applications', {
+		options = options || {};
+
+		const data = {
 			name,
 			creatorId: creator._id,
 			description,
 			scopes
-		});
+		};
+
+		if (options.root) {
+			data.root = true;
+		}
+
+		return this._repository.create('applications', data);
 	}
 
 	findByName(name) {
