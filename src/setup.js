@@ -2,7 +2,7 @@ const fs = require('fs');
 const { promisify } = require('util');
 const request = promisify(require('request'));
 const readLine = require('./modules/readline');
-const { loadConfig } = require('./modules/helpers/GeneralHelper');
+const { loadConfig, delay } = require('./modules/helpers/GeneralHelper');
 const MongoAdapter = require('./modules/MongoAdapter');
 
 const UsersService = require('./services/UsersService');
@@ -55,29 +55,31 @@ module.exports = async () => {
 		let isExit = false;
 		while(!isExit) {
 			console.log('<Commands>');
+			console.log('0: exit setup');
 			console.log('1: remove all db collections');
 			console.log('2: generate an application and its key for authorization host (Frost-Web etc.)');
-			console.log('3: exit');
+			console.log('3: migrate from old versions');
 			const number = parseInt(await readLine('> '));
 
-			if (number == 1) {
+			if (number == 0) {
+				isExit = true;
+			}
+			else if (number == 1) {
 				if (await q('(!) Do you really do remove all documents on db collections? (y/n) > ')) {
-					await repository.remove('users', {});
-					console.log('cleaned users collection.');
-					await repository.remove('userFollowings', {});
-					console.log('cleaned userFollowings collection.');
-					await repository.remove('posts', {});
-					console.log('cleaned posts collection.');
-					await repository.remove('storageFiles', {});
-					console.log('cleaned storageFiles collection.');
-					await repository.remove('applications', {});
-					console.log('cleaned applications collection.');
-					await repository.remove('tokens', {});
-					console.log('cleaned tokens collection.');
+					const clean = async (collection) => {
+						await repository.remove(collection, {});
+						console.log(`cleaned ${collection} collection.`);
+					};
+					await clean('users');
+					await clean('userFollowings');
+					await clean('posts');
+					await clean('storageFiles');
+					await clean('applications');
+					await clean('tokens');
 				}
 			}
 			else if (number == 2) {
-				let appName = await readLine('application name[Frost Web]: > ');
+				let appName = await readLine('application name(default: Frost Web) > ');
 
 				if (appName == '') {
 					appName = 'Frost Web';
@@ -86,18 +88,83 @@ module.exports = async () => {
 				const user = await usersService.create('frost', null, 'Frost公式', 'オープンソースSNS Frostです。');
 				console.log('user created.');
 
-				const application = applicationsService.create(appName, user, user.description, scopes.map(s => s.name));
-				console.log('application created.', application);
+				const application = applicationsService.create(appName, user, user.description, scopes.map(s => s.name), { root: true });
+				console.log('root application created.');
 
 				//const applicationSecret = await applicationsService.generateApplicationSecret(application);
 				//console.log(`applicationSecret generated. (secret: ${applicationSecret})`);
 
 				const hostToken = await tokensService.create(application, user, ['auth.host', 'app.host', 'user.create', 'user.delete']);
-				console.log('host token created.', hostToken);
+				console.log('host token created:', hostToken);
 			}
 			else if (number == 3) {
-				isExit = true;
+				const migrate = async (migrationId) => {
+					if (migrationId == '0.2->0.3') {
+						console.log('migrating to v0.3 ...');
+						const applications = await repository.findArray('applications', {});
+						console.log('apps length:', applications.length);
+
+						// root application
+						if (applications.length >= 1) {
+							await repository.update('applications', { _id: applications[0]._id }, { root: true });
+						}
+
+						// application "permissions" -> "scopes"
+						for(const app of applications) {
+							const scopesConversionTable = {
+								iceAuthHost: 'auth.host',
+								application: ['app.read', 'app.write'],
+								applicationSpecial: 'app.host',
+								accountRead: 'user.account.read',
+								accountWrite: 'user.account.write',
+								accountSpecial: null,
+								userRead: 'user.read',
+								userWrite: 'user.write',
+								userSpecial: ['user.create', 'user.delete'],
+								postRead: 'post.read',
+								postWrite: 'post.write',
+								storageRead: 'storage.read',
+								storageWrite: 'storage.write'
+							};
+
+							const scopes = [];
+							for(let p of app.permissions) {
+								let newName = scopesConversionTable[p];
+								if (newName == null) {
+									console.log(p, '-> remove');
+								}
+								else if (!Array.isArray(newName)) {
+									scopes.push(newName);
+								}
+								else {
+									scopes.push(...newName);
+								}
+							}
+							console.log(app.permissions, '->', scopes);
+
+							// await repository.update('applications', { _id: app._id }, { scopes: [] });
+						}
+
+						// await repository.create('meta', { type: 'api.version', major: 0, minor: 3 });
+					}
+					else {
+						console.log('unknown migration');
+					}
+				};
+
+				const version = await repository.find('meta', { type: 'api.version' });
+				if (version == null) {
+					migrate('0.2->0.3');
+					console.log('migration to v0.3 has completed.');
+				}
+				else if (version.major == 0 && version.minor == 3) {
+					console.log('there is no need for migration!');
+				}
+				else {
+					console.log('failed to migration: unknown api version');
+				}
 			}
+			await delay(400);
 			console.log();
 		}
 		console.log('disconnecting database ...');
