@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { promisify } = require('util');
+const semver = require('semver');
 const request = promisify(require('request'));
 const readLine = require('./modules/readline');
 const { loadConfig } = require('./modules/helpers/GeneralHelper');
@@ -92,9 +93,9 @@ module.exports = async () => {
 				console.log(hostToken);
 			}
 		});
-		menu.add('migrate from old frost-api versions', async () => {
+		menu.add('migrate from old data formats', async () => {
 			const migrate = async (migrationId) => {
-				if (migrationId == '0.2->0.3') {
+				if (migrationId == 'empty->0.3') {
 					console.log('migrating to v0.3 ...');
 					const applications = await repository.findArray('applications', {});
 					const rootAppId = applications.length >= 1 ? applications[0]._id : null;
@@ -159,19 +160,19 @@ module.exports = async () => {
 					await repository.drop('authorizeRequests');
 					console.log('droped authorizeRequests collection');
 
-					await repository.create('meta', { type: 'api.version', major: 0, minor: 3 });
+					await repository.create('meta', { type: 'dataFormat', value: '0.3.0' });
 				}
 				else {
 					console.log('unknown migration');
 				}
 			};
 
-			const version = await repository.find('meta', { type: 'api.version' });
-			if (version == null) {
-				await migrate('0.2->0.3');
+			const dataFormat = await repository.find('meta', { type: 'dataFormat' });
+			if (dataFormat == null) {
+				await migrate('empty->0.3');
 				console.log('migration to v0.3 has completed.');
 			}
-			else if (version.major == 0 && version.minor == 3) {
+			else if (semver.eq(dataFormat.value, '0.3.0')) {
 				console.log('there is no need for migration!');
 			}
 			else {

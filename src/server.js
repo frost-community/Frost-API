@@ -1,3 +1,4 @@
+const semver = require('semver');
 const express = require('express');
 const bodyParser = require('body-parser');
 const compression = require('compression');
@@ -31,6 +32,17 @@ module.exports = async () => {
 			dbConfig.host,
 			dbConfig.database,
 			dbConfig.password != null ? `${dbConfig.username}:${dbConfig.password}` : dbConfig.username);
+
+		const dataFormat = await repository.find('meta', { type: 'dataFormat' });
+		if (dataFormat == null || semver.neq(dataFormat.value, '0.3.0')) {
+			if (dataFormat == null || semver.lt(dataFormat.value, '0.3.0')) {
+				console.log('migration is required. please migrate database in setup mode. (command: npm run setup)');
+			}
+			else {
+				console.log('this format is not supported. there is a possibility it was used by a newer api.');
+			}
+			return;
+		}
 
 		defineStrategies(repository);
 
