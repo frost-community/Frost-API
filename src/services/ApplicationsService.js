@@ -84,10 +84,9 @@ class ApplicationsService {
 	// helpers
 
 	create(name, creator, description, scopes, options) {
+		options = options || {};
 		if (name == null || creator == null || description == null || scopes == null)
 			throw new MissingArgumentsError();
-
-		options = options || {};
 
 		const data = {
 			name,

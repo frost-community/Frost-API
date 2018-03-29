@@ -35,10 +35,9 @@ class TokensService {
 	// helpers
 
 	create(application, user, scopes, options) {
+		options = options || {};
 		if (application == null || user == null || scopes == null)
 			throw new MissingArgumentsError();
-
-		options = options || {};
 
 		const data = {
 			applicationId: application._id,

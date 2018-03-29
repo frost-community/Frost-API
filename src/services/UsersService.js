@@ -66,10 +66,9 @@ class UsersService {
 	 * @returns {UserDocument}
 	*/
 	create(screenName, password, name, description, options) {
+		options = options || {};
 		if (screenName == null || !options.root && password == null || name == null || description == null)
 			throw new MissingArgumentsError();
-
-		options = options || {};
 
 		let passwordHash;
 		if (password != null) {
