@@ -39,10 +39,12 @@ describe('User Storage API', () => {
 		});
 
 		// add general user, general application
-		let user, app;
+		let user, app, authInfo;
 		beforeEach(async () => {
 			user = await usersService.create('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
 			app = await applicationsService.create('generalapp', user, 'this is generalapp.', ['storage.read', 'storage.write']);
+
+			authInfo = { application: app, scopes: ['storage.read', 'storage.write'] };
 		});
 
 		// remove all users, all applications
@@ -65,7 +67,7 @@ describe('User Storage API', () => {
 						headers: { 'X-Api-Version': 1 },
 						testMode: true
 					});
-					context.application = app;
+					context.authInfo = authInfo;
 					context.user = user;
 					fileApiContexts.push(context);
 					promises.push(routeFiles.post(context));
@@ -78,7 +80,7 @@ describe('User Storage API', () => {
 					headers: { 'X-Api-Version': 1 },
 					testMode: true
 				});
-				context.application = app;
+				context.authInfo = authInfo;
 				context.user = user;
 				await route.get(context);
 
@@ -101,7 +103,7 @@ describe('User Storage API', () => {
 						headers: { 'X-Api-Version': 1 },
 						testMode: true
 					});
-					context.application = app;
+					context.authInfo = authInfo;
 					context.user = user;
 					await routeFiles.post(context);
 
@@ -136,7 +138,7 @@ describe('User Storage API', () => {
 							body: { accessRight: { level: 'public' }, fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
 							user,
-							application: app
+							authInfo
 						});
 						contexts.push(context);
 						promises.push(routeFiles.post(context));
@@ -175,7 +177,7 @@ describe('User Storage API', () => {
 						body: { accessRight: { level: 'public' }, fileData: '' },
 						headers: { 'X-Api-Version': 1 },
 						user,
-						application: app
+						authInfo
 					});
 					await routeFiles.post(context);
 
@@ -195,7 +197,7 @@ describe('User Storage API', () => {
 							body: { accessRight: { level: 'public' }, fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
 							user,
-							application: app
+							authInfo
 						});
 						contexts.push(context);
 					}
@@ -206,7 +208,7 @@ describe('User Storage API', () => {
 						params: { id: user._id.toString() },
 						headers: { 'X-Api-Version': 1 },
 						user,
-						application: app
+						authInfo
 					});
 					await routeFiles.get(context);
 
@@ -239,7 +241,7 @@ describe('User Storage API', () => {
 							body: { accessRight: { level: 'public' }, fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
 							user,
-							application: app
+							authInfo
 						});
 						await routeFiles.post(contextFile);
 
@@ -254,7 +256,7 @@ describe('User Storage API', () => {
 							},
 							headers: { 'X-Api-Version': 1 },
 							user,
-							application: app
+							authInfo
 						});
 						await routeFileId.get(context);
 

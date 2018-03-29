@@ -64,7 +64,7 @@ exports.get = async (apiContext) => {
 */
 exports.delete = async (apiContext) => {
 	await apiContext.proceed({
-		scopes: ['storageWrite']
+		scopes: ['storage.write']
 	});
 	if (apiContext.responsed) return;
 

@@ -24,10 +24,12 @@ describe('Posts API', () => {
 		});
 
 		// add general user, general application
-		let user, app;
+		let user, app, authInfo;
 		beforeEach(async () => {
 			user = await usersService.create('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
 			app = await applicationsService.create('generalapp', user, 'this is generalapp.', ['postWrite']);
+
+			authInfo = { application: app, scopes: ['post.write'] };
 		});
 
 		// remove all users, all applications
@@ -50,7 +52,7 @@ describe('Posts API', () => {
 						body: { text: 'hogehoge' },
 						headers: { 'X-Api-Version': 1 },
 						user,
-						application: app
+						authInfo: authInfo
 					});
 					await routeStatus.post(context);
 					assert(context.data != null, 'no response');

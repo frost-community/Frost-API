@@ -28,10 +28,12 @@ describe('Users API', () => {
 		});
 
 		// add general user, general application
-		let user, application;
+		let user, application, authInfo;
 		beforeEach(async () => {
 			user = await usersService.create('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
 			application = await applicationsService.create('generalapp', user, 'this is generalapp.', ['user.read', 'user.create']);
+
+			authInfo = { application: application, scopes: ['user.read', 'user.create'] };
 		});
 
 		// remove all users, all applications
@@ -49,7 +51,7 @@ describe('Users API', () => {
 					query: { 'screen_names': user.screenName },
 					headers: { 'X-Api-Version': 1 },
 					user,
-					application
+					authInfo
 				});
 				await route.get(context);
 				assert(context.data != null, 'no response');
@@ -80,7 +82,7 @@ describe('Users API', () => {
 					},
 					headers: { 'X-Api-Version': 1 },
 					user,
-					application
+					authInfo
 				});
 				await route.post(context);
 				assert(context.data != null, 'no response');
@@ -110,7 +112,7 @@ describe('Users API', () => {
 					},
 					headers: { 'X-Api-Version': 1 },
 					user,
-					application
+					authInfo
 				});
 				await route.post(context);
 				assert(context.data != null, 'no response');
@@ -125,7 +127,7 @@ describe('Users API', () => {
 					},
 					headers: { 'X-Api-Version': 1 },
 					user,
-					application
+					authInfo
 				});
 				await route.post(context);
 				assert(context.data != null, 'no response');
@@ -142,7 +144,7 @@ describe('Users API', () => {
 					},
 					headers: { 'X-Api-Version': 1 },
 					user,
-					application
+					authInfo
 				});
 				await route.post(context);
 				assert(context.data != null, 'no response');
@@ -159,7 +161,7 @@ describe('Users API', () => {
 					},
 					headers: { 'X-Api-Version': 1 },
 					user,
-					application
+					authInfo
 				});
 				await route.post(context);
 				assert(context.data != null, 'no response');
@@ -176,7 +178,7 @@ describe('Users API', () => {
 					},
 					headers: { 'X-Api-Version': 1 },
 					user,
-					application
+					authInfo
 				});
 				await route.post(context);
 				assert(context.data != null, 'no response');
@@ -191,7 +193,7 @@ describe('Users API', () => {
 						params: { id: user._id },
 						headers: { 'X-Api-Version': 1 },
 						user,
-						application
+						authInfo
 					});
 					await routeId.get(context);
 					assert(context.data != null, 'no response');
@@ -214,7 +216,7 @@ describe('Users API', () => {
 						params: { id: 'abcdefg1234' },
 						headers: { 'X-Api-Version': 1 },
 						user,
-						application
+						authInfo
 					});
 					await routeId.get(context);
 					assert(context.data != null, 'no response');

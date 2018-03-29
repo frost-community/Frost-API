@@ -26,13 +26,15 @@ describe('Applications API', () => {
 		});
 
 		// add general users, general applications
-		let userA, userB, appA, appB;
+		let userA, userB, appA, appB, authInfo;
 		beforeEach(async () => {
 			userA = await usersService.create('generaluser_a', 'abcdefg', 'froster', 'this is generaluser.');
 			userB = await usersService.create('generaluser_b', 'abcdefg', 'froster', 'this is generaluser.');
 
 			appA = await applicationsService.create('generalapp_a', userA, 'this is generalapp.', ['application', 'applicationSpecial']);
 			appB = await applicationsService.create('generalapp_b', userB, 'this is generalapp.', ['application', 'applicationSpecial']);
+
+			authInfo = { application: appA, scopes: ['app.read', 'app.write', 'app.host'] };
 		});
 
 		// remove all users, all applications
@@ -51,7 +53,7 @@ describe('Applications API', () => {
 					},
 					headers: { 'X-Api-Version': 1 },
 					user: userA,
-					application: appA
+					authInfo: authInfo
 				});
 				await routeApp.post(context);
 				assert(context.data != null, 'no response');
@@ -77,10 +79,12 @@ describe('Applications API', () => {
 					},
 					headers: { 'X-Api-Version': 1 },
 					user: userA,
-					application: appA
+					authInfo: authInfo
 				});
 				await routeApp.post(context);
-				assert.equal(context.data, 'body parameter \'name\' is invalid');
+
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 400 && context.data.message == 'body parameter \'name\' is invalid', `api error: ${context.data.message}`);
 
 				context = new ApiContext(db, config, {
 					body: {
@@ -90,10 +94,12 @@ describe('Applications API', () => {
 					},
 					headers: { 'X-Api-Version': 1 },
 					user: userA,
-					application: appA
+					authInfo: authInfo
 				});
 				await routeApp.post(context);
-				assert.equal(context.data, 'body parameter \'name\' is invalid');
+
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 400 && context.data.message == 'body parameter \'name\' is invalid', `api error: ${context.data.message}`);
 			});
 
 			it('descriptionが257文字以上のときは失敗する', async () => {
@@ -105,10 +111,12 @@ describe('Applications API', () => {
 					},
 					headers: { 'X-Api-Version': 1 },
 					user: userA,
-					application: appA
+					authInfo: authInfo
 				});
 				await routeApp.post(context);
-				assert.equal(context.data, 'body parameter \'description\' is invalid');
+
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 400 && context.data.message == 'body parameter \'description\' is invalid', `api error: ${context.data.message}`);
 			});
 		});
 
@@ -117,7 +125,7 @@ describe('Applications API', () => {
 				const context = new ApiContext(db, config, {
 					headers: { 'X-Api-Version': 1 },
 					user: userA,
-					application: appA
+					authInfo: authInfo
 				});
 				await routeApp.get(context);
 				assert(context.data != null, 'no response');
@@ -142,7 +150,7 @@ describe('Applications API', () => {
 						params: { id: appA._id.toString() },
 						headers: { 'X-Api-Version': 1 },
 						user: userA,
-						application: appA
+						authInfo: authInfo
 					});
 					await routeAppId.get(context);
 					assert(context.data != null, 'no response');
@@ -164,7 +172,7 @@ describe('Applications API', () => {
 						params: { id: appB._id.toString() },
 						headers: { 'X-Api-Version': 1 },
 						user: userA,
-						application: appA
+						authInfo: authInfo
 					});
 					await routeAppId.get(context);
 					assert(context.data != null, 'no response');
@@ -176,7 +184,7 @@ describe('Applications API', () => {
 						params: { id: 'abcdefg1234' },
 						headers: { 'X-Api-Version': 1 },
 						user: userA,
-						application: appA
+						authInfo: authInfo
 					});
 					await routeAppId.get(context);
 					assert(context.data != null, 'no response');
@@ -191,7 +199,7 @@ describe('Applications API', () => {
 							params: { id: appA._id.toString() },
 							headers: { 'X-Api-Version': 1 },
 							user: userA,
-							application: appA
+							authInfo: authInfo
 						});
 						await routeAppIdApplicationSecret.post(context);
 						assert(context.data != null, 'no response');
@@ -212,7 +220,7 @@ describe('Applications API', () => {
 							params: { id: appA._id.toString() },
 							headers: { 'X-Api-Version': 1 },
 							user: userA,
-							application: appA
+							authInfo: authInfo
 						});
 						await routeAppIdApplicationSecret.get(context);
 						assert(context.data != null, 'no response');

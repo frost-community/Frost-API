@@ -26,7 +26,7 @@ exports.post = async (apiContext) => {
 					.prop('users', $().array('string').unique().each(i => MongoAdapter.validateId(i))), default: { level: 'public' }
 			}
 		},
-		scopes: ['storageWrite']
+		scopes: ['storage.write']
 	});
 	if (apiContext.responsed) return;
 
