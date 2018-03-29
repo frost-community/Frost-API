@@ -53,7 +53,8 @@ describe('Posts API', () => {
 						application: app
 					});
 					await routeStatus.post(context);
-					assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
+					assert(context.data != null, 'no response');
+					assert(context.statusCode == 200, `api error: ${context.data.message}`);
 					delete context.data.postStatus.id;
 					delete context.data.postStatus.createdAt;
 					delete context.data.postStatus.user;

@@ -82,7 +82,8 @@ describe('User Storage API', () => {
 				context.user = user;
 				await route.get(context);
 
-				assert(typeof context.data != 'string', `api error: ${context.data}`);
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 200, `api error: ${context.data.message}`);
 
 				const { spaceSize, usedSpace, availableSpace } = context.data.storage;
 				assert.equal(testData64Size * fileApiContexts.length, usedSpace, 'usedSpace is invalid value');
@@ -104,7 +105,8 @@ describe('User Storage API', () => {
 					context.user = user;
 					await routeFiles.post(context);
 
-					assert(typeof context.data != 'string', `api error: ${context.data}`);
+					assert(context.data != null, 'no response');
+					assert(context.statusCode == 200, `api error: ${context.data.message}`);
 
 					assert(validator.isBase64(context.data.storageFile.fileData), 'returned fileData is not base64');
 					delete context.data.storageFile.fileData;
@@ -177,7 +179,8 @@ describe('User Storage API', () => {
 					});
 					await routeFiles.post(context);
 
-					assert.equal('body parameter \'fileData\' is invalid', context.data);
+					assert(context.data != null, 'no response');
+					assert(context.statusCode == 400 && context.data.message == 'body parameter \'fileData\' is invalid', `api error: ${context.data.message}`);
 				});
 
 			});
@@ -207,7 +210,8 @@ describe('User Storage API', () => {
 					});
 					await routeFiles.get(context);
 
-					assert(typeof context.data != 'string', `api error: ${context.data}`);
+					assert(context.data != null, 'no response');
+					assert(context.statusCode == 200, `api error: ${context.data.message}`);
 
 					assert(context.data.storageFiles != null, 'invalid response');
 					assert.equal(context.data.storageFiles.length, contexts.length, 'invalid response length');
@@ -239,7 +243,8 @@ describe('User Storage API', () => {
 						});
 						await routeFiles.post(contextFile);
 
-						assert(typeof contextFile.data != 'string', `api error: ${contextFile.data}`);
+						assert(contextFile.data != null, 'no response');
+						assert(contextFile.statusCode == 200, `api error: ${contextFile.data.message}`);
 
 						const context = new ApiContext(db, config, {
 							lock: lock,
@@ -253,7 +258,8 @@ describe('User Storage API', () => {
 						});
 						await routeFileId.get(context);
 
-						assert(typeof context.data != 'string', `api error: ${context.data}`);
+						assert(context.data != null, 'no response');
+						assert(context.statusCode == 200, `api error: ${context.data.message}`);
 
 						assert(validator.isBase64(context.data.storageFile.fileData), 'returned fileData is not base64');
 						delete context.data.storageFile.fileData;

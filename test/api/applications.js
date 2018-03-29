@@ -54,7 +54,8 @@ describe('Applications API', () => {
 					application: appA
 				});
 				await routeApp.post(context);
-				assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 200, `api error: ${context.data.message}`);
 				delete context.data.application.id;
 				delete context.data.application.createdAt;
 				assert.deepEqual(context.data, {
@@ -119,7 +120,8 @@ describe('Applications API', () => {
 					application: appA
 				});
 				await routeApp.get(context);
-				assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 200, `api error: ${context.data.message}`);
 				delete context.data.applications[0].id;
 				delete context.data.applications[0].createdAt;
 				assert.deepEqual(context.data, {
@@ -143,7 +145,8 @@ describe('Applications API', () => {
 						application: appA
 					});
 					await routeAppId.get(context);
-					assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
+					assert(context.data != null, 'no response');
+					assert(context.statusCode == 200, `api error: ${context.data.message}`);
 					delete context.data.application.id;
 					delete context.data.application.createdAt;
 					assert.deepEqual(context.data, {
@@ -164,7 +167,8 @@ describe('Applications API', () => {
 						application: appA
 					});
 					await routeAppId.get(context);
-					assert.equal(context.statusCode, 200);
+					assert(context.data != null, 'no response');
+					assert(context.statusCode == 200, `api error: ${context.data.message}`);
 				});
 
 				it('存在しないアプリケーションを指定した場合は404を返す', async () => {
@@ -175,7 +179,8 @@ describe('Applications API', () => {
 						application: appA
 					});
 					await routeAppId.get(context);
-					assert.equal(context.statusCode, 404);
+					assert(context.data != null, 'no response');
+					assert(context.statusCode == 404, `api error: ${context.data.message}`);
 				});
 			});
 
@@ -189,7 +194,8 @@ describe('Applications API', () => {
 							application: appA
 						});
 						await routeAppIdApplicationSecret.post(context);
-						assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
+						assert(context.data != null, 'no response');
+						assert(context.statusCode == 200, `api error: ${context.data.message}`);
 
 						appA = await db.findById('applications', appA._id);
 						assert.deepEqual(context.data, {
@@ -209,7 +215,8 @@ describe('Applications API', () => {
 							application: appA
 						});
 						await routeAppIdApplicationSecret.get(context);
-						assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
+						assert(context.data != null, 'no response');
+						assert(context.statusCode == 200, `api error: ${context.data.message}`);
 						assert.deepEqual(context.data, {
 							secret
 						});

@@ -52,7 +52,8 @@ describe('Users API', () => {
 					application
 				});
 				await route.get(context);
-				assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 200, `api error: ${context.data.message}`);
 				delete context.data.users[0].id;
 				delete context.data.users[0].createdAt;
 				assert.deepEqual(context.data, {
@@ -82,7 +83,8 @@ describe('Users API', () => {
 					application
 				});
 				await route.post(context);
-				assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 200, `api error: ${context.data.message}`);
 
 				delete context.data.user.id;
 				delete context.data.user.createdAt;
@@ -111,7 +113,8 @@ describe('Users API', () => {
 					application
 				});
 				await route.post(context);
-				assert.equal(context.statusCode, 400);
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 400, `api error: ${context.data.message}`);
 
 				context = new ApiContext(db, config, {
 					body: {
@@ -125,7 +128,8 @@ describe('Users API', () => {
 					application
 				});
 				await route.post(context);
-				assert.equal(context.statusCode, 400);
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 400, `api error: ${context.data.message}`);
 			});
 
 			it('passwordが6文字未満のときは失敗する', async () => {
@@ -141,7 +145,8 @@ describe('Users API', () => {
 					application
 				});
 				await route.post(context);
-				assert.equal(context.statusCode, 400);
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 400, `api error: ${context.data.message}`);
 			});
 
 			it('nameが33文字以上のときは失敗する', async () => {
@@ -157,7 +162,8 @@ describe('Users API', () => {
 					application
 				});
 				await route.post(context);
-				assert.equal(context.statusCode, 400);
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 400, `api error: ${context.data.message}`);
 			});
 
 			it('descriptionが257文字以上のときは失敗する', async () => {
@@ -173,7 +179,8 @@ describe('Users API', () => {
 					application
 				});
 				await route.post(context);
-				assert.equal(context.statusCode, 400);
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 400, `api error: ${context.data.message}`);
 			});
 		});
 
@@ -187,7 +194,8 @@ describe('Users API', () => {
 						application
 					});
 					await routeId.get(context);
-					assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
+					assert(context.data != null, 'no response');
+					assert(context.statusCode == 200, `api error: ${context.data.message}`);
 					delete context.data.user.id;
 					delete context.data.user.createdAt;
 					assert.deepEqual(context.data, {
@@ -209,7 +217,8 @@ describe('Users API', () => {
 						application
 					});
 					await routeId.get(context);
-					assert.equal(context.statusCode, 404);
+					assert(context.data != null, 'no response');
+					assert(context.statusCode == 404, `api error: ${context.data.message}`);
 				});
 			});
 			describe('/timelines/user', () => {
