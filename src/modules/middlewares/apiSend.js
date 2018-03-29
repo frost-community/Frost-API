@@ -10,10 +10,7 @@ module.exports = (req, res, next) => {
 			apiContext.statusCode = 200;
 		}
 
-		if (typeof apiContext.data == 'string') {
-			sendData.message = apiContext.data;
-		}
-		else if (apiContext.data != null) {
+		if (apiContext.data != null) {
 			sendData = apiContext.data;
 		}
 

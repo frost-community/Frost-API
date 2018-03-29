@@ -5,6 +5,7 @@ const StorageFilesService = require('../services/StorageFilesService');
 const ApplicationsService = require('../services/ApplicationsService');
 const TokensService = require('../services/TokensService');
 const { InvalidOperationError } = require('./errors');
+const { getType } = require('./helpers/GeneralHelper');
 const AsyncLock = require('async-lock');
 const MongoAdapter = require('./MongoAdapter');
 
@@ -117,13 +118,19 @@ class ApiContext {
 		}
 	}
 
-	response(statusCode, data, needStatusCode) {
+	response(statusCode, data) {
 		if (this.responsed) {
 			throw new InvalidOperationError('already responsed');
 		}
 		this.statusCode = statusCode;
-		this.data = data;
-		this.needStatusCode = needStatusCode != false;
+
+		if (getType(data) == 'String') {
+			this.data = { message: data };
+		}
+		else {
+			this.data = data;
+		}
+
 		this.responsed = true;
 	}
 }

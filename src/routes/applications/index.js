@@ -8,11 +8,9 @@ module.exports.post = async (apiContext) => {
 		body: {
 			name: { cafy: $().string().min(1).max(32) },
 			description: { cafy: $().string().max(256), default: '' },
-			scopes: { cafy: $().array('string').unique().eachQ((i) => {
-				i.pipe((v) => {
-					const scope = definedScopes.find(s => s.name == v);
-					return (scope != null) && scope.grantable;
-				});
+			scopes: { cafy: $().array('string').unique().each((i) => {
+				const scope = definedScopes.find(s => s.name == i);
+				return (scope != null) && scope.grantable;
 			}), default: [] }
 		},
 		scopes: ['app.host']
