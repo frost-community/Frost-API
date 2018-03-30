@@ -33,7 +33,13 @@ module.exports.post = async (apiContext) => {
 		return;
 	}
 
-	const token = await apiContext.tokensService.create(application, user, []);
+	// 同じアプリ、ユーザー、スコープの組み合わせのトークンは生成を拒否
+	if ((await apiContext.tokensService.find(applicationId, userId, scopes)) != null) {
+		apiContext.response(400, 'token already exists');
+		return;
+	}
+
+	const token = await apiContext.tokensService.create(application, user, scopes);
 
 	apiContext.response(200, { token: apiContext.tokensService.serialize(token) });
 };
@@ -43,13 +49,14 @@ module.exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
 			applicationId: { cafy: $().string() },
-			userId: { cafy: $().string() }
+			userId: { cafy: $().string() },
+			scopes: { cafy: $().array('string') }
 		},
 		scopes: ['auth.host']
 	});
 	if (apiContext.responsed) return;
 
-	const { applicationId, userId } = apiContext.body;
+	const { applicationId, userId, scopes } = apiContext.body;
 
 	if ((await apiContext.repository.findById('applications', applicationId)) == null) {
 		apiContext.response(400, 'applicationId is invalid');
@@ -61,12 +68,11 @@ module.exports.get = async (apiContext) => {
 		return;
 	}
 
-	const token = await apiContext.tokensService.findByAppAndUser(applicationId, userId);
-
+	const token = await apiContext.tokensService.find(applicationId, userId, scopes);
 	if (token == null) {
-		apiContext.response(400, 'token has not been generated yet');
+		apiContext.response(400, 'token not found');
 		return;
 	}
 
-	apiContext.response(200, { token });
+	apiContext.response(200, { token: apiContext.tokensService.serialize(token) });
 };

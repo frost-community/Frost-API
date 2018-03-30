@@ -29,6 +29,12 @@ class TokensService {
 		//res.id = res._id.toString();
 		delete res._id;
 
+		// applicationId
+		res.applicationId = res.applicationId.toString();
+
+		// userId
+		res.userId = res.userId.toString();
+
 		return sortObject(res);
 	}
 
@@ -53,11 +59,20 @@ class TokensService {
 		return this._repository.create('tokens', data);
 	}
 
-	findByAppAndUser(applicationId, userId) {
-		if (applicationId == null || userId == null)
+	find(applicationId, userId, scopes) {
+		if (applicationId == null || userId == null || scopes == null)
 			throw new MissingArgumentsError();
 
-		return this._repository.find('tokens', { applicationId, userId });
+		applicationId = MongoAdapter.buildId(applicationId);
+		userId = MongoAdapter.buildId(userId);
+
+		const scopesQuery = { $size: scopes.length };
+		// NOTE: 空の配列を$allに指定すると検索にヒットしなくなるので、空のときは$allを指定しない
+		if (scopes.length != 0) {
+			scopesQuery.$all = scopes;
+		}
+
+		return this._repository.find('tokens', { applicationId, userId, scopes: scopesQuery });
 	}
 
 	findByAccessToken(accessToken) {
