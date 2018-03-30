@@ -1,8 +1,9 @@
 const moment = require('moment');
 const MongoAdapter = require('../modules/MongoAdapter');
-const { buildHash, sortObject, randomRange } = require('../modules/helpers/GeneralHelper');
+const { buildHash, sortObject } = require('../modules/helpers/GeneralHelper');
 const { MissingArgumentsError, InvalidArgumentError, InvalidOperationError } = require('../modules/errors');
 const definedScopes = require('../modules/scopes');
+const uid = require('uid2');
 
 class ApplicationsService {
 	/**
@@ -29,7 +30,7 @@ class ApplicationsService {
 			throw new MissingArgumentsError();
 		}
 
-		const seed = randomRange(1, 99999);
+		const seed = uid(8);
 		const updatedDocument = await this._repository.updateById('applications', document._id.toString(), { seed });
 		const secret = this.getApplicationSecret(updatedDocument);
 

@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { promisify } = require('util');
 const request = promisify(require('request'));
+const uid = require('uid2');
 const readLine = require('./modules/readline');
 const { loadConfig } = require('./modules/helpers/GeneralHelper');
 const MongoAdapter = require('./modules/MongoAdapter');
@@ -124,7 +125,7 @@ module.exports = async () => {
 			menu.add('migrate from old data formats', async () => {
 				const migrate = async (migrationId) => {
 					if (migrationId == 'empty->0.3') {
-						// NOTE: 移行後にアプリケーションごとにapplicationSecretを生成する必要があります
+						// NOTE: applicationKeyが発行されていたアプリケーションは、移行すると代わりにapplicationSecret(seed)が登録されます。
 						console.log('migrating to v0.3 ...');
 						const applications = await repository.findArray('applications', {});
 						const rootAppId = applications.length >= 1 ? applications[0]._id : null;
@@ -158,11 +159,16 @@ module.exports = async () => {
 								}
 							}
 							delete app.permissions;
-							delete app.keyCode;
 
-							// add root flag
+							if (app.keyCode != null) {
+								delete app.keyCode;
+								app.seed = uid(8);
+							}
+
+							// root application なら
 							if (app._id.equals(rootAppId)) {
 								app.root = true;
+								delete app.seed;
 							}
 
 							await repository.update('applications', { _id: app._id }, app, { renewal: true });
