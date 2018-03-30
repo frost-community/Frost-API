@@ -1,4 +1,3 @@
-const semver = require('semver');
 const express = require('express');
 const bodyParser = require('body-parser');
 const compression = require('compression');
@@ -11,6 +10,8 @@ const { DirectoryRouter, Route } = require('./modules/directoryRouter');
 const ApiContext = require('./modules/ApiContext');
 const routeList = require('./routeList');
 const defineStrategies = require('./modules/defineStrategies');
+const getVersion = require('./modules/getVersion');
+const checkDataFormat = require('./modules/checkDataFormat');
 
 module.exports = async () => {
 	try {
@@ -18,6 +19,10 @@ module.exports = async () => {
 		console.log('| Frost API Server |');
 		console.log('+------------------+');
 
+		const { version } = getVersion();
+		console.log(`version: ${version}`);
+
+		console.log('loading config ...');
 		let config = loadConfig();
 		if (config == null) {
 			console.log('config file not found. please create in setup mode. (command: npm run setup)');
@@ -28,19 +33,25 @@ module.exports = async () => {
 		const lock = new AsyncLock();
 
 		const dbConfig = config.api.database;
+		console.log('connecting database ...');
 		const repository = await MongoAdapter.connect(
 			dbConfig.host,
 			dbConfig.database,
 			dbConfig.password != null ? `${dbConfig.username}:${dbConfig.password}` : dbConfig.username);
 
-		const dataFormat = await repository.find('meta', { type: 'dataFormat' });
-		if (dataFormat == null || semver.neq(dataFormat.value, '0.3.0')) {
-			if (dataFormat == null || semver.lt(dataFormat.value, '0.3.0')) {
+		console.log('checking dataFormat ...');
+		const dataFormatState = await checkDataFormat(repository);
+		if (dataFormatState != 0) {
+			if (dataFormatState == 1) {
+				console.log('please initialize in setup mode. (command: npm run setup)');
+			}
+			else if (dataFormatState == 2) {
 				console.log('migration is required. please migrate database in setup mode. (command: npm run setup)');
 			}
 			else {
-				console.log('this format is not supported. there is a possibility it was used by a newer api.');
+				console.log('this format is not supported. there is a possibility it was used by a newer api. please clear database and restart.');
 			}
+			repository.disconnect();
 			return;
 		}
 
