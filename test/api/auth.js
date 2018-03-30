@@ -8,7 +8,7 @@ const ApiContext = require('../../src/modules/ApiContext');
 const routeAuthTokens = require('../../src/routes/auth/tokens');
 
 describe('Auth API', () => {
-	describe('/auth', () => {
+	describe('/auth/tokens', () => {
 		let db, usersService, applicationsService;
 		before(async () => {
 			config.api.database = config.api.testDatabase;
