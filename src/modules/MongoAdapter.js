@@ -57,7 +57,12 @@ class MongoAdapter {
 		if (id == null)
 			throw new MissingArgumentsError();
 
-		return this.find(collectionName, { _id: MongoAdapter.buildId(id) }, options);
+		id = MongoAdapter.buildId(id);
+		if (id == null) {
+			return null;
+		}
+
+		return this.find(collectionName, { _id: id }, options);
 	}
 
 	/**
