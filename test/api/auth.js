@@ -71,7 +71,7 @@ describe('Auth API', () => {
 		});
 
 		describe('[GET]', () => {
-			it('正しくリクエストされた場合は成功する', async () => {
+			it('正しくリクエストされた場合は成功する(applicationId,userId,scopes)', async () => {
 				// 生成
 				let context = new ApiContext(db, config, {
 					body: {
@@ -93,6 +93,46 @@ describe('Auth API', () => {
 						applicationId: appA._id.toString(),
 						userId: userA._id.toString(),
 						scopes: []
+					},
+					headers: { 'X-Api-Version': 1 },
+					user: userA,
+					authInfo: authInfo
+				});
+				await routeAuthTokens.get(context);
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 200, `api error: ${context.data.message}`);
+				assert(context.data.token.accessToken != null, 'accessToken is empty');
+				delete context.data.token.accessToken;
+				assert.deepEqual(context.data, {
+					token: {
+						applicationId: appA._id.toString(),
+						userId: userA._id.toString(),
+						scopes: []
+					}
+				});
+			});
+
+			it('正しくリクエストされた場合は成功する(accessToken)', async () => {
+				// 生成
+				let context = new ApiContext(db, config, {
+					body: {
+						applicationId: appA._id.toString(),
+						userId: userA._id.toString(),
+						scopes: []
+					},
+					headers: { 'X-Api-Version': 1 },
+					user: userA,
+					authInfo: authInfo
+				});
+				await routeAuthTokens.post(context);
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 200, `api error: ${context.data.message}`);
+				const accessToken = context.data.token.accessToken;
+
+				// 取得
+				context = new ApiContext(db, config, {
+					body: {
+						accessToken: accessToken
 					},
 					headers: { 'X-Api-Version': 1 },
 					user: userA,

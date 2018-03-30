@@ -48,27 +48,35 @@ module.exports.post = async (apiContext) => {
 module.exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
-			applicationId: { cafy: $().string() },
-			userId: { cafy: $().string() },
-			scopes: { cafy: $().array('string') }
+			applicationId: { cafy: $().string(), default: null },
+			userId: { cafy: $().string(), default: null },
+			scopes: { cafy: $().array('string'), default: [] },
+			accessToken: { cafy: $().string(), default: null },
 		},
 		scopes: ['auth.host']
 	});
 	if (apiContext.responsed) return;
 
-	const { applicationId, userId, scopes } = apiContext.body;
+	const { applicationId, userId, scopes, accessToken } = apiContext.body;
 
-	if ((await apiContext.repository.findById('applications', applicationId)) == null) {
-		apiContext.response(400, 'applicationId is invalid');
-		return;
+	let token;
+	if (accessToken != null) {
+		token = await apiContext.tokensService.findByAccessToken(accessToken);
+	}
+	else {
+		if ((await apiContext.repository.findById('applications', applicationId)) == null) {
+			apiContext.response(400, 'applicationId is invalid');
+			return;
+		}
+
+		if ((await apiContext.repository.findById('users', userId)) == null) {
+			apiContext.response(400, 'userId is invalid');
+			return;
+		}
+
+		token = await apiContext.tokensService.find(applicationId, userId, scopes);
 	}
 
-	if ((await apiContext.repository.findById('users', userId)) == null) {
-		apiContext.response(400, 'userId is invalid');
-		return;
-	}
-
-	const token = await apiContext.tokensService.find(applicationId, userId, scopes);
 	if (token == null) {
 		apiContext.response(400, 'token not found');
 		return;
