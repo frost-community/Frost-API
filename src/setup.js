@@ -124,9 +124,9 @@ module.exports = async () => {
 		if (dataFormatState == 2) {
 			menu.add('migrate from old data formats', async () => {
 				const migrate = async (migrationId) => {
-					if (migrationId == 'empty->0.3') {
+					if (migrationId == 'empty->0.4') {
 						// NOTE: applicationKeyが発行されていたアプリケーションは、移行すると代わりにapplicationSecret(seed)が登録されます。
-						console.log('migrating to v0.3 ...');
+						console.log('migrating to v0.4 ...');
 						const applications = await repository.findArray('applications', {});
 						const rootAppId = applications.length >= 1 ? applications[0]._id : null;
 
@@ -189,7 +189,7 @@ module.exports = async () => {
 						await repository.drop('authorizeRequests');
 						console.log('droped authorizeRequests collection');
 
-						await repository.create('meta', { type: 'dataFormat', value: '0.3.0' });
+						await repository.create('meta', { type: 'dataFormat', value: '0.4.0' });
 					}
 					else {
 						console.log('unknown migration');
@@ -198,8 +198,8 @@ module.exports = async () => {
 
 				const dataFormat = await repository.find('meta', { type: 'dataFormat' });
 				if (dataFormat == null) {
-					await migrate('empty->0.3');
-					console.log('migration to v0.3 has completed.');
+					await migrate('empty->0.4');
+					console.log('migration to v0.4 has completed.');
 				}
 				else {
 					console.log('failed to migration: unknown dataFormat');
