@@ -1,5 +1,5 @@
 const ApiContext = require('../modules/ApiContext');
-const semver = require('semver');
+const getVersion = require('../modules/getVersion');
 
 /** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
@@ -8,10 +8,8 @@ exports.get = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const packageInfo = require(require('path').resolve('package.json'));
-
 	apiContext.response(200, {
 		message: 'Frost API Server',
-		version: `${semver.major(packageInfo.version)}.${semver.minor(packageInfo.version)}`
+		version: getVersion().version
 	});
 };

@@ -38,6 +38,11 @@ exports.post = async (apiContext) => {
 		return;
 	}
 
+	if (application.root) {
+		apiContext.response(400, 'cannot generate applicationSecret for root application in api');
+		return;
+	}
+
 	const secret = await apiContext.applicationsService.generateApplicationSecret(application);
 
 	apiContext.response(200, { secret });
