@@ -66,6 +66,7 @@ module.exports = [
 	// フォロワーの一覧を取得
 	['get', '/users/:id/followers'],
 
+	/*
 	['get', '/users/:id/storage'],
 
 	['get', '/users/:id/storage/files'],
@@ -75,6 +76,7 @@ module.exports = [
 	['get', '/users/:id/storage/files/:file_id'],
 
 	['delete', '/users/:id/storage/files/:file_id'],
+	*/
 
 	// == Posts ==
 
