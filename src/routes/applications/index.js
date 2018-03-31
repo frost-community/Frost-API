@@ -8,9 +8,8 @@ module.exports.post = async (apiContext) => {
 		body: {
 			name: { cafy: $().string().min(1).max(32) },
 			description: { cafy: $().string().max(256), default: '' },
-			scopes: { cafy: $().array('string').unique().each((scope) => {
-				const definedScope = definedScopes.find(i => i.name == scope);
-				return definedScope != null && definedScope.grantable;
+			scopes: { cafy: $().array('string').unique().each(scope => {
+				return apiContext.applicationsService.availableScope(scope);
 			}), default: [] }
 		},
 		scopes: ['app.host']
@@ -21,10 +20,6 @@ module.exports.post = async (apiContext) => {
 
 	if (!await apiContext.applicationsService.nonDuplicatedName(name)) {
 		apiContext.response(400, 'already exists name');
-		return;
-	}
-	if (!apiContext.applicationsService.availableScopes(scopes)) {
-		apiContext.response(400, 'some scopes use are disabled');
 		return;
 	}
 

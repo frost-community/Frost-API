@@ -146,14 +146,14 @@ class ApplicationsService {
 		return (await this.findByName(name)) == null;
 	}
 
-	availableScopes(scopeNames) {
-		if (scopeNames == null)
+	availableScope(scopeName) {
+		if (scopeName == null)
 			throw new MissingArgumentsError();
 
-		return scopeNames.every(scopeName => {
-			const scope = definedScopes.find(definedScope => definedScope.name == scopeName);
-			return scope != null && scope.grantable;
-		});
+		const definedScope = definedScopes.find(i => i.name == scopeName);
+		const available = definedScope != null && definedScope.grantable;
+
+		return available;
 	}
 }
 module.exports = ApplicationsService;
