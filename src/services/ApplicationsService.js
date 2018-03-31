@@ -122,23 +122,6 @@ class ApplicationsService {
 		return this._repository.findArray('applications', { creatorId }, options);
 	}
 
-	async verifyApplicationSecret(applicationId, secret) {
-		if (applicationId == null || secret == null) {
-			throw new MissingArgumentsError();
-		}
-
-		const application = await this._repository.findById('applications', applicationId);
-		if (application == null) {
-			throw new InvalidArgumentError();
-		}
-
-		if (!this.existApplicationSecret(application)) {
-			return false;
-		}
-
-		return this.getApplicationSecret(application) == secret;
-	}
-
 	async nonDuplicatedName(name) {
 		if (name == null)
 			throw new MissingArgumentsError();
