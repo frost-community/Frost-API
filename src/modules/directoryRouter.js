@@ -40,6 +40,7 @@ class DirectoryRouter {
 				try {
 					apiContext.user = request.user;
 					apiContext.authInfo = request.authInfo;
+					apiContext.params = request.params;
 
 					let routeFunc;
 					try {

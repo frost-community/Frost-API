@@ -76,10 +76,9 @@ module.exports = async () => {
 		app.use((req, res, next) => {
 			// sanitize
 			req.body = sanitize(req.body);
-			req.params = sanitize(req.params);
 
 			// apiContext
-			req.apiContext = new ApiContext(repository, config, { streams, lock, params: req.params, query: req.query, body: req.body });
+			req.apiContext = new ApiContext(repository, config, { streams, lock, query: req.query, body: req.body });
 
 			// cors headers
 			res.header('Access-Control-Allow-Origin', '*');
