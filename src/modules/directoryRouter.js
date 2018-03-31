@@ -36,8 +36,12 @@ class DirectoryRouter {
 	registerExpressRouter(route) {
 		this.router[route.method](route.path, (request, response) => {
 			(async () => {
-				let apiContext;
+				const apiContext = request.apiContext;
 				try {
+					apiContext.user = request.user;
+					apiContext.authInfo = request.authInfo;
+					apiContext.params = request.params;
+
 					let routeFunc;
 					try {
 						routeFunc = require(route.getModulePath())[route.method];
@@ -50,12 +54,6 @@ class DirectoryRouter {
 						throw new Error(`route function is not found\ntarget: ${route.method} ${route.path}`);
 					}
 
-					apiContext = new ApiContext(request.streams, request.lock, request.repository, request.config, {
-						params: request.params,
-						query: request.query,
-						body: request.body,
-						headers: request.headers
-					});
 					await routeFunc(apiContext);
 
 					console.log(`rest: ${route.method.toUpperCase()} ${route.path}, status=${apiContext.statusCode}`);
@@ -64,7 +62,7 @@ class DirectoryRouter {
 				catch (err) {
 					if (err instanceof Error) {
 						console.log('Internal Error:', err);
-						apiContext.response(500, { message: 'internal error', details: err });
+						apiContext.response(500, { message: 'internal error', details: err.message });
 						response.apiSend(apiContext);
 					}
 					else {

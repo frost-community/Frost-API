@@ -28,10 +28,12 @@ describe('Users API', () => {
 		});
 
 		// add general user, general application
-		let user, application;
+		let user, application, authInfo;
 		beforeEach(async () => {
 			user = await usersService.create('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
-			application = await applicationsService.create('generalapp', user, 'this is generalapp.', ['userRead', 'userSpecial']);
+			application = await applicationsService.create('generalapp', user, 'this is generalapp.', ['user.read', 'user.create']);
+
+			authInfo = { application: application, scopes: ['user.read', 'user.create'] };
 		});
 
 		// remove all users, all applications
@@ -44,15 +46,16 @@ describe('Users API', () => {
 
 		describe('[GET]', () => {
 			it('正しくリクエストされた場合は成功する', async () => {
-				const context = new ApiContext(null, null, db, config, {
+				const context = new ApiContext(db, config, {
 					params: { id: user._id },
 					query: { 'screen_names': user.screenName },
 					headers: { 'X-Api-Version': 1 },
 					user,
-					application
+					authInfo
 				});
 				await route.get(context);
-				assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 200, `api error: ${context.data.message}`);
 				delete context.data.users[0].id;
 				delete context.data.users[0].createdAt;
 				assert.deepEqual(context.data, {
@@ -70,7 +73,7 @@ describe('Users API', () => {
 
 		describe('[POST]', () => {
 			it('正しくリクエストされた場合は成功する', async () => {
-				const context = new ApiContext(null, null, db, config, {
+				const context = new ApiContext(db, config, {
 					body: {
 						screenName: 'hogehoge',
 						password: 'a1b2c3d4e5f6g',
@@ -79,10 +82,11 @@ describe('Users API', () => {
 					},
 					headers: { 'X-Api-Version': 1 },
 					user,
-					application
+					authInfo
 				});
 				await route.post(context);
-				assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 200, `api error: ${context.data.message}`);
 
 				delete context.data.user.id;
 				delete context.data.user.createdAt;
@@ -99,7 +103,7 @@ describe('Users API', () => {
 			});
 
 			it('screenNameが4文字未満もしくは16文字以上のとき失敗する', async () => {
-				let context = new ApiContext(null, null, db, config, {
+				let context = new ApiContext(db, config, {
 					body: {
 						screenName: 'abc',
 						password: 'a1b2c3d4e5f6g',
@@ -108,12 +112,13 @@ describe('Users API', () => {
 					},
 					headers: { 'X-Api-Version': 1 },
 					user,
-					application
+					authInfo
 				});
 				await route.post(context);
-				assert.equal(context.statusCode, 400);
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 400, `api error: ${context.data.message}`);
 
-				context = new ApiContext(null, null, db, config, {
+				context = new ApiContext(db, config, {
 					body: {
 						screenName: 'abcdefghijklmnop',
 						password: 'a1b2c3d4e5f6g',
@@ -122,14 +127,15 @@ describe('Users API', () => {
 					},
 					headers: { 'X-Api-Version': 1 },
 					user,
-					application
+					authInfo
 				});
 				await route.post(context);
-				assert.equal(context.statusCode, 400);
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 400, `api error: ${context.data.message}`);
 			});
 
 			it('passwordが6文字未満のときは失敗する', async () => {
-				const context = new ApiContext(null, null, db, config, {
+				const context = new ApiContext(db, config, {
 					body: {
 						screenName: 'hogehoge',
 						password: 'a1b2c',
@@ -138,14 +144,15 @@ describe('Users API', () => {
 					},
 					headers: { 'X-Api-Version': 1 },
 					user,
-					application
+					authInfo
 				});
 				await route.post(context);
-				assert.equal(context.statusCode, 400);
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 400, `api error: ${context.data.message}`);
 			});
 
 			it('nameが33文字以上のときは失敗する', async () => {
-				const context = new ApiContext(null, null, db, config, {
+				const context = new ApiContext(db, config, {
 					body: {
 						screenName: 'hogehoge',
 						password: 'a1b2c3d4e5f6g',
@@ -154,14 +161,15 @@ describe('Users API', () => {
 					},
 					headers: { 'X-Api-Version': 1 },
 					user,
-					application
+					authInfo
 				});
 				await route.post(context);
-				assert.equal(context.statusCode, 400);
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 400, `api error: ${context.data.message}`);
 			});
 
 			it('descriptionが257文字以上のときは失敗する', async () => {
-				const context = new ApiContext(null, null, db, config, {
+				const context = new ApiContext(db, config, {
 					body: {
 						screenName: 'hogehoge',
 						password: 'a1b2c3d4e5f6g',
@@ -170,24 +178,26 @@ describe('Users API', () => {
 					},
 					headers: { 'X-Api-Version': 1 },
 					user,
-					application
+					authInfo
 				});
 				await route.post(context);
-				assert.equal(context.statusCode, 400);
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 400, `api error: ${context.data.message}`);
 			});
 		});
 
 		describe('/:id', () => {
 			describe('[GET]', () => {
 				it('正しくリクエストされた場合は成功する', async () => {
-					const context = new ApiContext(null, null, db, config, {
+					const context = new ApiContext(db, config, {
 						params: { id: user._id },
 						headers: { 'X-Api-Version': 1 },
 						user,
-						application
+						authInfo
 					});
 					await routeId.get(context);
-					assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
+					assert(context.data != null, 'no response');
+					assert(context.statusCode == 200, `api error: ${context.data.message}`);
 					delete context.data.user.id;
 					delete context.data.user.createdAt;
 					assert.deepEqual(context.data, {
@@ -202,14 +212,15 @@ describe('Users API', () => {
 					});
 				});
 				it('存在しないユーザーを指定した場合は404を返す', async () => {
-					const context = new ApiContext(null, null, db, config, {
+					const context = new ApiContext(db, config, {
 						params: { id: 'abcdefg1234' },
 						headers: { 'X-Api-Version': 1 },
 						user,
-						application
+						authInfo
 					});
 					await routeId.get(context);
-					assert.equal(context.statusCode, 404);
+					assert(context.data != null, 'no response');
+					assert(context.statusCode == 404, `api error: ${context.data.message}`);
 				});
 			});
 			describe('/timelines/user', () => {

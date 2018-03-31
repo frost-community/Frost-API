@@ -7,7 +7,7 @@ exports.get = async (apiContext) => {
 		query: {
 			'screen_names': { cafy: $().string(), default: '' }
 		},
-		permissions: ['userRead']
+		scopes: ['user.read']
 	});
 	if (apiContext.responsed) return;
 
@@ -52,7 +52,7 @@ exports.post = async (apiContext) => {
 			password: { cafy: $().string() },
 			description: { cafy: $().string().range(0, 256), default: '' },
 			name: { cafy: $().string().range(1, 32), default: 'froster' }
-		}, permissions: ['userSpecial']
+		}, scopes: ['user.create']
 	});
 	if (apiContext.responsed) return;
 

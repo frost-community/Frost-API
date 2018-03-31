@@ -57,7 +57,12 @@ class MongoAdapter {
 		if (id == null)
 			throw new MissingArgumentsError();
 
-		return this.find(collectionName, { _id: MongoAdapter.buildId(id) }, options);
+		id = MongoAdapter.buildId(id);
+		if (id == null) {
+			return null;
+		}
+
+		return this.find(collectionName, { _id: id }, options);
 	}
 
 	/**
@@ -173,6 +178,14 @@ class MongoAdapter {
 		}
 
 		await this._connection.collection(collectionName).remove(query, options);
+	}
+
+	async drop(collectionName, options) {
+		if (collectionName == null) {
+			throw new MissingArgumentsError();
+		}
+
+		await this._connection.collection(collectionName).drop(options);
 	}
 
 	disconnect() {

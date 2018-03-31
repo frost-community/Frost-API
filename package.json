@@ -1,6 +1,6 @@
 {
   "name": "frost-api",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "description": "Frost API Server",
   "private": true,
   "main": "./src/index.js",
@@ -31,10 +31,14 @@
     "moment": "^2.18.0",
     "mongo-sanitize": "^1.0.0",
     "mongodb": "^2.2.28",
+    "passport": "^0.4.0",
+    "passport-http-bearer": "^1.0.1",
     "path-to-regexp": "^1.7.0",
     "redis": "^2.7.0",
     "request": "^2.81.0",
     "rimraf": "^2.6.1",
+    "semver": "^5.5.0",
+    "uid2": "0.0.3",
     "validator": "^9.0.0",
     "websocket": "^1.0.24",
     "websocket-events": "^0.0.4"

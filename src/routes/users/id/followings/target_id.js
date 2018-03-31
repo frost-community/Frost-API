@@ -6,7 +6,7 @@ const { StreamUtil } = require('../../../../modules/stream');
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		query: {},
-		permissions: ['userRead']
+		scopes: ['user.read']
 	});
 	if (apiContext.responsed) return;
 
@@ -37,7 +37,7 @@ exports.get = async (apiContext) => {
 exports.put = async (apiContext) => {
 	await apiContext.proceed({
 		body: {},
-		permissions: ['userWrite']
+		scopes: ['user.write']
 	});
 	if (apiContext.responsed) return;
 
@@ -101,7 +101,7 @@ exports.put = async (apiContext) => {
 exports.delete = async (apiContext) => {
 	await apiContext.proceed({
 		query: {},
-		permissions: ['userWrite']
+		scopes: ['user.write']
 	});
 	if (apiContext.responsed) return;
 

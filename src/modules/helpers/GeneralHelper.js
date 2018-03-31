@@ -50,12 +50,21 @@ class GeneralHelper {
 		return sorted;
 	}
 
+	/**
+	 * 型情報を文字列で取得します
+	 *
+	 * @return {'Object'|'Array'|'String'|'Number'|'Boolean'|'Function'|'AsyncFunction'|'Error'|'Promise'|'GeneratorFunction'|'Symbol'|'Null'|'Undefined'}
+	*/
 	static getType(object) {
 		return Object.prototype.toString.call(object).slice(8, -1);
 	}
 
 	static randomRange(min, max) {
 		return Math.floor(Math.random() * (max - min + 1)) + min;
+	}
+
+	static delay(ms) {
+		return new Promise(resolve => setTimeout(resolve, ms));
 	}
 }
 module.exports = GeneralHelper;

@@ -1,116 +1,213 @@
 const fs = require('fs');
+const path = require('path');
 const { promisify } = require('util');
 const request = promisify(require('request'));
+const uid = require('uid2');
 const readLine = require('./modules/readline');
 const { loadConfig } = require('./modules/helpers/GeneralHelper');
 const MongoAdapter = require('./modules/MongoAdapter');
-
+const ConsoleMenu = require('./modules/ConsoleMenu');
 const UsersService = require('./services/UsersService');
 const ApplicationsService = require('./services/ApplicationsService');
-const ApplicationAccessesService = require('./services/ApplicationAccessesService');
+const TokensService = require('./services/TokensService');
+const scopes = require('./modules/scopes');
+const getVersion = require('./modules/getVersion');
+const checkDataFormat = require('./modules/checkDataFormat');
 
 const urlConfigFile = 'https://raw.githubusercontent.com/Frost-Dev/Frost/master/config.json';
-const q = async str => (await readLine(str)).toLowerCase().indexOf('y') === 0;
 
+const q = async str => (await readLine(str)).toLowerCase().indexOf('y') === 0;
 const writeFile = promisify(fs.writeFile);
 
 module.exports = async () => {
 	console.log('## Setup Mode');
 
 	try {
-		console.log('loading config.json ...');
+		console.log('loading config ...');
 		// config
 		const config = loadConfig();
 		if (config == null) {
 			if (await q('config.json does not exist. generate now? (y/n) > ')) {
-				let configPath;
-
-				if (await q('generate config.json in the parent directory of repository? (y/n) > ')) {
-					configPath = `${process.cwd()}/../config.json`;
-				}
-				else {
-					configPath = `${process.cwd()}/config.json`;
-				}
-
+				const parent = await q('generate config.json in the parent directory of repository? (y/n) > ');
+				const configPath = path.resolve(parent ? '../config.json' : 'config.json');
 				const configJson = (await request(urlConfigFile)).body;
 				await writeFile(configPath, configJson);
-
 				console.log('generated. please edit config.json and restart frost-api.');
 			}
 			return;
 		}
-		console.log('loaded');
 
 		console.log('connecting database ...');
 		const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
 		const repository = await MongoAdapter.connect(config.api.database.host, config.api.database.database, authenticate);
-		console.log('connected');
+
+		console.log('checking dataFormat ...');
+		const dataFormatState = await checkDataFormat(repository);
+		const { dataFormatVersion } = getVersion();
+
+		let stateMessage = 'unknown';
+		if (dataFormatState == 0) stateMessage = 'bootable';
+		if (dataFormatState == 1) stateMessage = 'need initialization';
+		if (dataFormatState == 2) stateMessage = 'need migration';
+		console.log('dataFormat state:', stateMessage);
 
 		const usersService = new UsersService(repository, config);
 		const applicationsService = new ApplicationsService(repository, config);
-		const applicationAccessesService = new ApplicationAccessesService(repository, config);
+		const tokensService = new TokensService(repository, config);
 
-		let isExit = false;
-		while(!isExit) {
-			console.log('<Commands>');
-			console.log('1: remove all db collections');
-			console.log('2: generate an application and its key for authentication host (Frost-Web etc.)');
-			console.log('3: exit');
-			const number = parseInt(await readLine('> '));
-
-			if (number == 1) {
-				if (await q('(!) Do you really do remove all documents on db collections? (y/n) > ')) {
-					await repository.remove('applicationAccesses', {});
-					console.log('cleaned applicationAccesses collection.');
-					await repository.remove('authorizeRequests', {});
-					console.log('cleaned authorizeRequests collection.');
-					await repository.remove('applications', {});
-					console.log('cleaned applications collection.');
-					await repository.remove('users', {});
-					console.log('cleaned users collection.');
-				}
-			}
-			else if (number == 2) {
-				let appName = await readLine('application name[Frost Web]: > ');
-
-				if (appName == '') {
-					appName = 'Frost Web';
+		const menu = new ConsoleMenu();
+		menu.add('exit setup', async (ctx) => {
+			ctx.exit();
+		});
+		menu.add('initialize (register root application and root user)', async () => {
+			// なんらかの保存されたデータがあるとき
+			if (dataFormatState != 1) {
+				if (!(await q('(!) are you sure you want to REMOVE ALL COLLECTIONS and ALL DOCUMENTS in target database? (y/n) > '))) {
+					return;
 				}
 
-				const user = await usersService.create('frost', null, 'Frost公式', 'オープンソースSNS Frostです。');
-				console.log('user created.');
-
-				const application = applicationsService.create(appName, user, user.description, [
-					'iceAuthHost',
-					'application',
-					'applicationSpecial',
-					'accountRead',
-					'accountWrite',
-					'accountSpecial',
-					'userRead',
-					'userWrite',
-					'userSpecial',
-					'postRead',
-					'postWrite',
-					'storageRead',
-					'storageWrite'
-				]);
-				console.log('application created.', application);
-
-				const applicationKey = await applicationsService.generateApplicationKey(application);
-				console.log(`applicationKey generated. (key: ${applicationKey})`);
-
-				const applicationAccess = await applicationAccessesService.create(application._id, user._id);
-				console.log('applicationAccess created.', applicationAccess);
-
-				const accessKey = await applicationAccessesService.generateAccessKey(applicationAccess);
-				console.log(`accessKey generated. (key: ${accessKey})`);
+				const clean = async (collection) => {
+					await repository.remove(collection, {});
+					console.log(`cleaned ${collection} collection.`);
+				};
+				await clean('meta');
+				await clean('applications');
+				await clean('tokens');
+				await clean('users');
+				await clean('userFollowings');
+				await clean('posts');
+				await clean('storageFiles');
 			}
-			else if (number == 3) {
-				isExit = true;
+
+			let appName = await readLine('application name(default: Frost Web) > ');
+			if (appName == '') {
+				appName = 'Frost Web';
 			}
-			console.log();
+
+			const user = await usersService.create('frost', null, 'Frost公式', 'オープンソースSNS Frostです。', { root: true });
+			console.log('root user created.');
+
+			await applicationsService.create(appName, user, user.description, scopes.map(s => s.name), { root: true });
+			console.log('root application created.');
+
+			repository.create('meta', { type: 'dataFormat', value: dataFormatVersion });
+		});
+		// WARN: アンコメントすると、root applicationの認可付与に必要なapplicationSecretを生成可能になります。
+		// このapplicationSecretは漏洩するとAPIのフルアクセスが可能になってしまうため、必要なときにだけ生成すべきです。
+		/*
+		if (dataFormatState == 0) {
+			menu.add('generate applicationSecret for root application', async () => {
+				let rootApp = await repository.find('applications', { root: true });
+				const applicationSecret = await applicationsService.generateApplicationSecret(rootApp);
+				console.log(`applicationSecret generated. (secret: ${applicationSecret})`);
+			});
 		}
+		*/
+		if (dataFormatState == 0) {
+			menu.add('generate or get token for authorization host', async () => {
+				const rootUser = await repository.find('users', { root: true });
+				let rootApp = await repository.find('applications', { root: true });
+				if (rootApp != null) {
+					let hostToken = await repository.find('tokens', { host: true });
+
+					if (hostToken == null) {
+						hostToken = await tokensService.create(rootApp, rootUser, ['app.host', 'auth.host', 'user.create', 'user.delete'], { host: true });
+						console.log('host token created:');
+					}
+					else {
+						console.log('host token found:');
+					}
+					console.log(hostToken);
+				}
+			});
+		}
+		if (dataFormatState == 2) {
+			menu.add('migrate from old data formats', async () => {
+				const migrate = async (migrationId) => {
+					if (migrationId == 'empty->0.4') {
+						// NOTE: applicationKeyが発行されていたアプリケーションは、移行すると代わりにapplicationSecret(seed)が登録されます。
+						console.log('migrating to v0.4 ...');
+						const applications = await repository.findArray('applications', {});
+						const rootAppId = applications.length >= 1 ? applications[0]._id : null;
+
+						for(const app of applications) {
+							// "permissions" -> "scopes"
+							const scopesConversionTable = {
+								iceAuthHost: 'auth.host',
+								application: ['app.read', 'app.write'],
+								applicationSpecial: 'app.host',
+								accountRead: 'user.account.read',
+								accountWrite: 'user.account.write',
+								accountSpecial: null,
+								userRead: 'user.read',
+								userWrite: 'user.write',
+								userSpecial: ['user.create', 'user.delete'],
+								postRead: 'post.read',
+								postWrite: 'post.write',
+								storageRead: 'storage.read',
+								storageWrite: 'storage.write'
+							};
+
+							app.scopes = [];
+							for(let p of app.permissions) {
+								let newName = scopesConversionTable[p];
+								if (newName != null) {
+									if (Array.isArray(newName))
+										app.scopes.push(...newName);
+									else
+										app.scopes.push(newName);
+								}
+							}
+							delete app.permissions;
+
+							if (app.keyCode != null) {
+								delete app.keyCode;
+								app.seed = uid(8);
+							}
+
+							// root application なら
+							if (app._id.equals(rootAppId)) {
+								app.root = true;
+								delete app.seed;
+							}
+
+							await repository.update('applications', { _id: app._id }, app, { renewal: true });
+							console.log(`migrated application: ${app._id.toString()}`);
+						}
+
+						const users = await repository.findArray('users', {});
+						if (users.length > 0) {
+							const rootUser = users[0];
+							// add root flag
+							await repository.update('users', { _id: rootUser._id }, { root: true });
+							console.log(`migrated root user: ${rootUser._id.toString()}`);
+						}
+
+						await repository.drop('applicationAccesses');
+						console.log('droped applicationAccesses collection');
+
+						await repository.drop('authorizeRequests');
+						console.log('droped authorizeRequests collection');
+
+						await repository.create('meta', { type: 'dataFormat', value: '0.4.0' });
+					}
+					else {
+						console.log('unknown migration');
+					}
+				};
+
+				const dataFormat = await repository.find('meta', { type: 'dataFormat' });
+				if (dataFormat == null) {
+					await migrate('empty->0.4');
+					console.log('migration to v0.4 has completed.');
+				}
+				else {
+					console.log('failed to migration: unknown dataFormat');
+				}
+			});
+		}
+		await menu.show();
+
 		console.log('disconnecting database ...');
 		await repository.disconnect();
 		console.log('disconnected');
@@ -118,6 +215,5 @@ module.exports = async () => {
 	catch (err) {
 		console.log('Unprocessed Setup Error:', err);
 	}
-
 	console.log('## End Setup Mode');
 };

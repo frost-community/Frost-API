@@ -10,7 +10,7 @@ exports.get = async (apiContext) => {
 			limit: { cafy: $().string().pipe(i => v.isInt(i, { min: 0, max: 100 })), default: '30' },
 			next: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
 		},
-		permissions: ['userRead']
+		scopes: ['user.read']
 	});
 	if (apiContext.responsed) return;
 

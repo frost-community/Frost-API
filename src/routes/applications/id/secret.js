@@ -4,7 +4,7 @@ const ApiContext = require('../../../modules/ApiContext');
 /** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
-		permissions: ['applicationSpecial']
+		scopes: ['app.host']
 	});
 	if (apiContext.responsed) return;
 
@@ -14,27 +14,21 @@ exports.get = async (apiContext) => {
 		return;
 	}
 
-	// 対象アプリケーションの所有者かどうか
-	if (!application.creatorId.equals(apiContext.user._id)) {
-		apiContext.response(403, 'this operation is not permitted');
+	if (!apiContext.applicationsService.existApplicationSecret(application)) {
+		apiContext.response(400, 'application secret has not been generated yet');
 		return;
 	}
 
-	if (application.keyCode == null) {
-		apiContext.response(400, 'applicationKey has not been generated yet');
-		return;
-	}
+	const secret = apiContext.applicationsService.getApplicationSecret(application);
 
-	const applicationKey = apiContext.applicationsService.getApplicationKey(application);
-
-	apiContext.response(200, { applicationKey });
+	apiContext.response(200, { secret });
 };
 
 /** @param {ApiContext} apiContext */
 exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {},
-		permissions: ['applicationSpecial']
+		scopes: ['app.host']
 	});
 	if (apiContext.responsed) return;
 
@@ -44,13 +38,12 @@ exports.post = async (apiContext) => {
 		return;
 	}
 
-	// 対象アプリケーションの所有者かどうか
-	if (!application.creatorId.equals(apiContext.user._id)) {
-		apiContext.response(403, 'this operation is not permitted');
+	if (application.root) {
+		apiContext.response(400, 'cannot generate applicationSecret for root application in api');
 		return;
 	}
 
-	const applicationKey = await apiContext.applicationsService.generateApplicationKey(application);
+	const secret = await apiContext.applicationsService.generateApplicationSecret(application);
 
-	apiContext.response(200, { applicationKey });
+	apiContext.response(200, { secret });
 };

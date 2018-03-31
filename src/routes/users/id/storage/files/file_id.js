@@ -8,7 +8,7 @@ const ApiContext = require('../../../../../modules/ApiContext');
 */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
-		permissions: ['storageRead']
+		scopes: ['storage.read']
 	});
 	if (apiContext.responsed) return;
 
@@ -64,7 +64,7 @@ exports.get = async (apiContext) => {
 */
 exports.delete = async (apiContext) => {
 	await apiContext.proceed({
-		permissions: ['storageWrite']
+		scopes: ['storage.write']
 	});
 	if (apiContext.responsed) return;
 

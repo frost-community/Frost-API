@@ -1,5 +1,5 @@
 const ApiContext = require('../../modules/ApiContext');
-const { permissionTypes } = require('../../modules/permission');
+const definedScopes = require('../../modules/scopes');
 const $ = require('cafy').default;
 
 /** @param {ApiContext} apiContext */
@@ -8,24 +8,27 @@ module.exports.post = async (apiContext) => {
 		body: {
 			name: { cafy: $().string().min(1).max(32) },
 			description: { cafy: $().string().max(256), default: '' },
-			permissions: { cafy: $().array('string').unique().eachQ(q => q.or(permissionTypes)), default: [] }
+			scopes: { cafy: $().array('string').unique().each((scope) => {
+				const definedScope = definedScopes.find(i => i.name == scope);
+				return definedScope != null && definedScope.grantable;
+			}), default: [] }
 		},
-		permissions: ['applicationSpecial']
+		scopes: ['app.host']
 	});
 	if (apiContext.responsed) return;
 
-	const { name, description, permissions } = apiContext.body;
+	const { name, description, scopes } = apiContext.body;
 
 	if (!await apiContext.applicationsService.nonDuplicatedName(name)) {
 		apiContext.response(400, 'already exists name');
 		return;
 	}
-	if (!apiContext.applicationsService.availablePermissions(permissions)) {
-		apiContext.response(400, 'some permissions use are disabled');
+	if (!apiContext.applicationsService.availableScopes(scopes)) {
+		apiContext.response(400, 'some scopes use are disabled');
 		return;
 	}
 
-	const application = await apiContext.applicationsService.create(name, apiContext.user, description, permissions);
+	const application = await apiContext.applicationsService.create(name, apiContext.user, description, scopes);
 	if (application == null) {
 		apiContext.response(500, 'failed to create application');
 		return;
@@ -37,7 +40,7 @@ module.exports.post = async (apiContext) => {
 /** @param {ApiContext} apiContext */
 module.exports.get = async (apiContext) => {
 	await apiContext.proceed({
-		permissions: ['application']
+		scopes: ['app.read']
 	});
 	if (apiContext.responsed) return;
 

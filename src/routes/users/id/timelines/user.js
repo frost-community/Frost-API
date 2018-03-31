@@ -12,7 +12,7 @@ exports.get = async (apiContext) => {
 			newer: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null },
 			older: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
 		},
-		permissions: ['postRead', 'userRead']
+		scopes: ['post.read', 'user.read']
 	});
 	if (apiContext.responsed) return;
 

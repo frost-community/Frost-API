@@ -39,10 +39,12 @@ describe('User Storage API', () => {
 		});
 
 		// add general user, general application
-		let user, app;
+		let user, app, authInfo;
 		beforeEach(async () => {
 			user = await usersService.create('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
-			app = await applicationsService.create('generalapp', user, 'this is generalapp.', ['storageRead', 'storageWrite']);
+			app = await applicationsService.create('generalapp', user, 'this is generalapp.', ['storage.read', 'storage.write']);
+
+			authInfo = { application: app, scopes: ['storage.read', 'storage.write'] };
 		});
 
 		// remove all users, all applications
@@ -58,29 +60,32 @@ describe('User Storage API', () => {
 				const fileApiContexts = [];
 				const promises = [];
 				for (let i = 0; i < 4; i++) {
-					context = new ApiContext(null, lock, db, config, {
+					context = new ApiContext(db, config, {
+						lock: lock,
 						params: { id: user._id.toString() },
 						body: { accessRight: { level: 'public' }, fileData: testData64 },
 						headers: { 'X-Api-Version': 1 },
 						testMode: true
 					});
-					context.application = app;
+					context.authInfo = authInfo;
 					context.user = user;
 					fileApiContexts.push(context);
 					promises.push(routeFiles.post(context));
 				}
 				await Promise.all(promises);
 
-				context = new ApiContext(null, lock, db, config, {
+				context = new ApiContext(db, config, {
+					lock: lock,
 					params: { id: user._id.toString() },
 					headers: { 'X-Api-Version': 1 },
 					testMode: true
 				});
-				context.application = app;
+				context.authInfo = authInfo;
 				context.user = user;
 				await route.get(context);
 
-				assert(typeof context.data != 'string', `api error: ${context.data}`);
+				assert(context.data != null, 'no response');
+				assert(context.statusCode == 200, `api error: ${context.data.message}`);
 
 				const { spaceSize, usedSpace, availableSpace } = context.data.storage;
 				assert.equal(testData64Size * fileApiContexts.length, usedSpace, 'usedSpace is invalid value');
@@ -91,17 +96,19 @@ describe('User Storage API', () => {
 		describe('/files', () => {
 			describe('[POST]', () => {
 				it('正しくリクエストされた場合は成功する(1件、public)', async () => {
-					const context = new ApiContext(null, lock, db, config, {
+					const context = new ApiContext(db, config, {
+						lock: lock,
 						params: { id: user._id.toString() },
 						body: { accessRight: { level: 'public' }, fileData: testData64 },
 						headers: { 'X-Api-Version': 1 },
 						testMode: true
 					});
-					context.application = app;
+					context.authInfo = authInfo;
 					context.user = user;
 					await routeFiles.post(context);
 
-					assert(typeof context.data != 'string', `api error: ${context.data}`);
+					assert(context.data != null, 'no response');
+					assert(context.statusCode == 200, `api error: ${context.data.message}`);
 
 					assert(validator.isBase64(context.data.storageFile.fileData), 'returned fileData is not base64');
 					delete context.data.storageFile.fileData;
@@ -125,12 +132,13 @@ describe('User Storage API', () => {
 					const promises = [];
 					const count = parseInt(config.api.storage.spaceSize / testData64Size) + 1; // parseInt(500KB / 53.8KB) + 1 = 10 items, 10 * 53.8KB > 500KB
 					for (let i = 0; i < count; i++) {
-						const context = new ApiContext(null, lock, db, config, {
+						const context = new ApiContext(db, config, {
+							lock: lock,
 							params: { id: user._id.toString() },
 							body: { accessRight: { level: 'public' }, fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
 							user,
-							application: app
+							authInfo
 						});
 						contexts.push(context);
 						promises.push(routeFiles.post(context));
@@ -163,16 +171,18 @@ describe('User Storage API', () => {
 				});
 
 				it('fileDataが空のときは失敗する', async () => {
-					const context = new ApiContext(null, lock, db, config, {
+					const context = new ApiContext(db, config, {
+						lock: lock,
 						params: { id: user._id.toString() },
 						body: { accessRight: { level: 'public' }, fileData: '' },
 						headers: { 'X-Api-Version': 1 },
 						user,
-						application: app
+						authInfo
 					});
 					await routeFiles.post(context);
 
-					assert.equal('body parameter \'fileData\' is invalid', context.data);
+					assert(context.data != null, 'no response');
+					assert(context.statusCode == 400 && context.data.message == 'body parameter \'fileData\' is invalid', `api error: ${context.data.message}`);
 				});
 
 			});
@@ -181,26 +191,29 @@ describe('User Storage API', () => {
 					let context;
 					const contexts = [];
 					for (let i = 0; i < 4; i++) {
-						context = new ApiContext(null, lock, db, config, {
+						context = new ApiContext(db, config, {
+							lock: lock,
 							params: { id: user._id.toString() },
 							body: { accessRight: { level: 'public' }, fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
 							user,
-							application: app
+							authInfo
 						});
 						contexts.push(context);
 					}
 					await Promise.all(contexts.map(c => routeFiles.post(c)));
 
-					context = new ApiContext(null, lock, db, config, {
+					context = new ApiContext(db, config, {
+						lock: lock,
 						params: { id: user._id.toString() },
 						headers: { 'X-Api-Version': 1 },
 						user,
-						application: app
+						authInfo
 					});
 					await routeFiles.get(context);
 
-					assert(typeof context.data != 'string', `api error: ${context.data}`);
+					assert(context.data != null, 'no response');
+					assert(context.statusCode == 200, `api error: ${context.data.message}`);
 
 					assert(context.data.storageFiles != null, 'invalid response');
 					assert.equal(context.data.storageFiles.length, contexts.length, 'invalid response length');
@@ -222,29 +235,33 @@ describe('User Storage API', () => {
 			describe('/:file_id', () => {
 				describe('[GET]', () => {
 					it('正しくリクエストされた場合は成功する', async () => {
-						const contextFile = new ApiContext(null, lock, db, config, {
+						const contextFile = new ApiContext(db, config, {
+							lock: lock,
 							params: { id: user._id.toString() },
 							body: { accessRight: { level: 'public' }, fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
 							user,
-							application: app
+							authInfo
 						});
 						await routeFiles.post(contextFile);
 
-						assert(typeof contextFile.data != 'string', `api error: ${contextFile.data}`);
+						assert(contextFile.data != null, 'no response');
+						assert(contextFile.statusCode == 200, `api error: ${contextFile.data.message}`);
 
-						const context = new ApiContext(null, lock, db, config, {
+						const context = new ApiContext(db, config, {
+							lock: lock,
 							params: {
 								id: user._id.toString(),
 								'file_id': contextFile.data.storageFile.id
 							},
 							headers: { 'X-Api-Version': 1 },
 							user,
-							application: app
+							authInfo
 						});
 						await routeFileId.get(context);
 
-						assert(typeof context.data != 'string', `api error: ${context.data}`);
+						assert(context.data != null, 'no response');
+						assert(context.statusCode == 200, `api error: ${context.data.message}`);
 
 						assert(validator.isBase64(context.data.storageFile.fileData), 'returned fileData is not base64');
 						delete context.data.storageFile.fileData;

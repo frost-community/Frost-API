@@ -24,10 +24,12 @@ describe('Posts API', () => {
 		});
 
 		// add general user, general application
-		let user, app;
+		let user, app, authInfo;
 		beforeEach(async () => {
 			user = await usersService.create('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
 			app = await applicationsService.create('generalapp', user, 'this is generalapp.', ['postWrite']);
+
+			authInfo = { application: app, scopes: ['post.write'] };
 		});
 
 		// remove all users, all applications
@@ -46,14 +48,15 @@ describe('Posts API', () => {
 		describe('/post_status', () => {
 			describe('[POST]', () => {
 				it('正しくリクエストされた場合は成功する', async () => {
-					const context = new ApiContext(null, null, db, config, {
+					const context = new ApiContext(db, config, {
 						body: { text: 'hogehoge' },
 						headers: { 'X-Api-Version': 1 },
 						user,
-						application: app
+						authInfo: authInfo
 					});
 					await routeStatus.post(context);
-					assert(context.data != null && typeof context.data != 'string', `api error: ${context.data}`);
+					assert(context.data != null, 'no response');
+					assert(context.statusCode == 200, `api error: ${context.data.message}`);
 					delete context.data.postStatus.id;
 					delete context.data.postStatus.createdAt;
 					delete context.data.postStatus.user;

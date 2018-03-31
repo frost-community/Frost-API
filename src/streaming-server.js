@@ -1,11 +1,10 @@
 const WebSocket = require('websocket');
 const events = require('websocket-events');
-const { checkRequest } = require('./modules/helpers/StreamingHelper');
 const { Stream, StreamUtil } = require('./modules/stream');
 const methods = require('methods');
 const ApiContext = require('./modules/ApiContext');
 const ApplicationsService = require('./services/ApplicationsService');
-const ApplicationAccessesService = require('./services/ApplicationAccessesService');
+const TokensService = require('./services/TokensService');
 const UserFollowingsService = require('./services/UserFollowingsService');
 const sanitize = require('mongo-sanitize');
 
@@ -32,21 +31,28 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 	generalTimelineStream.addSource(generalTimelineStreamId);
 	streams.set(generalTimelineStreamId, generalTimelineStream);
 
-	const applicationsService = new ApplicationsService(repository, config);
-	const applicationAccessesService = new ApplicationAccessesService(repository, config);
+	const tokensService = new TokensService(repository, config);
 	const userFollowingsService = new UserFollowingsService(repository, config);
 
 	server.on('request', async request => {
+		const query = request.resourceURL.query;
+
 		// verification
-		let verification;
-		try {
-			verification = await checkRequest(request, applicationsService, applicationAccessesService);
-		}
-		catch (err) {
-			console.log('streaming verification error:', err);
+		const accessToken = query.access_token;
+
+		if (accessToken == null) {
+			const message = 'access_token parameter is empty';
+			request.reject(400, message);
 			return;
 		}
-		const { meId, applicationKey, accessKey } = verification;
+
+		const token = await tokensService.findByAccessToken(accessToken);
+		if (token == null) {
+			const message = 'access_token parameter is invalid';
+			request.reject(400, message);
+			return;
+		}
+		const meId = token.userId;
 
 		const connection = request.accept();
 
@@ -115,7 +121,6 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 					method,
 					endpoint,
 					query,
-					headers,
 					body
 				} = data;
 
@@ -166,14 +171,12 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				headers = sanitize(headers);
 
 				// ApiContextを構築
-				const apiContext = new ApiContext(streams, null, repository, config, {
+				const apiContext = new ApiContext(repository, config, {
+					streams,
 					params,
 					query,
-					body,
-					headers
+					body
 				});
-				apiContext.headers['x-application-key'] = applicationKey;
-				apiContext.headers['x-access-key'] = accessKey;
 
 				// 対象のRouteモジュールを実行
 				await routeFunc(apiContext);
@@ -193,7 +196,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				}
 
 				if (connection.connected)
-					return connection.send('rest', { success: true, statusCode: apiContext.statusCode, request: { method, endpoint, query, headers, body }, response });
+					return connection.send('rest', { success: true, statusCode: apiContext.statusCode, request: { method, endpoint, query, body }, response });
 			}
 			catch (err) {
 				console.log(err);
