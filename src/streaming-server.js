@@ -168,7 +168,6 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				params = sanitize(params);
 				query = sanitize(query);
 				body = sanitize(body);
-				headers = sanitize(headers);
 
 				// ApiContextを構築
 				const apiContext = new ApiContext(repository, config, {
