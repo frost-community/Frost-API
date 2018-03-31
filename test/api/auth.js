@@ -89,10 +89,10 @@ describe('Auth API', () => {
 
 				// 取得
 				context = new ApiContext(db, config, {
-					body: {
+					query: {
 						applicationId: appA._id.toString(),
 						userId: userA._id.toString(),
-						scopes: []
+						scopes: ''
 					},
 					headers: { 'X-Api-Version': 1 },
 					user: userA,
@@ -131,7 +131,7 @@ describe('Auth API', () => {
 
 				// 取得
 				context = new ApiContext(db, config, {
-					body: {
+					query: {
 						accessToken: accessToken
 					},
 					headers: { 'X-Api-Version': 1 },
