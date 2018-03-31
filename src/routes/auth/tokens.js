@@ -47,23 +47,33 @@ module.exports.post = async (apiContext) => {
 /** @param {ApiContext} apiContext */
 module.exports.get = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		query: {
 			applicationId: { cafy: $().string(), default: null },
 			userId: { cafy: $().string(), default: null },
-			scopes: { cafy: $().array('string'), default: [] },
+			scopes: { cafy: $().string(), default: null },
 			accessToken: { cafy: $().string(), default: null },
 		},
 		scopes: ['auth.host']
 	});
 	if (apiContext.responsed) return;
 
-	const { applicationId, userId, scopes, accessToken } = apiContext.body;
+	const { applicationId, userId, scopes, accessToken } = apiContext.query;
 
 	let token;
 	if (accessToken != null) {
 		token = await apiContext.tokensService.findByAccessToken(accessToken);
 	}
 	else {
+		if (applicationId == null) {
+			apiContext.response(400, 'applicationId is required');
+			return;
+		}
+
+		if (userId == null) {
+			apiContext.response(400, 'userId is required');
+			return;
+		}
+
 		if ((await apiContext.repository.findById('applications', applicationId)) == null) {
 			apiContext.response(400, 'applicationId is invalid');
 			return;
@@ -74,7 +84,12 @@ module.exports.get = async (apiContext) => {
 			return;
 		}
 
-		token = await apiContext.tokensService.find(applicationId, userId, scopes);
+		let splitedScopes = [];
+		if (scopes != null && scopes != '') {
+			splitedScopes = scopes.split(',');
+		}
+
+		token = await apiContext.tokensService.find(applicationId, userId, splitedScopes);
 	}
 
 	if (token == null) {
