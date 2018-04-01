@@ -1,10 +1,12 @@
 const WebSocket = require('websocket');
 const events = require('websocket-events');
+const MongoAdapter = require('./modules/MongoAdapter');
 const { Stream, StreamUtil } = require('./modules/stream');
 const methods = require('methods');
 const ApiContext = require('./modules/ApiContext');
 const ApplicationsService = require('./services/ApplicationsService');
 const TokensService = require('./services/TokensService');
+const UsersService = require('./services/UsersService');
 const UserFollowingsService = require('./services/UserFollowingsService');
 const sanitize = require('mongo-sanitize');
 
@@ -21,6 +23,9 @@ general-timeline-status:general generalに向けて流されたポストを受�
 home-timeline-status:(userId) そのユーザーのホームTLに向けて流されたポストを受信可能なStreamです
 */
 
+/**
+ * @param {MongoAdapter} repository
+*/
 module.exports = (http, directoryRouter, streams, repository, config) => {
 	const server = new WebSocket.server({ httpServer: http });
 
@@ -39,7 +44,6 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 
 		// verification
 		const accessToken = query.access_token;
-
 		if (accessToken == null) {
 			const message = 'access_token parameter is empty';
 			request.reject(400, message);
@@ -52,9 +56,28 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			request.reject(400, message);
 			return;
 		}
-		const meId = token.userId;
+
+		const [user, application] = await Promise.all([
+			repository.findById('users', token.userId),
+			repository.findById('applications', token.applicationId)
+		]);
+
+		if (user == null) {
+			const message = 'user not found';
+			request.reject(500, message);
+			return;
+		}
+
+		if (application == null) {
+			const message = 'application not found';
+			request.reject(500, message);
+			return;
+		}
 
 		const connection = request.accept();
+
+		connection.user = user;
+		connection.authInfo = { scopes: token.scopes, application: application };
 
 		connection.on('error', err => {
 			console.log('streaming error:', err);
@@ -107,7 +130,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			for (const streamId of connectedStreamIds) {
 				disconnectStream(streamId);
 			}
-			console.log(`disconnected streaming. user: ${meId}`);
+			console.log(`disconnected streaming. user: ${connection.user._id}`);
 		});
 
 		// クライアント側からRESTリクエストを受信したとき
@@ -239,7 +262,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				else if (timelineType == 'home') {
 					// memo: フォローユーザーのuser-timeline-statusストリームを統合したhome-timeline-statusストリームを生成
 					streamType = 'home-timeline-status';
-					streamId = StreamUtil.buildStreamId(streamType, meId);
+					streamId = StreamUtil.buildStreamId(streamType, connection.user._id);
 
 					// 既に接続済みなら中断
 					if (connectedStreamIds.indexOf(streamId) != -1) {
@@ -250,8 +273,8 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 					if (stream == null) {
 						// ストリームを生成
 						stream = new Stream();
-						stream.addSource(StreamUtil.buildStreamId('user-timeline-status', meId));
-						const followings = await userFollowingsService.findTargets(meId, { isAscending: false }); // TODO: (全て or ユーザーの購読設定によっては選択的に)
+						stream.addSource(StreamUtil.buildStreamId('user-timeline-status', connection.user._id));
+						const followings = await userFollowingsService.findTargets(connection.user._id, { isAscending: false }); // TODO: (全て or ユーザーの購読設定によっては選択的に)
 						for (const following of followings || []) {
 							const followingUserId = following.target.toString();
 							stream.addSource(StreamUtil.buildStreamId('user-timeline-status', followingUserId));
@@ -301,7 +324,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 					streamId = generalTimelineStreamId;
 				}
 				else if (timelineType == 'home') {
-					streamId = StreamUtil.buildStreamId('home-timeline-status', meId);
+					streamId = StreamUtil.buildStreamId('home-timeline-status', connection.user._id);
 				}
 				else {
 					return error('timeline-disconnect', `timeline type "${timelineType}" is invalid`);
@@ -321,7 +344,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			error('default', 'invalid event name');
 		});
 
-		console.log(`connected streaming. user: ${meId}`);
+		console.log(`connected streaming. user: ${connection.user._id}`);
 	});
 
 	console.log('streaming server is ready.');
