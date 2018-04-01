@@ -93,7 +93,7 @@ module.exports.get = async (apiContext) => {
 	}
 
 	if (token == null) {
-		apiContext.response(400, 'token not found');
+		apiContext.response(404, 'token not found');
 		return;
 	}
 

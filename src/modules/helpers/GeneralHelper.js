@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const path = require('path');
 const { MissingArgumentsError } = require('../errors');
 
 class GeneralHelper {
@@ -11,11 +12,11 @@ class GeneralHelper {
 	*/
 	static loadConfig() {
 		try {
-			return require(`${process.cwd()}/config.json`);
+			return require(path.resolve('config.json'));
 		}
 		catch (err) {
 			try {
-				return require(`${process.cwd()}/../config.json`);
+				return require(path.resolve('../config.json'));
 			}
 			catch (err2) {
 				return null;

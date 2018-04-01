@@ -122,23 +122,6 @@ class ApplicationsService {
 		return this._repository.findArray('applications', { creatorId }, options);
 	}
 
-	async verifyApplicationSecret(applicationId, secret) {
-		if (applicationId == null || secret == null) {
-			throw new MissingArgumentsError();
-		}
-
-		const application = await this._repository.findById('applications', applicationId);
-		if (application == null) {
-			throw new InvalidArgumentError();
-		}
-
-		if (!this.existApplicationSecret(application)) {
-			return false;
-		}
-
-		return this.getApplicationSecret(application) == secret;
-	}
-
 	async nonDuplicatedName(name) {
 		if (name == null)
 			throw new MissingArgumentsError();
@@ -146,14 +129,14 @@ class ApplicationsService {
 		return (await this.findByName(name)) == null;
 	}
 
-	availableScopes(scopeNames) {
-		if (scopeNames == null)
+	availableScope(scopeName) {
+		if (scopeName == null)
 			throw new MissingArgumentsError();
 
-		return scopeNames.every(scopeName => {
-			const scope = definedScopes.find(definedScope => definedScope.name == scopeName);
-			return scope != null && scope.grantable;
-		});
+		const definedScope = definedScopes.find(i => i.name == scopeName);
+		const available = definedScope != null && definedScope.grantable;
+
+		return available;
 	}
 }
 module.exports = ApplicationsService;

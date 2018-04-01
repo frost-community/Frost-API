@@ -6,6 +6,7 @@ const ApiContext = require('./modules/ApiContext');
 const ApplicationsService = require('./services/ApplicationsService');
 const TokensService = require('./services/TokensService');
 const UserFollowingsService = require('./services/UserFollowingsService');
+const sanitize = require('mongo-sanitize');
 
 /*
 # 各種変数の説明
@@ -163,6 +164,10 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				for (const key of Object.keys(query || {})) {
 					query[key] += '';
 				}
+
+				params = sanitize(params);
+				query = sanitize(query);
+				body = sanitize(body);
 
 				// ApiContextを構築
 				const apiContext = new ApiContext(repository, config, {
