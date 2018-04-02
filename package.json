@@ -41,7 +41,7 @@
     "uid2": "0.0.3",
     "validator": "^9.0.0",
     "websocket": "^1.0.24",
-    "websocket-events": "^0.0.4"
+    "websocket-events": "^1.0.0"
   },
   "devDependencies": {
     "eslint": "^4.15.0",
