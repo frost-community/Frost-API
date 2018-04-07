@@ -11,10 +11,10 @@ const UsersService = require('./services/UsersService');
 const ApplicationsService = require('./services/ApplicationsService');
 const TokensService = require('./services/TokensService');
 const scopes = require('./modules/scopes');
-const getVersion = require('./modules/getVersion');
 const checkDataFormat = require('./modules/checkDataFormat');
 
 const urlConfigFile = 'https://raw.githubusercontent.com/Frost-Dev/Frost/master/config.json';
+const dataFormatVersion = 1;
 
 const q = async str => (await readLine(str)).toLowerCase().indexOf('y') === 0;
 const writeFile = promisify(fs.writeFile);
@@ -42,11 +42,10 @@ module.exports = async () => {
 		const repository = await MongoAdapter.connect(config.api.database.host, config.api.database.database, authenticate);
 
 		console.log('checking dataFormat ...');
-		const dataFormatState = await checkDataFormat(repository);
-		const { dataFormatVersion } = getVersion();
+		const dataFormatState = await checkDataFormat(repository, dataFormatVersion);
 
 		let stateMessage = 'unknown';
-		if (dataFormatState == 0) stateMessage = 'bootable';
+		if (dataFormatState == 0) stateMessage = 'executable';
 		if (dataFormatState == 1) stateMessage = 'need initialization';
 		if (dataFormatState == 2) stateMessage = 'need migration';
 		console.log('dataFormat state:', stateMessage);
@@ -90,7 +89,7 @@ module.exports = async () => {
 			await applicationsService.create(appName, user, user.description, scopes.map(s => s.name), { root: true });
 			console.log('root application created.');
 
-			repository.create('meta', { type: 'dataFormat', value: dataFormatVersion });
+			await repository.create('meta', { type: 'dataFormat', value: dataFormatVersion });
 		});
 		// WARN: アンコメントすると、root applicationの認可付与に必要なapplicationSecretを生成可能になります。
 		// このapplicationSecretは漏洩するとAPIのフルアクセスが可能になってしまうため、必要なときにだけ生成すべきです。
@@ -124,9 +123,9 @@ module.exports = async () => {
 		if (dataFormatState == 2) {
 			menu.add('migrate from old data formats', async () => {
 				const migrate = async (migrationId) => {
-					if (migrationId == 'empty->0.4') {
+					if (migrationId == 'empty->1') {
 						// NOTE: applicationKeyが発行されていたアプリケーションは、移行すると代わりにapplicationSecret(seed)が登録されます。
-						console.log('migrating to v0.4 ...');
+						console.log('migrating to v1 ...');
 						const applications = await repository.findArray('applications', {});
 						const rootAppId = applications.length >= 1 ? applications[0]._id : null;
 
@@ -189,7 +188,7 @@ module.exports = async () => {
 						await repository.drop('authorizeRequests');
 						console.log('droped authorizeRequests collection');
 
-						await repository.create('meta', { type: 'dataFormat', value: '0.4.0' });
+						await repository.create('meta', { type: 'dataFormat', value: 1 });
 					}
 					else {
 						console.log('unknown migration');
@@ -198,8 +197,8 @@ module.exports = async () => {
 
 				const dataFormat = await repository.find('meta', { type: 'dataFormat' });
 				if (dataFormat == null) {
-					await migrate('empty->0.4');
-					console.log('migration to v0.4 has completed.');
+					await migrate('empty->1');
+					console.log('migration to v1 has completed.');
 				}
 				else {
 					console.log('failed to migration: unknown dataFormat');

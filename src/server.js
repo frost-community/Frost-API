@@ -13,6 +13,8 @@ const defineStrategies = require('./modules/defineStrategies');
 const getVersion = require('./modules/getVersion');
 const checkDataFormat = require('./modules/checkDataFormat');
 
+const dataFormatVersion = 1;
+
 module.exports = async () => {
 	try {
 		console.log('+------------------+');
@@ -40,7 +42,7 @@ module.exports = async () => {
 			dbConfig.password != null ? `${dbConfig.username}:${dbConfig.password}` : dbConfig.username);
 
 		console.log('checking dataFormat ...');
-		const dataFormatState = await checkDataFormat(repository);
+		const dataFormatState = await checkDataFormat(repository, dataFormatVersion);
 		if (dataFormatState != 0) {
 			if (dataFormatState == 1) {
 				console.log('please initialize in setup mode. (command: npm run setup)');

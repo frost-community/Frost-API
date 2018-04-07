@@ -1,6 +1,3 @@
-const semver = require('semver');
-const getVersion = require('./getVersion');
-
 /**
  * 保存されているデータフォーマットを確認します。
  *
@@ -13,9 +10,8 @@ const getVersion = require('./getVersion');
  * 3: 不明なバージョン
  * @return {Promise<0 | 1 | 2 | 3>}
 */
-module.exports = async (repository) => {
+module.exports = async (repository, currentVersion) => {
 	const dataFormat = await repository.find('meta', { type: 'dataFormat' });
-	const { dataFormatVersion } = getVersion();
 
 	let docCount = 0;
 	docCount += await repository.count('users', {});
@@ -33,12 +29,12 @@ module.exports = async (repository) => {
 	}
 
 	// データフォーマットが一致しているとき
-	if (semver.eq(dataFormat.value, dataFormatVersion)) {
+	if (dataFormat.value === currentVersion) {
 		return 0; // 準備完了
 	}
 
 	// データフォーマットが期待したものであるとき
-	if (semver.lt(dataFormat.value, dataFormatVersion)) {
+	if (dataFormat.value < currentVersion) {
 		return 2; // 移行が必要
 	}
 	else {
