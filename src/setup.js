@@ -58,7 +58,7 @@ module.exports = async () => {
 		menu.add('exit setup', async (ctx) => {
 			ctx.exit();
 		});
-		menu.add('initialize (register root application and root user)', async () => {
+		menu.add('initialize (register root application and root user)', async (ctx) => {
 			// なんらかの保存されたデータがあるとき
 			if (dataFormatState != 1) {
 				if (!(await q('(!) are you sure you want to REMOVE ALL COLLECTIONS and ALL DOCUMENTS in target database? (y/n) > '))) {
@@ -90,6 +90,7 @@ module.exports = async () => {
 			console.log('root application created.');
 
 			await repository.create('meta', { type: 'dataFormat', value: dataFormatVersion });
+			ctx.exit();
 		});
 		// WARN: アンコメントすると、root applicationの認可付与に必要なapplicationSecretを生成可能になります。
 		// このapplicationSecretは漏洩するとAPIのフルアクセスが可能になってしまうため、必要なときにだけ生成すべきです。
@@ -103,7 +104,7 @@ module.exports = async () => {
 		}
 		*/
 		if (dataFormatState == 0) {
-			menu.add('generate or get token for authorization host', async () => {
+			menu.add('generate or get token for authorization host', async (ctx) => {
 				const rootUser = await repository.find('users', { root: true });
 				let rootApp = await repository.find('applications', { root: true });
 				if (rootApp != null) {
@@ -118,10 +119,11 @@ module.exports = async () => {
 					}
 					console.log(hostToken);
 				}
+				ctx.exit();
 			});
 		}
 		if (dataFormatState == 2) {
-			menu.add('migrate from old data formats', async () => {
+			menu.add('migrate from old data formats', async (ctx) => {
 				const migrate = async (migrationId) => {
 					if (migrationId == 'empty->1') {
 						// NOTE: applicationKeyが発行されていたアプリケーションは、移行すると代わりにapplicationSecret(seed)が登録されます。
@@ -199,6 +201,7 @@ module.exports = async () => {
 				if (dataFormat == null) {
 					await migrate('empty->1');
 					console.log('migration to v1 has completed.');
+					ctx.exit();
 				}
 				else {
 					console.log('failed to migration: unknown dataFormat');
