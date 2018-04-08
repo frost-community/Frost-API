@@ -1,7 +1,7 @@
 const moment = require('moment');
 const MongoAdapter = require('../modules/MongoAdapter');
 const { buildHash, sortObject } = require('../modules/helpers/GeneralHelper');
-const { MissingArgumentsError, InvalidArgumentError, InvalidOperationError } = require('../modules/errors');
+const { MissingArgumentsError, InvalidOperationError } = require('../modules/errors');
 const definedScopes = require('../modules/scopes');
 const uid = require('uid2');
 
