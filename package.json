@@ -30,7 +30,7 @@
     "methods": "^1.1.2",
     "moment": "^2.18.0",
     "mongo-sanitize": "^1.0.0",
-    "mongodb": "^2.2.28",
+    "mongodb": "^2.2.34",
     "passport": "^0.4.0",
     "passport-http-bearer": "^1.0.1",
     "path-to-regexp": "^1.7.0",

@@ -1,15 +1,17 @@
-const { MongoClient, Db : Connection, ObjectId } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 const { MissingArgumentsError } = require('./errors');
 
 class MongoAdapter {
 	/**
-	 * @param {Connection} connection
+	 * @param {MongoClient} client
+	 * @param {string} dbName
 	*/
-	constructor(connection) {
-		if (connection == null) {
+	constructor(client, dbName) {
+		if (client == null) {
 			throw new MissingArgumentsError();
 		}
-		this._connection = connection;
+		this._client = client;
+		this._db = client.db(dbName);
 	}
 
 	/**
@@ -24,7 +26,7 @@ class MongoAdapter {
 			throw new MissingArgumentsError();
 		}
 
-		const result = await this._connection.collection(collectionName).insert(data);
+		const result = await this._db.collection(collectionName).insert(data);
 		const document = await this.find(collectionName, { _id: result.ops[0]._id });
 
 		return document;
@@ -38,12 +40,12 @@ class MongoAdapter {
 	 * @param {Object} options
 	 * @return {Promise<any>}
 	*/
-	async find(collectionName, query, options) {
+	find(collectionName, query, options) {
 		if (collectionName == null || query == null) {
 			throw new MissingArgumentsError();
 		}
 
-		return this._connection.collection(collectionName).findOne(query, options);
+		return this._db.collection(collectionName).findOne(query, options);
 	}
 
 	/**
@@ -57,12 +59,7 @@ class MongoAdapter {
 		if (id == null)
 			throw new MissingArgumentsError();
 
-		id = MongoAdapter.buildId(id);
-		if (id == null) {
-			return null;
-		}
-
-		return this.find(collectionName, { _id: id }, options);
+		return this.find(collectionName, { _id: MongoAdapter.buildId(id) }, options);
 	}
 
 	/**
@@ -71,7 +68,6 @@ class MongoAdapter {
 	 * @param {String} collectionName
 	 * @param {Object} query
 	 * @param {{isAscending: Boolean, limit: Number, since: ObjectId, until: ObjectId}} options
-	 * @return {Promise<any[]>}
 	*/
 	async findArray(collectionName, query, options) {
 		if (collectionName == null || query == null) {
@@ -90,7 +86,7 @@ class MongoAdapter {
 			query._id.$lt = options.until;
 		}
 
-		let cursor = this._connection.collection(collectionName).find(query);
+		let cursor = this._db.collection(collectionName).find(query);
 
 		if (options.limit != null)
 			cursor = cursor.limit(options.limit);
@@ -108,14 +104,13 @@ class MongoAdapter {
 	 *
 	 * @param {String} collectionName
 	 * @param {Object} query
-	 * @return {Promise<Number>}
 	*/
 	async count(collectionName, query) {
 		if (collectionName == null || query == null) {
 			throw new MissingArgumentsError();
 		}
 
-		const documentsCount = await this._connection.collection(collectionName).count(query);
+		const documentsCount = await this._db.collection(collectionName).count(query);
 
 		return documentsCount;
 	}
@@ -127,7 +122,6 @@ class MongoAdapter {
 	 * @param {Object} query
 	 * @param {Object} data
 	 * @param {Object} options
-	 * @return {Promise<any>}
 	*/
 	async update(collectionName, query, data, options) {
 		if (collectionName == null || query == null || data == null) {
@@ -136,7 +130,7 @@ class MongoAdapter {
 
 		if (options == null) options = {};
 
-		const result = await this._connection.collection(collectionName).updateOne(query, options.renewal ? data : { $set: data }, options);
+		const result = await this._db.collection(collectionName).updateOne(query, options.renewal ? data : { $set: data }, options);
 
 		if (result.result.ok != 1) {
 			throw new Error('failed to update a database document');
@@ -177,19 +171,7 @@ class MongoAdapter {
 			throw new MissingArgumentsError();
 		}
 
-		await this._connection.collection(collectionName).remove(query, options);
-	}
-
-	async drop(collectionName, options) {
-		if (collectionName == null) {
-			throw new MissingArgumentsError();
-		}
-
-		await this._connection.collection(collectionName).drop(options);
-	}
-
-	disconnect() {
-		return this._connection.close();
+		await this._db.collection(collectionName).remove(query, options);
 	}
 
 	removeById(collectionName, id, options) {
@@ -199,20 +181,40 @@ class MongoAdapter {
 		return this.remove(collectionName, { _id: MongoAdapter.buildId(id) }, options);
 	}
 
-	/**
-	 * MongoDBに接続します
-	 *
-	 * host, dbname, [authenticate]
-	 * @return {Promise<MongoAdapter>}
-	*/
-	static async connect(host, dbname, authenticate) {
-		if (host == null || dbname == null || authenticate == null) {
+	async drop(collectionName, options) {
+		if (collectionName == null) {
 			throw new MissingArgumentsError();
 		}
 
-		if (authenticate != null) authenticate += '@';
+		await this._db.collection(collectionName).drop(options);
+	}
 
-		return new MongoAdapter(await MongoClient.connect(`mongodb://${authenticate}${host}/${dbname}`));
+	disconnect() {
+		return this._client.close();
+	}
+
+	/**
+	 * MongoDBに接続します
+	 *
+	 * @param {string} host
+	 * @param {string} dbname
+	 * @param {string?} username
+	 * @param {string?} password
+	 * @return {Promise<MongoAdapter>}
+	*/
+	static async connect(host, dbname, username, password) {
+		if (host == null || dbname == null) {
+			throw new MissingArgumentsError();
+		}
+
+		let authentication = '';
+		if (username != null && password != null && username != '' && password != '') {
+			authentication = `${username}:${password}@`;
+		}
+
+		const client = await MongoClient.connect(`mongodb://${authentication}${host}`);
+
+		return new MongoAdapter(client, dbname);
 	}
 
 	static buildId(idSource) {
