@@ -34,7 +34,7 @@ describe('Applications API', () => {
 			appA = await applicationsService.create('generalapp_a', userA, 'this is generalapp.', ['application', 'applicationSpecial']);
 			appB = await applicationsService.create('generalapp_b', userB, 'this is generalapp.', ['application', 'applicationSpecial']);
 
-			authInfo = { application: appA, scopes: ['app.read', 'app.write', 'app.host'] };
+			authInfo = { application: appA, scopes: ['app.create', 'app.read', 'app.write', 'app.host'] };
 		});
 
 		// remove all users, all applications

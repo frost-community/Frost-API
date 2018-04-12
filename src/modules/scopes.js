@@ -1,6 +1,8 @@
 module.exports = [
 	// 認可付与のホスト権限
 	{ name: 'auth.host', grantable: false },
+	// 連携アプリの作成操作
+	{ name: 'app.create', grantable: false },
 	// 連携アプリの読み取り操作
 	{ name: 'app.read', grantable: true },
 	// 連携アプリの書き換え操作

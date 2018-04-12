@@ -12,7 +12,7 @@ module.exports.post = async (apiContext) => {
 				return apiContext.applicationsService.availableScope(scope);
 			}), default: [] }
 		},
-		scopes: ['app.host']
+		scopes: ['app.create']
 	});
 	if (apiContext.responsed) return;
 

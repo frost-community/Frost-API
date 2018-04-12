@@ -136,7 +136,7 @@ module.exports = async () => {
 							const scopesConversionTable = {
 								iceAuthHost: 'auth.host',
 								application: ['app.read', 'app.write'],
-								applicationSpecial: 'app.host',
+								applicationSpecial: ['app.host', 'app.create'],
 								accountRead: 'user.account.read',
 								accountWrite: 'user.account.write',
 								accountSpecial: null,
