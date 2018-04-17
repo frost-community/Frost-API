@@ -120,7 +120,7 @@ module.exports = async () => {
 			console.log(`listen on port: ${config.api.port}`);
 		});
 
-		require('./streaming-server')(http, directoryRouter, streams, repository, config);
+		require('./streamingServer')(http, directoryRouter, streams, repository, config);
 	}
 	catch (err) {
 		console.log('Unprocessed Server Error:', err);

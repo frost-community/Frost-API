@@ -158,7 +158,12 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			}
 
 			if (connection.connected)
-				return connection.send('rest', { success: true, statusCode: apiContext.statusCode, request: { method, endpoint, query, body }, response });
+				return connection.send('rest', {
+					success: true,
+					statusCode: apiContext.statusCode,
+					request: { method, endpoint, query, body },
+					response
+				});
 		}
 		catch (err) {
 			console.log(err);
