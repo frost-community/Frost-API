@@ -23,7 +23,7 @@ exports.post = async (apiContext) => {
 			accessRight: {
 				cafy: $().object()
 					.have('level', $().string().or('public|private'))
-					.prop('users', $().array('string').unique().each(i => MongoAdapter.validateId(i))), default: { level: 'public' }
+					.prop('users', $().array($().string()).unique().each(i => MongoAdapter.validateId(i))), default: { level: 'public' }
 			}
 		},
 		scopes: ['storage.write']

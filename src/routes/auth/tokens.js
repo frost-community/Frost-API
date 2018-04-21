@@ -7,7 +7,7 @@ module.exports.post = async (apiContext) => {
 		body: {
 			applicationId: { cafy: $().string() },
 			userId: { cafy: $().string() },
-			scopes: { cafy: $().array('string') },
+			scopes: { cafy: $().array($().string()) },
 		},
 		scopes: ['auth.host']
 	});

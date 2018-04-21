@@ -8,7 +8,7 @@ exports.post = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
 			text: { cafy: $().string().range(1, 256).pipe(i => !/^\s*$/.test(i)) },
-			attachments: { cafy: $().array('string').unique().max(4).each(i => MongoAdapter.validateId(i)), default: [] }
+			attachments: { cafy: $().array($().string()).unique().max(4).each(i => MongoAdapter.validateId(i)), default: [] }
 		},
 		scopes: ['post.write']
 	});

@@ -8,7 +8,7 @@ module.exports.post = async (apiContext) => {
 		body: {
 			name: { cafy: $().string().min(1).max(32) },
 			description: { cafy: $().string().max(256), default: '' },
-			scopes: { cafy: $().array('string').unique().each(scope => {
+			scopes: { cafy: $().array($().string()).unique().each(scope => {
 				return apiContext.applicationsService.availableScope(scope);
 			}), default: [] }
 		},
