@@ -14,6 +14,8 @@ module.exports = [
 	// 認証ホスト向けのトークンデータを生成する
 	['post', '/auth/tokens'],
 
+	['get', '/auth/valid_credential'],
+
 	// == Applications ==
 
 	// ユーザーが作成したアプリケーション情報を一覧で取得する

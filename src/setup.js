@@ -111,7 +111,7 @@ module.exports = async () => {
 					let hostToken = await repository.find('tokens', { host: true });
 
 					if (hostToken == null) {
-						hostToken = await tokensService.create(rootApp, rootUser, ['app.host', 'auth.host', 'user.create', 'user.delete'], { host: true });
+						hostToken = await tokensService.create(rootApp, rootUser, ['user.read', 'app.host', 'auth.host', 'user.create', 'user.delete'], { host: true });
 						console.log('host token created:');
 					}
 					else {

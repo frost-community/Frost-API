@@ -332,6 +332,10 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 		};
 
 		connection.on('error', err => {
+			if (err.message.indexOf('ECONNRESET') != -1) {
+				return;
+			}
+
 			if (err.userEventError)
 				connection.error('default', 'request format is invalid');
 			else
