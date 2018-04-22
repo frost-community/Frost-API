@@ -182,7 +182,7 @@ describe('User Storage API', () => {
 					await routeFiles.post(context);
 
 					assert(context.data != null, 'no response');
-					assert(context.statusCode == 400 && context.data.message == 'body parameter \'fileData\' is invalid', `api error: ${context.data.message}`);
+					assert(context.statusCode == 400 && context.data.message == 'body parameter \'fileData\' is required', `api error: ${context.data.message}`);
 				});
 
 			});

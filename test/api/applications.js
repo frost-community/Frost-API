@@ -84,7 +84,7 @@ describe('Applications API', () => {
 				await routeApp.post(context);
 
 				assert(context.data != null, 'no response');
-				assert(context.statusCode == 400 && context.data.message == 'body parameter \'name\' is invalid', `api error: ${context.data.message}`);
+				assert(context.statusCode == 400 && context.data.message == 'body parameter \'name\' is required', `api error: ${context.data.message}`);
 
 				context = new ApiContext(db, config, {
 					body: {

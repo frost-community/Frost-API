@@ -70,7 +70,7 @@ class ApiContext {
 		}
 
 		for (const paramName of Object.keys(rule.body)) {
-			if (this.body[paramName] == null || this.body[paramName] == '') {
+			if (this.body[paramName] == null || this.body[paramName] === '') {
 				const required = rule.body[paramName].default === undefined;
 				if (required) {
 					return this.response(400, `body parameter '${paramName}' is required`);
