@@ -17,5 +17,5 @@ cache:
   - node_modules
 
 script:
-  - wget https://raw.githubusercontent.com/Frost-Dev/Frost/master/config.json
+  - npm run generate-configs
   - npm run test
