@@ -4,23 +4,16 @@ const { MissingArgumentsError } = require('../errors');
 
 class GeneralHelper {
 	/**
-	 * 設定ファイルを読み込みます。
-	 * リポジトリ直下ディレクトリか、その１つ上層のディレクトリからconfig.jsonを読み込むことができます。
-	 * リポジトリ直下ディレクトリのconfig.jsonから優先的に読み込まれます。
+	 * 設定ファイルを読み込みます
 	 *
 	 * @return {Object} JSONデータのパース結果
 	*/
 	static loadConfig() {
 		try {
-			return require(path.resolve('config.json'));
+			return require(path.resolve('.configs/api-config.json'));
 		}
 		catch (err) {
-			try {
-				return require(path.resolve('../config.json'));
-			}
-			catch (err2) {
-				return null;
-			}
+			return null;
 		}
 	}
 

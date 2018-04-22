@@ -27,14 +27,14 @@ module.exports = async () => {
 		console.log('loading config ...');
 		let config = loadConfig();
 		if (config == null) {
-			console.log('config file not found. please create in setup mode. (command: npm run setup)');
+			console.log('config file not found. please create by command. (command: npm run generate-configs)');
 			return;
 		}
 
 		const streams = new Map(); // memo: keyはChannelName
 		const lock = new AsyncLock();
 
-		const dbConfig = config.api.database;
+		const dbConfig = config.database;
 		console.log('connecting database ...');
 		const repository = await MongoAdapter.connect(
 			dbConfig.host,
@@ -116,8 +116,8 @@ module.exports = async () => {
 			res.apiSend(apiContext);
 		});
 
-		const http = app.listen(config.api.port, () => {
-			console.log(`listen on port: ${config.api.port}`);
+		const http = app.listen(config.port, () => {
+			console.log(`listen on port: ${config.port}`);
 		});
 
 		require('./streamingServer')(http, directoryRouter, streams, repository, config);

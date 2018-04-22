@@ -52,8 +52,8 @@ describe('General Tests', () => {
 		let testDb;
 
 		it('DBに接続してそのインスタンスが取得できる', async () => {
-			const authenticate = config.api.testDatabase.password != null ? `${config.api.testDatabase.username}:${config.api.testDatabase.password}` : config.api.testDatabase.username;
-			testDb = await MongoAdapter.connect(config.api.testDatabase.host, config.api.testDatabase.database, authenticate);
+			const authenticate = config.testDatabase.password != null ? `${config.testDatabase.username}:${config.testDatabase.password}` : config.testDatabase.username;
+			testDb = await MongoAdapter.connect(config.testDatabase.host, config.testDatabase.database, authenticate);
 			assert(testDb != null);
 		});
 

@@ -23,11 +23,11 @@ exports.get = async (apiContext) => {
 	}
 
 	const usedSpace = await getUsedSpace(user._id, apiContext.storageFilesService);
-	const availableSpace = apiContext.config.api.storage.spaceSize - usedSpace;
+	const availableSpace = apiContext.config.storage.spaceSize - usedSpace;
 
 	apiContext.response(200, {
 		storage: {
-			spaceSize: apiContext.config.api.storage.spaceSize,
+			spaceSize: apiContext.config.storage.spaceSize,
 			usedSpace: usedSpace,
 			availableSpace: availableSpace
 		}

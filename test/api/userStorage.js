@@ -18,10 +18,10 @@ describe('User Storage API', () => {
 		// load collections
 		let db, usersService, applicationsService, lock, testData64, testData64Size;
 		before(async () => {
-			config.api.database = config.api.testDatabase;
+			config.database = config.testDatabase;
 
-			const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
-			db = await MongoAdapter.connect(config.api.database.host, config.api.database.database, authenticate);
+			const authenticate = config.database.password != null ? `${config.database.username}:${config.database.password}` : config.database.username;
+			db = await MongoAdapter.connect(config.database.host, config.database.database, authenticate);
 
 			await db.remove('users', {});
 			await db.remove('applications', {});
@@ -32,7 +32,7 @@ describe('User Storage API', () => {
 
 			lock = new AsyncLock();
 
-			config.api.storage.spaceSize = 500 * 1024; // テスト用の容量(500KB)に設定
+			config.storage.spaceSize = 500 * 1024; // テスト用の容量(500KB)に設定
 
 			testData64 = await getFileData(path.resolve(__dirname, '../resources/squid.png'), 'base64');
 			testData64Size = Buffer.from(testData64, 'base64').length;
@@ -130,7 +130,7 @@ describe('User Storage API', () => {
 				it('非同期で一度に容量制限を超える量のドキュメントを作成した場合でも、容量制限が正常に動作し作成に失敗する(public)', async () => {
 					const contexts = [];
 					const promises = [];
-					const count = parseInt(config.api.storage.spaceSize / testData64Size) + 1; // parseInt(500KB / 53.8KB) + 1 = 10 items, 10 * 53.8KB > 500KB
+					const count = parseInt(config.storage.spaceSize / testData64Size) + 1; // parseInt(500KB / 53.8KB) + 1 = 10 items, 10 * 53.8KB > 500KB
 					for (let i = 0; i < count; i++) {
 						const context = new ApiContext(db, config, {
 							lock: lock,

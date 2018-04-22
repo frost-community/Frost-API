@@ -1,7 +1,3 @@
-const fs = require('fs');
-const path = require('path');
-const { promisify } = require('util');
-const request = promisify(require('request'));
 const uid = require('uid2');
 const readLine = require('./modules/readline');
 const { loadConfig } = require('./modules/helpers/GeneralHelper');
@@ -13,33 +9,24 @@ const TokensService = require('./services/TokensService');
 const scopes = require('./modules/scopes');
 const checkDataFormat = require('./modules/checkDataFormat');
 
-const urlConfigFile = 'https://raw.githubusercontent.com/Frost-Dev/Frost/master/config.json';
 const dataFormatVersion = 1;
 
 const q = async str => (await readLine(str)).toLowerCase().indexOf('y') === 0;
-const writeFile = promisify(fs.writeFile);
 
 module.exports = async () => {
 	console.log('## Setup Mode');
 
 	try {
 		console.log('loading config ...');
-		// config
 		const config = loadConfig();
 		if (config == null) {
-			if (await q('config.json does not exist. generate now? (y/n) > ')) {
-				const parent = await q('generate config.json in the parent directory of repository? (y/n) > ');
-				const configPath = path.resolve(parent ? '../config.json' : 'config.json');
-				const configJson = (await request(urlConfigFile)).body;
-				await writeFile(configPath, configJson);
-				console.log('generated. please edit config.json and restart frost-api.');
-			}
+			console.log('config.json does not exist. please create by command. (command: npm run setup)');
 			return;
 		}
 
 		console.log('connecting database ...');
-		const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
-		const repository = await MongoAdapter.connect(config.api.database.host, config.api.database.database, authenticate);
+		const authenticate = config.database.password != null ? `${config.database.username}:${config.database.password}` : config.database.username;
+		const repository = await MongoAdapter.connect(config.database.host, config.database.database, authenticate);
 
 		console.log('checking dataFormat ...');
 		const dataFormatState = await checkDataFormat(repository, dataFormatVersion);

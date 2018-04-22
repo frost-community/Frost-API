@@ -134,7 +134,7 @@ class UsersService {
 		if (screenName == null)
 			throw new MissingArgumentsError();
 
-		const isNotInvalidScreenName = this._config.api.invalidScreenNames.every(invalidScreenName => screenName != invalidScreenName);
+		const isNotInvalidScreenName = this._config.invalidScreenNames.every(invalidScreenName => screenName != invalidScreenName);
 
 		return this.validFormatScreenName(screenName) && isNotInvalidScreenName;
 	}

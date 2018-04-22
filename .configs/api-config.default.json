@@ -1,0 +1,38 @@
+{
+  "$version": 1,
+  "port": 8000,
+  "database": {
+    "host": "localhost:27017",
+    "database": "frost",
+    "username": "frost-api",
+    "password": "frost-api"
+  },
+  "testDatabase": {
+    "host": "localhost",
+    "database": "test",
+    "username": "root",
+    "password": null
+  },
+  "applicationSecret": "application-secret-token",
+  "storage": {
+    "spaceSize": 10485760
+  },
+  "invalidScreenNames": [
+    "frost",
+    "help",
+    "home",
+    "mentions",
+    "login",
+    "logout",
+    "search",
+    "signin",
+    "signup",
+    "signout",
+    "tos",
+    "welcome",
+    "static",
+    "application",
+    "dev",
+    "developer"
+  ]
+}

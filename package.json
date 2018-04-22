@@ -14,7 +14,8 @@
     "test:mocha": "mocha -A --use_strict",
     "test:mocha-watch": "mocha -w",
     "test": "npm run test:lint && npm run test:mocha",
-    "versions": "echo mocha && mocha --version && echo eslint && eslint -v"
+    "versions": "echo mocha && mocha --version && echo eslint && eslint -v",
+    "generate-configs": "cp ./.configs/api-config.default.json ./.configs/api-config.json"
   },
   "author": "team FrostDevelop",
   "license": "MIT",

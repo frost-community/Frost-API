@@ -11,10 +11,10 @@ describe('Posts API', () => {
 	describe('/posts', () => {
 		let db, usersService, applicationsService;
 		before(async () => {
-			config.api.database = config.api.testDatabase;
+			config.database = config.testDatabase;
 
-			const authenticate = config.api.database.password != null ? `${config.api.database.username}:${config.api.database.password}` : config.api.database.username;
-			db = await MongoAdapter.connect(config.api.database.host, config.api.database.database, authenticate);
+			const authenticate = config.database.password != null ? `${config.database.username}:${config.database.password}` : config.database.username;
+			db = await MongoAdapter.connect(config.database.host, config.database.database, authenticate);
 
 			await db.remove('users', {});
 			await db.remove('applications', {});

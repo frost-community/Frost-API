@@ -45,7 +45,7 @@ class ApplicationsService {
 			throw new InvalidOperationError('seed is empty');
 		}
 
-		const secret = buildHash(`${this._config.api.secretToken.application}/${document._id}/${document.seed}`);
+		const secret = buildHash(`${this._config.applicationSecret}/${document._id}/${document.seed}`);
 
 		return secret;
 	}
