@@ -70,10 +70,10 @@ class ApiContext {
 		}
 
 		for (const paramName of Object.keys(rule.body)) {
-			if (this.body[paramName] == null || this.body[paramName] === '') {
+			if (this.body[paramName] == null) {
 				const required = rule.body[paramName].default === undefined;
 				if (required) {
-					return this.response(400, `body parameter '${paramName}' is required`);
+					return this.response(400, `body parameter '${paramName}' is require`);
 				}
 				else {
 					this.body[paramName] = rule.body[paramName].default;
@@ -100,7 +100,7 @@ class ApiContext {
 			if (this.query[paramName] == null) {
 				const required = rule.query[paramName].default === undefined;
 				if (required) {
-					return this.response(400, `query parameter '${paramName}' is required`);
+					return this.response(400, `query parameter '${paramName}' is require`);
 				}
 				else {
 					this.query[paramName] = rule.query[paramName].default;

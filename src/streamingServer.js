@@ -185,7 +185,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			const timelineType = request.type;
 
 			if (timelineType == null) {
-				return connection.error('timeline-connect', '"type" parameter is required');
+				return connection.error('timeline-connect', '"type" parameter is require');
 			}
 
 			// ストリームの取得または構築
@@ -257,7 +257,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			const timelineType = request.type;
 
 			if (timelineType == null) {
-				return connection.error('timeline-disconnect', '"type" parameter is required');
+				return connection.error('timeline-disconnect', '"type" parameter is require');
 			}
 
 			// 対象タイムラインのストリームを取得
