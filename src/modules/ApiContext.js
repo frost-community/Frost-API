@@ -73,7 +73,7 @@ class ApiContext {
 			if (this.body[paramName] == null) {
 				const required = rule.body[paramName].default === undefined;
 				if (required) {
-					return this.response(400, `body parameter '${paramName}' is require`);
+					return this.response(400, `body parameter '${paramName}' is required`);
 				}
 				else {
 					this.body[paramName] = rule.body[paramName].default;
@@ -100,7 +100,7 @@ class ApiContext {
 			if (this.query[paramName] == null) {
 				const required = rule.query[paramName].default === undefined;
 				if (required) {
-					return this.response(400, `query parameter '${paramName}' is require`);
+					return this.response(400, `query parameter '${paramName}' is required`);
 				}
 				else {
 					this.query[paramName] = rule.query[paramName].default;
