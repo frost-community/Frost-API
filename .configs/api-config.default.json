@@ -13,7 +13,7 @@
     "username": "root",
     "password": null
   },
-  "applicationSecret": "application-secret-token",
+  "applicationSecret": "please_specify_application_secret",
   "storage": {
     "spaceSize": 10485760
   },
