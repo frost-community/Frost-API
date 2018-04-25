@@ -20,7 +20,7 @@ module.exports = async () => {
 		console.log('loading config ...');
 		const config = loadConfig();
 		if (config == null) {
-			console.log('config.json does not exist. please create by command. (command: npm run setup)');
+			console.log('config.json does not exist. please create by command. (command: npm run generate-configs)');
 			return;
 		}
 
