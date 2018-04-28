@@ -39,7 +39,8 @@ module.exports = async () => {
 		const repository = await MongoAdapter.connect(
 			dbConfig.host,
 			dbConfig.database,
-			dbConfig.password != null ? `${dbConfig.username}:${dbConfig.password}` : dbConfig.username);
+			dbConfig.username,
+			dbConfig.password);
 
 		console.log('checking dataFormat ...');
 		const dataFormatState = await checkDataFormat(repository, dataFormatVersion);
