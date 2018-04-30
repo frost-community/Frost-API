@@ -8,8 +8,8 @@
     "node": ">= 8.0.0"
   },
   "scripts": {
-    "start": "node --use_strict ./",
-    "setup": "node --use_strict ./ --setup",
+    "start": "node ./",
+    "setup": "node ./ --setup",
     "test:lint": "eslint ./src/**/*.js",
     "test:mocha": "mocha -A --use_strict",
     "test:mocha-watch": "mocha -w",
