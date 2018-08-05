@@ -212,7 +212,7 @@ class MongoAdapter {
 			authentication = `${username}:${password}@`;
 		}
 
-		const client = await MongoClient.connect(`mongodb://${authentication}${host}`);
+		const client = await MongoClient.connect(`mongodb://${authentication}${host}/${dbname}`);
 
 		return new MongoAdapter(client, dbname);
 	}
