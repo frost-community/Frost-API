@@ -15,7 +15,7 @@ exports.get = async (apiContext) => {
 	}
 
 	if (!apiContext.applicationsService.existApplicationSecret(application)) {
-		apiContext.response(400, 'application secret has not been generated yet');
+		apiContext.response(404, 'application secret has not been generated yet');
 		return;
 	}
 
