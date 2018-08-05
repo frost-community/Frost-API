@@ -25,8 +25,11 @@ module.exports = async () => {
 		}
 
 		console.log('connecting database ...');
-		const authenticate = config.database.password != null ? `${config.database.username}:${config.database.password}` : config.database.username;
-		const repository = await MongoAdapter.connect(config.database.host, config.database.database, authenticate);
+		const repository = await MongoAdapter.connect(
+			config.database.host,
+			config.database.database,
+			config.database.username,
+			config.database.password);
 
 		console.log('checking dataFormat ...');
 		const dataFormatState = await checkDataFormat(repository, dataFormatVersion);
