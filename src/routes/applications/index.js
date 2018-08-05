@@ -1,5 +1,5 @@
 const ApiContext = require('../../modules/ApiContext');
-const definedScopes = require('../../modules/scopes');
+//const definedScopes = require('../../modules/scopes');
 const $ = require('cafy').default;
 
 /** @param {ApiContext} apiContext */

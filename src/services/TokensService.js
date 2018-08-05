@@ -1,7 +1,7 @@
-const moment = require('moment');
+//const moment = require('moment');
 const MongoAdapter = require('../modules/MongoAdapter');
 const { sortObject } = require('../modules/helpers/GeneralHelper');
-const { MissingArgumentsError, InvalidArgumentError } = require('../modules/errors');
+const { MissingArgumentsError } = require('../modules/errors');
 const uid = require('uid2');
 
 class TokensService {
