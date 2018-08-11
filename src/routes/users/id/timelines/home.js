@@ -29,7 +29,7 @@ exports.get = async (apiContext) => {
 			return;
 		}
 
-		// ids
+		// ids (フォロー中のユーザー + 自分自身)
 		const followings = await apiContext.userFollowingsService.findTargets(user._id, { isAscending: false });
 		const ids = followings.map(i => i.target);
 		ids.push(user._id); // ソースユーザーを追加
