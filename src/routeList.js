@@ -1,94 +1,95 @@
 module.exports = [
-	['get', '/'],
+	'/info/show', // [old] get /
 
 	// == general
 
 	// 全てのユーザーを対象とする、一般公開されたポストを時系列で複数取得
-	['get', '/general/timeline'],
+	'/general/timeline/get', // [old] get /general/timeline
 
 	// == Authorization ==
 
 	// 認証ホスト向けのトークンデータを取得する
-	['get', '/auth/tokens'],
+	'/auth/token/lookup', // [old] get /auth/tokens
 
 	// 認証ホスト向けのトークンデータを生成する
-	['post', '/auth/tokens'],
+	'/auth/token/create', // [old] post /auth/tokens
 
-	['get', '/auth/valid_credential'],
+	//
+	'/auth/credential/validate', // [old] get /auth/valid_credential
 
 	// == Applications ==
 
 	// ユーザーが作成したアプリケーション情報を一覧で取得する
-	['get', '/applications'],
+	'/app/list', // [old] get /applications
 
 	// アプリケーションを作成する
-	['post', '/applications'],
+	'/app/create', // [old] post /applications
 
 	// applicationIdを指定してアプリケーション情報を取得する
-	['get', '/applications/:id'],
+	'/app/show', // [old] get /applications/:id
 
 	// applicationIdを指定してapplicationSecretを取得する
-	['get', '/applications/:id/secret'],
+	'/app/secret/show', // [old] get /applications/:id/secret
 
 	// applicationIdを指定してapplicationSecretを生成する
-	['post', '/applications/:id/secret'],
+	'/app/secret/generate', // [old] post /applications/:id/secret
 
 	// == Users ==
 
-	// 一つ以上のscreenNameを指定してユーザー情報を取得する
-	['get', '/users'],
+	// 一つ以上のscreenNameを指定してユーザー情報を取得する (filter=allで全件取得)
+	'/user/list', // [old] get /users
 
 	// アカウントを作成する
-	['post', '/users'],
+	'/user/create', // [old] post /users
 
 	// ユーザー情報を取得する
-	['get', '/users/:id'],
+	'/user/show', // [old] get /users/:id
 
 	// idを指定してユーザー情報を更新する
-	['patch', '/users/:id'],
+	'/user/update', // [old] patch /users/:id
 
 	// 対象のユーザーが投稿したポストを時系列で複数取得
-	['get', '/users/:id/timelines/user'],
+	'/user/timeline/get', // [old] get /users/:id/timelines/user
 
 	// 対象のユーザーと、そのユーザーがフォローしてるユーザーが投稿したポストを時系列で複数取得
-	['get', '/users/:id/timelines/home'],
+	'/home/timeline/get', // [old] get /users/:id/timelines/home
 
 	// フォローの一覧を取得
-	['get', '/users/:id/followings'],
+	'/user/following/list', // [old] get /users/:id/followings
 
 	// 指定したユーザーが対象のユーザーをフォローしているかどうかを取得
-	['get', '/users/:id/followings/:target_id'],
+	'/user/following/show', // [old] get /users/:id/followings/:target_id
 
 	// 指定したユーザーをフォローする
-	['put', '/users/:id/followings/:target_id'],
+	'/user/follow', // [old] put /users/:id/followings/:target_id
 
 	// 指定したユーザーへのフォローを解除する
-	['delete', '/users/:id/followings/:target_id'],
+	'/user/unfollow', // [old] delete /users/:id/followings/:target_id
 
 	// フォロワーの一覧を取得
-	['get', '/users/:id/followers'],
+	'/user/follower/list', // [old] get /users/:id/followers
 
-	['get', '/users/:id/storage'],
+	'/user/storage/status/get', // [old] get /users/:id/storage
 
-	['get', '/users/:id/storage/files'],
+	'/user/storage/file/list', // [old] get /users/:id/storage/files
 
-	['post', '/users/:id/storage/files'],
+	'/user/storage/file/create', // [old] post /users/:id/storage/files
 
-	['get', '/users/:id/storage/files/:file_id'],
+	'/user/storage/file/show', // [old] get /users/:id/storage/files/:file_id
 
-	['delete', '/users/:id/storage/files/:file_id'],
+	'/user/storage/file/remove', // [old] delete /users/:id/storage/files/:file_id
 
 	// == Posts ==
 
 	// 短文のポストを作成する
-	['post', '/posts/post_status'],
+	'/post/create_status', // [old] post /posts/post_status
 
 	// 記事のポストを作成する
-	['post', '/posts/post_article'],
+	'/post/create_article', // [old] post /posts/post_article
 
 	// 他のポストを参照するポストを作成する
-	['post', '/posts/post_reference'],
+	'/post/create_reference', // [old] post /posts/post_reference
 
 	// idを指定してポストを取得
-	['get', '/posts/:id']
+	'/post/show' // [old] get /posts/:id
 ];
