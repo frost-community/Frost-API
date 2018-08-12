@@ -1,8 +1,8 @@
-const ApiContext = require('../../../modules/ApiContext');
+const ApiContext = require('../../modules/ApiContext');
 // const $ = require('cafy').default;
 
 /** @param {ApiContext} apiContext */
-exports.get = async (apiContext) => {
+exports.show = async (apiContext) => {
 	await apiContext.proceed({
 		scopes: ['app.host']
 	});
@@ -25,7 +25,7 @@ exports.get = async (apiContext) => {
 };
 
 /** @param {ApiContext} apiContext */
-exports.post = async (apiContext) => {
+exports.create = async (apiContext) => {
 	await apiContext.proceed({
 		body: {},
 		scopes: ['app.host']

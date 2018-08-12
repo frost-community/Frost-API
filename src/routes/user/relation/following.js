@@ -4,7 +4,7 @@ const v = require('validator');
 const $ = require('cafy').default;
 
 /** @param {ApiContext} apiContext */
-exports.get = async (apiContext) => {
+exports.list = async (apiContext) => {
 	await apiContext.proceed({
 		query: {
 			limit: { cafy: $().string().pipe(i => v.isInt(i, { min: 0, max: 100 })), default: '30' },
@@ -25,8 +25,8 @@ exports.get = async (apiContext) => {
 		return;
 	}
 
-	// このユーザーがフォロー元であるフォロー関係をすべて取得
-	const userFollowings = await apiContext.userFollowingsService.findSources(user._id, { limit, since: next });
+	// このユーザーを対象とするフォロー関係をすべて取得
+	const userFollowings = await apiContext.userFollowingsService.findTargets(user._id, { limit, since: next });
 	if (userFollowings.length == 0) {
 		apiContext.response(204);
 		return;
@@ -34,9 +34,9 @@ exports.get = async (apiContext) => {
 
 	// fetch and serialize users
 	const promises = userFollowings.map(async following => {
-		const user = await apiContext.repository.findById('users', following.source);
+		const user = await apiContext.repository.findById('users', following.target);
 		if (user == null) {
-			console.log(`notfound following source userId: ${following.source.toString()}`);
+			console.log(`notfound following target userId: ${following.target.toString()}`);
 			return;
 		}
 		return apiContext.usersService.serialize(user);

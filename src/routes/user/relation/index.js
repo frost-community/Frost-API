@@ -1,5 +1,5 @@
-const ApiContext = require('../../../../modules/ApiContext');
-const { StreamUtil } = require('../../../../modules/stream');
+const ApiContext = require('../../../modules/ApiContext');
+const { StreamUtil } = require('../../../modules/stream');
 // const $ = require('cafy').default;
 
 /** @param {ApiContext} apiContext */
@@ -34,7 +34,7 @@ exports.get = async (apiContext) => {
 };
 
 /** @param {ApiContext} apiContext */
-exports.put = async (apiContext) => {
+exports.follow = async (apiContext) => {
 	await apiContext.proceed({
 		body: {},
 		scopes: ['user.write']
@@ -98,7 +98,7 @@ exports.put = async (apiContext) => {
 };
 
 /** @param {ApiContext} apiContext */
-exports.delete = async (apiContext) => {
+exports.unfollow = async (apiContext) => {
 	await apiContext.proceed({
 		query: {},
 		scopes: ['user.write']

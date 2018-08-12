@@ -1,8 +1,8 @@
-const ApiContext = require('../../../../modules/ApiContext');
-const MongoAdapter = require('../../../../modules/MongoAdapter');
+const ApiContext = require('../../modules/ApiContext');
+const MongoAdapter = require('../../modules/MongoAdapter');
 const v = require('validator');
 const $ = require('cafy').default;
-const timeline = require('../../../../modules/timeline');
+const timeline = require('../../modules/timeline');
 
 /** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
@@ -29,12 +29,7 @@ exports.get = async (apiContext) => {
 			return;
 		}
 
-		// ids (フォロー中のユーザー + 自分自身)
-		const followings = await apiContext.userFollowingsService.findTargets(user._id, { isAscending: false });
-		const ids = followings.map(i => i.target);
-		ids.push(user._id); // ソースユーザーを追加
-
-		return await timeline(apiContext, 'status', ids, limit, { newer, older });
+		return await timeline(apiContext, 'status', [user._id], limit, { newer, older });
 	}
 	catch (err) {
 		console.log(err);

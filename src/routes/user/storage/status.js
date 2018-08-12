@@ -1,5 +1,5 @@
-const ApiContext = require('../../../../modules/ApiContext');
-const { getUsedSpace } = require('../../../../modules/helpers/UserStorageHelper');
+const ApiContext = require('../../../modules/ApiContext');
+const { getUsedSpace } = require('../../../modules/helpers/UserStorageHelper');
 // const $ = require('cafy').default;
 
 /** @param {ApiContext} apiContext */

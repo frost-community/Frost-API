@@ -2,7 +2,7 @@ const ApiContext = require('../../modules/ApiContext');
 const $ = require('cafy').default;
 
 /** @param {ApiContext} apiContext */
-module.exports.post = async (apiContext) => {
+module.exports.create = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
 			applicationId: { cafy: $().string() },
