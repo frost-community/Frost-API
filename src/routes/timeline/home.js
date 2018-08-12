@@ -7,7 +7,7 @@ const timeline = require('../../modules/timeline');
 /** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
-		query: {
+		body: {
 			limit: { cafy: $().string().pipe(i => v.isInt(i, { min: 0, max: 100 })), default: '30' },
 			newer: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null },
 			older: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
@@ -16,10 +16,10 @@ exports.get = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	// convert query value
-	const limit = apiContext.query.limit != null ? v.toInt(apiContext.query.limit) : null;
-	const newer = apiContext.query.newer != null ? MongoAdapter.buildId(apiContext.query.newer) : null;
-	const older = apiContext.query.older != null ? MongoAdapter.buildId(apiContext.query.older) : null;
+	// convert body value
+	const limit = apiContext.body.limit != null ? v.toInt(apiContext.body.limit) : null;
+	const newer = apiContext.body.newer != null ? MongoAdapter.buildId(apiContext.body.newer) : null;
+	const older = apiContext.body.older != null ? MongoAdapter.buildId(apiContext.body.older) : null;
 
 	try {
 		// user

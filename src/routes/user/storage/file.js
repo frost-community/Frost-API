@@ -150,7 +150,7 @@ exports.show = async (apiContext) => {
  * @param {ApiContext} apiContext */
 exports.list = async (apiContext) => { // TODO: フィルター指定
 	await apiContext.proceed({
-		query: {
+		body: {
 			limit: { cafy: $().string().pipe(i => validator.isInt(i, { min: 0, max: 100 })), default: '30' },
 			next: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null },
 			includeFileData: { cafy: $().string().pipe(i => validator.isBoolean(i)), default: 'false' }
@@ -159,10 +159,10 @@ exports.list = async (apiContext) => { // TODO: フィルター指定
 	});
 	if (apiContext.responsed) return;
 
-	// convert query value
-	const limit = validator.toInt(apiContext.query.limit);
-	const next = apiContext.query.next != null ? MongoAdapter.buildId(apiContext.query.next) : null;
-	const includeFileData = validator.toBoolean(apiContext.query.includeFileData);
+	// convert body value
+	const limit = validator.toInt(apiContext.body.limit);
+	const next = apiContext.body.next != null ? MongoAdapter.buildId(apiContext.body.next) : null;
+	const includeFileData = validator.toBoolean(apiContext.body.includeFileData);
 
 	// user
 	const user = await apiContext.repository.findById('users', apiContext.params.id);

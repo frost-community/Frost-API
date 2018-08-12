@@ -7,7 +7,7 @@ const { getStringSize } = require('../modules/helpers/GeneralHelper');
 /** @param {ApiContext} apiContext */
 exports.show = async (apiContext) => {
 	await apiContext.proceed({
-		query: {},
+		body: {},
 		scopes: ['post.read']
 	});
 	if (apiContext.responsed) return;

@@ -53,7 +53,6 @@ exports.create = async (apiContext) => {
 /** @param {ApiContext} apiContext */
 exports.show = async (apiContext) => {
 	await apiContext.proceed({
-		query: {},
 		scopes: ['user.read']
 	});
 	if (apiContext.responsed) return;
@@ -70,34 +69,33 @@ exports.show = async (apiContext) => {
 /** @param {ApiContext} apiContext */
 exports.lookup = async (apiContext) => {
 	await apiContext.proceed({
-		query: {
+		body: {
 			'screen_names': { cafy: $().string(), default: '' }
 		},
 		scopes: ['user.read']
 	});
 	if (apiContext.responsed) return;
 
-	let users;
-	if (apiContext.query.screen_names != '') {
-		const screenNames = apiContext.query.screen_names.split(',');
-
-		if (screenNames.lenth > 100) {
-			apiContext.response(400, 'screen_names query is limit over(100 items or less)');
-			return;
-		}
-
-		if (screenNames.some(screenName => !apiContext.usersService.validFormatScreenName(screenName))) {
-			apiContext.response(400, 'screen_names query is invalid');
-			return;
-		}
-
-		// TODO: screenNamesの重複チェック
-
-		users = await apiContext.usersService.findArrayByScreenNames(screenNames);
+	if (apiContext.body.screen_names == '') {
+		apiContext.response(400, 'screen_names is enpty');
+		return;
 	}
-	else {
-		users = await apiContext.repository.findArray('users', {});
+
+	const screenNames = apiContext.body.screen_names.split(',');
+
+	if (screenNames.lenth > 100) {
+		apiContext.response(400, 'screen_names is limit over(100 items or less)');
+		return;
 	}
+
+	if (screenNames.some(screenName => !apiContext.usersService.validFormatScreenName(screenName))) {
+		apiContext.response(400, 'screen_names is invalid');
+		return;
+	}
+
+	// TODO: screenNamesの重複チェック
+
+	const users = await apiContext.usersService.findArrayByScreenNames(screenNames);
 
 	if (users.length == 0) {
 		apiContext.response(204);
@@ -112,7 +110,21 @@ exports.lookup = async (apiContext) => {
 
 /** @param {ApiContext} apiContext */
 exports.list = async (apiContext) => {
-	// TODO: lookupからコピー
+	await apiContext.proceed({
+		scopes: ['user.read']
+	});
+	if (apiContext.responsed) return;
+
+	const users = await apiContext.repository.findArray('users', {});
+	if (users.length == 0) {
+		apiContext.response(204);
+		return;
+	}
+
+	const promises = users.map(user => apiContext.usersService.serialize(user));
+	const serializedUsers = await Promise.all(promises);
+
+	apiContext.response(200, { users: serializedUsers });
 };
 
 /** @param {ApiContext} apiContext */

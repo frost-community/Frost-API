@@ -6,7 +6,7 @@ const $ = require('cafy').default;
 /** @param {ApiContext} apiContext */
 exports.list = async (apiContext) => {
 	await apiContext.proceed({
-		query: {
+		body: {
 			limit: { cafy: $().string().pipe(i => v.isInt(i, { min: 0, max: 100 })), default: '30' },
 			next: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
 		},
@@ -14,9 +14,9 @@ exports.list = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	// convert query value
-	const limit = v.toInt(apiContext.query.limit);
-	const next = apiContext.query.next != null ? MongoAdapter.buildId(apiContext.query.next) : null;
+	// convert body value
+	const limit = v.toInt(apiContext.body.limit);
+	const next = apiContext.body.next != null ? MongoAdapter.buildId(apiContext.body.next) : null;
 
 	// user
 	const user = await apiContext.repository.findById('users', apiContext.params.id);

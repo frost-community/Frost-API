@@ -5,7 +5,7 @@ const { StreamUtil } = require('../../../modules/stream');
 /** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
-		query: {},
+		body: {},
 		scopes: ['user.read']
 	});
 	if (apiContext.responsed) return;
@@ -100,7 +100,7 @@ exports.follow = async (apiContext) => {
 /** @param {ApiContext} apiContext */
 exports.unfollow = async (apiContext) => {
 	await apiContext.proceed({
-		query: {},
+		body: {},
 		scopes: ['user.write']
 	});
 	if (apiContext.responsed) return;

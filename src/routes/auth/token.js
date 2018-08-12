@@ -47,7 +47,7 @@ module.exports.create = async (apiContext) => {
 /** @param {ApiContext} apiContext */
 module.exports.get = async (apiContext) => {
 	await apiContext.proceed({
-		query: {
+		body: {
 			applicationId: { cafy: $().string(), default: null },
 			userId: { cafy: $().string(), default: null },
 			scopes: { cafy: $().string(), default: null },
@@ -57,7 +57,7 @@ module.exports.get = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const { applicationId, userId, scopes, accessToken } = apiContext.query;
+	const { applicationId, userId, scopes, accessToken } = apiContext.body;
 
 	let token;
 	if (accessToken != null) {

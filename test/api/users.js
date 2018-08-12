@@ -48,7 +48,7 @@ describe('Users API', () => {
 			it('正しくリクエストされた場合は成功する', async () => {
 				const context = new ApiContext(db, config, {
 					params: { id: user._id },
-					query: { 'screen_names': user.screenName },
+					body: { 'screen_names': user.screenName },
 					headers: { 'X-Api-Version': 1 },
 					user,
 					authInfo
