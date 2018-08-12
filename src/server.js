@@ -81,7 +81,7 @@ module.exports = async () => {
 			req.body = sanitize(req.body);
 
 			// apiContext
-			req.apiContext = new ApiContext(repository, config, { streams, lock, query: req.query, body: req.body });
+			req.apiContext = new ApiContext(repository, config, { streams, lock, body: req.body });
 
 			// cors headers
 			res.header('Access-Control-Allow-Origin', '*');
@@ -94,13 +94,13 @@ module.exports = async () => {
 		app.use(passport.authenticate('accessToken', { session: false, failWithError: true }));
 		const directoryRouter = new DirectoryRouter(app);
 		for (const route of routeList) {
-			directoryRouter.addRoute(new Route(route[0], route[1]));
+			directoryRouter.addRoute(new Route(route));
 		}
 
 		// not found
 		app.use((req, res) => {
 			const apiContext = req.apiContext;
-			apiContext.response(404, 'endpoint not found, or method is not supported');
+			apiContext.response(404, 'endpoint not found');
 			res.apiSend(apiContext);
 		});
 

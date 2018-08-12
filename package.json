@@ -28,7 +28,6 @@
     "cpx": "1.5.x",
     "express": "4.16.x",
     "file-type": "7.6.x",
-    "methods": "1.1.x",
     "moment": "2.22.x",
     "mongo-sanitize": "1.0.x",
     "mongodb": "2.2.x",

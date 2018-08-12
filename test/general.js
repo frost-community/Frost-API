@@ -7,13 +7,6 @@ describe('General Tests', () => {
 	describe('routes', () => {
 		const routeList = require('../src/routeList');
 
-		it('存在するHTTPメソッドを利用している', async () => {
-			for (const route of routeList) {
-				let method = route[0];
-				assert(require('methods').indexOf(method) > -1);
-			}
-		});
-
 		it('すべての対象ルートのモジュールが存在している', async () => {
 			let errorCount = 0;
 			for (const routeInfo of routeList) {
@@ -21,7 +14,7 @@ describe('General Tests', () => {
 
 				let routeModule;
 				try {
-					routeModule = require(route.getModulePath())[route.method];
+					routeModule = require(route.getModulePath())[route.getFuncName()];
 				}
 				catch (e) {
 					routeModule = null;

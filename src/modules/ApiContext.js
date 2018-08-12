@@ -13,7 +13,7 @@ class ApiContext {
 	/**
 	 * @param {MongoAdapter} repository
 	 * @param {} config
-	 * @param {{user, authInfo, targetVersion, streams, lock: AsyncLock, params, query, body}} options
+	 * @param {{user, authInfo, targetVersion, streams, lock: AsyncLock, body}} options
 	*/
 	constructor(repository, config, options) {
 		this.repository = repository;
@@ -24,8 +24,6 @@ class ApiContext {
 		this.targetVersion = options.targetVersion;
 		this.streams = options.streams;
 		this.lock = options.lock;
-		this.params = options.params || {};
-		this.query = options.query || {};
 		this.body = options.body || {};
 
 		// service instances
@@ -86,33 +84,6 @@ class ApiContext {
 
 				if (rule.body[paramName].cafy.nok(this.body[paramName])) {
 					return this.response(400, `body parameter '${paramName}' is invalid`);
-				}
-			}
-		}
-
-		// query strings
-
-		if (rule.query == null) {
-			rule.query = [];
-		}
-
-		for (const paramName of Object.keys(rule.query)) {
-			if (this.query[paramName] == null) {
-				const required = rule.query[paramName].default === undefined;
-				if (required) {
-					return this.response(400, `query parameter '${paramName}' is required`);
-				}
-				else {
-					this.query[paramName] = rule.query[paramName].default;
-				}
-			}
-			else {
-				if (rule.query[paramName].cafy == null) {
-					throw new Error('cafy is required');
-				}
-
-				if (rule.query[paramName].cafy.nok(this.query[paramName])) {
-					return this.response(400, `query parameter '${paramName}' is invalid`);
 				}
 			}
 		}

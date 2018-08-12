@@ -1,8 +1,8 @@
 const WebSocket = require('websocket');
 const events = require('websocket-events');
 const MongoAdapter = require('./modules/MongoAdapter');
+const { DirectoryRouter } = require('./modules/directoryRouter');
 const { Stream, StreamUtil } = require('./modules/stream');
-const methods = require('methods');
 const ApiContext = require('./modules/ApiContext');
 const TokensService = require('./services/TokensService');
 const UserFollowingsService = require('./services/UserFollowingsService');
@@ -22,6 +22,7 @@ home-timeline-status:(userId) そのユーザーのホームTLに向けて流さ
 */
 
 /**
+ * @param {DirectoryRouter} directoryRouter
  * @param {MongoAdapter} repository
 */
 module.exports = (http, directoryRouter, streams, repository, config) => {
@@ -75,21 +76,13 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			}
 
 			let {
-				method,
 				endpoint,
-				query,
 				body
 			} = request;
 
 			// パラメータを検証
-			if (method == null || endpoint == null) {
+			if (endpoint == null) {
 				return connection.error('rest', 'request format is invalid');
-			}
-
-			method = method.toLowerCase();
-
-			if (methods.indexOf(method) == -1) {
-				return connection.error('rest', '"method" parameter is invalid');
 			}
 
 			// endpointを整形
@@ -102,13 +95,11 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 
 			// 対象Routeのモジュールを取得
 			let routeFunc;
-			let params = [];
 
 			try {
-				const route = directoryRouter.findRoute(method, endpoint);
+				const route = directoryRouter.findRoute(endpoint);
 				if (route != null) {
-					routeFunc = (require(route.getModulePath()))[method];
-					params = route.getParams(endpoint);
+					routeFunc = (require(route.getModulePath()))[route.getFuncName()];
 				}
 			}
 			catch (err) {
@@ -119,22 +110,11 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				return connection.error('rest', '"endpoint" parameter is invalid');
 			}
 
-			// TODO: この辺のqueryの処理なんとかする
-
-			// queryを全て文字列にする
-			for (const key of Object.keys(query || {})) {
-				query[key] += '';
-			}
-
-			params = sanitize(params);
-			query = sanitize(query);
 			body = sanitize(body);
 
 			// ApiContextを構築
 			const apiContext = new ApiContext(repository, config, {
 				streams: streams,
-				params: params,
-				query: query,
 				body: body,
 				user: connection.user,
 				authInfo: connection.authInfo
@@ -147,7 +127,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				return apiContext.response(500, 'not responsed');
 			}
 
-			console.log(`streaming/rest: ${method} ${endpoint}, status=${apiContext.statusCode}`);
+			console.log(`streaming/rest: ${endpoint}, status=${apiContext.statusCode}`);
 
 			let response;
 			if (typeof apiContext.data == 'string') {
@@ -157,13 +137,14 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				response = (apiContext.data != null) ? apiContext.data : {};
 			}
 
-			if (connection.connected)
+			if (connection.connected) {
 				return connection.send('rest', {
 					success: true,
 					statusCode: apiContext.statusCode,
-					request: { method, endpoint, query, body },
+					request: { endpoint, body },
 					response
 				});
+			}
 		}
 		catch (err) {
 			console.log(err);
