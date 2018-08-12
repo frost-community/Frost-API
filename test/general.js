@@ -10,7 +10,7 @@ describe('General Tests', () => {
 		it('すべての対象ルートのモジュールが存在している', async () => {
 			let errorCount = 0;
 			for (const routeInfo of routeList) {
-				const route = new Route(routeInfo[0], routeInfo[1]);
+				const route = new Route(routeInfo);
 
 				let routeModule;
 				try {
@@ -21,7 +21,7 @@ describe('General Tests', () => {
 				}
 
 				if (routeModule == null) {
-					console.log('route module not found:', routeInfo[0], routeInfo[1]);
+					console.log('route module not found:', routeInfo);
 					errorCount++;
 				}
 			}
