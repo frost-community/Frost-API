@@ -1,4 +1,5 @@
 const ApiContext = require('../../modules/ApiContext');
+const MongoAdapter = require('../../modules/MongoAdapter');
 //const definedScopes = require('../../modules/scopes');
 const $ = require('cafy').default;
 
@@ -35,13 +36,16 @@ module.exports.create = async (apiContext) => {
 /** @param {ApiContext} apiContext */
 exports.show = async (apiContext) => {
 	await apiContext.proceed({
+		body: {
+			applicationId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
+		},
 		scopes: ['app.read']
 	});
 	if (apiContext.responsed) return;
 
 	let application;
 	try {
-		application = await apiContext.repository.findById('applications', apiContext.params.id);
+		application = await apiContext.repository.findById('applications', apiContext.body.applicationId);
 	}
 	catch (err) {
 		console.log(err);

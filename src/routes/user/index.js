@@ -53,11 +53,14 @@ exports.create = async (apiContext) => {
 /** @param {ApiContext} apiContext */
 exports.show = async (apiContext) => {
 	await apiContext.proceed({
+		body: {
+			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
+		},
 		scopes: ['user.read']
 	});
 	if (apiContext.responsed) return;
 
-	const user = await apiContext.repository.findById('users', apiContext.params.id);
+	const user = await apiContext.repository.findById('users', apiContext.body.userId);
 	if (user == null) {
 		apiContext.response(404, 'user not found');
 		return;
@@ -131,6 +134,7 @@ exports.list = async (apiContext) => {
 exports.update = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
+			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
 			screenName: { cafy: $().string(), default: null },
 			description: { cafy: $().string().range(0, 256), default: null },
 			name: { cafy: $().string().range(1, 32), default: null },
@@ -140,7 +144,7 @@ exports.update = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const { screenName, name, description, iconFileId } = apiContext.body;
+	const { userId, screenName, name, description, iconFileId } = apiContext.body;
 	const data = { };
 
 	// アイコンを設定するときは、storage.readスコープを要求する
@@ -149,7 +153,7 @@ exports.update = async (apiContext) => {
 		return;
 	}
 
-	const user = await apiContext.repository.findById('users', apiContext.params.id);
+	const user = await apiContext.repository.findById('users', userId);
 	if (user == null) {
 		apiContext.response(404, 'user not found');
 		return;
@@ -213,7 +217,7 @@ exports.update = async (apiContext) => {
 		return;
 	}
 
-	const updated = await apiContext.repository.updateById('users', apiContext.params.id, data);
+	const updated = await apiContext.repository.updateById('users', userId, data);
 	if (updated == null) {
 		apiContext.response(500, 'failed to update user');
 		return;

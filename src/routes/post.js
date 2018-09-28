@@ -7,12 +7,14 @@ const { getStringSize } = require('../modules/helpers/GeneralHelper');
 /** @param {ApiContext} apiContext */
 exports.show = async (apiContext) => {
 	await apiContext.proceed({
-		body: {},
+		body: {
+			postId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
+		},
 		scopes: ['post.read']
 	});
 	if (apiContext.responsed) return;
 
-	const post = await apiContext.repository.findById('posts', apiContext.params.id);
+	const post = await apiContext.repository.findById('posts', apiContext.body.postId);
 	if (post == null) {
 		apiContext.response(404, 'post not found');
 		return;

@@ -19,6 +19,7 @@ const supportedMimeTypes = [
 exports.add = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
+			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
 			fileData: { cafy: $().string().pipe(i => validator.isBase64(i)) },
 			accessRight: {
 				cafy: $().object()
@@ -31,7 +32,7 @@ exports.add = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	// user
-	const user = await apiContext.repository.findById('users', apiContext.params.id);
+	const user = await apiContext.repository.findById('users', apiContext.body.userId);
 	if (user == null) {
 		apiContext.response(404, 'user as premise not found');
 		return;
@@ -95,12 +96,18 @@ exports.add = async (apiContext) => {
 */
 exports.show = async (apiContext) => {
 	await apiContext.proceed({
+		body: {
+			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
+			fileId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
+		},
 		scopes: ['storage.read']
 	});
 	if (apiContext.responsed) return;
 
+	const { userId, fileId } = apiContext.body;
+
 	// user
-	const user = await apiContext.repository.findById('users', apiContext.params.id);
+	const user = await apiContext.repository.findById('users', userId);
 	if (user == null) {
 		apiContext.response(404, 'user as premise not found');
 		return;
@@ -109,9 +116,10 @@ exports.show = async (apiContext) => {
 	// file
 	let file;
 	try {
-		file = await apiContext.repository.findById('storageFiles', apiContext.params.file_id);
+		file = await apiContext.repository.findById('storageFiles', fileId);
 	}
 	catch (err) {
+		console.log('failed show file');
 		console.log(err);
 	}
 
@@ -151,6 +159,7 @@ exports.show = async (apiContext) => {
 exports.list = async (apiContext) => { // TODO: フィルター指定
 	await apiContext.proceed({
 		body: {
+			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
 			limit: { cafy: $().string().pipe(i => validator.isInt(i, { min: 0, max: 100 })), default: '30' },
 			next: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null },
 			includeFileData: { cafy: $().string().pipe(i => validator.isBoolean(i)), default: 'false' }
@@ -165,7 +174,7 @@ exports.list = async (apiContext) => { // TODO: フィルター指定
 	const includeFileData = validator.toBoolean(apiContext.body.includeFileData);
 
 	// user
-	const user = await apiContext.repository.findById('users', apiContext.params.id);
+	const user = await apiContext.repository.findById('users', apiContext.body.userId);
 	if (user == null) {
 		apiContext.response(404, 'user as premise not found');
 		return;
@@ -197,12 +206,18 @@ exports.list = async (apiContext) => { // TODO: フィルター指定
 */
 exports.remove = async (apiContext) => {
 	await apiContext.proceed({
+		body: {
+			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
+			fileId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
+		},
 		scopes: ['storage.write']
 	});
 	if (apiContext.responsed) return;
 
+	const { userId, fileId } = apiContext.body;
+
 	// user
-	const user = await apiContext.repository.findById('users', apiContext.params.id);
+	const user = await apiContext.repository.findById('users', userId);
 	if (user == null) {
 		apiContext.response(404, 'user as premise not found');
 		return;
@@ -217,7 +232,7 @@ exports.remove = async (apiContext) => {
 	// file
 	let file;
 	try {
-		file = await apiContext.repository.findById('storageFiles', apiContext.params.file_id);
+		file = await apiContext.repository.findById('storageFiles', fileId);
 	}
 	catch (err) {
 		console.log(err);

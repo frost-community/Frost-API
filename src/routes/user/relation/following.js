@@ -7,6 +7,7 @@ const $ = require('cafy').default;
 exports.list = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
+			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
 			limit: { cafy: $().string().pipe(i => v.isInt(i, { min: 0, max: 100 })), default: '30' },
 			next: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
 		},
@@ -19,7 +20,7 @@ exports.list = async (apiContext) => {
 	const next = apiContext.body.next != null ? MongoAdapter.buildId(apiContext.body.next) : null;
 
 	// user
-	const user = await apiContext.repository.findById('users', apiContext.params.id);
+	const user = await apiContext.repository.findById('users', apiContext.body.userId);
 	if (user == null) {
 		apiContext.response(404, 'user as premise not found');
 		return;
