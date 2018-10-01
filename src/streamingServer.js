@@ -124,7 +124,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				return apiContext.response(500, 'not responsed');
 			}
 
-			console.log(`streaming/rest: ${method} ${endpoint}, status=${apiContext.statusCode}, from=${connection.user._id}`);
+			console.log(`streaming/rest: ${endpoint}, status=${apiContext.statusCode}, from=${connection.user._id}`);
 
 			let response;
 			if (typeof apiContext.data == 'string') {
