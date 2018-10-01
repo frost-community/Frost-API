@@ -22,36 +22,33 @@ home-timeline-status:(userId) そのユーザーのホームTLに向けて流さ
 */
 
 /**
+ * @param {Map<string, Stream>} streams
  * @param {MongoAdapter} repository
 */
 module.exports = (http, directoryRouter, streams, repository, config) => {
 	const server = new WebSocket.server({ httpServer: http });
 
 	// generate stream for general timeline (global)
-	const generalTimelineStream = new Stream();
-	const generalTimelineStreamType = 'general-timeline-status';
-	const generalTimelineStreamId = StreamUtil.buildStreamId(generalTimelineStreamType, 'general');
-	generalTimelineStream.addSource(generalTimelineStreamId);
-	streams.set(generalTimelineStreamId, generalTimelineStream);
+	const generalTLStream = new Stream();
+	const generalTLStreamType = 'general-timeline-status';
+	const generalTLStreamId = StreamUtil.buildStreamId(generalTLStreamType, 'general');
+	generalTLStream.addSource(generalTLStreamId);
+	streams.set(generalTLStreamId, generalTLStream);
 
 	const tokensService = new TokensService(repository, config);
 	const userFollowingsService = new UserFollowingsService(repository, config);
 
-	// このコネクション上で接続されているストリームID/ハンドラの一覧
-	const connectedStreamIds = [];
-	const connectedStreamHandlers = new Map();
-
 	// ストリームの購読解除メソッド
-	const disconnectStream = async (streamId) => {
-		const removeIndex = connectedStreamIds.indexOf(streamId);
-		connectedStreamIds.splice(removeIndex, 1);
+	const disconnectStream = async (connection, streamId) => {
+		const removeIndex = connection.connectedStreamIds.indexOf(streamId);
+		connection.connectedStreamIds.splice(removeIndex, 1);
 
 		let stream = streams.get(streamId);
 		if (stream != null) {
-			const streamHandler = connectedStreamHandlers.get(streamId);
+			const streamHandler = connection.connectedStreamHandlers.get(streamId);
 			if (streamHandler != null) {
 				stream.removeListener(streamHandler);
-				connectedStreamHandlers.delete(streamId);
+				connection.connectedStreamHandlers.delete(streamId);
 			}
 
 			// general-timeline-statusはストリーム自体の解放は行わない
@@ -147,7 +144,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				return apiContext.response(500, 'not responsed');
 			}
 
-			console.log(`streaming/rest: ${method} ${endpoint}, status=${apiContext.statusCode}`);
+			console.log(`streaming/rest: ${method} ${endpoint}, status=${apiContext.statusCode}, from=${connection.user._id}`);
 
 			let response;
 			if (typeof apiContext.data == 'string') {
@@ -191,23 +188,23 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			// ストリームの取得または構築
 			let stream, streamType, streamId;
 			if (timelineType == 'general') {
-				streamType = generalTimelineStreamType;
-				streamId = generalTimelineStreamId;
+				streamType = generalTLStreamType;
+				streamId = generalTLStreamId;
 
-				// 既に接続済みなら中断
-				if (connectedStreamIds.indexOf(streamId) != -1) {
+				// expect: Not connected to the stream yet from this connection.
+				if (connection.connectedStreamIds.indexOf(streamId) != -1) {
 					return connection.error('timeline-connect', `${timelineType} timeline stream is already connected`);
 				}
 
-				stream = generalTimelineStream;
+				stream = generalTLStream;
 			}
 			else if (timelineType == 'home') {
 				// memo: フォローユーザーのuser-timeline-statusストリームを統合したhome-timeline-statusストリームを生成
 				streamType = 'home-timeline-status';
 				streamId = StreamUtil.buildStreamId(streamType, connection.user._id);
 
-				// 既に接続済みなら中断
-				if (connectedStreamIds.indexOf(streamId) != -1) {
+				// expect: Not connected to the stream yet from this connection.
+				if (connection.connectedStreamIds.indexOf(streamId) != -1) {
 					return connection.error('timeline-connect', `${timelineType} timeline stream is already connected`);
 				}
 
@@ -238,10 +235,10 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 					console.log('not connected');
 				}
 			});
-			connectedStreamHandlers.set(streamId, streamHandler);
+			connection.connectedStreamHandlers.set(streamId, streamHandler);
 
 			// connectedStreamIdsに追加
-			connectedStreamIds.push(streamId);
+			connection.connectedStreamIds.push(streamId);
 
 			console.log('streaming/timeline-connect:', timelineType);
 			connection.send('timeline-connect', { success: true, message: `connected ${timelineType} timeline` });
@@ -263,7 +260,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			// 対象タイムラインのストリームを取得
 			let streamId;
 			if (timelineType == 'general') {
-				streamId = generalTimelineStreamId;
+				streamId = generalTLStreamId;
 			}
 			else if (timelineType == 'home') {
 				streamId = StreamUtil.buildStreamId('home-timeline-status', connection.user._id);
@@ -272,7 +269,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				return connection.error('timeline-disconnect', `timeline type "${timelineType}" is invalid`);
 			}
 
-			await disconnectStream(streamId);
+			await disconnectStream(connection, streamId);
 			console.log('streaming/timeline-disconnect:', streamId);
 			connection.send('timeline-disconnect', { success: true, message: `disconnected ${timelineType} timeline` });
 		}
@@ -322,6 +319,10 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 		connection.user = user;
 		connection.authInfo = { scopes: token.scopes, application: application };
 
+		// このコネクション上で接続されているストリームID/ハンドラの一覧
+		connection.connectedStreamIds = [];
+		connection.connectedStreamHandlers = new Map();
+
 		// support user events
 		events(connection);
 
@@ -343,9 +344,11 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 		});
 
 		connection.on('close', () => {
-			// 全ての接続済みストリームを購読解除
-			for (const streamId of connectedStreamIds) {
-				disconnectStream(streamId);
+			if (connection.connectedStreamIds != null || connection.connectedStreamHandlers != null) {
+				// 全ての接続済みストリームを購読解除
+				for (const streamId of connection.connectedStreamIds) {
+					disconnectStream(connection, streamId);
+				}
 			}
 			console.log(`disconnected streaming. user: ${connection.user._id}`);
 		});
