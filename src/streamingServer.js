@@ -52,15 +52,16 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				connection.connectedStreamHandlers.delete(streamId);
 			}
 
-			// general-timeline-statusはストリーム自体の解放は行わない
-			const { streamType } = StreamUtil.parseStreamId(streamId);
-			if (streamType == 'general-timeline-status') {
-				return;
-			}
-
 			// リスナが1つもなければストリーム自体を解放
 			if (stream.listenerCount() == 0) {
-				await stream.quit();
+
+				// general-timeline-statusはストリーム自体の解放は行わない
+				const { streamType } = StreamUtil.parseStreamId(streamId);
+				if (streamType == 'general-timeline-status') {
+					return;
+				}
+
+				await stream.dispose();
 				streams.delete(streamId);
 			}
 		}
