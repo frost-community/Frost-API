@@ -151,7 +151,6 @@ class Stream {
 					}
 					resolve();
 				});
-				return;
 			}
 		});
 		const disposePubClient = () => new Promise((resolve, reject) => {
