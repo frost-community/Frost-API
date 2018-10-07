@@ -35,43 +35,58 @@ class StreamPublisher {
 	 * @param {string | {[x:string]:any}} data JSON data or object
 	*/
 	publish(type, publisherId, data) {
-		let strData = (data instanceof String) ? data : JSON.stringify(data);
-		this.redisClient.publish(StreamUtil.buildStreamId(type, publisherId), strData);
-	}
-	dispose() {
 		return new Promise((resolve, reject) => {
+			let strData = (data instanceof String) ? data : JSON.stringify(data);
+			const streamId = StreamUtil.buildStreamId(type, publisherId);
+			this.redisClient.publish(streamId, strData, (err) => {
+				if (err) {
+					return reject(err);
+				}
+				resolve();
+			});
+		});
+	}
+	async dispose() {
+		const dispose = () => new Promise((resolve, reject) => {
 			if (this.redisClient.connected) {
 				this.redisClient.quit((err) => {
 					if (err) {
 						return reject(err);
 					}
+					this.redisClient.removeAllListeners();
 					resolve();
 				});
 			}
 			else {
 				resolve();
 			}
-			this.redisClient.removeAllListeners();
 		});
+
+		await dispose();
+		this.redisClient.removeAllListeners();
 	}
 }
 
 class Stream {
 	/** @param {redis.RedisClient} redisClient */
-	constructor(redisClient = redis.createClient(6379, 'localhost')) {
+	constructor(redisClient = redis.createClient(6379, 'localhost'), redisPubClient = redis.createClient(6379, 'localhost')) {
 		this.sources = [];
 		this.emitter = new EventEmitter();
 		this.redisClient = redisClient;
+		this.redisPubClient = redisPubClient;
 		this.redisClient.on('message', (channel, message) => {
 			// 自身のリスナーに対して投げる
 			this.emitter.emit('data', (message instanceof String) ? message : JSON.parse(message));
 			// 設定した別のStreamに投げる
 			if (this.outgoingStreamId != null) {
-				this.redisClient.publish(this.outgoingStreamId, message);
+				this.redisPubClient.publish(this.outgoingStreamId, message);
 			}
 		});
 		this.redisClient.on('error', (err) => {
 			throw new Error(`stream: ${String(err)}`);
+		});
+		this.redisPubClient.on('error', (err) => {
+			throw new Error(`stream(pub): ${String(err)}`);
 		});
 	}
 	setDestination(streamId) {
@@ -127,8 +142,8 @@ class Stream {
 		return this.emitter.listenerCount('data');
 	}
 	/** @returns {Promise<void>} */
-	dispose() {
-		return new Promise((resolve, reject) => {
+	async dispose() {
+		const disposeClient = () => new Promise((resolve, reject) => {
 			if (this.redisClient.connected) {
 				this.redisClient.quit((err) => {
 					if (err) {
@@ -136,14 +151,27 @@ class Stream {
 					}
 					resolve();
 				});
+				return;
 			}
-			else {
-				resolve();
-			}
-
-			this.redisClient.removeAllListeners();
-			this.emitter.removeAllListeners();
 		});
+		const disposePubClient = () => new Promise((resolve, reject) => {
+			if (this.redisPubClient.connected) {
+				this.redisPubClient.quit((err) => {
+					if (err) {
+						return reject(err);
+					}
+					resolve();
+				});
+			}
+		});
+
+		await Promise.all(this.sources.map(i => this.removeSource(i)));
+
+		await disposeClient();
+		await disposePubClient();
+		this.redisClient.removeAllListeners();
+		this.redisPubClient.removeAllListeners();
+		this.emitter.removeAllListeners();
 	}
 }
 
