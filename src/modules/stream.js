@@ -85,20 +85,34 @@ class Stream {
 	}
 	/** @param {string} streamId */
 	addSource(streamId) {
-		if (this.sources.indexOf(streamId) != -1) {
-			throw new Error('already added');
-		}
-		this.sources.push(streamId);
-		this.redisClient.subscribe(streamId);
+		return new Promise((resolve, reject) => {
+			if (this.sources.indexOf(streamId) != -1) {
+				throw new Error('already added');
+			}
+			this.redisClient.subscribe(streamId, (err) => {
+				if (err) {
+					return reject(err);
+				}
+				this.sources.push(streamId);
+				resolve();
+			});
+		});
 	}
 	/** @param {string} streamId */
 	removeSource(streamId) {
-		const index = this.sources.indexOf(streamId);
-		if (index == -1) {
-			throw new Error('not exist');
-		}
-		this.sources.splice(index, 1);
-		this.redisClient.unsubscribe(streamId);
+		return new Promise((resolve, reject) => {
+			const index = this.sources.indexOf(streamId);
+			if (index == -1) {
+				throw new Error('not exist');
+			}
+			this.redisClient.unsubscribe(streamId, (err) => {
+				if (err) {
+					return reject(err);
+				}
+				this.sources.splice(index, 1);
+				resolve();
+			});
+		});
 	}
 	/** @param {(data: string | {[x:string]:any})=>void} listener */
 	addListener(listener) {
@@ -126,7 +140,9 @@ class Stream {
 			else {
 				resolve();
 			}
+
 			this.redisClient.removeAllListeners();
+			this.emitter.removeAllListeners();
 		});
 	}
 }
