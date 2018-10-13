@@ -4,26 +4,21 @@ const { EventEmitter } = require('events');
 
 class EventIdUtil {
 	/**
-	 * @param {string} serviceId
 	 * @param {string} eventType
 	 * @param {string[]} params
 	*/
-	static buildEventId(serviceId, eventType, params) {
-		return `${serviceId}:${eventType}:${params.join(':')}`;
+	static buildEventId(eventType, params) {
+		return `${eventType}:${params.join(':')}`;
 	}
 	/** @param {string} eventId */
 	static parseEventId(eventId) {
 		const elements = eventId.split(':');
-		if (elements.length < 2) {
-			throw new Error(`invalid eventId: ${eventId}`);
-		}
 		const appendedParams = [];
-		if (elements.length >= 3) {
-			appendedParams.push(...elements.slice(2));
+		if (elements.length >= 2) {
+			appendedParams.push(...elements.slice(1));
 		}
 		return {
-			serviceId: elements[0],
-			eventType: elements[1],
+			eventType: elements[0],
 			appendedParams: appendedParams
 		};
 	}
@@ -35,14 +30,11 @@ class StreamEventIdUtil {
 	 * @param {string} publisherId
 	*/
 	static buildStreamEventId(streamType, publisherId) {
-		return EventIdUtil.buildEventId('frost-api', 'stream', [streamType, publisherId]);
+		return EventIdUtil.buildEventId('stream', [streamType, publisherId]);
 	}
 	/** @param {string} eventId */
 	static parseStreamEventId(eventId) {
 		const elements = EventIdUtil.parseEventId(eventId);
-		if (elements.serviceId != 'frost-api') {
-			throw new Error('serviceId is not frost-api');
-		}
 		if (elements.eventType != 'stream') {
 			throw new Error('eventType is not stream');
 		}
@@ -50,8 +42,8 @@ class StreamEventIdUtil {
 			throw new Error('length of appendedParams is invalid');
 		}
 		return {
-			serviceId: elements.appendedParams[0],
-			eventType: elements.appendedParams[1]
+			streamType: elements.appendedParams[0],
+			publisherId: elements.appendedParams[1]
 		};
 	}
 }
