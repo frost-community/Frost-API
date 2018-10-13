@@ -1,5 +1,5 @@
 const ApiContext = require('../../modules/ApiContext');
-const { StreamPublisher } = require('../../modules/stream');
+const { XevStreamPublisher : StreamPublisher } = require('../../modules/stream');
 const $ = require('cafy').default;
 const MongoAdapter = require('../../modules/MongoAdapter');
 
@@ -35,8 +35,10 @@ exports.post = async (apiContext) => {
 
 	// 各種ストリームに発行
 	const publisher = new StreamPublisher();
-	publisher.publish('user-timeline-status', apiContext.user._id.toString(), serializedPostStatus);
-	publisher.publish('general-timeline-status', 'general', serializedPostStatus);
+	await Promise.all([
+		publisher.publish('user-timeline-status', apiContext.user._id.toString(), serializedPostStatus),
+		publisher.publish('general-timeline-status', 'general', serializedPostStatus)
+	]);
 	await publisher.dispose();
 
 	apiContext.response(200, { postStatus: serializedPostStatus });

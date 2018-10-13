@@ -1,33 +1,128 @@
+const XevPubSub = require('./XevPubSub');
 const redis = require('redis');
 const { EventEmitter } = require('events');
 
-class StreamUtil {
+class EventIdUtil {
 	/**
-	 * @param {string} type
-	 * @param {string} publisherId
+	 * @param {string} serviceId
+	 * @param {string} eventType
+	 * @param {string[]} params
 	*/
-	static buildStreamId(type, publisherId) {
-		return `${type}:${publisherId}`;
+	static buildEventId(serviceId, eventType, ...params) {
+		return `${serviceId}:${eventType}:${params.join(':')}`;
 	}
-	/** @param {string} streamId */
-	static parseStreamId(streamId) {
-		const elements = streamId.split(':');
+	/** @param {string} eventId */
+	static parseEventId(eventId) {
+		const elements = eventId.split(':');
+		if (elements.length < 2) {
+			throw new Error(`invalid eventId: ${eventId}`);
+		}
+		const appendedParams = [];
+		if (elements.length >= 3) {
+			appendedParams.push(...elements.slice(2));
+		}
 		return {
-			streamType: elements[0],
-			streamPublisher: elements[1]
+			serviceId: elements[0],
+			eventType: elements[1],
+			appendedParams: appendedParams
 		};
 	}
 }
 
-class StreamPublisher {
-	constructor(redisClient = redis.createClient(6379, 'localhost')) {
-		this.redisClient = redisClient;
-		if (!(this.redisClient instanceof redis.RedisClient)) {
-			throw new TypeError('argument "redisClient" is not a RedisClient');
+class StreamEventIdUtil {
+	/**
+	 * @param {string} streamType
+	 * @param {string} publisherId
+	*/
+	static buildStreamEventId(streamType, publisherId) {
+		return EventIdUtil.buildEventId('frost-api', 'stream', [streamType, publisherId]);
+	}
+	/** @param {string} eventId */
+	static parseStreamEventId(eventId) {
+		const elements = EventIdUtil.parseEventId(eventId);
+		if (elements.serviceId != 'frost-api') {
+			throw new Error('serviceId is not frost-api');
 		}
-		this.redisClient.on('error', (err) => {
-			throw new Error(`stream publisher: ${String(err)}`);
+		if (elements.eventType != 'stream') {
+			throw new Error('eventType is not stream');
+		}
+		if (elements.appendedParams.length != 2) {
+			throw new Error('length of appendedParams is invalid');
+		}
+		return {
+			serviceId: elements.appendedParams[0],
+			eventType: elements.appendedParams[1]
+		};
+	}
+}
+
+class XevStream {
+	/** @param {redis.RedisClient} redisClient */
+	constructor() {
+		this.sources = [];
+		this.emitter = new EventEmitter();
+		this.xev = new XevPubSub('frost-api');
+		this.xev.on('message', (channel, message) => {
+			// 自身のリスナーに対して投げる
+			this.emitter.emit('data', (message instanceof String) ? message : JSON.parse(message));
+			// 設定した別のStreamに投げる
+			if (this.outgoingStreamId != null) {
+				this.xev.publish(this.outgoingStreamId, message);
+			}
 		});
+	}
+	setDestination(streamId) {
+		this.outgoingStreamId = streamId;
+	}
+	unsetDestination() {
+		this.outgoingStreamId = null;
+	}
+	getSources() {
+		return this.sources;
+	}
+	/** @param {string} streamId */
+	addSource(streamId) {
+		if (this.sources.indexOf(streamId) != -1) {
+			throw new Error('already added');
+		}
+		this.xev.subscribe(streamId);
+		this.sources.push(streamId);
+	}
+	/** @param {string} streamId */
+	removeSource(streamId) {
+		const index = this.sources.indexOf(streamId);
+		if (index == -1) {
+			throw new Error('not exist');
+		}
+		this.xev.unsubscribe(streamId);
+		this.sources.splice(index, 1);
+	}
+	/**
+	 * @param {(data: string | {[x:string]:any})=>void} listener
+	 * @returns listener
+	*/
+	addListener(listener) {
+		this.emitter.addListener('data', listener);
+		return listener;
+	}
+	/** @param {(data: string | {[x:string]:any})=>void} listener */
+	removeListener(listener) {
+		this.emitter.removeListener('data', listener);
+	}
+	listenerCount() {
+		return this.emitter.listenerCount('data');
+	}
+	dispose() {
+		this.sources.map(i => this.removeSource(i));
+		this.xev.dispose();
+		this.xev.removeAllListeners();
+		this.emitter.removeAllListeners();
+	}
+}
+
+class XevStreamPublisher {
+	constructor() {
+		this.xev = new XevPubSub('frost-api');
 	}
 	/**
 	 * @param {string} type
@@ -35,58 +130,38 @@ class StreamPublisher {
 	 * @param {string | {[x:string]:any}} data JSON data or object
 	*/
 	publish(type, publisherId, data) {
-		return new Promise((resolve, reject) => {
-			let strData = (data instanceof String) ? data : JSON.stringify(data);
-			const streamId = StreamUtil.buildStreamId(type, publisherId);
-			this.redisClient.publish(streamId, strData, (err) => {
-				if (err) {
-					return reject(err);
-				}
-				resolve();
-			});
-		});
+		let strData = (data instanceof String) ? data : JSON.stringify(data);
+		const streamEventId = StreamEventIdUtil.buildStreamEventId(type, publisherId);
+		this.xev.publish(streamEventId, strData);
 	}
-	async dispose() {
-		const dispose = () => new Promise((resolve, reject) => {
-			if (this.redisClient.connected) {
-				this.redisClient.quit((err) => {
-					if (err) {
-						return reject(err);
-					}
-					this.redisClient.removeAllListeners();
-					resolve();
-				});
-			}
-			else {
-				resolve();
-			}
-		});
-
-		await dispose();
-		this.redisClient.removeAllListeners();
+	dispose() {
+		this.xev.removeAllListeners();
+		this.xev.dispose();
 	}
 }
 
-class Stream {
+class RedisStream {
 	/** @param {redis.RedisClient} redisClient */
-	constructor(redisClient = redis.createClient(6379, 'localhost'), redisPubClient = redis.createClient(6379, 'localhost')) {
+	constructor(redisOptions = { host: 'localhost', port: 6379 }) {
 		this.sources = [];
 		this.emitter = new EventEmitter();
-		this.redisClient = redisClient;
-		this.redisPubClient = redisPubClient;
-		this.redisClient.on('message', (channel, message) => {
+		this.redis = {
+			sub: redis.createClient(redisOptions),
+			pub: redis.createClient(redisOptions)
+		};
+		this.redis.sub.on('message', (channel, message) => {
 			// 自身のリスナーに対して投げる
 			this.emitter.emit('data', (message instanceof String) ? message : JSON.parse(message));
 			// 設定した別のStreamに投げる
 			if (this.outgoingStreamId != null) {
-				this.redisPubClient.publish(this.outgoingStreamId, message);
+				this.redis.pub.publish(this.outgoingStreamId, message);
 			}
 		});
-		this.redisClient.on('error', (err) => {
-			throw new Error(`stream: ${String(err)}`);
+		this.redis.sub.on('error', (err) => {
+			throw new Error(`redis(sub): ${String(err)}`);
 		});
-		this.redisPubClient.on('error', (err) => {
-			throw new Error(`stream(pub): ${String(err)}`);
+		this.redis.pub.on('error', (err) => {
+			throw new Error(`redis(pub): ${String(err)}`);
 		});
 	}
 	setDestination(streamId) {
@@ -104,7 +179,7 @@ class Stream {
 			if (this.sources.indexOf(streamId) != -1) {
 				throw new Error('already added');
 			}
-			this.redisClient.subscribe(streamId, (err) => {
+			this.redis.sub.subscribe(streamId, (err) => {
 				if (err) {
 					return reject(err);
 				}
@@ -120,7 +195,7 @@ class Stream {
 			if (index == -1) {
 				throw new Error('not exist');
 			}
-			this.redisClient.unsubscribe(streamId, (err) => {
+			this.redis.sub.unsubscribe(streamId, (err) => {
 				if (err) {
 					return reject(err);
 				}
@@ -129,7 +204,10 @@ class Stream {
 			});
 		});
 	}
-	/** @param {(data: string | {[x:string]:any})=>void} listener */
+	/**
+	 * @param {(data: string | {[x:string]:any})=>void} listener
+	 * @returns listener
+	*/
 	addListener(listener) {
 		this.emitter.addListener('data', listener);
 		return listener;
@@ -143,9 +221,9 @@ class Stream {
 	}
 	/** @returns {Promise<void>} */
 	async dispose() {
-		const disposeClient = () => new Promise((resolve, reject) => {
-			if (this.redisClient.connected) {
-				this.redisClient.quit((err) => {
+		const disposeRedisSub = () => new Promise((resolve, reject) => {
+			if (this.redis.sub.connected) {
+				this.redis.sub.quit((err) => {
 					if (err) {
 						return reject(err);
 					}
@@ -153,9 +231,9 @@ class Stream {
 				});
 			}
 		});
-		const disposePubClient = () => new Promise((resolve, reject) => {
-			if (this.redisPubClient.connected) {
-				this.redisPubClient.quit((err) => {
+		const disposeRedisPub = () => new Promise((resolve, reject) => {
+			if (this.redis.pub.connected) {
+				this.redis.pub.quit((err) => {
 					if (err) {
 						return reject(err);
 					}
@@ -165,17 +243,63 @@ class Stream {
 		});
 
 		await Promise.all(this.sources.map(i => this.removeSource(i)));
-
-		await disposeClient();
-		await disposePubClient();
-		this.redisClient.removeAllListeners();
-		this.redisPubClient.removeAllListeners();
+		await disposeRedisSub();
+		await disposeRedisPub();
+		this.redis.sub.removeAllListeners();
+		this.redis.pub.removeAllListeners();
 		this.emitter.removeAllListeners();
 	}
 }
 
+class RedisStreamPublisher {
+	constructor(redisOptions = { host: 'localhost', port: 6379 }) {
+		this.redisPub = redis.createClient(redisOptions);
+		this.redisPub.on('error', (err) => {
+			throw new Error(`stream(pub): ${String(err)}`);
+		});
+	}
+	/**
+	 * @param {string} type
+	 * @param {string} publisherId
+	 * @param {string | {[x:string]:any}} data JSON data or object
+	*/
+	publish(type, publisherId, data) {
+		return new Promise((resolve, reject) => {
+			let strData = (data instanceof String) ? data : JSON.stringify(data);
+			const streamEventId = StreamEventIdUtil.buildStreamEventId(type, publisherId);
+			this.redisPub.publish(streamEventId, strData, (err) => {
+				if (err) {
+					return reject(err);
+				}
+				resolve();
+			});
+		});
+	}
+	async dispose() {
+		const dispose = () => new Promise((resolve, reject) => {
+			if (this.redisPub.connected) {
+				this.redisPub.quit((err) => {
+					if (err) {
+						return reject(err);
+					}
+					resolve();
+				});
+			}
+			else {
+				resolve();
+			}
+		});
+
+		await dispose();
+		this.redisPub.removeAllListeners();
+	}
+}
+
 module.exports = {
-	StreamUtil,
-	StreamPublisher,
-	Stream
+	EventIdUtil,
+	StreamEventIdUtil,
+	XevStream,
+	XevStreamPublisher,
+	RedisStream,
+	RedisStreamPublisher
 };

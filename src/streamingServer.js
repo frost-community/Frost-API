@@ -1,7 +1,7 @@
 const WebSocket = require('websocket');
 const events = require('websocket-events');
 const MongoAdapter = require('./modules/MongoAdapter');
-const { Stream, StreamUtil } = require('./modules/stream');
+const { XevStream : Stream, StreamEventIdUtil } = require('./modules/stream');
 const methods = require('methods');
 const ApiContext = require('./modules/ApiContext');
 const TokensService = require('./services/TokensService');
@@ -12,7 +12,7 @@ const sanitize = require('mongo-sanitize');
 # 各種変数の説明
 streamType: 'user-timeline-status' | 'home-timeline-status' | 'general-timeline-status'
 streamPublisher: ストリームの発行者情報
-streamId : StreamUtil.buildStreamId(streamType, streamPublisher) ストリームの識別子
+streamId : StreamEventIdUtil.buildStreamEventId(streamType, streamPublisher) ストリームの識別子
 streams: Map<streamId, Stream> 全てのストリーム一覧
 connectedStreamIds: streamId[] 接続済みのストリーム名一覧
 
@@ -31,7 +31,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 	// generate stream for general timeline (global)
 	const generalTLStream = new Stream();
 	const generalTLStreamType = 'general-timeline-status';
-	const generalTLStreamId = StreamUtil.buildStreamId(generalTLStreamType, 'general');
+	const generalTLStreamId = StreamEventIdUtil.buildStreamEventId(generalTLStreamType, 'general');
 	generalTLStream.addSource(generalTLStreamId);
 	streams.set(generalTLStreamId, generalTLStream);
 
@@ -55,7 +55,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			if (stream.listenerCount() == 0) {
 
 				// general-timeline-statusはストリーム自体の解放は行わない
-				const { streamType } = StreamUtil.parseStreamId(streamId);
+				const { streamType } = StreamEventIdUtil.parseStreamEventId(streamId);
 				if (streamType == 'general-timeline-status') {
 					return;
 				}
@@ -202,7 +202,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			else if (timelineType == 'home') {
 				// memo: フォローユーザーのuser-timeline-statusストリームを統合したhome-timeline-statusストリームを生成
 				streamType = 'home-timeline-status';
-				streamId = StreamUtil.buildStreamId(streamType, connection.user._id);
+				streamId = StreamEventIdUtil.buildStreamEventId(streamType, connection.user._id);
 
 				// expect: Not connected to the stream yet from this connection.
 				if (connection.connectedStreamIds.indexOf(streamId) != -1) {
@@ -213,11 +213,11 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				if (stream == null) {
 					// ストリームを生成
 					stream = new Stream();
-					stream.addSource(StreamUtil.buildStreamId('user-timeline-status', connection.user._id));
+					stream.addSource(StreamEventIdUtil.buildStreamEventId('user-timeline-status', connection.user._id));
 					const followings = await userFollowingsService.findTargets(connection.user._id, { isAscending: false }); // TODO: (全て or ユーザーの購読設定によっては選択的に)
 					for (const following of followings || []) {
 						const followingUserId = following.target.toString();
-						stream.addSource(StreamUtil.buildStreamId('user-timeline-status', followingUserId));
+						stream.addSource(StreamEventIdUtil.buildStreamEventId('user-timeline-status', followingUserId));
 					}
 					streams.set(streamId, stream);
 				}
@@ -264,7 +264,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				streamId = generalTLStreamId;
 			}
 			else if (timelineType == 'home') {
-				streamId = StreamUtil.buildStreamId('home-timeline-status', connection.user._id);
+				streamId = StreamEventIdUtil.buildStreamEventId('home-timeline-status', connection.user._id);
 			}
 			else {
 				return connection.error('timeline-disconnect', `timeline type "${timelineType}" is invalid`);

@@ -1,16 +1,24 @@
 const assert = require('assert');
-const { Stream, StreamPublisher, StreamUtil } = require('../src/modules/stream');
+const {
+	XevStream,
+	XevStreamPublisher,
+	RedisStream,
+	RedisStreamPublisher,
+	StreamEventIdUtil
+} = require('../src/modules/stream');
 const { delay } = require('../src/modules/helpers/GeneralHelper');
 
-describe('Stream tests', () => {
+const iteration = 10;
+
+describe('xev stream tests', () => {
 	const disposeStreams = [];
 
-	for (let i = 0; i < 1; i++) {
-		it('basic streamming A: '+i, async () => {
+	for (let i = 0; i < iteration; i++) {
+		it('basic streamming A: '+(i+1), async () => {
 			// stream (source: A)
-			const stream = new Stream();
+			const stream = new XevStream();
 			disposeStreams.push(stream);
-			await stream.addSource(StreamUtil.buildStreamId('user', 'publisherA'));
+			stream.addSource(StreamEventIdUtil.buildStreamEventId('user', 'publisherA'));
 			let count = 0;
 			stream.addListener((data) => {
 				assert.equal(data.text, 'abc');
@@ -19,28 +27,28 @@ describe('Stream tests', () => {
 			assert.equal(stream.getSources().length, 1);
 
 			// publish from A
-			const publisher = new StreamPublisher();
+			const publisher = new XevStreamPublisher();
 			const publishingData = { text: 'abc' };
-			await publisher.publish('user', 'publisherA', publishingData);
-			await publisher.dispose();
+			publisher.publish('user', 'publisherA', publishingData);
+			publisher.dispose();
 
 			// 配信が完了することを期待して3ms待つ
-			await delay(3);
+			//await delay(3);
 
 			// expect: 1回の受信がある
 			assert.equal(count, 1);
 		});
 	}
 
-	for (let i = 0; i < 1; i++) {
-		it('basic streamming B: '+i, async () => {
+	for (let i = 0; i < iteration; i++) {
+		it('basic streamming B: '+(i+1), async () => {
 			// home stream (source: A)
-			const homeStream = new Stream();
+			const homeStream = new XevStream();
 			disposeStreams.push(homeStream);
-			homeStream.setDestination(StreamUtil.buildStreamId('home', 'publisherA'));
-			await homeStream.addSource(StreamUtil.buildStreamId('user', 'publisherA'));
-			await homeStream.addSource(StreamUtil.buildStreamId('user', 'publisherB'));
-			await homeStream.removeSource(StreamUtil.buildStreamId('user', 'publisherB'));
+			homeStream.setDestination(StreamEventIdUtil.buildStreamEventId('home', 'publisherA'));
+			homeStream.addSource(StreamEventIdUtil.buildStreamEventId('user', 'publisherA'));
+			homeStream.addSource(StreamEventIdUtil.buildStreamEventId('user', 'publisherB'));
+			homeStream.removeSource(StreamEventIdUtil.buildStreamEventId('user', 'publisherB'));
 
 			let countA = 0;
 			let countB = 0;
@@ -54,17 +62,14 @@ describe('Stream tests', () => {
 			});
 
 			// publish from A
-			const publisherA = new StreamPublisher();
-			await publisherA.publish('user', 'publisherA', { text: 'from A' });
-			await publisherA.dispose();
+			const publisherA = new XevStreamPublisher();
+			publisherA.publish('user', 'publisherA', { text: 'from A' });
+			publisherA.dispose();
 
 			// publish from B
-			const publisherB = new StreamPublisher();
-			await publisherB.publish('user', 'publisherB', { text: 'from B' });
-			await publisherB.dispose();
-
-			// 配信が完了することを期待して3ms待つ
-			await delay(3);
+			const publisherB = new XevStreamPublisher();
+			publisherB.publish('user', 'publisherB', { text: 'from B' });
+			publisherB.dispose();
 
 			// expect: homeStreamにAとBから1回ずつ受信がある
 			assert.equal(countA, 1);
@@ -72,19 +77,19 @@ describe('Stream tests', () => {
 		});
 	}
 
-	for (let i = 0; i < 1; i++) {
-		it('create a stream channel: '+i, async () => {
+	for (let i = 0; i < iteration; i++) {
+		it('create a stream channel: '+(i+1), async () => {
 			// home stream (source: A, B)
-			const homeStream = new Stream();
+			const homeStream = new XevStream();
 			disposeStreams.push(homeStream);
-			homeStream.setDestination(StreamUtil.buildStreamId('home', 'publisherA'));
-			await homeStream.addSource(StreamUtil.buildStreamId('user', 'publisherA'));
-			await homeStream.addSource(StreamUtil.buildStreamId('user', 'publisherB'));
+			homeStream.setDestination(StreamEventIdUtil.buildStreamEventId('home', 'publisherA'));
+			homeStream.addSource(StreamEventIdUtil.buildStreamEventId('user', 'publisherA'));
+			homeStream.addSource(StreamEventIdUtil.buildStreamEventId('user', 'publisherB'));
 
 			// other stream (source: home)
-			const otherStream = new Stream();
+			const otherStream = new XevStream();
 			disposeStreams.push(otherStream);
-			await otherStream.addSource(StreamUtil.buildStreamId('home', 'publisherA'));
+			otherStream.addSource(StreamEventIdUtil.buildStreamEventId('home', 'publisherA'));
 			let countA = 0;
 			let countB = 0;
 			otherStream.addListener((data) => {
@@ -97,12 +102,131 @@ describe('Stream tests', () => {
 			});
 
 			// publish from A
-			const publisherA = new StreamPublisher();
+			const publisherA = new XevStreamPublisher();
+			publisherA.publish('user', 'publisherA', { text: 'from A' });
+			publisherA.dispose();
+
+			// publish from B
+			const publisherB = new XevStreamPublisher();
+			publisherB.publish('user', 'publisherB', { text: 'from B' });
+			publisherB.dispose();
+
+			// expect: otherStreamにAとBから1回ずつ受信がある
+			assert.equal(countA, 1);
+			assert.equal(countB, 1);
+		});
+	}
+
+	afterEach(async () => {
+		// dispose
+		for (const stream of disposeStreams) {
+			stream.dispose();
+		}
+		disposeStreams.splice(0, disposeStreams.length);
+	});
+});
+
+describe('redis stream tests', () => {
+	const disposeStreams = [];
+
+	for (let i = 0; i < iteration; i++) {
+		it('basic streamming A: '+(i+1), async () => {
+			// stream (source: A)
+			const stream = new RedisStream();
+			disposeStreams.push(stream);
+			await stream.addSource(StreamEventIdUtil.buildStreamEventId('user', 'publisherA'));
+			let count = 0;
+			stream.addListener((data) => {
+				assert.equal(data.text, 'abc');
+				count++;
+			});
+			assert.equal(stream.getSources().length, 1);
+
+			// publish from A
+			const publisher = new RedisStreamPublisher();
+			const publishingData = { text: 'abc' };
+			await publisher.publish('user', 'publisherA', publishingData);
+			await publisher.dispose();
+
+			// 配信が完了することを期待して3ms待つ
+			await delay(3);
+
+			// expect: 1回の受信がある
+			assert.equal(count, 1);
+		});
+	}
+
+	for (let i = 0; i < iteration; i++) {
+		it('basic streamming B: '+(i+1), async () => {
+			// home stream (source: A)
+			const homeStream = new RedisStream();
+			disposeStreams.push(homeStream);
+			homeStream.setDestination(StreamEventIdUtil.buildStreamEventId('home', 'publisherA'));
+			await homeStream.addSource(StreamEventIdUtil.buildStreamEventId('user', 'publisherA'));
+			await homeStream.addSource(StreamEventIdUtil.buildStreamEventId('user', 'publisherB'));
+			await homeStream.removeSource(StreamEventIdUtil.buildStreamEventId('user', 'publisherB'));
+
+			let countA = 0;
+			let countB = 0;
+			homeStream.addListener((data) => {
+				if (data.text == 'from A') {
+					countA++;
+				}
+				if (data.text == 'from B') {
+					countB++;
+				}
+			});
+
+			// publish from A
+			const publisherA = new RedisStreamPublisher();
 			await publisherA.publish('user', 'publisherA', { text: 'from A' });
 			await publisherA.dispose();
 
 			// publish from B
-			const publisherB = new StreamPublisher();
+			const publisherB = new RedisStreamPublisher();
+			await publisherB.publish('user', 'publisherB', { text: 'from B' });
+			await publisherB.dispose();
+
+			// 配信が完了することを期待して3ms待つ
+			await delay(3);
+
+			// expect: homeStreamにAとBから1回ずつ受信がある
+			assert.equal(countA, 1);
+			assert.equal(countB, 0);
+		});
+	}
+
+	for (let i = 0; i < iteration; i++) {
+		it('create a stream channel: '+(i+1), async () => {
+			// home stream (source: A, B)
+			const homeStream = new RedisStream();
+			disposeStreams.push(homeStream);
+			homeStream.setDestination(StreamEventIdUtil.buildStreamEventId('home', 'publisherA'));
+			await homeStream.addSource(StreamEventIdUtil.buildStreamEventId('user', 'publisherA'));
+			await homeStream.addSource(StreamEventIdUtil.buildStreamEventId('user', 'publisherB'));
+
+			// other stream (source: home)
+			const otherStream = new RedisStream();
+			disposeStreams.push(otherStream);
+			await otherStream.addSource(StreamEventIdUtil.buildStreamEventId('home', 'publisherA'));
+			let countA = 0;
+			let countB = 0;
+			otherStream.addListener((data) => {
+				if (data.text == 'from A') {
+					countA++;
+				}
+				if (data.text == 'from B') {
+					countB++;
+				}
+			});
+
+			// publish from A
+			const publisherA = new RedisStreamPublisher();
+			await publisherA.publish('user', 'publisherA', { text: 'from A' });
+			await publisherA.dispose();
+
+			// publish from B
+			const publisherB = new RedisStreamPublisher();
 			await publisherB.publish('user', 'publisherB', { text: 'from B' });
 			await publisherB.dispose();
 

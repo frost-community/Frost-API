@@ -1,5 +1,5 @@
 const ApiContext = require('../../../../modules/ApiContext');
-const { StreamUtil } = require('../../../../modules/stream');
+const { StreamEventIdUtil } = require('../../../../modules/stream');
 // const $ = require('cafy').default;
 
 /** @param {ApiContext} apiContext */
@@ -89,7 +89,7 @@ exports.put = async (apiContext) => {
 	}
 
 	// 対象ユーザーのストリームを購読
-	const stream = apiContext.streams.get(StreamUtil.buildStreamId('user-timeline-status', sourceUserId.toString()));
+	const stream = apiContext.streams.get(StreamEventIdUtil.buildStreamEventId('user-timeline-status', sourceUserId.toString()));
 	if (stream != null) {
 		stream.addSource(targetUserId.toString()); // この操作は冪等
 	}
@@ -131,7 +131,7 @@ exports.delete = async (apiContext) => {
 	}
 
 	// 対象ユーザーのストリームを購読解除
-	const stream = apiContext.streams.get(StreamUtil.buildStreamId('user-timeline-status', soruceUser._id.toString()));
+	const stream = apiContext.streams.get(StreamEventIdUtil.buildStreamEventId('user-timeline-status', soruceUser._id.toString()));
 	if (stream != null) {
 		stream.removeSource(targetUser._id.toString());
 	}
