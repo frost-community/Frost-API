@@ -8,7 +8,7 @@ class EventIdUtil {
 	 * @param {string} eventType
 	 * @param {string[]} params
 	*/
-	static buildEventId(serviceId, eventType, ...params) {
+	static buildEventId(serviceId, eventType, params) {
 		return `${serviceId}:${eventType}:${params.join(':')}`;
 	}
 	/** @param {string} eventId */
