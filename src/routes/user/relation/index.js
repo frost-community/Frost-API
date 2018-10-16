@@ -1,6 +1,7 @@
 const ApiContext = require('../../../modules/ApiContext');
 const MongoAdapter = require('../../../modules/MongoAdapter');
-const { StreamUtil } = require('../../../modules/stream');
+const { RedisEventSender } = require('../../../../modules/redisEvent');
+const EventIdHelper = require('../../../../modules/helpers/EventIdHelper');
 const $ = require('cafy').default;
 
 /** @param {ApiContext} apiContext */
@@ -96,11 +97,14 @@ exports.follow = async (apiContext) => {
 		return;
 	}
 
-	// 対象ユーザーのストリームを購読
-	const stream = apiContext.streams.get(StreamUtil.buildStreamId('user-timeline-status', sourceUserId.toString()));
-	if (stream != null) {
-		stream.addSource(targetUserId.toString()); // この操作は冪等
-	}
+	// event.following を発行
+	const eventSender = new RedisEventSender('frost-api');
+	await eventSender.publish(EventIdHelper.buildEventId(['event', 'following']), {
+		following: true,
+		sourceId: sourceUserId,
+		targetId: targetUserId
+	});
+	await eventSender.dispose();
 
 	apiContext.response(200, 'following');
 };
@@ -152,11 +156,14 @@ exports.unfollow = async (apiContext) => {
 		console.log(err);
 	}
 
-	// 対象ユーザーのストリームを購読解除
-	const stream = apiContext.streams.get(StreamUtil.buildStreamId('user-timeline-status', sourceUser._id.toString()));
-	if (stream != null) {
-		stream.removeSource(targetUser._id.toString());
-	}
+	// event.following を発行
+	const eventSender = new RedisEventSender('frost-api');
+	await eventSender.publish(EventIdHelper.buildEventId(['event', 'following']), {
+		following: false,
+		sourceUserId,
+		targetUserId
+	});
+	await eventSender.dispose();
 
 	apiContext.response(200, { following: false });
 };

@@ -1,5 +1,5 @@
 const ApiContext = require('../modules/ApiContext');
-const { StreamPublisher } = require('../modules/stream');
+const { RedisEventSender } = require('../modules/redisEvent');
 const $ = require('cafy').default;
 const MongoAdapter = require('../modules/MongoAdapter');
 const { getStringSize } = require('../modules/helpers/GeneralHelper');
@@ -53,11 +53,12 @@ exports['create_status'] = async (apiContext) => {
 
 	const serializedPostStatus = await apiContext.postsService.serialize(postStatus, true);
 
-	// 各種ストリームに発行
-	const publisher = new StreamPublisher();
-	publisher.publish('user-timeline-status', apiContext.user._id.toString(), serializedPostStatus);
-	publisher.publish('general-timeline-status', 'general', serializedPostStatus);
-	await publisher.dispose();
+	// event.posting.chat を発行
+	const eventSender = new RedisEventSender('frost-api');
+	await eventSender.publish(EventIdHelper.buildEventId(['event', 'posting', 'chat']), {
+		posting: postStatus
+	});
+	await eventSender.dispose();
 
 	apiContext.response(200, { postStatus: serializedPostStatus });
 };

@@ -2,7 +2,9 @@ const WebSocket = require('websocket');
 const events = require('websocket-events');
 const MongoAdapter = require('./modules/MongoAdapter');
 const { DirectoryRouter } = require('./modules/directoryRouter');
-const { Stream, StreamUtil } = require('./modules/stream');
+const EventIdHelper = require('./modules/helpers/EventIdHelper');
+const { LocalStream, LocalStreamPublisher } = require('./modules/localStream');
+const { RedisEventReciever } = require('./modules/redisEvent');
 const ApiContext = require('./modules/ApiContext');
 const TokensService = require('./services/TokensService');
 const UserFollowingsService = require('./services/UserFollowingsService');
@@ -12,27 +14,62 @@ const sanitize = require('mongo-sanitize');
 # 各種変数の説明
 streamType: 'user-timeline-status' | 'home-timeline-status' | 'general-timeline-status'
 streamPublisher: ストリームの発行者情報
-streamId : StreamUtil.buildStreamId(streamType, streamPublisher) ストリームの識別子
-streams: Map<streamId, Stream> 全てのストリーム一覧
+streamId: EventIdHelper.buildEventId(['stream', streamType, streamPublisher]) ストリームの識別子
+streams: Map<streamId, LocalStream> 全てのストリーム一覧
 connectedStreamIds: streamId[] 接続済みのストリーム名一覧
 
 # streamIdの例
-general-timeline-status:general generalに向けて流されたポストを受信可能なStreamです
-home-timeline-status:(userId) そのユーザーのホームTLに向けて流されたポストを受信可能なStreamです
+general-timeline-status:general generalに向けて流されたポストを受信可能なLocalStreamです
+home-timeline-status:(userId) そのユーザーのホームTLに向けて流されたポストを受信可能なLocalStreamです
+*/
+
+/*
+
+// イベント受信とその処理を追加: event.following.user follow
+const eventReciever = new RedisEventReciever('frost-api');
+eventReciever.addListener((data) => {
+	// 対象ユーザーのストリームを購読
+	const stream = apiContext.streams.get(EventIdHelper.buildEventId(['stream', 'user-timeline-status', sourceUserId.toString()]));
+	if (stream != null) {
+		stream.addSource(targetUserId.toString()); // この操作は冪等
+	}
+});
+
+// イベント受信とその処理を追加: event.following.user unfollow
+const eventReciever = new RedisEventReciever('frost-api');
+eventReciever.addListener((data) => {
+	// 対象ユーザーのストリームを購読解除
+	const stream = apiContext.streams.get(EventIdUtil.buildEventId(['stream', 'user-timeline-status', soruceUser._id.toString()]));
+	if (stream != null) {
+		stream.removeSource(targetUser._id.toString());
+	}
+});
+
+
+	
+
+	// 各種ストリームに発行
+	const publisher = new LocalStreamPublisher();
+	await Promise.all([
+		publisher.publish('user-timeline-status', apiContext.user._id.toString(), serializedPostStatus),
+		publisher.publish('general-timeline-status', 'general', serializedPostStatus)
+	]);
+	await publisher.dispose();
+
 */
 
 /**
  * @param {DirectoryRouter} directoryRouter
- * @param {Map<string, Stream>} streams
+ * @param {Map<string, LocalStream>} streams
  * @param {MongoAdapter} repository
 */
 module.exports = (http, directoryRouter, streams, repository, config) => {
 	const server = new WebSocket.server({ httpServer: http });
 
 	// generate stream for general timeline (global)
-	const generalTLStream = new Stream();
+	const generalTLStream = new LocalStream();
 	const generalTLStreamType = 'general-timeline-status';
-	const generalTLStreamId = StreamUtil.buildStreamId(generalTLStreamType, 'general');
+	const generalTLStreamId = EventIdHelper.buildEventId(['stream', generalTLStreamType, 'general']);
 	generalTLStream.addSource(generalTLStreamId);
 	streams.set(generalTLStreamId, generalTLStream);
 
@@ -56,7 +93,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			if (stream.listenerCount() == 0) {
 
 				// general-timeline-statusはストリーム自体の解放は行わない
-				const { streamType } = StreamUtil.parseStreamId(streamId);
+				const { streamType } = EventIdHelper.parseEventId(streamId);
 				if (streamType == 'general-timeline-status') {
 					return;
 				}
@@ -183,7 +220,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			else if (timelineType == 'home') {
 				// memo: フォローユーザーのuser-timeline-statusストリームを統合したhome-timeline-statusストリームを生成
 				streamType = 'home-timeline-status';
-				streamId = StreamUtil.buildStreamId(streamType, connection.user._id);
+				streamId = EventIdHelper.buildEventId(['stream', streamType, connection.user._id]);
 
 				// expect: Not connected to the stream yet from this connection.
 				if (connection.connectedStreamIds.indexOf(streamId) != -1) {
@@ -194,11 +231,11 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				if (stream == null) {
 					// ストリームを生成
 					stream = new Stream();
-					stream.addSource(StreamUtil.buildStreamId('user-timeline-status', connection.user._id));
+					stream.addSource(EventIdHelper.buildEventId(['stream', 'user-timeline-status', connection.user._id]));
 					const followings = await userFollowingsService.findTargets(connection.user._id, { isAscending: false }); // TODO: (全て or ユーザーの購読設定によっては選択的に)
 					for (const following of followings || []) {
 						const followingUserId = following.target.toString();
-						stream.addSource(StreamUtil.buildStreamId('user-timeline-status', followingUserId));
+						stream.addSource(EventIdHelper.buildEventId(['stream', 'user-timeline-status', followingUserId]));
 					}
 					streams.set(streamId, stream);
 				}
@@ -207,7 +244,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				return connection.error('timeline-connect', `timeline type "${timelineType}" is invalid`);
 			}
 
-			// ストリームからのデータをwebsocketに流す
+			// LocalStreamからのデータをwebsocketに流す
 			const streamHandler = stream.addListener(data => {
 				if (connection.connected) {
 					console.log(`streaming/stream:${streamType}`);
@@ -245,7 +282,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				streamId = generalTLStreamId;
 			}
 			else if (timelineType == 'home') {
-				streamId = StreamUtil.buildStreamId('home-timeline-status', connection.user._id);
+				streamId = EventIdHelper.buildEventId(['stream', 'home-timeline-status', connection.user._id]);
 			}
 			else {
 				return connection.error('timeline-disconnect', `timeline type "${timelineType}" is invalid`);
