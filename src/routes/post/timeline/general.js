@@ -1,19 +1,18 @@
-const ApiContext = require('../../modules/ApiContext');
-const MongoAdapter = require('../../modules/MongoAdapter');
+const ApiContext = require('../../../modules/ApiContext');
+const MongoAdapter = require('../../../modules/MongoAdapter');
 const v = require('validator');
 const $ = require('cafy').default;
-const timeline = require('../../modules/timeline');
+const timeline = require('../../../modules/timeline');
 
 /** @param {ApiContext} apiContext */
-exports.get = async (apiContext) => {
+exports.list = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
-			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
 			limit: { cafy: $().string().pipe(i => v.isInt(i, { min: 0, max: 100 })), default: '30' },
 			newer: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null },
 			older: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
 		},
-		scopes: ['post.read', 'user.read']
+		scopes: ['post.read']
 	});
 	if (apiContext.responsed) return;
 
@@ -23,14 +22,7 @@ exports.get = async (apiContext) => {
 	const older = apiContext.body.older != null ? MongoAdapter.buildId(apiContext.body.older) : null;
 
 	try {
-		// user
-		const user = await apiContext.repository.findById('users', apiContext.body.userId);
-		if (user == null) {
-			apiContext.response(404, 'user as premise not found');
-			return;
-		}
-
-		return await timeline(apiContext, 'status', [user._id], limit, { newer, older });
+		return await timeline(apiContext, 'status', null, limit, { newer, older });
 	}
 	catch (err) {
 		console.log(err);

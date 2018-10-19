@@ -2,7 +2,7 @@ const ApiContext = require('../../modules/ApiContext');
 const $ = require('cafy').default;
 
 /** @param {ApiContext} apiContext */
-module.exports.validate = async (apiContext) => {
+exports.validate = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
 			screenName: { cafy: $().string() },

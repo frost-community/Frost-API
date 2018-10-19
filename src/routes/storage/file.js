@@ -1,9 +1,9 @@
-const ApiContext = require('../../../modules/ApiContext');
-const MongoAdapter = require('../../../modules/MongoAdapter');
+const ApiContext = require('../../modules/ApiContext');
+const MongoAdapter = require('../../modules/MongoAdapter');
 const validator = require('validator');
 const $ = require('cafy').default;
-const { getUsedSpace } = require('../../../modules/helpers/UserStorageHelper');
-const { ApplicationError } = require('../../../modules/errors');
+const { getUsedSpace } = require('../../modules/helpers/UserStorageHelper');
+const { ApplicationError } = require('../../modules/errors');
 const getFileType = require('file-type');
 
 const supportedMimeTypes = [
@@ -94,7 +94,7 @@ exports.add = async (apiContext) => {
  *
  * @param {ApiContext} apiContext
 */
-exports.show = async (apiContext) => {
+exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
 			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },

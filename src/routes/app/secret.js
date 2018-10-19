@@ -3,7 +3,7 @@ const MongoAdapter = require('../../modules/MongoAdapter');
 const $ = require('cafy').default;
 
 /** @param {ApiContext} apiContext */
-exports.show = async (apiContext) => {
+exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
 			applicationId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }

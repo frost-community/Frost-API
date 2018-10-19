@@ -1,6 +1,8 @@
 const ApiContext = require('../../modules/ApiContext');
 const MongoAdapter = require('../../modules/MongoAdapter');
 const $ = require('cafy').default;
+const { RedisEventSender } = require('../../modules/redisEvent');
+const EventIdHelper = require('../../modules/helpers/EventIdHelper');
 
 /** @param {ApiContext} apiContext */
 exports.create = async (apiContext) => {
@@ -51,7 +53,26 @@ exports.create = async (apiContext) => {
 };
 
 /** @param {ApiContext} apiContext */
-exports.show = async (apiContext) => {
+exports.list = async (apiContext) => {
+	await apiContext.proceed({
+		scopes: ['user.read']
+	});
+	if (apiContext.responsed) return;
+
+	const users = await apiContext.repository.findArray('users', {});
+	if (users.length == 0) {
+		apiContext.response(204);
+		return;
+	}
+
+	const promises = users.map(user => apiContext.usersService.serialize(user));
+	const serializedUsers = await Promise.all(promises);
+
+	apiContext.response(200, { users: serializedUsers });
+};
+
+/** @param {ApiContext} apiContext */
+exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
 			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
@@ -70,7 +91,7 @@ exports.show = async (apiContext) => {
 };
 
 /** @param {ApiContext} apiContext */
-exports.lookup = async (apiContext) => {
+exports.get2 = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
 			'screen_names': { cafy: $().string(), default: '' }
@@ -100,25 +121,6 @@ exports.lookup = async (apiContext) => {
 
 	const users = await apiContext.usersService.findArrayByScreenNames(screenNames);
 
-	if (users.length == 0) {
-		apiContext.response(204);
-		return;
-	}
-
-	const promises = users.map(user => apiContext.usersService.serialize(user));
-	const serializedUsers = await Promise.all(promises);
-
-	apiContext.response(200, { users: serializedUsers });
-};
-
-/** @param {ApiContext} apiContext */
-exports.list = async (apiContext) => {
-	await apiContext.proceed({
-		scopes: ['user.read']
-	});
-	if (apiContext.responsed) return;
-
-	const users = await apiContext.repository.findArray('users', {});
 	if (users.length == 0) {
 		apiContext.response(204);
 		return;
@@ -224,4 +226,131 @@ exports.update = async (apiContext) => {
 	}
 
 	apiContext.response(200, { user: await apiContext.usersService.serialize(updated) });
+};
+
+
+/** @param {ApiContext} apiContext */
+exports.follow = async (apiContext) => {
+	await apiContext.proceed({
+		body: {
+			sourceUserId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
+			targetUserId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
+			message: { cafy: $().string().pipe(i => !/^\s*$/.test(i) || /^[\s\S]{1,64}$/.test(i)), default: null }
+		},
+		scopes: ['user.write']
+	});
+	if (apiContext.responsed) return;
+
+	const { sourceUserId, targetUserId, message } = apiContext.body;
+
+	// fetch: source user
+	const sourceUser = await apiContext.repository.findById('users', sourceUserId);
+	if (sourceUser == null) {
+		apiContext.response(404, 'user as premise not found');
+		return;
+	}
+
+	// fetch: target user
+	const targetUser = await apiContext.repository.findById('users', targetUserId);
+	if (targetUser == null) {
+		apiContext.response(404, 'target user as premise not found');
+		return;
+	}
+
+	// expect: sourceUser is you
+	if (!sourceUser._id.equals(apiContext.user._id)) {
+		apiContext.response(403, 'this operation is not permitted');
+		return;
+	}
+
+	// expect: sourceUser != targetUser
+	if (targetUser._id.equals(sourceUser._id)) {
+		apiContext.response(400, 'source user and target user is same');
+		return;
+	}
+
+	// ドキュメント作成・更新
+	let userFollowing;
+	try {
+		userFollowing = await apiContext.userFollowingsService.create(sourceUser._id, targetUser._id, message);
+	}
+	catch (err) {
+		console.log('failed follow');
+		console.log(err);
+	}
+
+	if (userFollowing == null) {
+		apiContext.response(500, 'failed follow');
+		return;
+	}
+
+	// event.following を発行
+	const eventSender = new RedisEventSender('frost-api');
+	await eventSender.publish(EventIdHelper.buildEventId(['event', 'following']), {
+		following: true,
+		sourceId: sourceUserId,
+		targetId: targetUserId
+	});
+	await eventSender.dispose();
+
+	apiContext.response(200, 'following');
+};
+
+/** @param {ApiContext} apiContext */
+exports.unfollow = async (apiContext) => {
+	await apiContext.proceed({
+		body: {
+			sourceUserId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
+			targetUserId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
+		},
+		scopes: ['user.write']
+	});
+	if (apiContext.responsed) return;
+
+	const { sourceUserId, targetUserId, message } = apiContext.body;
+
+	// fetch: source user
+	const sourceUser = await apiContext.repository.findById('users', sourceUserId);
+	if (sourceUser == null) {
+		apiContext.response(404, 'user as premise not found');
+		return;
+	}
+
+	// fetch: target user
+	const targetUser = await apiContext.repository.findById('users', targetUserId);
+	if (targetUser == null) {
+		apiContext.response(404, 'target user as premise not found');
+		return;
+	}
+
+	// expect: sourceUser is you
+	if (!sourceUser._id.equals(apiContext.user._id)) {
+		apiContext.response(403, 'this operation is not permitted');
+		return;
+	}
+
+	// expect: sourceUser != targetUser
+	if (targetUser._id.equals(sourceUser._id)) {
+		apiContext.response(400, 'source user and target user is same');
+		return;
+	}
+
+	try {
+		await apiContext.userFollowingsService.removeBySrcDestId(sourceUser._id, targetUser._id);
+	}
+	catch (err) {
+		console.log('failed unfollow');
+		console.log(err);
+	}
+
+	// event.following を発行
+	const eventSender = new RedisEventSender('frost-api');
+	await eventSender.publish(EventIdHelper.buildEventId(['event', 'following']), {
+		following: false,
+		sourceUserId,
+		targetUserId
+	});
+	await eventSender.dispose();
+
+	apiContext.response(200, { following: false });
 };

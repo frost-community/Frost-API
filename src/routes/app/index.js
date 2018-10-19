@@ -4,7 +4,7 @@ const MongoAdapter = require('../../modules/MongoAdapter');
 const $ = require('cafy').default;
 
 /** @param {ApiContext} apiContext */
-module.exports.create = async (apiContext) => {
+exports.create = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
 			name: { cafy: $().string().min(1).max(32) },
@@ -34,7 +34,7 @@ module.exports.create = async (apiContext) => {
 };
 
 /** @param {ApiContext} apiContext */
-exports.show = async (apiContext) => {
+exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
 			applicationId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
@@ -60,7 +60,7 @@ exports.show = async (apiContext) => {
 };
 
 /** @param {ApiContext} apiContext */
-module.exports.list = async (apiContext) => {
+exports.list = async (apiContext) => {
 	await apiContext.proceed({
 		scopes: ['app.read']
 	});

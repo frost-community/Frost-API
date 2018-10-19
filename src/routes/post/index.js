@@ -1,11 +1,11 @@
-const ApiContext = require('../modules/ApiContext');
-const { RedisEventSender } = require('../modules/redisEvent');
+const ApiContext = require('../../modules/ApiContext');
+const { RedisEventSender } = require('../../modules/redisEvent');
 const $ = require('cafy').default;
-const MongoAdapter = require('../modules/MongoAdapter');
-const { getStringSize } = require('../modules/helpers/GeneralHelper');
+const MongoAdapter = require('../../modules/MongoAdapter');
+const { getStringSize } = require('../../modules/helpers/GeneralHelper');
 
 /** @param {ApiContext} apiContext */
-exports.show = async (apiContext) => {
+exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
 			postId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
@@ -24,7 +24,7 @@ exports.show = async (apiContext) => {
 };
 
 /** @param {ApiContext} apiContext */
-exports['create_status'] = async (apiContext) => {
+exports['create-message'] = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
 			text: { cafy: $().string().range(1, 256).pipe(i => !/^\s*$/.test(i)) },
@@ -51,7 +51,7 @@ exports['create_status'] = async (apiContext) => {
 		return;
 	}
 
-	const serializedPostStatus = await apiContext.postsService.serialize(postStatus, true);
+	const serialized = await apiContext.postsService.serialize(postStatus, true);
 
 	// event.posting.chat を発行
 	const eventSender = new RedisEventSender('frost-api');
@@ -60,11 +60,11 @@ exports['create_status'] = async (apiContext) => {
 	});
 	await eventSender.dispose();
 
-	apiContext.response(200, { postStatus: serializedPostStatus });
+	apiContext.response(200, { postMessage: serialized });
 };
 
 /** @param {ApiContext} apiContext */
-exports['create_article'] = async (apiContext) => {
+exports['create-article'] = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
 			title: { cafy: $().string() },
@@ -96,7 +96,7 @@ exports['create_article'] = async (apiContext) => {
 };
 
 /** @param {ApiContext} apiContext */
-exports['create_reference'] = async (apiContext) => {
+exports['create-reference'] = async (apiContext) => {
 	await apiContext.proceed({
 		body: {},
 		scopes: ['post.write']
