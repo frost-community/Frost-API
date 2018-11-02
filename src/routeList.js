@@ -30,7 +30,7 @@ module.exports = [
 
 	// フォロワーの一覧を取得する
 	'/user/follower/list', // [old] get /users/:id/followers
-	
+
 	// 指定したユーザーが対象のユーザーをフォローしているかどうかを取得
 	'/user/relation/get', // [old] get /users/:id/followings/:target_id
 
@@ -72,7 +72,7 @@ module.exports = [
 	'/storage/file/list', // [old] get /users/:id/storage/files
 
 	// ストレージの指定したファイルを削除する
-	'/storage/file/remove', // [old] delete /users/:id/storage/files/:file_id
+	'/storage/file/delete', // [old] delete /users/:id/storage/files/:file_id
 
 	// == app ==
 

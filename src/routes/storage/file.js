@@ -204,7 +204,7 @@ exports.list = async (apiContext) => { // TODO: フィルター指定
  *
  * @param {ApiContext} apiContext
 */
-exports.remove = async (apiContext) => {
+exports.delete = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
 			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
