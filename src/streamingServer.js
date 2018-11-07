@@ -3,8 +3,8 @@ const events = require('websocket-events');
 const MongoAdapter = require('./modules/MongoAdapter');
 const { DirectoryRouter } = require('./modules/directoryRouter');
 const EventIdHelper = require('./modules/helpers/EventIdHelper');
-const { LocalStream, LocalStreamPublisher } = require('./modules/localStream');
-const { RedisEventReciever } = require('./modules/redisEvent');
+const XevPubSub = require('./modules/XevPubSub');
+const RedisEventEmitter = require('./modules/RedisEventEmitter');
 const ApiContext = require('./modules/ApiContext');
 const TokensService = require('./services/TokensService');
 const UserFollowingsService = require('./services/UserFollowingsService');
@@ -46,7 +46,6 @@ eventReciever.addListener((data) => {
 });
 
 
-	
 
 	// 各種ストリームに発行
 	const publisher = new LocalStreamPublisher();
@@ -55,28 +54,33 @@ eventReciever.addListener((data) => {
 		publisher.publish('general-timeline-status', 'general', serializedPostStatus)
 	]);
 	await publisher.dispose();
-
+XevPubSub
 */
 
 /**
  * @param {DirectoryRouter} directoryRouter
- * @param {Map<string, LocalStream>} streams
+ * @param {Map<string, XevPubSub>} streams
  * @param {MongoAdapter} repository
 */
 module.exports = (http, directoryRouter, streams, repository, config) => {
 	const server = new WebSocket.server({ httpServer: http });
 
 	// generate stream for general timeline (global)
-	const generalTLStream = new LocalStream();
-	const generalTLStreamType = 'general-timeline-status';
-	const generalTLStreamId = EventIdHelper.buildEventId(['stream', generalTLStreamType, 'general']);
-	generalTLStream.addSource(generalTLStreamId);
-	streams.set(generalTLStreamId, generalTLStream);
+	//const generalTLStream = new LocalStream();
+	const generalTLPubSub = new XevPubSub('frost-api');
+	//const generalTLStreamId = EventIdHelper.buildEventId(['stream', 'general-timeline-status', 'general']);
+	const generalTLEventId = EventIdHelper.buildEventId(['stream', 'general-timeline-status']);
+	generalTLPubSub.subscribe(generalTLEventId);
+	streams.set(generalTLEventId, generalTLPubSub);
 
 	const tokensService = new TokensService(repository, config);
 	const userFollowingsService = new UserFollowingsService(repository, config);
 
-	// ストリームの購読解除メソッド
+	/**
+	 * ストリームの購読解除メソッド
+	 * @param {WebSocket.connection} connection
+	 * @param {string} streamId
+	*/
 	const disconnectStream = async (connection, streamId) => {
 		const removeIndex = connection.connectedStreamIds.indexOf(streamId);
 		connection.connectedStreamIds.splice(removeIndex, 1);
@@ -104,16 +108,20 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 		}
 	};
 
-	const receivedRest = async (connection, request) => {
+	/**
+	 * @param {WebSocket.connection} connection
+	 * @param {any} reqData
+	*/
+	const receivedRest = async (connection, reqData) => {
 		try {
-			if (request == null) {
+			if (reqData == null) {
 				return connection.error('rest', 'request format is invalid');
 			}
 
 			let {
 				endpoint,
 				body
-			} = request;
+			} = reqData;
 
 			// パラメータを検証
 			if (endpoint == null) {
@@ -187,7 +195,11 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 		}
 	};
 
-	const receivedNotificationConnect = async (connection, request) => {
+	/**
+	 * @param {WebSocket.connection} connection
+	 * @param {any} reqData
+	*/
+	const receivedNotificationConnect = async (connection, reqData) => {
 		try {
 			return connection.error('notification-connect', 'comming soon'); // TODO
 		}
@@ -196,31 +208,43 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			connection.error('notification-connect', 'server error');
 		}
 	};
-	const receivedTimelineConnect = async (connection, request) => {
+
+	/**
+	 * @param {WebSocket.connection} connection
+	 * @param {any} reqData
+	*/
+	const receivedTimelineConnect = async (connection, reqData) => {
 		try {
-			const timelineType = request.type;
+			const timelineType = reqData.type;
 
 			if (timelineType == null) {
 				return connection.error('timeline-connect', '"type" parameter is required');
 			}
 
 			// ストリームの取得または構築
-			let stream, streamType, streamId;
+
+			/** @type {XevPubSub} */
+			let stream;
+			/** @type {string} */
+			let streamType;
+			/** @type {string} */
+			let streamId;
+
 			if (timelineType == 'general') {
-				streamType = generalTLStreamType;
-				streamId = generalTLStreamId;
+				streamType = 'general-timeline-status';
+				streamId = generalTLEventId;
 
 				// expect: Not connected to the stream yet from this connection.
 				if (connection.connectedStreamIds.indexOf(streamId) != -1) {
 					return connection.error('timeline-connect', `${timelineType} timeline stream is already connected`);
 				}
 
-				stream = generalTLStream;
+				stream = generalTLPubSub;
 			}
 			else if (timelineType == 'home') {
 				// memo: フォローユーザーのuser-timeline-statusストリームを統合したhome-timeline-statusストリームを生成
 				streamType = 'home-timeline-status';
-				streamId = EventIdHelper.buildEventId(['stream', streamType, connection.user._id]);
+				streamId = EventIdHelper.buildEventId(['stream', 'home-timeline-status', connection.user._id]);
 
 				// expect: Not connected to the stream yet from this connection.
 				if (connection.connectedStreamIds.indexOf(streamId) != -1) {
@@ -230,12 +254,13 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				stream = streams.get(streamId);
 				if (stream == null) {
 					// ストリームを生成
-					stream = new Stream();
-					stream.addSource(EventIdHelper.buildEventId(['stream', 'user-timeline-status', connection.user._id]));
+					stream = new XevPubSub('frost-api');
+					//stream.addSource(EventIdHelper.buildEventId(['stream', 'user-timeline-status', connection.user._id]));
+					stream.subscribe(EventIdHelper.buildEventId(['stream', 'user-timeline-status', connection.user._id]));
 					const followings = await userFollowingsService.findTargets(connection.user._id, { isAscending: false }); // TODO: (全て or ユーザーの購読設定によっては選択的に)
 					for (const following of followings || []) {
 						const followingUserId = following.target.toString();
-						stream.addSource(EventIdHelper.buildEventId(['stream', 'user-timeline-status', followingUserId]));
+						stream.subscribe(EventIdHelper.buildEventId(['stream', 'user-timeline-status', followingUserId]));
 					}
 					streams.set(streamId, stream);
 				}
@@ -245,7 +270,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			}
 
 			// LocalStreamからのデータをwebsocketに流す
-			const streamHandler = stream.addListener(data => {
+			const streamHandler = data => {
 				if (connection.connected) {
 					console.log(`streaming/stream:${streamType}`);
 					connection.send(`stream:${streamType}`, { streamId, resource: data });
@@ -253,7 +278,8 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				else {
 					console.log('not connected');
 				}
-			});
+			};
+			stream.addListener('message', streamHandler);
 			connection.connectedStreamHandlers.set(streamId, streamHandler);
 
 			// connectedStreamIdsに追加
@@ -268,9 +294,13 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 		}
 	};
 
-	const receivedTimelineDisconnect = async (connection, request) => {
+	/**
+	 * @param {WebSocket.connection} connection
+	 * @param {any} reqData
+	*/
+	const receivedTimelineDisconnect = async (connection, reqData) => {
 		try {
-			const timelineType = request.type;
+			const timelineType = reqData.type;
 
 			if (timelineType == null) {
 				return connection.error('timeline-disconnect', '"type" parameter is required');
@@ -279,7 +309,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			// 対象タイムラインのストリームを取得
 			let streamId;
 			if (timelineType == 'general') {
-				streamId = generalTLStreamId;
+				streamId = generalTLEventId;
 			}
 			else if (timelineType == 'home') {
 				streamId = EventIdHelper.buildEventId(['stream', 'home-timeline-status', connection.user._id]);
@@ -373,18 +403,18 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 		});
 
 		// クライアント側からRESTリクエストを受信したとき
-		connection.on('rest', (request) => receivedRest(connection, request));
+		connection.on('rest', (reqData) => receivedRest(connection, reqData));
 
 		// クライアント側から通知の購読リクエストを受信したとき
-		connection.on('notification-connect', request => receivedNotificationConnect(connection, request));
+		connection.on('notification-connect', reqData => receivedNotificationConnect(connection, reqData));
 
 		// クライアント側からタイムラインの購読リクエストを受信したとき
-		connection.on('timeline-connect', request => receivedTimelineConnect(connection, request));
+		connection.on('timeline-connect', reqData => receivedTimelineConnect(connection, reqData));
 
 		// クライアント側からタイムラインの購読解除リクエストを受信したとき
-		connection.on('timeline-disconnect', request => receivedTimelineDisconnect(connection, request));
+		connection.on('timeline-disconnect', reqData => receivedTimelineDisconnect(connection, reqData));
 
-		connection.on('default', (eventData) => {
+		connection.on('default', (reqData) => {
 			connection.error('default', 'invalid event name');
 		});
 
