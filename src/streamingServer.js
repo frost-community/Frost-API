@@ -2,7 +2,7 @@ const WebSocket = require('websocket');
 const events = require('websocket-events');
 const MongoAdapter = require('./modules/MongoAdapter');
 const { DirectoryRouter } = require('./modules/directoryRouter');
-const EventIdHelper = require('./modules/helpers/EventIdHelper');
+const DataTypeIdHelper = require('./modules/helpers/DataTypeIdHelper');
 const XevPubSub = require('./modules/XevPubSub');
 const RedisEventEmitter = require('./modules/RedisEventEmitter');
 const ApiContext = require('./modules/ApiContext');
@@ -14,7 +14,7 @@ const sanitize = require('mongo-sanitize');
 # 各種変数の説明
 streamType: 'user-timeline-status' | 'home-timeline-status' | 'general-timeline-status'
 streamPublisher: ストリームの発行者情報
-streamId: EventIdHelper.buildEventId(['stream', streamType, streamPublisher]) ストリームの識別子
+streamId: DataTypeIdHelper.build(['stream', streamType, streamPublisher]) ストリームの識別子
 streams: Map<streamId, LocalStream> 全てのストリーム一覧
 connectedStreamIds: streamId[] 接続済みのストリーム名一覧
 
@@ -24,37 +24,25 @@ home-timeline-status:(userId) そのユーザーのホームTLに向けて流さ
 */
 
 /*
-
-// イベント受信とその処理を追加: event.following.user follow
+// イベント受信とその処理を追加: following (follow)
 const eventReciever = new RedisEventReciever('frost-api');
 eventReciever.addListener((data) => {
 	// 対象ユーザーのストリームを購読
-	const stream = apiContext.streams.get(EventIdHelper.buildEventId(['stream', 'user-timeline-status', sourceUserId.toString()]));
+	const stream = apiContext.streams.get(DataTypeIdHelper.build(['stream', 'user-timeline-status', sourceUserId.toString()]));
 	if (stream != null) {
 		stream.addSource(targetUserId.toString()); // この操作は冪等
 	}
 });
 
-// イベント受信とその処理を追加: event.following.user unfollow
+// イベント受信とその処理を追加: following (unfollow)
 const eventReciever = new RedisEventReciever('frost-api');
 eventReciever.addListener((data) => {
 	// 対象ユーザーのストリームを購読解除
-	const stream = apiContext.streams.get(EventIdUtil.buildEventId(['stream', 'user-timeline-status', soruceUser._id.toString()]));
+	const stream = apiContext.streams.get(DataTypeIdHelper.build(['stream', 'user-timeline-status', soruceUser._id.toString()]));
 	if (stream != null) {
 		stream.removeSource(targetUser._id.toString());
 	}
 });
-
-
-
-	// 各種ストリームに発行
-	const publisher = new LocalStreamPublisher();
-	await Promise.all([
-		publisher.publish('user-timeline-status', apiContext.user._id.toString(), serializedPostStatus),
-		publisher.publish('general-timeline-status', 'general', serializedPostStatus)
-	]);
-	await publisher.dispose();
-XevPubSub
 */
 
 /**
@@ -66,53 +54,66 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 	const server = new WebSocket.server({ httpServer: http });
 
 	// generate stream for general timeline (global)
-	//const generalTLStream = new LocalStream();
-	const generalTLPubSub = new XevPubSub('frost-api');
-	//const generalTLStreamId = EventIdHelper.buildEventId(['stream', 'general-timeline-status', 'general']);
-	const generalTLEventId = EventIdHelper.buildEventId(['stream', 'general-timeline-status']);
-	generalTLPubSub.subscribe(generalTLEventId);
-	streams.set(generalTLEventId, generalTLPubSub);
+	const generalTLStream = new XevPubSub('frost-api');
+	//const generalTLStreamId = DataTypeIdHelper.build(['stream', 'general-timeline-status', 'general']);
+	const generalTLStreamId = DataTypeIdHelper.build(['timeline', 'general', 'status']);
+	generalTLStream.subscribe(generalTLStreamId);
+	streams.set(generalTLStreamId, generalTLStream);
 
 	const tokensService = new TokensService(repository, config);
 	const userFollowingsService = new UserFollowingsService(repository, config);
+
+	const eventReciever = new RedisEventEmitter('frost-api', true);
+
+	// RedisEvent受信 posting.chat
+	eventReciever.addListener(DataTypeIdHelper.build(['posting', 'chat']), (data) => {
+		// streamに流す
+		const publisher = new XevPubSub('frost-api');
+		publisher.publish(DataTypeIdHelper.build(['timeline', 'user', 'status', data.posting.userId]), data.posting);
+		publisher.publish(DataTypeIdHelper.build(['timeline', 'general', 'status']), data.posting);
+		publisher.dispose();
+	});
+
+	// RedisEvent受信 following
+	eventReciever.addListener(DataTypeIdHelper.build(['following']), (data) => {
+
+	});
 
 	/**
 	 * ストリームの購読解除メソッド
 	 * @param {WebSocket.connection} connection
 	 * @param {string} streamId
 	*/
-	const disconnectStream = async (connection, streamId) => {
-		const removeIndex = connection.connectedStreamIds.indexOf(streamId);
-		connection.connectedStreamIds.splice(removeIndex, 1);
+	async function disconnectStream(connection, streamId) {
+		const index = connection.connectedStreams.findIndex(stream => stream.id == streamId);
+		if (index == -1) return;
 
-		let stream = streams.get(streamId);
-		if (stream != null) {
-			const streamHandler = connection.connectedStreamHandlers.get(streamId);
-			if (streamHandler != null) {
-				stream.removeListener(streamHandler);
-				connection.connectedStreamHandlers.delete(streamId);
+		const stream = streams.get(streamId);
+		if (stream == null) return;
+
+		// dispose listener
+		const { listener } = connection.connectedStreams[index];
+		stream.removeListener(listener);
+		connection.connectedStreams.splice(index, 1);
+
+		// dispose stream if no listeners
+		if (stream.listenerCount() == 0) {
+
+			// stream.general-timeline-statusはストリーム自体の解放は行わない
+			if (DataTypeIdHelper.contain(streamId, ['timeline', 'general', 'status'])) {
+				return;
 			}
 
-			// リスナが1つもなければストリーム自体を解放
-			if (stream.listenerCount() == 0) {
-
-				// general-timeline-statusはストリーム自体の解放は行わない
-				const { streamType } = EventIdHelper.parseEventId(streamId);
-				if (streamType == 'general-timeline-status') {
-					return;
-				}
-
-				await stream.dispose();
-				streams.delete(streamId);
-			}
+			await stream.dispose();
+			streams.delete(streamId);
 		}
-	};
+	}
 
 	/**
 	 * @param {WebSocket.connection} connection
 	 * @param {any} reqData
 	*/
-	const receivedRest = async (connection, reqData) => {
+	async function receivedRequest(connection, reqData) {
 		try {
 			if (reqData == null) {
 				return connection.error('rest', 'request format is invalid');
@@ -193,140 +194,177 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			console.log(err);
 			connection.error('rest', 'server error');
 		}
-	};
+	}
 
 	/**
 	 * @param {WebSocket.connection} connection
 	 * @param {any} reqData
 	*/
-	const receivedNotificationConnect = async (connection, reqData) => {
+	async function receivedSubscribe(connection, reqData) {
 		try {
-			return connection.error('notification-connect', 'comming soon'); // TODO
+			const { sourceType } = reqData;
+
+			if (sourceType == 'notification') {
+				subscribeNotification(connection, reqData);
+			}
+			else if (sourceType == 'homeTimeline') {
+				subscribeTimeline(connection, reqData, 'home');
+			}
+			else {
+				connection.error('subscribe', 'invalid sourceType');
+			}
 		}
 		catch (err) {
 			console.log(err);
-			connection.error('notification-connect', 'server error');
+			connection.error('subscribe', 'server error');
 		}
-	};
+	}
 
 	/**
 	 * @param {WebSocket.connection} connection
 	 * @param {any} reqData
 	*/
-	const receivedTimelineConnect = async (connection, reqData) => {
+	async function receivedUnsubscribe(connection, reqData) {
 		try {
-			const timelineType = reqData.type;
+			const { sourceType } = reqData;
 
-			if (timelineType == null) {
-				return connection.error('timeline-connect', '"type" parameter is required');
+			if (sourceType == 'notification') {
+				unsubscribeNotification(connection, reqData);
 			}
-
-			// ストリームの取得または構築
-
-			/** @type {XevPubSub} */
-			let stream;
-			/** @type {string} */
-			let streamType;
-			/** @type {string} */
-			let streamId;
-
-			if (timelineType == 'general') {
-				streamType = 'general-timeline-status';
-				streamId = generalTLEventId;
-
-				// expect: Not connected to the stream yet from this connection.
-				if (connection.connectedStreamIds.indexOf(streamId) != -1) {
-					return connection.error('timeline-connect', `${timelineType} timeline stream is already connected`);
-				}
-
-				stream = generalTLPubSub;
+			else if (sourceType == 'homeTimeline') {
+				unsubscribeTimeline(connection, reqData, 'home');
 			}
-			else if (timelineType == 'home') {
+			else {
+				connection.error('unsubscribe', 'invalid sourceType');
+			}
+		}
+		catch (err) {
+			console.log(err);
+			connection.error('unsubscribe', 'server error');
+		}
+	}
+
+	/**
+	 * @param {WebSocket.connection} connection
+	 * @param {any} reqData
+	*/
+	async function subscribeNotification(connection, reqData) {
+		return connection.error('subscribe', 'comming soon'); // TODO
+	}
+
+	/**
+	 * @param {WebSocket.connection} connection
+	 * @param {any} reqData
+	*/
+	async function unsubscribeNotification(connection, reqData) {
+		return connection.error('unsubscribe', 'comming soon'); // TODO
+	}
+
+	/**
+	 * @param {WebSocket.connection} connection
+	 * @param {any} reqData
+	*/
+	async function subscribeTimeline(connection, reqData, timelineType) {
+
+		/** @type {XevPubSub} */
+		let stream;
+		/** @type {string} */
+		let streamId;
+
+		// ストリームの取得または構築
+		if (timelineType == 'home') {
+			const candy = (reqData.candy != null);
+
+			if (candy) {
+				streamId = generalTLStreamId;
+				timelineType = 'candy';
+			}
+			else {
 				// memo: フォローユーザーのuser-timeline-statusストリームを統合したhome-timeline-statusストリームを生成
-				streamType = 'home-timeline-status';
-				streamId = EventIdHelper.buildEventId(['stream', 'home-timeline-status', connection.user._id]);
+				streamId = DataTypeIdHelper.build(['timeline', 'home', 'status', connection.user._id]);
+			}
 
-				// expect: Not connected to the stream yet from this connection.
-				if (connection.connectedStreamIds.indexOf(streamId) != -1) {
-					return connection.error('timeline-connect', `${timelineType} timeline stream is already connected`);
-				}
+			// expect: Not connected to the stream yet from this connection.
+			if (connection.connectedStreamIds.indexOf(streamId) != -1) {
+				return connection.error('subscribe', `${timelineType} timeline stream is already connected`);
+			}
 
+			if (candy) {
+				stream = generalTLStream;
+			}
+			else {
+				// Streamを取得
 				stream = streams.get(streamId);
+
+				// Streamを生成
 				if (stream == null) {
-					// ストリームを生成
 					stream = new XevPubSub('frost-api');
-					//stream.addSource(EventIdHelper.buildEventId(['stream', 'user-timeline-status', connection.user._id]));
-					stream.subscribe(EventIdHelper.buildEventId(['stream', 'user-timeline-status', connection.user._id]));
+					//stream.addSource(DataTypeIdHelper.build(['timeline', 'user', 'status', connection.user._id]));
+					stream.subscribe(DataTypeIdHelper.build(['timeline', 'user', 'status', connection.user._id]));
 					const followings = await userFollowingsService.findTargets(connection.user._id, { isAscending: false }); // TODO: (全て or ユーザーの購読設定によっては選択的に)
 					for (const following of followings || []) {
 						const followingUserId = following.target.toString();
-						stream.subscribe(EventIdHelper.buildEventId(['stream', 'user-timeline-status', followingUserId]));
+						stream.subscribe(DataTypeIdHelper.build(['timeline', 'user', 'status', followingUserId]));
 					}
 					streams.set(streamId, stream);
 				}
 			}
-			else {
-				return connection.error('timeline-connect', `timeline type "${timelineType}" is invalid`);
+		}
+		else {
+			return connection.error('subscribe', `timeline type "${timelineType}" is invalid`);
+		}
+
+		// Streamからのデータをwebsocketに流す
+		function streamHandler(data) {
+			if (connection.connected) {
+				console.log(`streaming/${streamId}`);
+				connection.send('event', { eventType: streamId, resource: data });
 			}
-
-			// LocalStreamからのデータをwebsocketに流す
-			const streamHandler = data => {
-				if (connection.connected) {
-					console.log(`streaming/stream:${streamType}`);
-					connection.send(`stream:${streamType}`, { streamId, resource: data });
-				}
-				else {
-					console.log('not connected');
-				}
-			};
-			stream.addListener('message', streamHandler);
-			connection.connectedStreamHandlers.set(streamId, streamHandler);
-
-			// connectedStreamIdsに追加
-			connection.connectedStreamIds.push(streamId);
-
-			console.log('streaming/timeline-connect:', timelineType);
-			connection.send('timeline-connect', { success: true, message: `connected ${timelineType} timeline` });
+			else {
+				console.log('not connected');
+			}
 		}
-		catch (err) {
-			console.log(err);
-			connection.error('timeline-disconnect', 'server error');
-		}
-	};
+		stream.addListener('message', streamHandler);
+
+		// connectedStreamsに追加
+		connection.connectedStreams.push({ id: streamId, listener: streamHandler });
+
+		console.log(`streaming/subscribe timeline.${timelineType}`);
+		connection.send('subscribe', { success: true, message: `connected ${timelineType} timeline` });
+	}
 
 	/**
 	 * @param {WebSocket.connection} connection
 	 * @param {any} reqData
 	*/
-	const receivedTimelineDisconnect = async (connection, reqData) => {
+	async function unsubscribeTimeline(connection, reqData, timelineType) {
 		try {
-			const timelineType = reqData.type;
-
-			if (timelineType == null) {
-				return connection.error('timeline-disconnect', '"type" parameter is required');
-			}
-
 			// 対象タイムラインのストリームを取得
 			let streamId;
-			if (timelineType == 'general') {
-				streamId = generalTLEventId;
-			}
-			else if (timelineType == 'home') {
-				streamId = EventIdHelper.buildEventId(['stream', 'home-timeline-status', connection.user._id]);
+			if (timelineType == 'home') {
+				const candy = (reqData.candy != null);
+
+				if (candy) {
+					streamId = generalTLStreamId;
+					timelineType = 'candy';
+				}
+				else {
+					streamId = DataTypeIdHelper.build(['timeline', 'home', 'status', connection.user._id]);
+				}
 			}
 			else {
-				return connection.error('timeline-disconnect', `timeline type "${timelineType}" is invalid`);
+				return connection.error('unsubscribe', `timeline type "${timelineType}" is invalid`);
 			}
 
 			await disconnectStream(connection, streamId);
-			console.log('streaming/timeline-disconnect:', streamId);
-			connection.send('timeline-disconnect', { success: true, message: `disconnected ${timelineType} timeline` });
+			console.log('streaming/unsubscribe:', streamId);
+			connection.send('unsubscribe', { success: true, message: `disconnected ${timelineType} timeline` });
 		}
 		catch (err) {
 			console.log(err);
-			connection.error('timeline-disconnect', 'server error');
+			connection.error('unsubscribe', 'server error');
 		}
-	};
+	}
 
 	server.on('request', async request => {
 		const query = request.resourceURL.query;
@@ -369,8 +407,8 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 		connection.authInfo = { scopes: token.scopes, application: application };
 
 		// このコネクション上で接続されているストリームID/ハンドラの一覧
-		connection.connectedStreamIds = [];
-		connection.connectedStreamHandlers = new Map();
+		connection.connectedStreams = [];
+		// connectedStreams: [{ id: string, listener: Function }]
 
 		// support user events
 		events(connection);
@@ -402,17 +440,14 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			console.log(`disconnected streaming. user: ${connection.user._id}`);
 		});
 
-		// クライアント側からRESTリクエストを受信したとき
-		connection.on('rest', (reqData) => receivedRest(connection, reqData));
+		// クライアント側からrequestを受信したとき
+		connection.on('request', (reqData) => receivedRequest(connection, reqData));
 
-		// クライアント側から通知の購読リクエストを受信したとき
-		connection.on('notification-connect', reqData => receivedNotificationConnect(connection, reqData));
+		// クライアント側からsubscribeを受信したとき
+		connection.on('subscribe', reqData => receivedSubscribe(connection, reqData));
 
-		// クライアント側からタイムラインの購読リクエストを受信したとき
-		connection.on('timeline-connect', reqData => receivedTimelineConnect(connection, reqData));
-
-		// クライアント側からタイムラインの購読解除リクエストを受信したとき
-		connection.on('timeline-disconnect', reqData => receivedTimelineDisconnect(connection, reqData));
+		// クライアント側からunsubscribeを受信したとき
+		connection.on('unsubscribe', reqData => receivedUnsubscribe(connection, reqData));
 
 		connection.on('default', (reqData) => {
 			connection.error('default', 'invalid event name');
