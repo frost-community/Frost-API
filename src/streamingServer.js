@@ -116,7 +116,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 	async function receivedRequest(connection, reqData) {
 		try {
 			if (reqData == null) {
-				return connection.error('rest', 'request format is invalid');
+				return connection.error('request', 'request format is invalid');
 			}
 
 			let {
@@ -126,7 +126,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 
 			// パラメータを検証
 			if (endpoint == null) {
-				return connection.error('rest', 'request format is invalid');
+				return connection.error('request', 'request format is invalid');
 			}
 
 			// endpointを整形
@@ -151,7 +151,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			}
 
 			if (routeFunc == null) {
-				return connection.error('rest', '"endpoint" parameter is invalid');
+				return connection.error('request', '"endpoint" parameter is invalid');
 			}
 
 			body = sanitize(body);
@@ -171,7 +171,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				return apiContext.response(500, 'not responsed');
 			}
 
-			console.log(`streaming/rest: ${endpoint}, status=${apiContext.statusCode}, from=${connection.user._id}`);
+			console.log(`streaming/request: ${endpoint}, status=${apiContext.statusCode}, from=${connection.user._id}`);
 
 			let response;
 			if (typeof apiContext.data == 'string') {
@@ -182,7 +182,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			}
 
 			if (connection.connected) {
-				return connection.send('rest', {
+				return connection.send('request', {
 					success: true,
 					statusCode: apiContext.statusCode,
 					request: { endpoint, body },
@@ -192,7 +192,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 		}
 		catch (err) {
 			console.log(err);
-			connection.error('rest', 'server error');
+			connection.error('request', 'server error');
 		}
 	}
 
