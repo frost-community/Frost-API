@@ -23,28 +23,6 @@ general-timeline-status:general generalに向けて流されたポストを受�
 home-timeline-status:(userId) そのユーザーのホームTLに向けて流されたポストを受信可能なLocalStreamです
 */
 
-/*
-// イベント受信とその処理を追加: following (follow)
-const eventReciever = new RedisEventReciever('frost-api');
-eventReciever.addListener((data) => {
-	// 対象ユーザーのストリームを購読
-	const stream = apiContext.streams.get(DataTypeIdHelper.build(['stream', 'user-timeline-status', sourceUserId.toString()]));
-	if (stream != null) {
-		stream.addSource(targetUserId.toString()); // この操作は冪等
-	}
-});
-
-// イベント受信とその処理を追加: following (unfollow)
-const eventReciever = new RedisEventReciever('frost-api');
-eventReciever.addListener((data) => {
-	// 対象ユーザーのストリームを購読解除
-	const stream = apiContext.streams.get(DataTypeIdHelper.build(['stream', 'user-timeline-status', soruceUser._id.toString()]));
-	if (stream != null) {
-		stream.removeSource(targetUser._id.toString());
-	}
-});
-*/
-
 /**
  * @param {DirectoryRouter} directoryRouter
  * @param {Map<string, XevPubSub>} streams
@@ -56,8 +34,9 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 	// generate stream for general timeline (global)
 	const generalTLStream = new XevPubSub('frost-api');
 	//const generalTLStreamId = DataTypeIdHelper.build(['stream', 'general-timeline-status', 'general']);
-	const generalTLStreamId = DataTypeIdHelper.build(['timeline', 'general', 'status']);
-	generalTLStream.subscribe(generalTLStreamId);
+	const generalTLStreamId = DataTypeIdHelper.build(['stream', 'timeline', 'chat', 'general']);
+	const generalTLEventId = DataTypeIdHelper.build(['event', 'timeline', 'chat', 'general']);
+	generalTLStream.subscribe(generalTLEventId);
 	streams.set(generalTLStreamId, generalTLStream);
 
 	const tokensService = new TokensService(repository, config);
@@ -65,18 +44,42 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 
 	const eventReciever = new RedisEventEmitter('frost-api', true);
 
-	// RedisEvent受信 posting.chat
-	eventReciever.addListener(DataTypeIdHelper.build(['posting', 'chat']), (data) => {
+	// (RedisEvent受信) redis.posting.chat
+	eventReciever.addListener(DataTypeIdHelper.build(['redis', 'posting', 'chat']), (data) => {
 		// streamに流す
 		const publisher = new XevPubSub('frost-api');
-		publisher.publish(DataTypeIdHelper.build(['timeline', 'user', 'status', data.posting.userId]), data.posting);
-		publisher.publish(DataTypeIdHelper.build(['timeline', 'general', 'status']), data.posting);
+		publisher.publish(DataTypeIdHelper.build(['event', 'timeline', 'chat', 'user', data.posting.userId]), data.posting);
+		publisher.publish(DataTypeIdHelper.build(['event', 'timeline', 'chat', 'general']), data.posting);
 		publisher.dispose();
 	});
 
-	// RedisEvent受信 following
-	eventReciever.addListener(DataTypeIdHelper.build(['following']), (data) => {
+	// (RedisEvent受信) redis.posting.article
+	eventReciever.addListener(DataTypeIdHelper.build(['redis', 'posting', 'article']), (data) => {
+	});
 
+	// (RedisEvent受信) redis.posting.reference
+	eventReciever.addListener(DataTypeIdHelper.build(['redis', 'posting', 'reference']), (data) => {
+	});
+
+	// (RedisEvent受信) redis.following
+	eventReciever.addListener(DataTypeIdHelper.build(['redis', 'following']), (data) => {
+		/*
+
+		// フォロー時
+		// 対象ユーザーのストリームを購読
+		const stream = apiContext.streams.get(DataTypeIdHelper.build(['stream', 'user-timeline-status', sourceUserId.toString()]));
+		if (stream != null) {
+			stream.addSource(targetUserId.toString()); // この操作は冪等
+		}
+
+		// アンフォロー時
+		// 対象ユーザーのストリームを購読解除
+		const stream = apiContext.streams.get(DataTypeIdHelper.build(['stream', 'user-timeline-status', soruceUser._id.toString()]));
+		if (stream != null) {
+			stream.removeSource(targetUser._id.toString());
+		}
+
+		*/
 	});
 
 	/**
@@ -100,7 +103,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 		if (stream.listenerCount() == 0) {
 
 			// stream.general-timeline-statusはストリーム自体の解放は行わない
-			if (DataTypeIdHelper.contain(streamId, ['timeline', 'general', 'status'])) {
+			if (DataTypeIdHelper.contain(streamId, ['stream','timeline', 'chat', 'general'])) {
 				return;
 			}
 
@@ -281,7 +284,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 			}
 			else {
 				// memo: フォローユーザーのuser-timeline-statusストリームを統合したhome-timeline-statusストリームを生成
-				streamId = DataTypeIdHelper.build(['timeline', 'home', 'status', connection.user._id]);
+				streamId = DataTypeIdHelper.build(['stream', 'timeline', 'chat', 'home', connection.user._id]);
 			}
 
 			const index = connection.connectedStreams.findIndex(stream => stream.id == streamId);
@@ -301,12 +304,12 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				// Streamを生成
 				if (stream == null) {
 					stream = new XevPubSub('frost-api');
-					//stream.addSource(DataTypeIdHelper.build(['timeline', 'user', 'status', connection.user._id]));
-					stream.subscribe(DataTypeIdHelper.build(['timeline', 'user', 'status', connection.user._id]));
+					//stream.addSource(DataTypeIdHelper.build(['event', 'timeline', 'chat', 'user', connection.user._id]));
+					stream.subscribe(DataTypeIdHelper.build(['event', 'timeline', 'chat', 'user', connection.user._id]));
 					const followings = await userFollowingsService.findTargets(connection.user._id, { isAscending: false }); // TODO: (全て or ユーザーの購読設定によっては選択的に)
 					for (const following of followings || []) {
 						const followingUserId = following.target.toString();
-						stream.subscribe(DataTypeIdHelper.build(['timeline', 'user', 'status', followingUserId]));
+						stream.subscribe(DataTypeIdHelper.build(['event', 'timeline', 'chat', 'user', followingUserId]));
 					}
 					streams.set(streamId, stream);
 				}
@@ -351,7 +354,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 					timelineType = 'candy';
 				}
 				else {
-					streamId = DataTypeIdHelper.build(['timeline', 'home', 'status', connection.user._id]);
+					streamId = DataTypeIdHelper.build(['stream', 'timeline', 'chat', 'home', connection.user._id]);
 				}
 			}
 			else {

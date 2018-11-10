@@ -56,7 +56,7 @@ exports['create-message'] = async (apiContext) => {
 
 	// RedisEvent posting.chat を発行
 	const eventSender = new RedisEventEmitter('frost-api', false);
-	await eventSender.emit(DataTypeIdHelper.build(['posting', 'chat']), {
+	await eventSender.emit(DataTypeIdHelper.build(['redis', 'posting', 'chat']), {
 		posting: serialized
 	});
 	await eventSender.dispose();
