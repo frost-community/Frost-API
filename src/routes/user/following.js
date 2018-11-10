@@ -1,5 +1,5 @@
-const ApiContext = require('../../../modules/ApiContext');
-const MongoAdapter = require('../../../modules/MongoAdapter');
+const ApiContext = require('../../modules/ApiContext');
+const MongoAdapter = require('../../modules/MongoAdapter');
 const v = require('validator');
 const $ = require('cafy').default;
 
