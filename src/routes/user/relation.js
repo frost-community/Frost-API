@@ -1,5 +1,5 @@
-const ApiContext = require('../../../modules/ApiContext');
-const MongoAdapter = require('../../../modules/MongoAdapter');
+const ApiContext = require('../../modules/ApiContext');
+const MongoAdapter = require('../../modules/MongoAdapter');
 const $ = require('cafy').default;
 
 /** @param {ApiContext} apiContext */

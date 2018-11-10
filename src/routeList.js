@@ -34,28 +34,28 @@ module.exports = [
 	// 指定したユーザーが対象のユーザーをフォローしているかどうかを取得
 	'/user/relation/get', // [old] get /users/:id/followings/:target_id
 
-	// == post ==
+	// == posting ==
 
 	// 短文のポストを作成する
-	'/post/create-message', // [old] post /posts/post_status
+	'/posting/create-chat', // [old] post /posts/post_status
 
 	// 記事のポストを作成する
-	'/post/create-article', // [old] post /posts/post_article
+	'/posting/create-article', // [old] post /posts/post_article
 
 	// 他のポストを参照するポストを作成する
-	'/post/create-reference', // [old] post /posts/post_reference
+	'/posting/create-reference', // [old] post /posts/post_reference
 
 	// idを指定してポストを取得する
-	'/post/get', // [old] get /posts/:id
+	'/posting/get', // [old] get /posts/:id
 
 	// 全てのユーザーを対象とした、一般公開のポストを時系列で複数取得する
-	'/post/timeline/general/list', // [old] get /general/timeline
+	'/posting/timeline/general/list', // [old] get /general/timeline
 
 	// 対象のユーザーが投稿したポストを時系列で複数取得する
-	'/post/timeline/user/list', // [old] get /users/:id/timelines/user
+	'/posting/timeline/user/list', // [old] get /users/:id/timelines/user
 
 	// 対象のユーザーと、そのユーザーがフォローしてるユーザーが投稿したポストを時系列で複数取得する
-	'/post/timeline/home/list', // [old] get /users/:id/timelines/home
+	'/posting/timeline/home/list', // [old] get /users/:id/timelines/home
 
 	// == storage ==
 

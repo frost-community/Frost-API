@@ -24,7 +24,7 @@ exports.get = async (apiContext) => {
 };
 
 /** @param {ApiContext} apiContext */
-exports['create-message'] = async (apiContext) => {
+exports['create-chat'] = async (apiContext) => {
 	await apiContext.proceed({
 		body: {
 			text: { cafy: $().string().range(1, 256).pipe(i => !/^\s*$/.test(i)) },
