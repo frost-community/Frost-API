@@ -93,7 +93,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 
 		// dispose listener
 		const { listener } = connection.connectedStreams[index];
-		stream.removeListener(listener);
+		stream.removeListener('message', listener);
 		connection.connectedStreams.splice(index, 1);
 
 		// dispose stream if no listeners
@@ -284,9 +284,11 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 				streamId = DataTypeIdHelper.build(['timeline', 'home', 'status', connection.user._id]);
 			}
 
-			// expect: Not connected to the stream yet from this connection.
-			if (connection.connectedStreamIds.indexOf(streamId) != -1) {
-				return connection.error('subscribe', `${timelineType} timeline stream is already connected`);
+			const index = connection.connectedStreams.findIndex(stream => stream.id == streamId);
+
+			// expect: Not subscribed to the stream yet from this connection.
+			if (index != -1) {
+				return connection.error('subscribe', `${timelineType} timeline stream is already subscribed`);
 			}
 
 			if (candy) {
@@ -315,13 +317,13 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 		}
 
 		// Streamからのデータをwebsocketに流す
-		function streamHandler(data) {
+		function streamHandler(sourceStreamId, data) {
 			if (connection.connected) {
 				console.log(`streaming/${streamId}`);
 				connection.send('event', { eventType: streamId, resource: data });
 			}
 			else {
-				console.log('not connected');
+				console.log('not subscribed');
 			}
 		}
 		stream.addListener('message', streamHandler);
@@ -330,7 +332,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 		connection.connectedStreams.push({ id: streamId, listener: streamHandler });
 
 		console.log(`streaming/subscribe timeline.${timelineType}`);
-		connection.send('subscribe', { success: true, message: `connected ${timelineType} timeline` });
+		connection.send('subscribe', { success: true, message: `subscribed ${timelineType} timeline` });
 	}
 
 	/**
@@ -358,7 +360,7 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 
 			await disconnectStream(connection, streamId);
 			console.log('streaming/unsubscribe:', streamId);
-			connection.send('unsubscribe', { success: true, message: `disconnected ${timelineType} timeline` });
+			connection.send('unsubscribe', { success: true, message: `unsubscribed ${timelineType} timeline` });
 		}
 		catch (err) {
 			console.log(err);
@@ -431,10 +433,10 @@ module.exports = (http, directoryRouter, streams, repository, config) => {
 		});
 
 		connection.on('close', () => {
-			if (connection.connectedStreamIds != null || connection.connectedStreamHandlers != null) {
+			if (connection.connectedStreams != null) {
 				// 全ての接続済みストリームを購読解除
-				for (const streamId of connection.connectedStreamIds) {
-					disconnectStream(connection, streamId);
+				for (const connectedStream of connection.connectedStreams) {
+					disconnectStream(connection, connectedStream.id);
 				}
 			}
 			console.log(`disconnected streaming. user: ${connection.user._id}`);
