@@ -9,7 +9,7 @@
 - Redis
 
 ## Reference
-Apiary page: [docs.snsfrost.apiary.io](http://docs.snsfrost.apiary.io/)
+Frost-API Wiki: [api docs (ja)](https://github.com/Frost-Dev/Frost-API/wiki/api-docs-(ja))
 
 ## License
 Released under the [MIT](LICENSE) license.
