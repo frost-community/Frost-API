@@ -1,5 +1,5 @@
-const RedisEventEmitter = require('./modules/RedisEventEmitter');
-const XevPubSub = require('./modules/XevPubSub');
+const RedisEventEmitter = require('../modules/RedisEventEmitter');
+const XevPubSub = require('../modules/XevPubSub');
 
 /*
 # 各種変数の説明

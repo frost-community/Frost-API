@@ -1,5 +1,5 @@
 const sanitize = require('mongo-sanitize');
-const ApiContext = require('./modules/ApiContext');
+const ApiContext = require('../modules/ApiContext');
 
 module.exports = (connection, directoryRouter) => {
 
