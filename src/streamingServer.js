@@ -76,7 +76,7 @@ module.exports = (http, directoryRouter, repository, config) => {
 			console.log(`disconnected streaming. user: ${connection.user._id}`);
 		});
 
-		RequestApi(connection, directoryRouter);
+		RequestApi(connection, directoryRouter, repository, config);
 		EventApi(connection, userFollowingsService);
 
 		connection.on('default', (reqData) => {

@@ -1,5 +1,6 @@
 const RedisEventEmitter = require('../modules/RedisEventEmitter');
 const XevPubSub = require('../modules/XevPubSub');
+const DataTypeIdHelper = require('../modules/helpers/DataTypeIdHelper');
 
 /*
 # 各種変数の説明
@@ -275,8 +276,8 @@ module.exports = (connection, userFollowingsService) => {
 	}
 
 	// クライアント側からsubscribeを受信したとき
-	connection.on('subscribe', reqData => receivedSubscribe(connection, reqData));
+	connection.on('subscribe', reqData => receivedSubscribe(reqData));
 
 	// クライアント側からunsubscribeを受信したとき
-	connection.on('unsubscribe', reqData => receivedUnsubscribe(connection, reqData));
+	connection.on('unsubscribe', reqData => receivedUnsubscribe(reqData));
 };

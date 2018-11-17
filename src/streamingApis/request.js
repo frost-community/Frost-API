@@ -1,7 +1,7 @@
 const sanitize = require('mongo-sanitize');
 const ApiContext = require('../modules/ApiContext');
 
-module.exports = (connection, directoryRouter) => {
+module.exports = (connection, directoryRouter, repository, config) => {
 
 	/**
 	 * @param {any} reqData
@@ -90,5 +90,5 @@ module.exports = (connection, directoryRouter) => {
 	}
 
 	// クライアント側からrequestを受信したとき
-	connection.on('request', (reqData) => receivedRequest(connection, reqData));
+	connection.on('request', (reqData) => receivedRequest(reqData));
 };
