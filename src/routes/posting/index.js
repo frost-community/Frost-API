@@ -1,5 +1,6 @@
 const ApiContext = require('../../modules/ApiContext');
-const { RedisEventSender } = require('../../modules/redisEvent');
+const DataTypeIdHelper = require('../../modules/helpers/DataTypeIdHelper');
+const RedisEventEmitter = require('../../modules/RedisEventEmitter');
 const $ = require('cafy').default;
 const MongoAdapter = require('../../modules/MongoAdapter');
 const { getStringSize } = require('../../modules/helpers/GeneralHelper');
@@ -53,10 +54,10 @@ exports['create-chat'] = async (apiContext) => {
 
 	const serialized = await apiContext.postsService.serialize(postStatus, true);
 
-	// event.posting.chat を発行
-	const eventSender = new RedisEventSender('frost-api');
-	await eventSender.publish(EventIdHelper.buildEventId(['event', 'posting', 'chat']), {
-		posting: postStatus
+	// RedisEvent posting.chat を発行
+	const eventSender = new RedisEventEmitter('frost-api', false);
+	await eventSender.emit(DataTypeIdHelper.build(['redis', 'posting', 'chat']), {
+		posting: serialized
 	});
 	await eventSender.dispose();
 
