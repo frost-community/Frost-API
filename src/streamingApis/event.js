@@ -225,13 +225,21 @@ module.exports = (connection, userFollowingsService) => {
 		}
 
 		// Streamからのデータをwebsocketに流す
-		function streamListener(sourceStreamId, data) {
+		function streamListener(eventId, data) {
 			if (connection.connected) {
 				console.log(`streaming/${streamId}`);
-				connection.send('event', { eventType: streamId, resource: data });
+				let eventType;
+				const parsed = DataTypeIdHelper.parse(streamId);
+				if (DataTypeIdHelper.contain(streamId, ['stream', 'timeline', 'chat'])) {
+					eventType = ['timeline', 'chat', parsed[3]];
+				}
+				else {
+					throw new Error(`unknown streamId: ${streamId}`);
+				}
+				connection.send('event', { eventType: eventType, resource: data });
 			}
 			else {
-				console.log('not subscribed');
+				console.log('not connected');
 			}
 		}
 		stream.addListener('message', streamListener);

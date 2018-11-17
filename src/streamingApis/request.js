@@ -14,7 +14,8 @@ module.exports = (connection, directoryRouter, repository, config) => {
 
 			let {
 				endpoint,
-				body
+				params,
+				id
 			} = reqData;
 
 			// パラメータを検証
@@ -48,11 +49,11 @@ module.exports = (connection, directoryRouter, repository, config) => {
 				return connection.error('request', '"endpoint" parameter is invalid');
 			}
 
-			body = sanitize(body);
+			params = sanitize(params);
 
 			// ApiContextを構築
 			const apiContext = new ApiContext(repository, config, {
-				body: body,
+				body: params,
 				user: connection.user,
 				authInfo: connection.authInfo
 			});
@@ -76,10 +77,10 @@ module.exports = (connection, directoryRouter, repository, config) => {
 
 			if (connection.connected) {
 				return connection.send('request', {
+					id: id,
 					success: true,
 					statusCode: apiContext.statusCode,
-					request: { endpoint, body },
-					response
+					resource: response
 				});
 			}
 		}
