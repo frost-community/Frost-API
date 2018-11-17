@@ -31,7 +31,6 @@ module.exports = async () => {
 			return;
 		}
 
-		const streams = new Map(); // memo: keyはChannelName
 		const lock = new AsyncLock();
 
 		const dbConfig = config.database;
@@ -81,7 +80,7 @@ module.exports = async () => {
 			req.body = sanitize(req.body);
 
 			// apiContext
-			req.apiContext = new ApiContext(repository, config, { streams, lock, body: req.body });
+			req.apiContext = new ApiContext(repository, config, { lock, body: req.body });
 
 			// cors headers
 			res.header('Access-Control-Allow-Origin', '*');
@@ -121,7 +120,7 @@ module.exports = async () => {
 			console.log(`listen on port: ${config.port}`);
 		});
 
-		require('./streamingServer')(http, directoryRouter, streams, repository, config);
+		require('./streamingServer')(http, directoryRouter, repository, config);
 	}
 	catch (err) {
 		console.log('Unprocessed Server Error:', err);
