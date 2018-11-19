@@ -13,7 +13,7 @@ class ApiContext {
 	/**
 	 * @param {MongoAdapter} repository
 	 * @param {} config
-	 * @param {{user, authInfo, targetVersion, streams, lock: AsyncLock, body}} options
+	 * @param {{user, authInfo, targetVersion, streams, lock: AsyncLock, params}} options
 	*/
 	constructor(repository, config, options) {
 		this.repository = repository;
@@ -24,7 +24,7 @@ class ApiContext {
 		this.targetVersion = options.targetVersion;
 		this.streams = options.streams;
 		this.lock = options.lock;
-		this.body = options.body || {};
+		this.params = options.params || {};
 
 		// service instances
 		this.usersService = new UsersService(repository, config);
@@ -61,29 +61,29 @@ class ApiContext {
 			return this.response(403, { message: 'you do not have some scopes', details: missingScopes });
 		}
 
-		// body
+		// params
 
-		if (rule.body == null) {
-			rule.body = [];
+		if (rule.params == null) {
+			rule.params = [];
 		}
 
-		for (const paramName of Object.keys(rule.body)) {
-			if (this.body[paramName] == null) {
-				const required = rule.body[paramName].default === undefined;
+		for (const paramName of Object.keys(rule.params)) {
+			if (this.params[paramName] == null) {
+				const required = rule.params[paramName].default === undefined;
 				if (required) {
-					return this.response(400, `body parameter '${paramName}' is required`);
+					return this.response(400, `parameter '${paramName}' is required`);
 				}
 				else {
-					this.body[paramName] = rule.body[paramName].default;
+					this.params[paramName] = rule.params[paramName].default;
 				}
 			}
 			else {
-				if (rule.body[paramName].cafy == null) {
+				if (rule.params[paramName].cafy == null) {
 					throw new Error('cafy is required');
 				}
 
-				if (rule.body[paramName].cafy.nok(this.body[paramName])) {
-					return this.response(400, `body parameter '${paramName}' is invalid`);
+				if (rule.params[paramName].cafy.nok(this.params[paramName])) {
+					return this.response(400, `parameter '${paramName}' is invalid`);
 				}
 			}
 		}

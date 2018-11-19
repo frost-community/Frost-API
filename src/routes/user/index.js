@@ -7,7 +7,7 @@ const EventIdHelper = require('../../modules/helpers/EventIdHelper');
 /** @param {ApiContext} apiContext */
 exports.create = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		params: {
 			screenName: { cafy: $().string() },
 			password: { cafy: $().string() },
 			description: { cafy: $().string().range(0, 256), default: '' },
@@ -21,7 +21,7 @@ exports.create = async (apiContext) => {
 		password,
 		name,
 		description
-	} = apiContext.body;
+	} = apiContext.params;
 
 	// screenName
 	if (!apiContext.usersService.validFormatScreenName(screenName)) {
@@ -74,14 +74,14 @@ exports.list = async (apiContext) => {
 /** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		params: {
 			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
 		},
 		scopes: ['user.read']
 	});
 	if (apiContext.responsed) return;
 
-	const user = await apiContext.repository.findById('users', apiContext.body.userId);
+	const user = await apiContext.repository.findById('users', apiContext.params.userId);
 	if (user == null) {
 		apiContext.response(404, 'user not found');
 		return;
@@ -93,19 +93,19 @@ exports.get = async (apiContext) => {
 /** @param {ApiContext} apiContext */
 exports.get2 = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		params: {
 			'screen_names': { cafy: $().string(), default: '' }
 		},
 		scopes: ['user.read']
 	});
 	if (apiContext.responsed) return;
 
-	if (apiContext.body.screen_names == '') {
+	if (apiContext.params.screen_names == '') {
 		apiContext.response(400, 'screen_names is enpty');
 		return;
 	}
 
-	const screenNames = apiContext.body.screen_names.split(',');
+	const screenNames = apiContext.params.screen_names.split(',');
 
 	if (screenNames.lenth > 100) {
 		apiContext.response(400, 'screen_names is limit over(100 items or less)');
@@ -135,7 +135,7 @@ exports.get2 = async (apiContext) => {
 /** @param {ApiContext} apiContext */
 exports.update = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		params: {
 			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
 			screenName: { cafy: $().string(), default: null },
 			description: { cafy: $().string().range(0, 256), default: null },
@@ -146,7 +146,7 @@ exports.update = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const { userId, screenName, name, description, iconFileId } = apiContext.body;
+	const { userId, screenName, name, description, iconFileId } = apiContext.params;
 	const data = { };
 
 	// アイコンを設定するときは、storage.readスコープを要求する
@@ -232,7 +232,7 @@ exports.update = async (apiContext) => {
 /** @param {ApiContext} apiContext */
 exports.follow = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		params: {
 			sourceUserId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
 			targetUserId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
 			message: { cafy: $().string().pipe(i => !/^\s*$/.test(i) || /^[\s\S]{1,64}$/.test(i)), default: null }
@@ -241,7 +241,7 @@ exports.follow = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const { sourceUserId, targetUserId, message } = apiContext.body;
+	const { sourceUserId, targetUserId, message } = apiContext.params;
 
 	// fetch: source user
 	const sourceUser = await apiContext.repository.findById('users', sourceUserId);
@@ -299,7 +299,7 @@ exports.follow = async (apiContext) => {
 /** @param {ApiContext} apiContext */
 exports.unfollow = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		params: {
 			sourceUserId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
 			targetUserId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
 		},
@@ -307,7 +307,7 @@ exports.unfollow = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const { sourceUserId, targetUserId, message } = apiContext.body;
+	const { sourceUserId, targetUserId, message } = apiContext.params;
 
 	// fetch: source user
 	const sourceUser = await apiContext.repository.findById('users', sourceUserId);

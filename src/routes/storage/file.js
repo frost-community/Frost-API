@@ -18,7 +18,7 @@ const supportedMimeTypes = [
  * @param {ApiContext} apiContext */
 exports.add = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		params: {
 			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
 			fileData: { cafy: $().string().pipe(i => validator.isBase64(i)) },
 			accessRight: {
@@ -32,7 +32,7 @@ exports.add = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	// user
-	const user = await apiContext.repository.findById('users', apiContext.body.userId);
+	const user = await apiContext.repository.findById('users', apiContext.params.userId);
 	if (user == null) {
 		apiContext.response(404, 'user as premise not found');
 		return;
@@ -44,10 +44,10 @@ exports.add = async (apiContext) => {
 		return;
 	}
 
-	const accessRight = apiContext.body.accessRight;
+	const accessRight = apiContext.params.accessRight;
 
 	// file data
-	const fileDataBuffer = Buffer.from(apiContext.body.fileData, 'base64');
+	const fileDataBuffer = Buffer.from(apiContext.params.fileData, 'base64');
 
 	// file type
 	const fileType = getFileType(fileDataBuffer);
@@ -96,7 +96,7 @@ exports.add = async (apiContext) => {
 */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		params: {
 			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
 			fileId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
 		},
@@ -104,7 +104,7 @@ exports.get = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const { userId, fileId } = apiContext.body;
+	const { userId, fileId } = apiContext.params;
 
 	// user
 	const user = await apiContext.repository.findById('users', userId);
@@ -158,7 +158,7 @@ exports.get = async (apiContext) => {
  * @param {ApiContext} apiContext */
 exports.list = async (apiContext) => { // TODO: フィルター指定
 	await apiContext.proceed({
-		body: {
+		params: {
 			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
 			limit: { cafy: $().string().pipe(i => validator.isInt(i, { min: 0, max: 100 })), default: '30' },
 			next: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null },
@@ -168,13 +168,13 @@ exports.list = async (apiContext) => { // TODO: フィルター指定
 	});
 	if (apiContext.responsed) return;
 
-	// convert body value
-	const limit = validator.toInt(apiContext.body.limit);
-	const next = apiContext.body.next != null ? MongoAdapter.buildId(apiContext.body.next) : null;
-	const includeFileData = validator.toBoolean(apiContext.body.includeFileData);
+	// convert params value
+	const limit = validator.toInt(apiContext.params.limit);
+	const next = apiContext.params.next != null ? MongoAdapter.buildId(apiContext.params.next) : null;
+	const includeFileData = validator.toBoolean(apiContext.params.includeFileData);
 
 	// user
-	const user = await apiContext.repository.findById('users', apiContext.body.userId);
+	const user = await apiContext.repository.findById('users', apiContext.params.userId);
 	if (user == null) {
 		apiContext.response(404, 'user as premise not found');
 		return;
@@ -206,7 +206,7 @@ exports.list = async (apiContext) => { // TODO: フィルター指定
 */
 exports.delete = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		params: {
 			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
 			fileId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
 		},
@@ -214,7 +214,7 @@ exports.delete = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const { userId, fileId } = apiContext.body;
+	const { userId, fileId } = apiContext.params;
 
 	// user
 	const user = await apiContext.repository.findById('users', userId);

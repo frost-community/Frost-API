@@ -5,7 +5,7 @@ const $ = require('cafy').default;
 /** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		params: {
 			sourceUserId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
 			targetUserId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
 		},
@@ -13,7 +13,7 @@ exports.get = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const { sourceUserId, targetUserId } = apiContext.body;
+	const { sourceUserId, targetUserId } = apiContext.params;
 
 	// fetch: source user
 	const sourceUser = await apiContext.repository.findById('users', sourceUserId);
