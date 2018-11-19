@@ -46,12 +46,13 @@ exports.create = async (apiContext) => {
 
 /** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
+	const { tokensService } = apiContext;
 	await apiContext.proceed({
 		body: {
 			applicationId: { cafy: $().string(), default: null },
 			userId: { cafy: $().string(), default: null },
 			scopes: { cafy: $().string(), default: null },
-			accessToken: { cafy: $().string(), default: null },
+			accessToken: { cafy: $().string().pipe(tokensService.validateFormat), default: null },
 		},
 		scopes: ['auth.host']
 	});
@@ -61,7 +62,7 @@ exports.get = async (apiContext) => {
 
 	let token;
 	if (accessToken != null) {
-		token = await apiContext.tokensService.findByAccessToken(accessToken);
+		token = await tokensService.findByAccessToken(accessToken);
 	}
 	else {
 		if (applicationId == null) {
