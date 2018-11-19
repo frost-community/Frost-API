@@ -1,3 +1,4 @@
+const $ = require('cafy').default;
 const RedisEventEmitter = require('../modules/RedisEventEmitter');
 const XevPubSub = require('../modules/XevPubSub');
 const DataTypeIdHelper = require('../modules/helpers/DataTypeIdHelper');
@@ -114,7 +115,18 @@ module.exports = (connection, userFollowingsService) => {
 	*/
 	async function receivedSubscribe(reqData) {
 		try {
-			const { sourceType } = reqData;
+			if ($().object().nok(reqData)) {
+				return connection.error('event.subscribe', 'invalid data');
+			}
+
+			const {
+				id,
+				sourceType
+			} = reqData;
+
+			if ($().or($().string(), $().number()).nok(id)) {
+				return connection.error('event.subscribe', 'invalid property', { propertyName: 'id' });
+			}
 
 			if (sourceType == 'notification') {
 				subscribeNotification(reqData);
@@ -123,12 +135,12 @@ module.exports = (connection, userFollowingsService) => {
 				subscribeTimeline(reqData, 'home');
 			}
 			else {
-				connection.error('subscribe', 'invalid sourceType');
+				return connection.error('event.subscribe', 'invalid property', { propertyName: 'sourceType' });
 			}
 		}
 		catch (err) {
 			console.log(err);
-			connection.error('subscribe', 'server error');
+			connection.error('event.subscribe', 'server error');
 		}
 	}
 
@@ -137,7 +149,14 @@ module.exports = (connection, userFollowingsService) => {
 	*/
 	async function receivedUnsubscribe(reqData) {
 		try {
-			const { sourceType } = reqData;
+			const {
+				id,
+				sourceType
+			} = reqData;
+
+			if ($().or($().string(), $().number()).nok(id)) {
+				return connection.error('event.unsubscribe', 'invalid property', { propertyName: 'id' });
+			}
 
 			if (sourceType == 'notification') {
 				unsubscribeNotification(reqData);
@@ -146,12 +165,12 @@ module.exports = (connection, userFollowingsService) => {
 				unsubscribeTimeline(reqData, 'home');
 			}
 			else {
-				connection.error('unsubscribe', 'invalid sourceType');
+				return connection.error('event.unsubscribe', 'invalid property', { propertyName: 'sourceType' });
 			}
 		}
 		catch (err) {
 			console.log(err);
-			connection.error('unsubscribe', 'server error');
+			connection.error('event.unsubscribe', 'server error');
 		}
 	}
 
@@ -159,14 +178,14 @@ module.exports = (connection, userFollowingsService) => {
 	 * @param {any} reqData
 	*/
 	async function subscribeNotification(reqData) {
-		return connection.error('subscribe', 'comming soon'); // TODO
+		return connection.error('event.subscribe', 'comming soon'); // TODO
 	}
 
 	/**
 	 * @param {any} reqData
 	*/
 	async function unsubscribeNotification(reqData) {
-		return connection.error('unsubscribe', 'comming soon'); // TODO
+		return connection.error('event.unsubscribe', 'comming soon'); // TODO
 	}
 
 	/**
@@ -192,11 +211,11 @@ module.exports = (connection, userFollowingsService) => {
 				streamId = DataTypeIdHelper.build(['stream', 'timeline', 'chat', 'home', connection.user._id]);
 			}
 
-			const index = connectedStreams.findIndex(stream => stream.id == streamId);
+			const index = connectedStreams.findIndex(streamInfo => streamInfo.id == streamId);
 
 			// expect: Not subscribed to the stream yet from this connection.
 			if (index != -1) {
-				return connection.error('subscribe', `${timelineType} timeline stream is already subscribed`);
+				return connection.error('event.subscribe', `${timelineType} timeline is already subscribed`);
 			}
 
 			if (candy) {
@@ -221,22 +240,22 @@ module.exports = (connection, userFollowingsService) => {
 			}
 		}
 		else {
-			return connection.error('subscribe', `timeline type "${timelineType}" is invalid`);
+			return connection.error('event.subscribe', `timeline type "${timelineType}" is invalid`);
 		}
 
 		// Streamからのデータをwebsocketに流す
 		function streamListener(eventId, data) {
 			if (connection.connected) {
-				console.log(`streaming/${streamId}`);
-				let eventType;
+				console.log(`(streaming)event: ${streamId}`);
+				let elements;
 				const parsed = DataTypeIdHelper.parse(streamId);
 				if (DataTypeIdHelper.contain(streamId, ['stream', 'timeline', 'chat'])) {
-					eventType = ['timeline', 'chat', parsed[3]];
+					elements = ['timeline', 'chat', parsed[3]];
 				}
 				else {
 					throw new Error(`unknown streamId: ${streamId}`);
 				}
-				connection.send('event', { eventType: eventType, resource: data });
+				connection.send('event', { eventType: DataTypeIdHelper.build(elements), resource: data });
 			}
 			else {
 				console.log('not connected');
@@ -247,8 +266,8 @@ module.exports = (connection, userFollowingsService) => {
 		// connectedStreamsに追加
 		connectedStreams.push({ id: streamId, listener: streamListener });
 
-		console.log(`streaming/subscribe timeline.${timelineType}`);
-		connection.send('subscribe', { success: true, message: `subscribed ${timelineType} timeline` });
+		console.log(`(streaming)event.subscribe: timeline.${timelineType}`);
+		connection.send('event.subscribe', { success: true, message: `subscribed ${timelineType} timeline` });
 	}
 
 	/**
@@ -270,22 +289,29 @@ module.exports = (connection, userFollowingsService) => {
 				}
 			}
 			else {
-				return connection.error('unsubscribe', `timeline type "${timelineType}" is invalid`);
+				return connection.error('event.unsubscribe', `timeline type "${timelineType}" is invalid`);
+			}
+
+			const index = connectedStreams.findIndex(streamInfo => streamInfo.id == streamId);
+
+			// expect: Subscribed to the stream from this connection.
+			if (index == -1) {
+				return connection.error('event.unsubscribe', `${timelineType} timeline is not subscribed yet`);
 			}
 
 			await disposeStream(streamId);
-			console.log('streaming/unsubscribe:', streamId);
-			connection.send('unsubscribe', { success: true, message: `unsubscribed ${timelineType} timeline` });
+			console.log('(streaming)event.unsubscribe:', streamId);
+			connection.send('event.unsubscribe', { success: true, message: `unsubscribed ${timelineType} timeline` });
 		}
 		catch (err) {
 			console.log(err);
-			connection.error('unsubscribe', 'server error');
+			connection.error('event.unsubscribe', 'server error');
 		}
 	}
 
 	// クライアント側からsubscribeを受信したとき
-	connection.on('subscribe', reqData => receivedSubscribe(reqData));
+	connection.on('event.subscribe', reqData => receivedSubscribe(reqData));
 
 	// クライアント側からunsubscribeを受信したとき
-	connection.on('unsubscribe', reqData => receivedUnsubscribe(reqData));
+	connection.on('event.unsubscribe', reqData => receivedUnsubscribe(reqData));
 };

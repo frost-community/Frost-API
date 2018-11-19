@@ -2,6 +2,7 @@ const WebSocket = require('websocket');
 const events = require('websocket-events');
 const MongoAdapter = require('./modules/MongoAdapter');
 const { DirectoryRouter } = require('./modules/directoryRouter');
+const $ = require('cafy').default;
 const TokensService = require('./services/TokensService');
 const UserFollowingsService = require('./services/UserFollowingsService');
 const RequestApi = require('./streamingApis/request');
@@ -18,17 +19,16 @@ module.exports = (http, directoryRouter, repository, config) => {
 	const userFollowingsService = new UserFollowingsService(repository, config);
 
 	server.on('request', async request => {
-		const query = request.resourceURL.query;
 
 		// verification
-		const accessToken = query.access_token;
-		if (accessToken == null) {
-			return request.reject(400, 'access_token parameter is empty');
+		const accessToken = request.resourceURL.query.access_token;
+		if ($().string().pipe(tokensService.validateFormat).nok(accessToken)) {
+			return request.reject(400, 'invalid param: access_token');
 		}
 
 		const token = await tokensService.findByAccessToken(accessToken);
 		if (token == null) {
-			return request.reject(400, 'access_token parameter is invalid');
+			return request.reject(400, 'invalid param: access_token');
 		}
 
 		const [user, application] = await Promise.all([
@@ -65,15 +65,15 @@ module.exports = (http, directoryRouter, repository, config) => {
 			}
 
 			if (err.userEventError) {
-				connection.error('default', 'request format is invalid');
+				connection.error('default', 'invalid json format');
 			}
 			else {
-				console.log('streaming error:', err);
+				console.log('(streaming)connection error:', err);
 			}
 		});
 
 		connection.on('close', () => {
-			console.log(`disconnected streaming. user: ${connection.user._id}`);
+			console.log(`(streaming)disconnected: userId=${connection.user._id}`);
 		});
 
 		RequestApi(connection, directoryRouter, repository, config);
@@ -83,7 +83,7 @@ module.exports = (http, directoryRouter, repository, config) => {
 			connection.error('default', 'invalid event name');
 		});
 
-		console.log(`connected streaming. user: ${connection.user._id}`);
+		console.log(`(streaming)connected: userId=${connection.user._id}`);
 	});
 
 	console.log('streaming server is ready.');

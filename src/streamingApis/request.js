@@ -1,3 +1,4 @@
+const $ = require('cafy').default;
 const sanitize = require('mongo-sanitize');
 const ApiContext = require('../modules/ApiContext');
 
@@ -8,22 +9,27 @@ module.exports = (connection, directoryRouter, repository, config) => {
 	*/
 	async function receivedRequest(reqData) {
 		try {
-			if (reqData == null) {
-				return connection.error('request', 'request format is invalid');
+			if ($().object().nok(reqData)) {
+				return connection.error('request', 'invalid data');
 			}
 
 			let {
+				id,
 				endpoint,
 				params,
-				id
 			} = reqData;
 
-			// パラメータを検証
-			if (endpoint == null) {
-				return connection.error('request', 'request format is invalid');
+			// param: id
+
+			if ($().optional.or($().string(), $().number()).nok(id)) {
+				return connection.error('request', 'invalid property', { propertyName: 'id' });
 			}
 
-			// endpointを整形
+			// param: endpoint
+
+			if ($().string().nok(endpoint)) {
+				return connection.error('request', 'invalid property', { propertyName: 'endpoint' });
+			}
 			if (endpoint == '') {
 				endpoint = '/';
 			}
@@ -33,7 +39,6 @@ module.exports = (connection, directoryRouter, repository, config) => {
 
 			// 対象Routeのモジュールを取得
 			let routeFunc;
-
 			try {
 				const route = directoryRouter.findRoute(endpoint);
 				if (route != null) {
@@ -41,15 +46,19 @@ module.exports = (connection, directoryRouter, repository, config) => {
 				}
 			}
 			catch (err) {
-				console.error('streaming/request:', 'failed to parse route info.');
+				console.error('(streaming)request:', 'failed to parse route info.');
 				console.error(err);
 			}
-
 			if (routeFunc == null) {
-				return connection.error('request', '"endpoint" parameter is invalid');
+				return connection.error('request', 'invalid property', { propertyName: 'endpoint' });
 			}
 
-			params = sanitize(params);
+			// param: params
+
+			if ($().optional.object().nok(params)) {
+				return connection.error('request', 'invalid property', { propertyName: 'params' });
+			}
+			params = sanitize(params || {});
 
 			// ApiContextを構築
 			const apiContext = new ApiContext(repository, config, {
@@ -65,7 +74,7 @@ module.exports = (connection, directoryRouter, repository, config) => {
 				return apiContext.response(500, 'not responsed');
 			}
 
-			console.log('streaming/request:', `${endpoint}, status=${apiContext.statusCode}, from=${connection.user._id}`);
+			console.log('(streaming)request:', `${endpoint}, status=${apiContext.statusCode}, from=${connection.user._id}`);
 
 			let response;
 			if (typeof apiContext.data == 'string') {
@@ -85,7 +94,7 @@ module.exports = (connection, directoryRouter, repository, config) => {
 			}
 		}
 		catch (err) {
-			console.error('streaming/request:', err);
+			console.error('(streaming)request:', err);
 			connection.error('request', 'server error');
 		}
 	}
