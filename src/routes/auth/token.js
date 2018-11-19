@@ -4,7 +4,7 @@ const $ = require('cafy').default;
 /** @param {ApiContext} apiContext */
 exports.create = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		params: {
 			applicationId: { cafy: $().string() },
 			userId: { cafy: $().string() },
 			scopes: { cafy: $().array($().string()) },
@@ -13,7 +13,7 @@ exports.create = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const { applicationId, userId, scopes } = apiContext.body;
+	const { applicationId, userId, scopes } = apiContext.params;
 
 	const application = await apiContext.repository.findById('applications', applicationId);
 	if (application == null) {
@@ -48,7 +48,7 @@ exports.create = async (apiContext) => {
 exports.get = async (apiContext) => {
 	const { tokensService } = apiContext;
 	await apiContext.proceed({
-		body: {
+		params: {
 			applicationId: { cafy: $().string(), default: null },
 			userId: { cafy: $().string(), default: null },
 			scopes: { cafy: $().string(), default: null },
@@ -58,7 +58,7 @@ exports.get = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const { applicationId, userId, scopes, accessToken } = apiContext.body;
+	const { applicationId, userId, scopes, accessToken } = apiContext.params;
 
 	let token;
 	if (accessToken != null) {

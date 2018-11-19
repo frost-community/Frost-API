@@ -6,7 +6,7 @@ const $ = require('cafy').default;
 /** @param {ApiContext} apiContext */
 exports.create = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		params: {
 			name: { cafy: $().string().min(1).max(32) },
 			description: { cafy: $().string().max(256), default: '' },
 			scopes: { cafy: $().array($().string()).unique().each(scope => {
@@ -17,7 +17,7 @@ exports.create = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const { name, description, scopes } = apiContext.body;
+	const { name, description, scopes } = apiContext.params;
 
 	if (!await apiContext.applicationsService.nonDuplicatedName(name)) {
 		apiContext.response(400, 'already exists name');
@@ -36,7 +36,7 @@ exports.create = async (apiContext) => {
 /** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		params: {
 			applicationId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
 		},
 		scopes: ['app.read']
@@ -45,7 +45,7 @@ exports.get = async (apiContext) => {
 
 	let application;
 	try {
-		application = await apiContext.repository.findById('applications', apiContext.body.applicationId);
+		application = await apiContext.repository.findById('applications', apiContext.params.applicationId);
 	}
 	catch (err) {
 		console.log(err);

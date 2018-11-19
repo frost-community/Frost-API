@@ -5,14 +5,14 @@ const $ = require('cafy').default;
 /** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		params: {
 			applicationId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
 		},
 		scopes: ['app.host']
 	});
 	if (apiContext.responsed) return;
 
-	const application = await apiContext.repository.findById('applications', apiContext.body.applicationId);
+	const application = await apiContext.repository.findById('applications', apiContext.params.applicationId);
 	if (application == null) {
 		apiContext.response(404, 'application as premise not found');
 		return;
@@ -31,14 +31,14 @@ exports.get = async (apiContext) => {
 /** @param {ApiContext} apiContext */
 exports.create = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		params: {
 			applicationId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
 		},
 		scopes: ['app.host']
 	});
 	if (apiContext.responsed) return;
 
-	const application = await apiContext.repository.findById('applications', apiContext.body.applicationId);
+	const application = await apiContext.repository.findById('applications', apiContext.params.applicationId);
 	if (application == null) {
 		apiContext.response(404, 'application as premise not found');
 		return;

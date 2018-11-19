@@ -4,7 +4,7 @@ const $ = require('cafy').default;
 /** @param {ApiContext} apiContext */
 exports.validate = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		params: {
 			screenName: { cafy: $().string() },
 			password: { cafy: $().string() }
 		},
@@ -12,7 +12,7 @@ exports.validate = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const { screenName, password } = apiContext.body;
+	const { screenName, password } = apiContext.params;
 
 	if (!apiContext.usersService.validFormatScreenName(screenName)) {
 		apiContext.response(200, { valid: false });

@@ -80,7 +80,7 @@ module.exports = async () => {
 			req.body = sanitize(req.body);
 
 			// apiContext
-			req.apiContext = new ApiContext(repository, config, { lock, body: req.body });
+			req.apiContext = new ApiContext(repository, config, { lock, params: req.body });
 
 			// cors headers
 			res.header('Access-Control-Allow-Origin', '*');

@@ -6,7 +6,7 @@ const $ = require('cafy').default;
 /** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		params: {
 			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
 		},
 		scopes: ['storage.read']
@@ -14,7 +14,7 @@ exports.get = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	// user
-	const user = await apiContext.repository.findById('users', apiContext.body.userId);
+	const user = await apiContext.repository.findById('users', apiContext.params.userId);
 	if (user == null) {
 		apiContext.response(404, 'user as premise not found');
 		return;

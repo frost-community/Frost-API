@@ -8,14 +8,14 @@ const { getStringSize } = require('../../modules/helpers/GeneralHelper');
 /** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		params: {
 			postId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
 		},
 		scopes: ['post.read']
 	});
 	if (apiContext.responsed) return;
 
-	const post = await apiContext.repository.findById('posts', apiContext.body.postId);
+	const post = await apiContext.repository.findById('posts', apiContext.params.postId);
 	if (post == null) {
 		apiContext.response(404, 'post not found');
 		return;
@@ -27,7 +27,7 @@ exports.get = async (apiContext) => {
 /** @param {ApiContext} apiContext */
 exports['create-chat'] = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		params: {
 			text: { cafy: $().string().range(1, 256).pipe(i => !/^\s*$/.test(i)) },
 			attachments: { cafy: $().array($().string()).unique().max(4).each(i => MongoAdapter.validateId(i)), default: [] }
 		},
@@ -36,8 +36,8 @@ exports['create-chat'] = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	const userId = apiContext.user._id;
-	const text = apiContext.body.text;
-	const attachmentIds = apiContext.body.attachments.map(i => MongoAdapter.buildId(i));
+	const text = apiContext.params.text;
+	const attachmentIds = apiContext.params.attachments.map(i => MongoAdapter.buildId(i));
 
 	// check existing files
 	const fileCount = await apiContext.repository.count('storageFiles', { _id: { $in: attachmentIds } });
@@ -67,7 +67,7 @@ exports['create-chat'] = async (apiContext) => {
 /** @param {ApiContext} apiContext */
 exports['create-article'] = async (apiContext) => {
 	await apiContext.proceed({
-		body: {
+		params: {
 			title: { cafy: $().string() },
 			text: { cafy: $().string() }
 		},
@@ -75,7 +75,7 @@ exports['create-article'] = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const { title, text } = apiContext.body;
+	const { title, text } = apiContext.params;
 
 	if (/^\s*$/.test(title) || getStringSize(text) > 64) {
 		apiContext.response(400, 'title is invalid format. max 64bytes');
@@ -99,7 +99,7 @@ exports['create-article'] = async (apiContext) => {
 /** @param {ApiContext} apiContext */
 exports['create-reference'] = async (apiContext) => {
 	await apiContext.proceed({
-		body: {},
+		params: { },
 		scopes: ['post.write']
 	});
 	if (apiContext.responsed) return;
