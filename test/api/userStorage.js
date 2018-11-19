@@ -62,8 +62,7 @@ describe('User Storage API', () => {
 				for (let i = 0; i < 4; i++) {
 					context = new ApiContext(db, config, {
 						lock: lock,
-						params: { id: user._id.toString() },
-						body: { accessRight: { level: 'public' }, fileData: testData64 },
+						params: { id: user._id.toString(), accessRight: { level: 'public' }, fileData: testData64 },
 						headers: { 'X-Api-Version': 1 },
 						testMode: true
 					});
@@ -98,8 +97,7 @@ describe('User Storage API', () => {
 				it('正しくリクエストされた場合は成功する(1件、public)', async () => {
 					const context = new ApiContext(db, config, {
 						lock: lock,
-						params: { id: user._id.toString() },
-						body: { accessRight: { level: 'public' }, fileData: testData64 },
+						params: { id: user._id.toString(), accessRight: { level: 'public' }, fileData: testData64 },
 						headers: { 'X-Api-Version': 1 },
 						testMode: true
 					});
@@ -134,8 +132,7 @@ describe('User Storage API', () => {
 					for (let i = 0; i < count; i++) {
 						const context = new ApiContext(db, config, {
 							lock: lock,
-							params: { id: user._id.toString() },
-							body: { accessRight: { level: 'public' }, fileData: testData64 },
+							params: { id: user._id.toString(), accessRight: { level: 'public' }, fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
 							user,
 							authInfo
@@ -173,8 +170,7 @@ describe('User Storage API', () => {
 				it('fileDataが空のときは失敗する', async () => {
 					const context = new ApiContext(db, config, {
 						lock: lock,
-						params: { id: user._id.toString() },
-						body: { accessRight: { level: 'public' }, fileData: '' },
+						params: { id: user._id.toString(), accessRight: { level: 'public' }, fileData: '' },
 						headers: { 'X-Api-Version': 1 },
 						user,
 						authInfo
@@ -182,7 +178,7 @@ describe('User Storage API', () => {
 					await routeFiles.post(context);
 
 					assert(context.data != null, 'no response');
-					assert(context.statusCode == 400 && context.data.message == 'body parameter \'fileData\' is invalid', `api error: ${context.data.message}`);
+					assert(context.statusCode == 400 && context.data.message == 'parameter \'fileData\' is invalid', `api error: ${context.data.message}`);
 				});
 
 			});
@@ -193,8 +189,7 @@ describe('User Storage API', () => {
 					for (let i = 0; i < 4; i++) {
 						context = new ApiContext(db, config, {
 							lock: lock,
-							params: { id: user._id.toString() },
-							body: { accessRight: { level: 'public' }, fileData: testData64 },
+							params: { id: user._id.toString(), accessRight: { level: 'public' }, fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
 							user,
 							authInfo
@@ -237,8 +232,7 @@ describe('User Storage API', () => {
 					it('正しくリクエストされた場合は成功する', async () => {
 						const contextFile = new ApiContext(db, config, {
 							lock: lock,
-							params: { id: user._id.toString() },
-							body: { accessRight: { level: 'public' }, fileData: testData64 },
+							params: { id: user._id.toString(), accessRight: { level: 'public' }, fileData: testData64 },
 							headers: { 'X-Api-Version': 1 },
 							user,
 							authInfo

@@ -46,7 +46,7 @@ describe('Applications API', () => {
 		describe('[POST]', () => {
 			it('正しくリクエストされた場合は成功する', async () => {
 				const context = new ApiContext(db, config, {
-					body: {
+					params: {
 						name: 'temp',
 						description: 'hogehoge',
 						scopes: []
@@ -72,7 +72,7 @@ describe('Applications API', () => {
 
 			it('nameが空もしくは33文字以上の場合は失敗する', async () => {
 				let context = new ApiContext(db, config, {
-					body: {
+					params: {
 						name: '',
 						description: 'hogehoge',
 						scopes: []
@@ -84,10 +84,10 @@ describe('Applications API', () => {
 				await routeApp.post(context);
 
 				assert(context.data != null, 'no response');
-				assert(context.statusCode == 400 && context.data.message == 'body parameter \'name\' is invalid', `api error: ${context.data.message}`);
+				assert(context.statusCode == 400 && context.data.message == 'parameter \'name\' is invalid', `api error: ${context.data.message}`);
 
 				context = new ApiContext(db, config, {
-					body: {
+					params: {
 						name: 'superFrostersuperFrostersuperFros',
 						description: 'hogehoge',
 						scopes: []
@@ -99,12 +99,12 @@ describe('Applications API', () => {
 				await routeApp.post(context);
 
 				assert(context.data != null, 'no response');
-				assert(context.statusCode == 400 && context.data.message == 'body parameter \'name\' is invalid', `api error: ${context.data.message}`);
+				assert(context.statusCode == 400 && context.data.message == 'parameter \'name\' is invalid', `api error: ${context.data.message}`);
 			});
 
 			it('descriptionが257文字以上のときは失敗する', async () => {
 				const context = new ApiContext(db, config, {
-					body: {
+					params: {
 						name: 'temp',
 						description: 'testhogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthogetesthoget',
 						scopes: []
@@ -116,7 +116,7 @@ describe('Applications API', () => {
 				await routeApp.post(context);
 
 				assert(context.data != null, 'no response');
-				assert(context.statusCode == 400 && context.data.message == 'body parameter \'description\' is invalid', `api error: ${context.data.message}`);
+				assert(context.statusCode == 400 && context.data.message == 'parameter \'description\' is invalid', `api error: ${context.data.message}`);
 			});
 		});
 

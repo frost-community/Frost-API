@@ -49,7 +49,7 @@ describe('Posts API', () => {
 			describe('[POST]', () => {
 				it('正しくリクエストされた場合は成功する', async () => {
 					const context = new ApiContext(db, config, {
-						body: { text: 'hogehoge' },
+						params: { text: 'hogehoge' },
 						headers: { 'X-Api-Version': 1 },
 						user,
 						authInfo: authInfo

@@ -46,7 +46,7 @@ describe('Auth API', () => {
 		describe('[POST]', () => {
 			it('正しくリクエストされた場合は成功する', async () => {
 				const context = new ApiContext(db, config, {
-					body: {
+					params: {
 						applicationId: appA._id.toString(),
 						userId: userA._id.toString(),
 						scopes: []
@@ -80,7 +80,7 @@ describe('Auth API', () => {
 			it('正しくリクエストされた場合は成功する(applicationId,userId,scopes)', async () => {
 				// 生成
 				let context = new ApiContext(db, config, {
-					body: {
+					params: {
 						applicationId: appA._id.toString(),
 						userId: userA._id.toString(),
 						scopes: []
@@ -95,7 +95,7 @@ describe('Auth API', () => {
 
 				// 取得
 				context = new ApiContext(db, config, {
-					body: {
+					params: {
 						applicationId: appA._id.toString(),
 						userId: userA._id.toString(),
 						scopes: ''
@@ -121,7 +121,7 @@ describe('Auth API', () => {
 			it('正しくリクエストされた場合は成功する(accessToken)', async () => {
 				// 生成
 				let context = new ApiContext(db, config, {
-					body: {
+					params: {
 						applicationId: appA._id.toString(),
 						userId: userA._id.toString(),
 						scopes: []
@@ -137,7 +137,7 @@ describe('Auth API', () => {
 
 				// 取得
 				context = new ApiContext(db, config, {
-					body: {
+					params: {
 						accessToken: accessToken
 					},
 					headers: { 'X-Api-Version': 1 },

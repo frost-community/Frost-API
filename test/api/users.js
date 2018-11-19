@@ -48,7 +48,7 @@ describe('Users API', () => {
 			it('正しくリクエストされた場合は成功する', async () => {
 				const context = new ApiContext(db, config, {
 					params: { id: user._id },
-					body: { 'screen_names': user.screenName },
+					params: { 'screen_names': user.screenName },
 					headers: { 'X-Api-Version': 1 },
 					user,
 					authInfo
@@ -74,7 +74,7 @@ describe('Users API', () => {
 		describe('[POST]', () => {
 			it('正しくリクエストされた場合は成功する', async () => {
 				const context = new ApiContext(db, config, {
-					body: {
+					params: {
 						screenName: 'hogehoge',
 						password: 'a1b2c3d4e5f6g',
 						name: 'froster',
@@ -104,7 +104,7 @@ describe('Users API', () => {
 
 			it('screenNameが4文字未満もしくは16文字以上のとき失敗する', async () => {
 				let context = new ApiContext(db, config, {
-					body: {
+					params: {
 						screenName: 'abc',
 						password: 'a1b2c3d4e5f6g',
 						name: 'froster',
@@ -119,7 +119,7 @@ describe('Users API', () => {
 				assert(context.statusCode == 400, `api error: ${context.data.message}`);
 
 				context = new ApiContext(db, config, {
-					body: {
+					params: {
 						screenName: 'abcdefghijklmnop',
 						password: 'a1b2c3d4e5f6g',
 						name: 'froster',
@@ -136,7 +136,7 @@ describe('Users API', () => {
 
 			it('passwordが6文字未満のときは失敗する', async () => {
 				const context = new ApiContext(db, config, {
-					body: {
+					params: {
 						screenName: 'hogehoge',
 						password: 'a1b2c',
 						name: 'froster',
@@ -153,7 +153,7 @@ describe('Users API', () => {
 
 			it('nameが33文字以上のときは失敗する', async () => {
 				const context = new ApiContext(db, config, {
-					body: {
+					params: {
 						screenName: 'hogehoge',
 						password: 'a1b2c3d4e5f6g',
 						name: 'superFrostersuperFrostersuperFros',
@@ -170,7 +170,7 @@ describe('Users API', () => {
 
 			it('descriptionが257文字以上のときは失敗する', async () => {
 				const context = new ApiContext(db, config, {
-					body: {
+					params: {
 						screenName: 'hogehoge',
 						password: 'a1b2c3d4e5f6g',
 						name: '',

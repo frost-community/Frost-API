@@ -62,7 +62,7 @@ module.exports = (connection, directoryRouter, repository, config) => {
 
 			// ApiContextを構築
 			const apiContext = new ApiContext(repository, config, {
-				body: params,
+				params: params,
 				user: connection.user,
 				authInfo: connection.authInfo
 			});
