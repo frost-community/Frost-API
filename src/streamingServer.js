@@ -48,7 +48,7 @@ module.exports = (http, directoryRouter, repository, config) => {
 		connection.authInfo = { scopes: token.scopes, application: application };
 
 		// support user events
-		events(connection);
+		events(connection, { keys: { eventName: 'event', eventContent: 'data' } });
 
 		connection.error = (eventName, message, details = null) => {
 			if (connection.connected) {

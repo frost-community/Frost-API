@@ -17,7 +17,7 @@ module.exports = (connection, directoryRouter, repository, config) => {
 			id,
 			endpoint,
 			params,
-		} = reqData;
+		} = ctx.reqData;
 
 		// param: id
 
