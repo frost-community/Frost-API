@@ -1,5 +1,6 @@
+const $ = require('cafy').default;
 const { MongoClient, ObjectId } = require('mongodb');
-const { MissingArgumentsError } = require('./errors');
+const { MissingArgumentsError, InvalidArgumentError } = require('./errors');
 
 class MongoAdapter {
 	/**
@@ -222,6 +223,16 @@ class MongoAdapter {
 			return null;
 
 		return new ObjectId(idSource);
+	}
+
+	static stringifyId(id) {
+		if ($().string().ok()) return id;
+
+		if (!MongoAdapter.validateId(id)) {
+			throw new InvalidArgumentError('id');
+		}
+
+		return id.toString();
 	}
 
 	static validateId(id) {
