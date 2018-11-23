@@ -92,7 +92,7 @@ module.exports = (connection, userFollowingsService) => {
 		if (stream.listenerCount() == 0) {
 
 			// stream.general-timeline-statusはストリーム自体の解放は行わない
-			if (DataTypeIdHelper.contain(streamId, ['stream','timeline', 'chat', 'general'])) {
+			if (DataTypeIdHelper.contain(streamId, ['stream', 'timeline', 'chat', 'general'])) {
 				return;
 			}
 
