@@ -2,7 +2,7 @@ const ApiContext = require('../../modules/ApiContext');
 const MongoAdapter = require('../../modules/MongoAdapter');
 const $ = require('cafy').default;
 const RedisEventEmitter = require('../../modules/RedisEventEmitter');
-const EventIdHelper = require('../../modules/helpers/EventIdHelper');
+const DataTypeIdHelper = require('../../modules/helpers/DataTypeIdHelper');
 
 /** @param {ApiContext} apiContext */
 exports.create = async (apiContext) => {
@@ -90,6 +90,7 @@ exports.get = async (apiContext) => {
 	apiContext.response(200, { user: await apiContext.usersService.serialize(user) });
 };
 
+// TODO: get に統合する
 /** @param {ApiContext} apiContext */
 exports.get2 = async (apiContext) => {
 	await apiContext.proceed({
@@ -286,7 +287,7 @@ exports.follow = async (apiContext) => {
 
 	// RedisEvent following を発行
 	const eventSender = new RedisEventEmitter('frost-api', false);
-	await eventSender.emit(EventIdHelper.buildEventId(['following']), {
+	await eventSender.emit(DataTypeIdHelper.build(['redis', 'following']), {
 		following: true,
 		sourceId: sourceUserId,
 		targetId: targetUserId
@@ -345,7 +346,7 @@ exports.unfollow = async (apiContext) => {
 
 	// RedisEvent following を発行
 	const eventSender = new RedisEventEmitter('frost-api', false);
-	await eventSender.emit(EventIdHelper.buildEventId(['following']), {
+	await eventSender.emit(DataTypeIdHelper.build(['redis', 'following']), {
 		following: false,
 		sourceId: sourceUserId,
 		targetId: targetUserId
