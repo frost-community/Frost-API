@@ -1,6 +1,5 @@
 const ApiContext = require('../../modules/ApiContext');
 const MongoAdapter = require('../../modules/MongoAdapter');
-const v = require('validator');
 const $ = require('cafy').default;
 
 /** @param {ApiContext} apiContext */
@@ -8,7 +7,7 @@ exports.list = async (apiContext) => {
 	await apiContext.proceed({
 		params: {
 			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
-			limit: { cafy: $().string().pipe(i => v.isInt(i, { min: 0, max: 100 })), default: '30' },
+			limit: { cafy: $().number().int().range(0, 100), default: 30 },
 			next: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
 		},
 		scopes: ['user.read']
@@ -16,7 +15,7 @@ exports.list = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	// convert params value
-	const limit = v.toInt(apiContext.params.limit);
+	const limit = apiContext.params.limit;
 	const next = apiContext.params.next != null ? MongoAdapter.buildId(apiContext.params.next) : null;
 
 	// user

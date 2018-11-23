@@ -1,6 +1,5 @@
 const ApiContext = require('../../../modules/ApiContext');
 const MongoAdapter = require('../../../modules/MongoAdapter');
-const v = require('validator');
 const $ = require('cafy').default;
 const timeline = require('../../../modules/timeline');
 
@@ -8,8 +7,7 @@ const timeline = require('../../../modules/timeline');
 exports.list = async (apiContext) => {
 	await apiContext.proceed({
 		params: {
-			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
-			limit: { cafy: $().string().pipe(i => v.isInt(i, { min: 0, max: 100 })), default: '30' },
+			limit: { cafy: $().number().int().range(0, 100), default: 30 },
 			newer: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null },
 			older: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
 		},
@@ -18,7 +16,7 @@ exports.list = async (apiContext) => {
 	if (apiContext.responsed) return;
 
 	// convert params value
-	const limit = apiContext.params.limit != null ? v.toInt(apiContext.params.limit) : null;
+	const limit = apiContext.params.limit;
 	const newer = apiContext.params.newer != null ? MongoAdapter.buildId(apiContext.params.newer) : null;
 	const older = apiContext.params.older != null ? MongoAdapter.buildId(apiContext.params.older) : null;
 

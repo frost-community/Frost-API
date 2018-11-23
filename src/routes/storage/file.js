@@ -160,9 +160,9 @@ exports.list = async (apiContext) => { // TODO: フィルター指定
 	await apiContext.proceed({
 		params: {
 			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
-			limit: { cafy: $().string().pipe(i => validator.isInt(i, { min: 0, max: 100 })), default: '30' },
+			limit: { cafy: $().number().int().range(0, 100), default: 30 },
 			next: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null },
-			includeFileData: { cafy: $().string().pipe(i => validator.isBoolean(i)), default: 'false' }
+			includeFileData: { cafy: $().boolean(), default: false }
 		},
 		scopes: ['storage.read']
 	});
