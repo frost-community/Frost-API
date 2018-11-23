@@ -3,6 +3,7 @@ const events = require('websocket-events');
 const MongoAdapter = require('./modules/MongoAdapter');
 const { DirectoryRouter } = require('./modules/directoryRouter');
 const $ = require('cafy').default;
+const StreamingContext = require('./modules/StreamingContext');
 const TokensService = require('./services/TokensService');
 const UserFollowingsService = require('./services/UserFollowingsService');
 const RequestApi = require('./streamingApis/request');
@@ -80,7 +81,8 @@ module.exports = (http, directoryRouter, repository, config) => {
 		EventApi(connection, userFollowingsService);
 
 		connection.on('default', (reqData) => {
-			connection.error('default', 'invalid event name');
+			const ctx = new StreamingContext('default', connection, reqData);
+			ctx.error('invalid event name');
 		});
 
 		console.log(`(streaming)connected: userId=${connection.user._id}`);

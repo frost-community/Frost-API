@@ -2,6 +2,7 @@ const $ = require('cafy').default;
 const RedisEventEmitter = require('../modules/RedisEventEmitter');
 const XevPubSub = require('../modules/XevPubSub');
 const DataTypeIdHelper = require('../modules/helpers/DataTypeIdHelper');
+const StreamingContext = require('../modules/StreamingContext');
 
 /*
 # 各種変数の説明
@@ -110,97 +111,22 @@ module.exports = (connection, userFollowingsService) => {
 		}
 	});
 
-	/**
-	 * @param {any} reqData
-	*/
-	async function receivedSubscribe(reqData) {
-		try {
-			if ($().object().nok(reqData)) {
-				return connection.error('event.subscribe', 'invalid data');
-			}
-
-			const {
-				id,
-				sourceType
-			} = reqData;
-
-			if ($().or($().string(), $().number()).nok(id)) {
-				return connection.error('event.subscribe', 'invalid property', { propertyName: 'id' });
-			}
-
-			if (sourceType == 'notification') {
-				subscribeNotification(reqData);
-			}
-			else if (sourceType == 'homeTimeline') {
-				subscribeTimeline(reqData, 'home');
-			}
-			else {
-				return connection.error('event.subscribe', 'invalid property', { propertyName: 'sourceType' });
-			}
-		}
-		catch (err) {
-			console.log(err);
-			connection.error('event.subscribe', 'server error');
-		}
-	}
+	let eventSources = [];
 
 	/**
-	 * @param {any} reqData
+	 * @param {StreamingContext} ctx
 	*/
-	async function receivedUnsubscribe(reqData) {
-		try {
-			const {
-				id,
-				sourceType
-			} = reqData;
-
-			if ($().or($().string(), $().number()).nok(id)) {
-				return connection.error('event.unsubscribe', 'invalid property', { propertyName: 'id' });
-			}
-
-			if (sourceType == 'notification') {
-				unsubscribeNotification(reqData);
-			}
-			else if (sourceType == 'homeTimeline') {
-				unsubscribeTimeline(reqData, 'home');
-			}
-			else {
-				return connection.error('event.unsubscribe', 'invalid property', { propertyName: 'sourceType' });
-			}
-		}
-		catch (err) {
-			console.log(err);
-			connection.error('event.unsubscribe', 'server error');
-		}
-	}
-
-	/**
-	 * @param {any} reqData
-	*/
-	async function subscribeNotification(reqData) {
-		return connection.error('event.subscribe', 'comming soon'); // TODO
-	}
-
-	/**
-	 * @param {any} reqData
-	*/
-	async function unsubscribeNotification(reqData) {
-		return connection.error('event.unsubscribe', 'comming soon'); // TODO
-	}
-
-	/**
-	 * @param {any} reqData
-	*/
-	async function subscribeTimeline(reqData, timelineType) {
+	async function subscribeTimeline(ctx, timelineType) {
 
 		/** @type {XevPubSub} */
 		let stream;
+
 		/** @type {string} */
 		let streamId;
 
 		// ストリームの取得または構築
 		if (timelineType == 'home') {
-			const candy = (reqData.candy != null);
+			const candy = (ctx.reqData.candy != null);
 
 			if (candy) {
 				streamId = generalTLStreamId;
@@ -208,14 +134,14 @@ module.exports = (connection, userFollowingsService) => {
 			}
 			else {
 				// memo: フォローユーザーのuser-timeline-statusストリームを統合したhome-timeline-statusストリームを生成
-				streamId = DataTypeIdHelper.build(['stream', 'timeline', 'chat', 'home', connection.user._id]);
+				streamId = DataTypeIdHelper.build(['stream', 'timeline', 'chat', 'home', ctx.connection.user._id]);
 			}
 
 			const index = connectedStreams.findIndex(streamInfo => streamInfo.id == streamId);
 
 			// expect: Not subscribed to the stream yet from this connection.
 			if (index != -1) {
-				return connection.error('event.subscribe', `${timelineType} timeline is already subscribed`);
+				return ctx.error(`${timelineType} timeline is already subscribed`);
 			}
 
 			if (candy) {
@@ -229,8 +155,8 @@ module.exports = (connection, userFollowingsService) => {
 				if (stream == null) {
 					stream = new XevPubSub('frost-api');
 					//stream.addSource(DataTypeIdHelper.build(['event', 'timeline', 'chat', 'user', connection.user._id]));
-					stream.subscribe(DataTypeIdHelper.build(['event', 'timeline', 'chat', 'user', connection.user._id]));
-					const followings = await userFollowingsService.findTargets(connection.user._id, { isAscending: false }); // TODO: (全て or ユーザーの購読設定によっては選択的に)
+					stream.subscribe(DataTypeIdHelper.build(['event', 'timeline', 'chat', 'user', ctx.connection.user._id]));
+					const followings = await userFollowingsService.findTargets(ctx.connection.user._id, { isAscending: false }); // TODO: (全て or ユーザーの購読設定によっては選択的に)
 					for (const following of followings || []) {
 						const followingUserId = following.target.toString();
 						stream.subscribe(DataTypeIdHelper.build(['event', 'timeline', 'chat', 'user', followingUserId]));
@@ -240,12 +166,12 @@ module.exports = (connection, userFollowingsService) => {
 			}
 		}
 		else {
-			return connection.error('event.subscribe', `timeline type "${timelineType}" is invalid`);
+			return ctx.error(`timeline type "${timelineType}" is invalid`);
 		}
 
 		// Streamからのデータをwebsocketに流す
 		function streamListener(eventId, data) {
-			if (connection.connected) {
+			if (ctx.connection.connected) {
 				console.log(`(streaming)event: ${streamId}`);
 				let elements;
 				const parsed = DataTypeIdHelper.parse(streamId);
@@ -255,7 +181,7 @@ module.exports = (connection, userFollowingsService) => {
 				else {
 					throw new Error(`unknown streamId: ${streamId}`);
 				}
-				connection.send('event', { eventType: DataTypeIdHelper.build(elements), resource: data });
+				ctx.connection.send('event', { eventType: DataTypeIdHelper.build(elements), resource: data });
 			}
 			else {
 				console.log('not connected');
@@ -266,52 +192,115 @@ module.exports = (connection, userFollowingsService) => {
 		// connectedStreamsに追加
 		connectedStreams.push({ id: streamId, listener: streamListener });
 
-		console.log(`(streaming)event.subscribe: timeline.${timelineType}`);
-		connection.send('event.subscribe', { success: true, message: `subscribed ${timelineType} timeline` });
+		console.log(`(streaming)${ctx.eventName}: timeline.${timelineType}`);
+		ctx.send({ success: true, message: `subscribed ${timelineType} timeline` });
 	}
 
 	/**
-	 * @param {any} reqData
+	 * @param {StreamingContext} ctx
 	*/
-	async function unsubscribeTimeline(reqData, timelineType) {
-		try {
-			// 対象タイムラインのストリームを取得
-			let streamId;
-			if (timelineType == 'home') {
-				const candy = (reqData.candy != null);
+	async function unsubscribeTimeline(ctx, timelineType) {
+		// 対象タイムラインのストリームを取得
+		let streamId;
+		if (timelineType == 'home') {
+			const candy = (ctx.reqData.candy != null);
 
-				if (candy) {
-					streamId = generalTLStreamId;
-					timelineType = 'candy';
-				}
-				else {
-					streamId = DataTypeIdHelper.build(['stream', 'timeline', 'chat', 'home', connection.user._id]);
-				}
+			if (candy) {
+				streamId = generalTLStreamId;
+				timelineType = 'candy';
 			}
 			else {
-				return connection.error('event.unsubscribe', `timeline type "${timelineType}" is invalid`);
+				streamId = DataTypeIdHelper.build(['stream', 'timeline', 'chat', 'home', ctx.connection.user._id]);
 			}
-
-			const index = connectedStreams.findIndex(streamInfo => streamInfo.id == streamId);
-
-			// expect: Subscribed to the stream from this connection.
-			if (index == -1) {
-				return connection.error('event.unsubscribe', `${timelineType} timeline is not subscribed yet`);
-			}
-
-			await disposeStream(streamId);
-			console.log('(streaming)event.unsubscribe:', streamId);
-			connection.send('event.unsubscribe', { success: true, message: `unsubscribed ${timelineType} timeline` });
 		}
-		catch (err) {
-			console.log(err);
-			connection.error('event.unsubscribe', 'server error');
+		else {
+			return ctx.error(`timeline type "${timelineType}" is invalid`);
+		}
+
+		const index = connectedStreams.findIndex(streamInfo => streamInfo.id == streamId);
+
+		// expect: Subscribed to the stream from this connection.
+		if (index == -1) {
+			return ctx.error(`${timelineType} timeline is not subscribed yet`);
+		}
+
+		await disposeStream(streamId);
+		console.log(`(streaming)${ctx.eventName}: ${streamId}`);
+		ctx.send({ success: true, message: `unsubscribed ${timelineType} timeline` });
+	}
+
+	eventSources.push({
+		sourceName: 'homeTimeline',
+		subscribe: async (ctx) => {
+			await subscribeTimeline(ctx, 'home');
+		},
+		unsubscribe: async (ctx) => {
+			await unsubscribeTimeline(ctx, 'home');
+		}
+	});
+
+	eventSources.push({
+		sourceName: 'notification',
+		subscribe: async (ctx) => {
+			ctx.error('comming soon'); // TODO
+		},
+		unsubscribe: async (ctx) => {
+			ctx.error('comming soon'); // TODO
+		}
+	});
+
+	/**
+	 * @param {StreamingContext} ctx
+	*/
+	async function eventApiHandler(ctx) {
+		if ($().object().nok(ctx.reqData)) {
+			return ctx.error('invalid data');
+		}
+
+		const {
+			id,
+			sourceName
+		} = ctx.reqData;
+
+		if ($().or($().string(), $().number()).nok(id)) {
+			return ctx.error('invalid property', { propertyName: 'id' });
+		}
+
+		const eventSource = eventSources.find(s => s.sourceName == sourceName);
+
+		if (eventSource == null) {
+			return ctx.error('invalid property', { propertyName: 'sourceName' });
+		}
+
+		if (ctx.eventName == 'event.subscribe') {
+			await eventSource.subscribe(ctx);
+		}
+		if (ctx.eventName == 'event.unsubscribe') {
+			await eventSource.unsubscribe(ctx);
 		}
 	}
 
-	// クライアント側からsubscribeを受信したとき
-	connection.on('event.subscribe', reqData => receivedSubscribe(reqData));
+	// Streaming API: event.subscribe
+	connection.on('event.subscribe', async reqData => {
+		const ctx = new StreamingContext('event.subscribe', connection, reqData);
+		try {
+			await eventApiHandler(ctx);
+		}
+		catch (err) {
+			ctx.error('server error');
+			console.error(err);
+		}
+	});
 
-	// クライアント側からunsubscribeを受信したとき
-	connection.on('event.unsubscribe', reqData => receivedUnsubscribe(reqData));
+	// Streaming API: event.unsubscribe
+	connection.on('event.unsubscribe', async reqData => {
+		const ctx = new StreamingContext('event.unsubscribe', connection, reqData);
+		try {
+			await eventApiHandler(ctx);
+		}
+		catch (err) {
+			ctx.error('server error');
+			console.error(err);
+		}
+	});
 };
