@@ -1,5 +1,5 @@
 const $ = require('cafy').default;
-const RedisEventEmitter = require('../../modules/RedisEventEmitter');
+const DomainEventEmitter = require('../../modules/RedisEventEmitter');
 const PubSub = require('../../modules/XevPubSub');
 const DataTypeIdHelper = require('../../modules/helpers/DataTypeIdHelper');
 const StreamingContext = require('../modules/StreamingContext');
@@ -29,10 +29,10 @@ module.exports = (userFollowingsService) => {
 	generalTLStream.subscribe(generalTLEventId);
 	streams.set(generalTLStreamId, generalTLStream);
 
-	const eventReciever = new RedisEventEmitter('frost-api', true);
+	const domainEventReciever = new DomainEventEmitter('frost-api', true);
 
-	// (RedisEvent受信) redis.posting.chat
-	eventReciever.addListener(DataTypeIdHelper.build(['redis', 'posting', 'chat']), (data) => {
+	// (DomainEvent受信) redis.posting.chat
+	domainEventReciever.addListener(DataTypeIdHelper.build(['redis', 'posting', 'chat']), (data) => {
 		// streamに流す
 		const publisher = new PubSub('frost-api');
 		publisher.publish(DataTypeIdHelper.build(['event', 'timeline', 'chat', 'user', data.posting.userId]), data.posting);
@@ -40,16 +40,16 @@ module.exports = (userFollowingsService) => {
 		publisher.dispose();
 	});
 
-	// (RedisEvent受信) redis.posting.article
-	eventReciever.addListener(DataTypeIdHelper.build(['redis', 'posting', 'article']), (data) => {
+	// (DomainEvent受信) redis.posting.article
+	domainEventReciever.addListener(DataTypeIdHelper.build(['redis', 'posting', 'article']), (data) => {
 	});
 
-	// (RedisEvent受信) redis.posting.reference
-	eventReciever.addListener(DataTypeIdHelper.build(['redis', 'posting', 'reference']), (data) => {
+	// (DomainEvent受信) redis.posting.reference
+	domainEventReciever.addListener(DataTypeIdHelper.build(['redis', 'posting', 'reference']), (data) => {
 	});
 
-	// (RedisEvent受信) redis.following
-	eventReciever.addListener(DataTypeIdHelper.build(['redis', 'following']), (data) => {
+	// (DomainEvent受信) redis.following
+	domainEventReciever.addListener(DataTypeIdHelper.build(['redis', 'following']), (data) => {
 		/*
 
 		// フォロー時
