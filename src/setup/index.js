@@ -77,7 +77,7 @@ module.exports = async (meta) => {
 			await applicationsService.create(appName, user, user.description, scopes.map(s => s.name), { root: true });
 			console.log('root application created.');
 
-			await repository.create('meta', { type: 'dataFormat', value: dataFormatVersion });
+			await repository.create('meta', { type: 'dataFormat', value: meta.dataFormatVersion });
 			ctx.exit();
 		});
 		// WARN: アンコメントすると、root applicationの認可付与に必要なapplicationSecretを生成可能になります。
