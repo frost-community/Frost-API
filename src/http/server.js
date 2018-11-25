@@ -6,7 +6,7 @@ const passport = require('passport');
 const { DirectoryRouter, Route } = require('../modules/directoryRouter');
 const ApiContext = require('../modules/ApiContext');
 const routeList = require('../routeList');
-const defineStrategies = require('../modules/defineStrategies');
+const defineStrategies = require('./modules/defineStrategies');
 const apiSendMiddleware = require('./middlewares/apiSend');
 
 module.exports = async (lock, repository, config) => {
