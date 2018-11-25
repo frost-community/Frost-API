@@ -1,5 +1,5 @@
 const readLine = require('./readline');
-const { delay } = require('./helpers/GeneralHelper');
+const { delay } = require('../../modules/helpers/GeneralHelper');
 
 class ConsoleMenu {
 	constructor() {

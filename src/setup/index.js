@@ -1,19 +1,17 @@
 const uid = require('uid2');
 const readLine = require('./modules/readline');
-const { loadConfig } = require('./modules/helpers/GeneralHelper');
-const MongoAdapter = require('./modules/MongoAdapter');
+const { loadConfig } = require('../modules/helpers/GeneralHelper');
+const MongoAdapter = require('../modules/MongoAdapter');
 const ConsoleMenu = require('./modules/ConsoleMenu');
-const UsersService = require('./services/UsersService');
-const ApplicationsService = require('./services/ApplicationsService');
-const TokensService = require('./services/TokensService');
-const scopes = require('./modules/scopes');
-const checkDataFormat = require('./modules/checkDataFormat');
-
-const dataFormatVersion = 1;
+const UsersService = require('../services/UsersService');
+const ApplicationsService = require('../services/ApplicationsService');
+const TokensService = require('../services/TokensService');
+const scopes = require('../modules/scopes');
+const checkDataFormat = require('../modules/checkDataFormat');
 
 const q = async str => (await readLine(str)).toLowerCase().indexOf('y') === 0;
 
-module.exports = async () => {
+module.exports = async (meta) => {
 	console.log('## Setup Mode');
 
 	try {
@@ -32,7 +30,7 @@ module.exports = async () => {
 			config.database.password);
 
 		console.log('checking dataFormat ...');
-		const dataFormatState = await checkDataFormat(repository, dataFormatVersion);
+		const dataFormatState = await checkDataFormat(repository, meta.dataFormatVersion);
 
 		let stateMessage = 'unknown';
 		if (dataFormatState == 0) stateMessage = 'executable';
