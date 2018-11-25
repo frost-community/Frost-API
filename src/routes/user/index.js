@@ -229,12 +229,10 @@ exports.update = async (apiContext) => {
 	apiContext.response(200, { user: await apiContext.usersService.serialize(updated) });
 };
 
-
 /** @param {ApiContext} apiContext */
 exports.follow = async (apiContext) => {
 	await apiContext.proceed({
 		params: {
-			sourceUserId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
 			targetUserId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
 			message: { cafy: $().string().pipe(i => !/^\s*$/.test(i) || /^[\s\S]{1,64}$/.test(i)), default: null }
 		},
@@ -242,14 +240,7 @@ exports.follow = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const { sourceUserId, targetUserId, message } = apiContext.params;
-
-	// fetch: source user
-	const sourceUser = await apiContext.repository.findById('users', sourceUserId);
-	if (sourceUser == null) {
-		apiContext.response(404, 'user as premise not found');
-		return;
-	}
+	const { targetUserId, message } = apiContext.params;
 
 	// fetch: target user
 	const targetUser = await apiContext.repository.findById('users', targetUserId);
@@ -258,22 +249,16 @@ exports.follow = async (apiContext) => {
 		return;
 	}
 
-	// expect: sourceUser is you
-	if (!sourceUser._id.equals(apiContext.user._id)) {
-		apiContext.response(403, 'this operation is not permitted');
-		return;
-	}
-
-	// expect: sourceUser != targetUser
-	if (targetUser._id.equals(sourceUser._id)) {
-		apiContext.response(400, 'source user and target user is same');
+	// expect: me != targetUser
+	if (targetUser._id.equals(apiContext.user._id)) {
+		apiContext.response(400, 'target user is you');
 		return;
 	}
 
 	// ドキュメント作成・更新
 	let userFollowing;
 	try {
-		userFollowing = await apiContext.userFollowingsService.create(sourceUser._id, targetUser._id, message);
+		userFollowing = await apiContext.userFollowingsService.create(apiContext.user._id, targetUser._id, message);
 	}
 	catch (err) {
 		console.log('failed follow');
@@ -301,21 +286,13 @@ exports.follow = async (apiContext) => {
 exports.unfollow = async (apiContext) => {
 	await apiContext.proceed({
 		params: {
-			sourceUserId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
 			targetUserId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
 		},
 		scopes: ['user.write']
 	});
 	if (apiContext.responsed) return;
 
-	const { sourceUserId, targetUserId, message } = apiContext.params;
-
-	// fetch: source user
-	const sourceUser = await apiContext.repository.findById('users', sourceUserId);
-	if (sourceUser == null) {
-		apiContext.response(404, 'user as premise not found');
-		return;
-	}
+	const { targetUserId, message } = apiContext.params;
 
 	// fetch: target user
 	const targetUser = await apiContext.repository.findById('users', targetUserId);
@@ -324,20 +301,14 @@ exports.unfollow = async (apiContext) => {
 		return;
 	}
 
-	// expect: sourceUser is you
-	if (!sourceUser._id.equals(apiContext.user._id)) {
-		apiContext.response(403, 'this operation is not permitted');
-		return;
-	}
-
-	// expect: sourceUser != targetUser
-	if (targetUser._id.equals(sourceUser._id)) {
-		apiContext.response(400, 'source user and target user is same');
+	// expect: me != targetUser
+	if (targetUser._id.equals(apiContext.user._id)) {
+		apiContext.response(400, 'target user is you');
 		return;
 	}
 
 	try {
-		await apiContext.userFollowingsService.removeBySrcDestId(sourceUser._id, targetUser._id);
+		await apiContext.userFollowingsService.removeBySrcDestId(apiContext.user._id, targetUser._id);
 	}
 	catch (err) {
 		console.log('failed unfollow');
@@ -348,7 +319,7 @@ exports.unfollow = async (apiContext) => {
 	const eventSender = new RedisEventEmitter('frost-api', false);
 	await eventSender.emit(DataTypeIdHelper.build(['redis', 'following']), {
 		following: false,
-		sourceId: sourceUserId,
+		sourceId: apiContext.user._id.toString(),
 		targetId: targetUserId
 	});
 	await eventSender.dispose();
