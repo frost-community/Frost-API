@@ -76,10 +76,15 @@ class TokensService {
 	}
 
 	findByAccessToken(accessToken) {
-		if (accessToken == null)
+		if (accessToken == null) {
 			throw new MissingArgumentsError();
+		}
 
 		return this._repository.find('tokens', { accessToken });
+	}
+
+	validateFormat(accessToken) {
+		return /^[A-Za-z0-9]{128}$/.test(accessToken);
 	}
 }
 module.exports = TokensService;

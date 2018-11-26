@@ -13,7 +13,7 @@ class ApiContext {
 	/**
 	 * @param {MongoAdapter} repository
 	 * @param {} config
-	 * @param {{user, authInfo, targetVersion, streams, lock: AsyncLock, params}} options
+	 * @param {{user, authInfo, targetVersion, lock: AsyncLock, params}} options
 	*/
 	constructor(repository, config, options) {
 		this.repository = repository;
@@ -22,7 +22,6 @@ class ApiContext {
 		this.user = options.user;
 		this.authInfo = options.authInfo || {};
 		this.targetVersion = options.targetVersion;
-		this.streams = options.streams;
 		this.lock = options.lock;
 		this.params = options.params || {};
 

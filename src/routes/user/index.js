@@ -1,7 +1,7 @@
 const ApiContext = require('../../modules/ApiContext');
 const MongoAdapter = require('../../modules/MongoAdapter');
 const $ = require('cafy').default;
-const RedisEventEmitter = require('../../modules/RedisEventEmitter');
+const DomainEventEmitter = require('../../modules/RedisEventEmitter');
 const DataTypeIdHelper = require('../../modules/helpers/DataTypeIdHelper');
 
 /** @param {ApiContext} apiContext */
@@ -270,8 +270,8 @@ exports.follow = async (apiContext) => {
 		return;
 	}
 
-	// RedisEvent following を発行
-	const eventSender = new RedisEventEmitter('frost-api', false);
+	// DomainEvent following を発行
+	const eventSender = new DomainEventEmitter('frost-api', false);
 	await eventSender.emit(DataTypeIdHelper.build(['redis', 'following']), {
 		following: true,
 		sourceId: apiContext.user._id.toString(),
@@ -315,8 +315,8 @@ exports.unfollow = async (apiContext) => {
 		console.log(err);
 	}
 
-	// RedisEvent following を発行
-	const eventSender = new RedisEventEmitter('frost-api', false);
+	// DomainEvent following を発行
+	const eventSender = new DomainEventEmitter('frost-api', false);
 	await eventSender.emit(DataTypeIdHelper.build(['redis', 'following']), {
 		following: false,
 		sourceId: apiContext.user._id.toString(),

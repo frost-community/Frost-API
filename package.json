@@ -22,8 +22,9 @@
   "dependencies": {
     "argv": "0.0.x",
     "async-lock": "1.1.x",
+    "axios": "^0.18.0",
     "body-parser": "1.18.x",
-    "cafy": "4.0.x",
+    "cafy": "6.x",
     "compression": "1.7.x",
     "cpx": "1.5.x",
     "express": "4.16.x",
