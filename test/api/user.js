@@ -6,7 +6,10 @@ const MongoAdapter = require('../../src/modules/MongoAdapter');
 const UsersService = require('../../src/services/UsersService');
 const ApplicationsService = require('../../src/services/ApplicationsService');
 const ApiContext = require('../../src/modules/ApiContext');
-const userApi = require('../../src/routes/user');
+const apiUser = require('../../src/routes/user');
+const apiUserRelation = require('../../src/routes/user/relation');
+const apiUserFollowing = require('../../src/routes/user/following');
+const apiUserFollower = require('../../src/routes/user/follower');
 
 describe('User endpoints', () => {
 
@@ -64,17 +67,19 @@ describe('User endpoints', () => {
 	function testSuccess(ctx) {
 		let err;
 		assert.equal(ctx.responsed, true, 'no response');
-		if (ctx.statusCode != 200) {
-			throw new Error(`status code is not 200: ${ctx.data.message}`);
+		if (ctx.statusCode < 200 || ctx.statusCode >= 300) {
+			throw new Error(`status code is not 2xx : ${ctx.statusCode} ${JSON.stringify(ctx.data)}`);
 		}
-		err = $().object().test(ctx.data);
-		if (err) throw err;
+		if (ctx.statusCode != 204) {
+			err = $().object().test(ctx.data);
+			if (err) throw err;
+		}
 	}
 
 	describe('/user/create', () => {
 		it('if valid request', async () => {
 			const ctx = buildContext({ screenName: 'tempUser1', password: 'temp1234' });
-			await userApi.create(ctx);
+			await apiUser.create(ctx);
 			testSuccess(ctx);
 			const res = ctx.data;
 			let err;
@@ -87,7 +92,7 @@ describe('User endpoints', () => {
 	describe('/user/list', () => {
 		it('if valid request', async () => {
 			const ctx = buildContext();
-			await userApi.list(ctx);
+			await apiUser.list(ctx);
 			testSuccess(ctx);
 			const res = ctx.data;
 			let err;
@@ -100,7 +105,7 @@ describe('User endpoints', () => {
 	describe('/user/get', () => {
 		it('if valid request', async () => {
 			const ctx = buildContext({ userId: MongoAdapter.stringifyId(user._id) });
-			await userApi.get(ctx);
+			await apiUser.get(ctx);
 			testSuccess(ctx);
 			const res = ctx.data;
 			let err;
@@ -123,14 +128,42 @@ describe('User endpoints', () => {
 	});
 
 	describe('/user/relation/get', () => {
-		it('if valid request');
+		it('if valid request', async () => {
+			const ctx = buildContext({
+				sourceUserId: MongoAdapter.stringifyId(user._id),
+				targetUserId: MongoAdapter.stringifyId(user2._id),
+			});
+			await apiUserRelation.get(ctx);
+			testSuccess(ctx);
+			const res = ctx.data;
+			let err;
+
+			err = $().boolean().test(res.following);
+			if (err) throw err;
+		});
 	});
 
 	describe('/user/following/list', () => {
-		it('if valid request');
+		it('if valid request', async () => {
+			const ctx = buildContext({
+				userId: MongoAdapter.stringifyId(user._id)
+			});
+			await apiUserFollowing.list(ctx);
+			testSuccess(ctx);
+			const res = ctx.data;
+			let err;
+		});
 	});
 
 	describe('/user/follower/list', () => {
-		it('if valid request');
+		it('if valid request', async () => {
+			const ctx = buildContext({
+				userId: MongoAdapter.stringifyId(user._id)
+			});
+			await apiUserFollower.list(ctx);
+			testSuccess(ctx);
+			const res = ctx.data;
+			let err;
+		});
 	});
 });

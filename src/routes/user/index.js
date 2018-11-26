@@ -274,7 +274,7 @@ exports.follow = async (apiContext) => {
 	const eventSender = new RedisEventEmitter('frost-api', false);
 	await eventSender.emit(DataTypeIdHelper.build(['redis', 'following']), {
 		following: true,
-		sourceId: sourceUserId,
+		sourceId: apiContext.user._id.toString(),
 		targetId: targetUserId
 	});
 	await eventSender.dispose();
