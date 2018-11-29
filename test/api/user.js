@@ -29,23 +29,23 @@ describe('User endpoints', () => {
 		const authenticate = config.database.password != null ? `${config.database.username}:${config.database.password}` : config.database.username;
 		db = await MongoAdapter.connect(config.database.host, config.database.database, authenticate);
 
-		await db.remove('users', {});
-		await db.remove('applications', {});
-		await db.remove('authorizeRequests', {});
-		await db.remove('applicationAccesses', {});
-
 		usersService = new UsersService(db, config);
 		applicationsService = new ApplicationsService(db, config);
 	});
 
 	// initialize for the case
-	let user, user2, app, authInfo, ctx;
+	let user, user2, app, authInfo;
 	beforeEach(async () => {
+		await db.remove('users', {});
+		await db.remove('applications', {});
+		await db.remove('authorizeRequests', {});
+		await db.remove('applicationAccesses', {});
+
 		user = await usersService.create('generaluser', 'abcdefg', 'froster', 'this is generaluser.');
 		user2 = await usersService.create('generaluser2', 'abcdefg', 'froster', 'this is generaluser2.');
 		app = await applicationsService.create('generalapp', user, 'this is generalapp.', ['user.read', 'user.create']);
 
-		authInfo = { application: app, scopes: ['user.read', 'user.create'] };
+		authInfo = { application: app, scopes: ['user.write', 'user.read', 'user.create'] };
 	});
 
 	// filalize for the case
@@ -116,15 +116,51 @@ describe('User endpoints', () => {
 	});
 
 	describe('/user/update', () => {
-		it('if valid request');
+		it('if valid request', async () => {
+			const ctx = buildContext({
+			});
+			await apiUser.update(ctx);
+			testSuccess(ctx);
+			const res = ctx.data;
+			let err;
+
+			err = $().object().test(res.user);
+			if (err) throw err;
+		});
 	});
 
 	describe('/user/follow', () => {
-		it('if valid request');
+		it('if valid request', async () => {
+			const ctx = buildContext({
+				targetUserId: MongoAdapter.stringifyId(user2._id)
+			});
+			await apiUser.follow(ctx);
+			testSuccess(ctx);
+			const res = ctx.data;
+			let err;
+
+			err = $().boolean().test(res.following);
+			if (err) throw err;
+		});
 	});
 
 	describe('/user/unfollow', () => {
-		it('if valid request');
+		it('if valid request', async () => {
+			await apiUser.follow(buildContext({
+				targetUserId: MongoAdapter.stringifyId(user2._id)
+			}));
+
+			const ctx = buildContext({
+				targetUserId: MongoAdapter.stringifyId(user2._id)
+			});
+			await apiUser.unfollow(ctx);
+			testSuccess(ctx);
+			const res = ctx.data;
+			let err;
+
+			err = $().boolean().test(res.following);
+			if (err) throw err;
+		});
 	});
 
 	describe('/user/relation/get', () => {

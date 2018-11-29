@@ -137,7 +137,7 @@ exports.get2 = async (apiContext) => {
 exports.update = async (apiContext) => {
 	await apiContext.proceed({
 		params: {
-			userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
+			// userId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) },
 			screenName: { cafy: $().string(), default: null },
 			description: { cafy: $().string().range(0, 256), default: null },
 			name: { cafy: $().string().range(1, 32), default: null },
@@ -147,7 +147,7 @@ exports.update = async (apiContext) => {
 	});
 	if (apiContext.responsed) return;
 
-	const { userId, screenName, name, description, iconFileId } = apiContext.params;
+	const { screenName, name, description, iconFileId } = apiContext.params;
 	const data = { };
 
 	// アイコンを設定するときは、storage.readスコープを要求する
@@ -156,16 +156,7 @@ exports.update = async (apiContext) => {
 		return;
 	}
 
-	const user = await apiContext.repository.findById('users', userId);
-	if (user == null) {
-		apiContext.response(404, 'user not found');
-		return;
-	}
-
-	if (!apiContext.user._id.equals(user._id)) {
-		apiContext.response(403, 'this operation is not permitted');
-		return;
-	}
+	const user = apiContext.user;
 
 	// screenName
 	if (screenName != null) {
@@ -202,7 +193,7 @@ exports.update = async (apiContext) => {
 			return;
 		}
 
-		if (!iconFile.creator.id.equals(apiContext.user._id)) {
+		if (!iconFile.creator.id.equals(user._id)) {
 			apiContext.response(400, 'icon file must be owned');
 			return;
 		}
@@ -220,13 +211,13 @@ exports.update = async (apiContext) => {
 		return;
 	}
 
-	const updated = await apiContext.repository.updateById('users', userId, data);
-	if (updated == null) {
+	const updatedUser = await apiContext.repository.updateById('users', user._id, data);
+	if (updatedUser == null) {
 		apiContext.response(500, 'failed to update user');
 		return;
 	}
 
-	apiContext.response(200, { user: await apiContext.usersService.serialize(updated) });
+	apiContext.response(200, { user: await apiContext.usersService.serialize(updatedUser) });
 };
 
 /** @param {ApiContext} apiContext */
@@ -279,7 +270,7 @@ exports.follow = async (apiContext) => {
 	});
 	await eventSender.dispose();
 
-	apiContext.response(200, 'following');
+	apiContext.response(200, { following: true });
 };
 
 /** @param {ApiContext} apiContext */
