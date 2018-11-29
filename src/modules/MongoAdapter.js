@@ -142,6 +142,24 @@ class MongoAdapter {
 		return document;
 	}
 
+	async updateMany(collectionName, query, data, options) {
+		if (collectionName == null || query == null || data == null) {
+			throw new MissingArgumentsError();
+		}
+
+		if (options == null) options = {};
+
+		const result = await this._db.collection(collectionName).updateMany(query, options.renewal ? data : { $set: data }, options);
+
+		if (result.result.ok != 1) {
+			throw new Error('failed to update some database documents');
+		}
+
+		const documents = await this.findArray(collectionName, query);
+
+		return documents;
+	}
+
 	updateById(collectionName, id, data, options) {
 		if (id == null) {
 			throw new MissingArgumentsError();

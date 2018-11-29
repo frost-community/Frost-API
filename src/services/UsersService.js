@@ -45,9 +45,9 @@ class UsersService {
 		// passwordHash
 		delete res.passwordHash;
 
-		// followingsCount, followersCount, postsCount.status
-		res.postsCount = {};
-		[res.followingsCount, res.followersCount, res.postsCount.status] = await Promise.all([
+		// followingsCount, followersCount, postingsCount.chat
+		res.postingsCount = {};
+		[res.followingsCount, res.followersCount, res.postingsCount.chat] = await Promise.all([
 			this._repository.count('userFollowings', { source: userDocument._id }),
 			this._repository.count('userFollowings', { target: userDocument._id }),
 			this._repository.count('posts', { type: 'status', userId: userDocument._id })

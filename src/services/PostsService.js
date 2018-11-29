@@ -25,8 +25,8 @@ class PostsService {
 
 		const res = Object.assign({}, document);
 
+		// user
 		if (includeEntity) {
-			// user
 			const user = await this._repository.findById('users', res.userId);
 			if (user != null) {
 				res.user = await this._usersService.serialize(user);
@@ -41,7 +41,12 @@ class PostsService {
 		delete res._id;
 
 		// userId
-		res.userId = res.userId.toString();
+		if (includeEntity) {
+			delete res.userId;
+		}
+		else {
+			res.userId = res.userId.toString();
+		}
 
 		// attachmentIds
 		if (res.attachmentIds != null) {
@@ -64,7 +69,7 @@ class PostsService {
 			throw new MissingArgumentsError();
 
 		const data = {
-			type: 'status',
+			type: 'chat',
 			userId,
 			text
 		};
