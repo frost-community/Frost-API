@@ -63,7 +63,7 @@ describe('Posting endpoints', () => {
 		});
 	}
 
-	function testSuccess(ctx) {
+	function expectsSuccess(ctx) {
 		let err;
 		assert.equal(ctx.responsed, true, 'no response');
 		if (ctx.statusCode < 200 || ctx.statusCode >= 300) {
@@ -75,11 +75,19 @@ describe('Posting endpoints', () => {
 		}
 	}
 
+	function expectsFailure(ctx) {
+		let err;
+		assert.equal(ctx.responsed, true, 'no response');
+		if (ctx.statusCode < 300 || ctx.statusCode >= 500) {
+			throw new Error(`status code is not 4xx : ${ctx.statusCode} ${JSON.stringify(ctx.data)}`);
+		}
+	}
+
 	describe('/posting/create-chat', () => {
 		it('if request is valid', async () => {
 			const ctx = buildContext({ text: 'abc' });
 			await apiPosting['create-chat'](ctx);
-			testSuccess(ctx);
+			expectsSuccess(ctx);
 			const res = ctx.data;
 			let err;
 
@@ -100,12 +108,12 @@ describe('Posting endpoints', () => {
 		it('if request is valid', async () => {
 			const ctx1 = buildContext({ text: 'abc' });
 			await apiPosting['create-chat'](ctx1);
-			testSuccess(ctx1);
+			expectsSuccess(ctx1);
 			const posting = ctx1.data.posting;
 
 			const ctx = buildContext({ postingId: posting.id });
 			await apiPosting.get(ctx);
-			testSuccess(ctx);
+			expectsSuccess(ctx);
 			const res = ctx.data;
 			let err;
 
@@ -118,7 +126,7 @@ describe('Posting endpoints', () => {
 		it('if request is valid', async () => {
 			const ctx = buildContext({ });
 			await apiPostingTimelineHome.list(ctx);
-			testSuccess(ctx);
+			expectsSuccess(ctx);
 			const res = ctx.data;
 			let err;
 
@@ -135,7 +143,7 @@ describe('Posting endpoints', () => {
 		it('if request is valid', async () => {
 			const ctx = buildContext({ userId: MongoAdapter.stringifyId(user._id) });
 			await apiPostingTimelineUser.list(ctx);
-			testSuccess(ctx);
+			expectsSuccess(ctx);
 			const res = ctx.data;
 			let err;
 

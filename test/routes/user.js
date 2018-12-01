@@ -64,7 +64,7 @@ describe('User endpoints', () => {
 		});
 	}
 
-	function testSuccess(ctx) {
+	function expectsSuccess(ctx) {
 		let err;
 		assert.equal(ctx.responsed, true, 'no response');
 		if (ctx.statusCode < 200 || ctx.statusCode >= 300) {
@@ -76,11 +76,19 @@ describe('User endpoints', () => {
 		}
 	}
 
+	function expectsFailure(ctx) {
+		let err;
+		assert.equal(ctx.responsed, true, 'no response');
+		if (ctx.statusCode < 300 || ctx.statusCode >= 500) {
+			throw new Error(`status code is not 4xx : ${ctx.statusCode} ${JSON.stringify(ctx.data)}`);
+		}
+	}
+
 	describe('/user/create', () => {
 		it('if request is valid', async () => {
 			const ctx = buildContext({ screenName: 'tempUser1', password: 'temp1234' });
 			await apiUser.create(ctx);
-			testSuccess(ctx);
+			expectsSuccess(ctx);
 			const res = ctx.data;
 			let err;
 
@@ -93,7 +101,7 @@ describe('User endpoints', () => {
 		it('if request is valid', async () => {
 			const ctx = buildContext();
 			await apiUser.list(ctx);
-			testSuccess(ctx);
+			expectsSuccess(ctx);
 			const res = ctx.data;
 			let err;
 
@@ -106,7 +114,7 @@ describe('User endpoints', () => {
 		it('if request is valid', async () => {
 			const ctx = buildContext({ userId: MongoAdapter.stringifyId(user._id) });
 			await apiUser.get(ctx);
-			testSuccess(ctx);
+			expectsSuccess(ctx);
 			const res = ctx.data;
 			let err;
 
@@ -120,7 +128,7 @@ describe('User endpoints', () => {
 			const ctx = buildContext({
 			});
 			await apiUser.update(ctx);
-			testSuccess(ctx);
+			expectsSuccess(ctx);
 			const res = ctx.data;
 			let err;
 
@@ -135,7 +143,7 @@ describe('User endpoints', () => {
 				targetUserId: MongoAdapter.stringifyId(user2._id)
 			});
 			await apiUser.follow(ctx);
-			testSuccess(ctx);
+			expectsSuccess(ctx);
 			const res = ctx.data;
 			let err;
 
@@ -154,7 +162,7 @@ describe('User endpoints', () => {
 				targetUserId: MongoAdapter.stringifyId(user2._id)
 			});
 			await apiUser.unfollow(ctx);
-			testSuccess(ctx);
+			expectsSuccess(ctx);
 			const res = ctx.data;
 			let err;
 
@@ -170,7 +178,7 @@ describe('User endpoints', () => {
 				targetUserId: MongoAdapter.stringifyId(user2._id),
 			});
 			await apiUserRelation.get(ctx);
-			testSuccess(ctx);
+			expectsSuccess(ctx);
 			const res = ctx.data;
 			let err;
 
@@ -185,7 +193,7 @@ describe('User endpoints', () => {
 				userId: MongoAdapter.stringifyId(user._id)
 			});
 			await apiUserFollowing.list(ctx);
-			testSuccess(ctx);
+			expectsSuccess(ctx);
 			const res = ctx.data;
 			let err;
 		});
@@ -197,7 +205,7 @@ describe('User endpoints', () => {
 				userId: MongoAdapter.stringifyId(user._id)
 			});
 			await apiUserFollower.list(ctx);
-			testSuccess(ctx);
+			expectsSuccess(ctx);
 			const res = ctx.data;
 			let err;
 		});
