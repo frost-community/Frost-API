@@ -66,6 +66,8 @@ exports['create-chat'] = async (apiContext) => {
 
 /** @param {ApiContext} apiContext */
 exports['create-article'] = async (apiContext) => {
+	return apiContext.response(501, 'not implemented yet');
+/*
 	await apiContext.proceed({
 		params: {
 			title: { cafy: $().string() },
@@ -94,15 +96,17 @@ exports['create-article'] = async (apiContext) => {
 	}
 
 	apiContext.response(200, { posting: await apiContext.postsService.serialize(postingArticle, true) });
+*/
 };
 
 /** @param {ApiContext} apiContext */
 exports['create-reference'] = async (apiContext) => {
+	return apiContext.response(501, 'not implemented yet');
+/*
 	await apiContext.proceed({
 		params: { },
 		scopes: ['post.write']
 	});
 	if (apiContext.responsed) return;
-
-	apiContext.response(501, 'not implemented yet');
+*/
 };

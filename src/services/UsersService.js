@@ -50,7 +50,7 @@ class UsersService {
 		[res.followingsCount, res.followersCount, res.postingsCount.chat] = await Promise.all([
 			this._repository.count('userFollowings', { source: userDocument._id }),
 			this._repository.count('userFollowings', { target: userDocument._id }),
-			this._repository.count('posts', { type: 'status', userId: userDocument._id })
+			this._repository.count('posts', { type: 'chat', userId: userDocument._id })
 		]);
 
 		return sortObject(res);

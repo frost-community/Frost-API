@@ -77,7 +77,7 @@ describe('User endpoints', () => {
 	}
 
 	describe('/user/create', () => {
-		it('if valid request', async () => {
+		it('if request is valid', async () => {
 			const ctx = buildContext({ screenName: 'tempUser1', password: 'temp1234' });
 			await apiUser.create(ctx);
 			testSuccess(ctx);
@@ -90,7 +90,7 @@ describe('User endpoints', () => {
 	});
 
 	describe('/user/list', () => {
-		it('if valid request', async () => {
+		it('if request is valid', async () => {
 			const ctx = buildContext();
 			await apiUser.list(ctx);
 			testSuccess(ctx);
@@ -103,7 +103,7 @@ describe('User endpoints', () => {
 	});
 
 	describe('/user/get', () => {
-		it('if valid request', async () => {
+		it('if request is valid', async () => {
 			const ctx = buildContext({ userId: MongoAdapter.stringifyId(user._id) });
 			await apiUser.get(ctx);
 			testSuccess(ctx);
@@ -116,7 +116,7 @@ describe('User endpoints', () => {
 	});
 
 	describe('/user/update', () => {
-		it('if valid request', async () => {
+		it('if request is valid', async () => {
 			const ctx = buildContext({
 			});
 			await apiUser.update(ctx);
@@ -130,7 +130,7 @@ describe('User endpoints', () => {
 	});
 
 	describe('/user/follow', () => {
-		it('if valid request', async () => {
+		it('if request is valid', async () => {
 			const ctx = buildContext({
 				targetUserId: MongoAdapter.stringifyId(user2._id)
 			});
@@ -145,7 +145,7 @@ describe('User endpoints', () => {
 	});
 
 	describe('/user/unfollow', () => {
-		it('if valid request', async () => {
+		it('if request is valid', async () => {
 			await apiUser.follow(buildContext({
 				targetUserId: MongoAdapter.stringifyId(user2._id)
 			}));
@@ -164,7 +164,7 @@ describe('User endpoints', () => {
 	});
 
 	describe('/user/relation/get', () => {
-		it('if valid request', async () => {
+		it('if request is valid', async () => {
 			const ctx = buildContext({
 				sourceUserId: MongoAdapter.stringifyId(user._id),
 				targetUserId: MongoAdapter.stringifyId(user2._id),
@@ -180,7 +180,7 @@ describe('User endpoints', () => {
 	});
 
 	describe('/user/following/list', () => {
-		it('if valid request', async () => {
+		it('if request is valid', async () => {
 			const ctx = buildContext({
 				userId: MongoAdapter.stringifyId(user._id)
 			});
@@ -192,7 +192,7 @@ describe('User endpoints', () => {
 	});
 
 	describe('/user/follower/list', () => {
-		it('if valid request', async () => {
+		it('if request is valid', async () => {
 			const ctx = buildContext({
 				userId: MongoAdapter.stringifyId(user._id)
 			});

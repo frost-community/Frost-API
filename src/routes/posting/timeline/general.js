@@ -21,7 +21,7 @@ exports.list = async (apiContext) => {
 	const older = apiContext.params.older != null ? MongoAdapter.buildId(apiContext.params.older) : null;
 
 	try {
-		return await timeline(apiContext, 'status', null, limit, { newer, older });
+		return await timeline(apiContext, 'chat', null, limit, { newer, older });
 	}
 	catch (err) {
 		console.log(err);

@@ -7,6 +7,7 @@ const timeline = require('../../../modules/timeline');
 exports.list = async (apiContext) => {
 	await apiContext.proceed({
 		params: {
+			// userId
 			limit: { cafy: $().number().int().range(0, 100), default: 30 },
 			newer: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null },
 			older: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)), default: null }
@@ -22,7 +23,7 @@ exports.list = async (apiContext) => {
 
 	try {
 		// user
-		const user = await apiContext.repository.findById('users', apiContext.params.userId);
+		const user = await apiContext.repository.findById('users', apiContext.user._id);
 		if (user == null) {
 			apiContext.response(404, 'user as premise not found');
 			return;
@@ -33,7 +34,7 @@ exports.list = async (apiContext) => {
 		const ids = followings.map(i => i.target);
 		ids.push(user._id); // ソースユーザーを追加
 
-		return await timeline(apiContext, 'status', ids, limit, { newer, older });
+		return await timeline(apiContext, 'chat', ids, limit, { newer, older });
 	}
 	catch (err) {
 		console.log(err);

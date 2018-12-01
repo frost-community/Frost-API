@@ -7,6 +7,8 @@ const UsersService = require('../../src/services/UsersService');
 const ApplicationsService = require('../../src/services/ApplicationsService');
 const ApiContext = require('../../src/modules/ApiContext');
 const apiPosting = require('../../src/routes/posting');
+const apiPostingTimelineHome = require('../../src/routes/posting/timeline/home');
+const apiPostingTimelineUser = require('../../src/routes/posting/timeline/user');
 
 describe('Posting endpoints', () => {
 
@@ -42,7 +44,7 @@ describe('Posting endpoints', () => {
 		user2 = await usersService.create('generaluser2', 'abcdefg', 'froster', 'this is generaluser2.');
 		app = await applicationsService.create('generalapp', user, 'this is generalapp.', ['post.write']);
 
-		authInfo = { application: app, scopes: ['post.write'] };
+		authInfo = { application: app, scopes: ['user.read', 'post.read', 'post.write'] };
 	});
 
 	// filalize for the case
@@ -74,7 +76,7 @@ describe('Posting endpoints', () => {
 	}
 
 	describe('/posting/create-chat', () => {
-		it('if valid request', async () => {
+		it('if request is valid', async () => {
 			const ctx = buildContext({ text: 'abc' });
 			await apiPosting['create-chat'](ctx);
 			testSuccess(ctx);
@@ -82,6 +84,66 @@ describe('Posting endpoints', () => {
 			let err;
 
 			err = $().object().test(res.posting);
+			if (err) throw err;
+		});
+	});
+
+	describe('/posting/create-article', () => {
+		it('if request is valid');
+	});
+
+	describe('/posting/create-reference', () => {
+		it('if request is valid');
+	});
+
+	describe('/posting/get', () => {
+		it('if request is valid', async () => {
+			const ctx1 = buildContext({ text: 'abc' });
+			await apiPosting['create-chat'](ctx1);
+			testSuccess(ctx1);
+			const posting = ctx1.data.posting;
+
+			const ctx = buildContext({ postingId: posting.id });
+			await apiPosting.get(ctx);
+			testSuccess(ctx);
+			const res = ctx.data;
+			let err;
+
+			err = $().object().test(res.posting);
+			if (err) throw err;
+		});
+	});
+
+	describe('/posting/timeline/home', () => {
+		it('if request is valid', async () => {
+			const ctx = buildContext({ });
+			await apiPostingTimelineHome.list(ctx);
+			testSuccess(ctx);
+			const res = ctx.data;
+			let err;
+
+			err = $().array().test(res.postings);
+			if (err) throw err;
+			err = $().nullable.string().test(res.newer);
+			if (err) throw err;
+			err = $().nullable.string().test(res.older);
+			if (err) throw err;
+		});
+	});
+
+	describe('/posting/timeline/user', () => {
+		it('if request is valid', async () => {
+			const ctx = buildContext({ userId: MongoAdapter.stringifyId(user._id) });
+			await apiPostingTimelineUser.list(ctx);
+			testSuccess(ctx);
+			const res = ctx.data;
+			let err;
+
+			err = $().array().test(res.postings);
+			if (err) throw err;
+			err = $().nullable.string().test(res.newer);
+			if (err) throw err;
+			err = $().nullable.string().test(res.older);
 			if (err) throw err;
 		});
 	});

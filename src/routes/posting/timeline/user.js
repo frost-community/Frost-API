@@ -29,7 +29,7 @@ exports.list = async (apiContext) => {
 			return;
 		}
 
-		return await timeline(apiContext, 'status', [user._id], limit, { newer, older });
+		return await timeline(apiContext, 'chat', [user._id], limit, { newer, older });
 	}
 	catch (err) {
 		console.log(err);
