@@ -106,7 +106,7 @@ describe('Auth endpoints', () => {
 				userId: '',
 				scopes: [''],
 			});
-			await apiApp.create(ctx);
+			await apiAuthToken.create(ctx);
 			expectsSuccess(ctx);
 			const res = ctx.data;
 			let err;
@@ -125,7 +125,7 @@ describe('Auth endpoints', () => {
 				scopes: '', // optional
 				accessToken: '' // optional
 			});
-			await apiApp.create(ctx);
+			await apiAuthToken.create(ctx);
 			expectsSuccess(ctx);
 			const res = ctx.data;
 			let err;
