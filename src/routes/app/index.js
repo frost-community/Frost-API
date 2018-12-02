@@ -30,14 +30,14 @@ exports.create = async (apiContext) => {
 		return;
 	}
 
-	apiContext.response(200, { application: apiContext.applicationsService.serialize(application) });
+	apiContext.response(200, { app: apiContext.applicationsService.serialize(application) });
 };
 
 /** @param {ApiContext} apiContext */
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		params: {
-			applicationId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
+			appId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
 		},
 		scopes: ['app.read']
 	});
@@ -45,7 +45,7 @@ exports.get = async (apiContext) => {
 
 	let application;
 	try {
-		application = await apiContext.repository.findById('applications', apiContext.params.applicationId);
+		application = await apiContext.repository.findById('applications', apiContext.params.appId);
 	}
 	catch (err) {
 		console.log(err);
@@ -56,12 +56,15 @@ exports.get = async (apiContext) => {
 		return;
 	}
 
-	apiContext.response(200, { application: apiContext.applicationsService.serialize(application) });
+	apiContext.response(200, { app: apiContext.applicationsService.serialize(application) });
 };
 
 /** @param {ApiContext} apiContext */
 exports.list = async (apiContext) => {
 	await apiContext.proceed({
+		params: {
+			// userId
+		},
 		scopes: ['app.read']
 	});
 	if (apiContext.responsed) return;
@@ -72,5 +75,5 @@ exports.list = async (apiContext) => {
 		return;
 	}
 
-	apiContext.response(200, { applications: applications.map(i => apiContext.applicationsService.serialize(i)) });
+	apiContext.response(200, { apps: applications.map(i => apiContext.applicationsService.serialize(i)) });
 };

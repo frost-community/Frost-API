@@ -9,19 +9,19 @@ const { getStringSize } = require('../../modules/helpers/GeneralHelper');
 exports.get = async (apiContext) => {
 	await apiContext.proceed({
 		params: {
-			postId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
+			postingId: { cafy: $().string().pipe(i => MongoAdapter.validateId(i)) }
 		},
 		scopes: ['post.read']
 	});
 	if (apiContext.responsed) return;
 
-	const post = await apiContext.repository.findById('posts', apiContext.params.postId);
-	if (post == null) {
-		apiContext.response(404, 'post not found');
+	const postingId = await apiContext.repository.findById('posts', apiContext.params.postingId);
+	if (postingId == null) {
+		apiContext.response(404, 'posting not found');
 		return;
 	}
 
-	apiContext.response(200, { post: await apiContext.postsService.serialize(post, true) });
+	apiContext.response(200, { posting: await apiContext.postsService.serialize(postingId, true) });
 };
 
 /** @param {ApiContext} apiContext */
@@ -46,13 +46,13 @@ exports['create-chat'] = async (apiContext) => {
 		return;
 	}
 
-	let postStatus = await apiContext.postsService.createStatusPost(userId, text, attachmentIds);
-	if (postStatus == null) {
-		apiContext.response(500, 'failed to create postStatus');
+	let postingChat = await apiContext.postsService.createStatusPost(userId, text, attachmentIds);
+	if (postingChat == null) {
+		apiContext.response(500, 'failed to create postingChat');
 		return;
 	}
 
-	const serialized = await apiContext.postsService.serialize(postStatus, true);
+	const serialized = await apiContext.postsService.serialize(postingChat, true);
 
 	// DomainEvent posting.chat を発行
 	const eventSender = new DomainEventEmitter('frost-api', false);
@@ -61,11 +61,13 @@ exports['create-chat'] = async (apiContext) => {
 	});
 	await eventSender.dispose();
 
-	apiContext.response(200, { postMessage: serialized });
+	apiContext.response(200, { posting: serialized });
 };
 
 /** @param {ApiContext} apiContext */
 exports['create-article'] = async (apiContext) => {
+	return apiContext.response(501, 'not implemented yet');
+/*
 	await apiContext.proceed({
 		params: {
 			title: { cafy: $().string() },
@@ -87,22 +89,24 @@ exports['create-article'] = async (apiContext) => {
 		return;
 	}
 
-	const postArticle = await apiContext.postsService.createArticlePost(apiContext.user._id, text, title);
-	if (postArticle == null) {
-		apiContext.response(500, 'failed to create postArticle');
+	const postingArticle = await apiContext.postsService.createArticlePost(apiContext.user._id, text, title);
+	if (postingArticle == null) {
+		apiContext.response(500, 'failed to create postingArticle');
 		return;
 	}
 
-	apiContext.response(200, { postArticle: await apiContext.postsService.serialize(postArticle, true) });
+	apiContext.response(200, { posting: await apiContext.postsService.serialize(postingArticle, true) });
+*/
 };
 
 /** @param {ApiContext} apiContext */
 exports['create-reference'] = async (apiContext) => {
+	return apiContext.response(501, 'not implemented yet');
+/*
 	await apiContext.proceed({
 		params: { },
 		scopes: ['post.write']
 	});
 	if (apiContext.responsed) return;
-
-	apiContext.response(501, 'not implemented yet');
+*/
 };

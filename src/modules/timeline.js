@@ -27,28 +27,32 @@ module.exports = async (apiContext, type, ids, limit, options) => {
 	// newerが指定されている時だけ昇順
 	const isAscending = (options.newer != null);
 
-	const posts = await apiContext.repository.findArray('posts', query, {
+	const postings = await apiContext.repository.findArray('posts', query, {
 		isAscending,
 		limit,
 		since: options.newer,
 		until: options.older
 	});
 
-	if (posts.length == 0) {
-		apiContext.response(204);
+	if (postings.length == 0) {
+		apiContext.response(200, {
+			postings: [],
+			newer: null,
+			older: null
+		});
 		return;
 	}
 
 	// 昇順の時は順序を反転
 	if (isAscending) {
-		posts.reverse();
+		postings.reverse();
 	}
 
-	const promises = posts.map(p => apiContext.postsService.serialize(p, true));
+	const serialized = await Promise.all(postings.map(p => apiContext.postsService.serialize(p, true)));
 
 	apiContext.response(200, {
-		posts: await Promise.all(promises),
-		newer: posts[0]._id,
-		older: posts[posts.length-1]._id
+		postings: serialized,
+		newer: postings[0]._id,
+		older: postings[postings.length-1]._id
 	});
 };
