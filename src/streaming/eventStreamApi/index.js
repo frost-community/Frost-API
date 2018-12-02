@@ -5,21 +5,34 @@ const DataTypeIdHelper = require('../../modules/helpers/DataTypeIdHelper');
 const StreamingContext = require('../modules/StreamingContext');
 
 /*
-# 各種変数の説明
-streamType: 'user-timeline-status' | 'home-timeline-status' | 'general-timeline-status'
-streamPublisher: ストリームの発行者情報
-streamId: DataTypeIdHelper.build(['stream', streamType, streamPublisher]) ストリームの識別子
-streams: Map<streamId, LocalStream> 全てのストリーム一覧
-connectedStreamIds: streamId[] 接続済みのストリーム名一覧
+# 各種用語
+DomainEvent : 実行中のノードを超える範囲でやり取りされるイベント(RedisのPub/Sub動作時)
+LocalEvent : ローカルノードの範囲でやり取りされるイベント(Xev)
+EventId : LocalEventの識別子
+LocalStream : LocalEventを単位にするイベントのストリーム(単にstreamとも呼ばれる)
+StreamId : LocalStreamの識別子
 
-# streamIdの例
-general-timeline-status:general generalに向けて流されたポストを受信可能なLocalStreamです
-home-timeline-status:(userId) そのユーザーのホームTLに向けて流されたポストを受信可能なLocalStreamです
+# 変数
+streams: Map<streamId, LocalStream> : 全てのLocalStream一覧
+connectedStreams : このコネクション上で接続されているLocalStream(ID+Listener)の一覧
+
+# StreamIdの例
+stream.timeline.chat.general : generalに向けて流されたポストを受信可能なLocalStreamです
+stream.timeline.chat.home.(userId) : そのユーザーのホームTLに向けて流されたポストを受信可能なLocalStreamです
+
+# EventIdの例
+event.timeline.chat.general
+event.timeline.chat.user.(userId)
+
+# DomainEventIdの例
+redis.posting.chat
+redis.following
 */
 
 module.exports = (userFollowingsService) => {
 
-	const streams = new Map(); // memo: keyはChannelName
+	/** @type {Map<string, PubSub>} */
+	const streams = new Map();
 
 	// generate stream for general timeline (global)
 	const generalTLStream = new PubSub('frost-api');
@@ -35,7 +48,7 @@ module.exports = (userFollowingsService) => {
 	domainEventReciever.addListener(DataTypeIdHelper.build(['redis', 'posting', 'chat']), (data) => {
 		// streamに流す
 		const publisher = new PubSub('frost-api');
-		publisher.publish(DataTypeIdHelper.build(['event', 'timeline', 'chat', 'user', data.posting.userId]), data.posting);
+		publisher.publish(DataTypeIdHelper.build(['event', 'timeline', 'chat', 'user', data.posting.user.id]), data.posting);
 		publisher.publish(DataTypeIdHelper.build(['event', 'timeline', 'chat', 'general']), data.posting);
 		publisher.dispose();
 	});
@@ -113,12 +126,13 @@ module.exports = (userFollowingsService) => {
 			}
 		});
 
+		/** @type {{ sourceName: string, subscribe: (ctx: StreamingContext)=>Promise<void>, unsubscribe: (ctx: StreamingContext)=>Promise<void> }[]} */
 		let eventSources = [];
 
 		/**
 		 * @param {StreamingContext} ctx
 		*/
-		async function subscribeTimeline(ctx, timelineType) {
+		async function subscribeTimeline(ctx) {
 
 			/** @type {PubSub} */
 			let stream;
@@ -127,12 +141,12 @@ module.exports = (userFollowingsService) => {
 			let streamId;
 
 			// ストリームの取得または構築
-			if (timelineType == 'home') {
+			if (ctx.timelineType == 'home') {
 				const candy = (ctx.reqData.candy != null);
 
 				if (candy) {
 					streamId = generalTLStreamId;
-					timelineType = 'candy';
+					ctx.timelineType = 'candy';
 				}
 				else {
 					// memo: フォローユーザーのuser-timeline-statusストリームを統合したhome-timeline-statusストリームを生成
@@ -143,7 +157,7 @@ module.exports = (userFollowingsService) => {
 
 				// expect: Not subscribed to the stream yet from this connection.
 				if (index != -1) {
-					return ctx.error(`${timelineType} timeline is already subscribed`);
+					return ctx.error(`${ctx.timelineType} timeline is already subscribed`);
 				}
 
 				if (candy) {
@@ -168,7 +182,7 @@ module.exports = (userFollowingsService) => {
 				}
 			}
 			else {
-				return ctx.error(`timeline type "${timelineType}" is invalid`);
+				return ctx.error(`timeline type "${ctx.timelineType}" is invalid`);
 			}
 
 			// Streamからのデータをwebsocketに流す
@@ -194,50 +208,60 @@ module.exports = (userFollowingsService) => {
 			// connectedStreamsに追加
 			connectedStreams.push({ id: streamId, listener: streamListener });
 
-			console.log(`(streaming)${ctx.eventName}: timeline.${timelineType}`);
-			ctx.send({ success: true, message: `subscribed ${timelineType} timeline` });
+			console.log(`(streaming)${ctx.eventName}: timeline.${ctx.timelineType}`);
+			ctx.send({
+				id: ctx.id,
+				success: true,
+				message: `subscribed ${ctx.timelineType} timeline`
+			});
 		}
 
 		/**
 		 * @param {StreamingContext} ctx
 		*/
-		async function unsubscribeTimeline(ctx, timelineType) {
+		async function unsubscribeTimeline(ctx) {
 			// 対象タイムラインのストリームを取得
 			let streamId;
-			if (timelineType == 'home') {
+			if (ctx.timelineType == 'home') {
 				const candy = (ctx.reqData.candy != null);
 
 				if (candy) {
 					streamId = generalTLStreamId;
-					timelineType = 'candy';
+					ctx.timelineType = 'candy';
 				}
 				else {
 					streamId = DataTypeIdHelper.build(['stream', 'timeline', 'chat', 'home', ctx.connection.user._id]);
 				}
 			}
 			else {
-				return ctx.error(`timeline type "${timelineType}" is invalid`);
+				return ctx.error(`timeline type "${ctx.timelineType}" is invalid`);
 			}
 
 			const index = connectedStreams.findIndex(streamInfo => streamInfo.id == streamId);
 
 			// expect: Subscribed to the stream from this connection.
 			if (index == -1) {
-				return ctx.error(`${timelineType} timeline is not subscribed yet`);
+				return ctx.error(`${ctx.timelineType} timeline is not subscribed yet`);
 			}
 
 			await disposeStream(streamId);
 			console.log(`(streaming)${ctx.eventName}: ${streamId}`);
-			ctx.send({ success: true, message: `unsubscribed ${timelineType} timeline` });
+			ctx.send({
+				id: ctx.id,
+				success: true,
+				message: `unsubscribed ${ctx.timelineType} timeline`
+			});
 		}
 
 		eventSources.push({
 			sourceName: 'homeTimeline',
 			subscribe: async (ctx) => {
-				await subscribeTimeline(ctx, 'home');
+				ctx.timelineType = 'home';
+				await subscribeTimeline(ctx);
 			},
 			unsubscribe: async (ctx) => {
-				await unsubscribeTimeline(ctx, 'home');
+				ctx.timelineType = 'home';
+				await unsubscribeTimeline(ctx);
 			}
 		});
 
@@ -273,6 +297,8 @@ module.exports = (userFollowingsService) => {
 			if (eventSource == null) {
 				return ctx.error('invalid property', { propertyName: 'sourceName' });
 			}
+
+			ctx.id = id;
 
 			if (ctx.eventName == 'eventStream.subscribe') {
 				await eventSource.subscribe(ctx);

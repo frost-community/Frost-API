@@ -86,14 +86,12 @@ module.exports = (directoryRouter, repository, config) => {
 				response = (apiContext.data != null) ? apiContext.data : {};
 			}
 
-			if (ctx.connection.connected) {
-				return ctx.send({
-					id: id,
-					success: true,
-					statusCode: apiContext.statusCode,
-					resource: response
-				});
-			}
+			ctx.send({
+				id: id,
+				success: true,
+				statusCode: apiContext.statusCode,
+				resource: response
+			});
 		}
 
 		// Streaming API: request

@@ -5,10 +5,14 @@ class StreamingContext {
 		this.reqData = reqData;
 	}
 	send(data) {
-		this.connection.send(this.eventName, data);
+		if (this.connection.connected) {
+			this.connection.send(this.eventName, data);
+		}
 	}
 	error(message, details = null) {
-		this.connection.error(this.eventName, message, details);
+		if (this.connection.connected) {
+			this.connection.error(this.eventName, message, details);
+		}
 	}
 }
 module.exports = StreamingContext;

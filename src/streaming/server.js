@@ -54,13 +54,11 @@ module.exports = (http, directoryRouter, repository, config) => {
 			events(connection, { keys: { eventName: 'event', eventContent: 'data' } });
 
 			connection.error = (eventName, message, details = null) => {
-				if (connection.connected) {
-					const res = { success: false, message };
-					if (details != null) {
-						res.details = details;
-					}
-					connection.send(eventName, res);
+				const res = { success: false, message };
+				if (details != null) {
+					res.details = details;
 				}
+				connection.send(eventName, res);
 			};
 
 			connection.on('error', err => {
@@ -68,7 +66,7 @@ module.exports = (http, directoryRouter, repository, config) => {
 					return;
 				}
 
-				if (err.userEventError) {
+				if (err.userEventError && connection.connected) {
 					connection.error('default', 'invalid json format');
 				}
 				else {
