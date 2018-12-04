@@ -42,7 +42,7 @@
     "uid2": "0.0.x",
     "validator": "9.4.x",
     "websocket": "1.0.x",
-    "websocket-events": "1.0.x",
+    "websocket-events": "2.0.x",
     "xev": "^2.0.1"
   },
   "devDependencies": {

@@ -51,10 +51,10 @@ module.exports = (http, directoryRouter, repository, config) => {
 			connection.authInfo = { scopes: token.scopes, application: application };
 
 			// support user events
-			events(connection, { keys: { eventName: 'event', eventContent: 'data' } });
+			events(connection, { eventKeyName: '@frame' });
 
-			connection.error = (eventName, message, details = null) => {
-				const res = { success: false, message };
+			connection.error = (eventName, reason, details = null) => {
+				const res = { error: { reason } };
 				if (details != null) {
 					res.details = details;
 				}
@@ -81,8 +81,8 @@ module.exports = (http, directoryRouter, repository, config) => {
 			requestApi.handle(connection);
 			eventStreamApi.handle(connection);
 
-			connection.on('default', (reqData) => {
-				const ctx = new StreamingContext('default', connection, reqData);
+			connection.on('default', (event) => {
+				const ctx = new StreamingContext('default', connection, event);
 				ctx.error('invalid event name');
 			});
 
